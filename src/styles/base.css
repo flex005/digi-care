@@ -1,0 +1,67 @@
+/**
+ * Base element styling. Everything here reads from tokens.css.
+ */
+
+body {
+  background-color: var(--bg-page);
+  color: var(--ink-700);
+  font-family: var(--font-family);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-regular);
+}
+
+/**
+ * PRD §7: visible focus ring, 2px --purple-600 with 2px offset, never removed.
+ * :focus-visible only, so a mouse click does not ring, but every keyboard
+ * route does. There is no rule anywhere in this project that sets
+ * `outline: none` without an immediate replacement.
+ */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/**
+ * Tabular numerals in every table, MAR grid and metric. PRD §4.3.
+ * Applied at the element level so a numeric column never has to remember.
+ */
+table,
+[data-numeric] {
+  font-variant-numeric: tabular-nums;
+}
+
+/**
+ * Available to assistive technology, invisible on screen. Used where the
+ * accessible name is a full sentence but the visible cell must stay compact —
+ * the MAR grid above all. PRD §7.
+ */
+.visuallyHidden {
+  position: absolute;
+  overflow: hidden;
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  white-space: nowrap;
+}
+
+/* Skip-to-content link. PRD §7. Visible the moment it takes focus. */
+.skipToContent {
+  position: absolute;
+  top: var(--space-8);
+  left: var(--space-8);
+  z-index: 100;
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  box-shadow: var(--shadow-overlay);
+  transform: translateY(calc(-1 * var(--space-64)));
+}
+
+.skipToContent:focus-visible {
+  transform: translateY(0);
+}

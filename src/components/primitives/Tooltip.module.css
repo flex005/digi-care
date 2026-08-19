@@ -1,0 +1,16 @@
+.content {
+  z-index: 60;
+  max-width: 280px;
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-sm);
+  background-color: var(--purple-900);
+  color: var(--bg-surface);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-medium);
+  box-shadow: var(--shadow-overlay);
+}
+
+.arrow {
+  fill: var(--purple-900);
+}

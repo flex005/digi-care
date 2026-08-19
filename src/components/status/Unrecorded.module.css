@@ -1,0 +1,43 @@
+/**
+ * The only component permitted to apply the unrecorded treatment.
+ * Every class here composes from the single definition in
+ * src/styles/unrecorded.module.css — nothing is redrawn.
+ */
+
+.badge {
+  composes: unrecordedBadge from '../../styles/unrecorded.module.css';
+}
+
+.cell {
+  composes: unrecordedCell from '../../styles/unrecorded.module.css';
+}
+
+.panel {
+  composes: unrecordedPanel from '../../styles/unrecorded.module.css';
+}
+
+.row {
+  composes: unrecordedRow from '../../styles/unrecorded.module.css';
+}
+
+/* The label is the carrier of meaning; the pattern is reinforcement. */
+.label {
+  font-weight: var(--weight-semibold);
+}
+
+/* What is missing, and how much of it. Never a bare figure. */
+.detail {
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-regular);
+}
+
+.panel .label {
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+}
+
+.row .label,
+.cell .label {
+  font-weight: var(--weight-semibold);
+}

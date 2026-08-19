@@ -1,0 +1,48 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "types": ["vite/client", "vite-plugin-svgr/client"],
+    "allowArbitraryExtensions": true,
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Strict. PRD §3.1. The Evidence Invariant depends on the compiler
+       refusing a screen that forgot the unrecorded case, so this may not be
+       relaxed.
+
+       Deliberately NOT enabled, having been tried and reverted:
+       - noUncheckedIndexedAccess: CSS Modules are typed with an index
+         signature, so it makes every `styles.foo` `string | undefined` and
+         forces `!` or `?? ''` at hundreds of call sites. `?? ''` is the exact
+         reflex CLAUDE.md §1 tells us not to build, and the noise would train
+         the habit even where it matters.
+       - exactOptionalPropertyTypes: it conflicts with Radix's own
+         `value?: string` props and buys nothing here, because the status
+         unions in src/data/types/state.ts have no optional properties at all
+         by design. */
+    "strict": true,
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+
+    /* Paths */
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"]
+}

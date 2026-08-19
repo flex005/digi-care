@@ -1,0 +1,42 @@
+/**
+ * Rule 4 — every aggregate carries its denominator.
+ *
+ * The figure and its coverage are one component and cannot be separated,
+ * because a bare number is the bug. There is no variant of this that renders
+ * the value alone.
+ */
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-16) var(--space-20);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-surface);
+}
+
+.caption {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.value {
+  color: var(--ink-900);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The denominator. Never optional, never smaller than legible. */
+.coverage {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-variant-numeric: tabular-nums;
+}

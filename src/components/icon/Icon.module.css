@@ -1,0 +1,10 @@
+.icon {
+  display: inline-block;
+  flex-shrink: 0;
+
+  /* Icons are normalised to currentColor by `npm run icons`, so they take
+     their colour from whatever text colour surrounds them and never carry
+     one of their own. */
+  color: inherit;
+  vertical-align: -0.125em;
+}

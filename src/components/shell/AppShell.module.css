@@ -1,0 +1,55 @@
+.shell {
+  display: grid;
+  grid-template-rows: var(--layout-topbar-height) 1fr;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'topbar topbar'
+    'sidebar main';
+  min-height: 100vh;
+}
+
+.topbar {
+  grid-area: topbar;
+}
+
+.sidebar {
+  grid-area: sidebar;
+}
+
+.main {
+  grid-area: main;
+  min-width: 0;
+  padding: var(--space-24) var(--layout-gutter);
+}
+
+.content {
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+}
+
+/* Below --layout-min-width the app says so rather than degrading into a
+   broken layout. PRD §4.6: desktop only in this build. */
+.viewportGuard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-48);
+  text-align: center;
+}
+
+.viewportGuardTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.viewportGuardBody {
+  max-width: 44ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+}

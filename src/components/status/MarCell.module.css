@@ -1,0 +1,63 @@
+/**
+ * MAR cell states. PRD §2.1, §6.4 — the highest-consequence surface in the
+ * build, and the reason the Evidence Invariant exists.
+ *
+ * "An empty cell means 'not due yet', or 'due, window open, nobody has
+ * acted', or 'window closed, no record — this is an omission'."
+ * Three different meanings behind one blank. Here they are three different
+ * things on screen.
+ */
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: var(--space-64);
+  min-height: var(--space-48);
+  padding: var(--space-4);
+  font-size: var(--text-mono-num-size);
+  line-height: var(--text-mono-num-line);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/**
+ * Not due. Nothing is expected here, so nothing is missing here.
+ *
+ * This is the one cell state that may be quiet: it is neither a record nor
+ * the absence of one. It is still LABELLED, because a silent blank is exactly
+ * what this product exists to prevent — the label is what stops it being read
+ * as an omission.
+ */
+.notDue {
+  background-color: var(--bg-surface-sunken);
+  color: var(--ink-400);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.label {
+  font-weight: var(--weight-semibold);
+}
+
+.detail {
+  color: inherit;
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-regular);
+}
+
+/* The second signature on a controlled drug, or its conspicuous absence. */
+.witness {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-medium);
+}
+
+.witnessMissing {
+  color: var(--status-critical-ink);
+  font-weight: var(--weight-semibold);
+}

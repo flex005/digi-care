@@ -1,0 +1,169 @@
+/**
+ * diGi-Care design tokens. PRD §4.
+ *
+ * This is the ONLY file in the repository where a colour, size or shadow
+ * literal may appear. Everywhere else, colour reaches a component as
+ * var(--token). Stylelint enforces that mechanically; see stylelint.config.js.
+ *
+ * One palette. No dark mode, no theme switching, no prefers-color-scheme,
+ * no .dark class. CLAUDE.md §4.
+ *
+ * Values marked "⚠️ unverified" are read by eye off the diGiLog screenshot
+ * rather than measured (PRD §4, §9 item 1). They are not blocking: they live
+ * only here, so swapping verified values in later is a single edit that
+ * touches no component.
+ */
+
+:root {
+  /* ==================================================================
+     BRAND PALETTE — PRD §4.1 ✅ exact
+     ================================================================== */
+  --purple-900: #1e0059; /* App header, primary text on light, headings */
+  --purple-600: #6935cf; /* Primary action, active nav, focus ring */
+  --purple-400: #a284f1; /* Secondary accent, chart series, hover */
+  --purple-200: #d5c6fb; /* Selected rows, subtle fills, disabled primary */
+  --purple-50: #f1ecff; /* Tinted card backgrounds, tag fills */
+
+  /* ==================================================================
+     SURFACES AND NEUTRALS — PRD §4.2
+     ================================================================== */
+  --bg-page: #f2f6fe; /* ✅ Application background */
+  --bg-surface: #ffffff; /* ✅ Cards, tables, drawers, dialogs */
+  --bg-surface-sunken: #f8fafe; /* ⚠️ unverified — table headers, inset panels */
+
+  --ink-900: #1e0059; /* ✅ Primary text (reuses brand deep purple) */
+  --ink-700: #443b63; /* ⚠️ unverified — body text */
+  --ink-500: #6e6688; /* ⚠️ unverified — secondary text, labels */
+  --ink-400: #9a93b0; /* ⚠️ unverified — placeholder, disabled text */
+
+  --border-strong: #e7e4fd; /* ✅ Input borders, dividers under headers */
+  --border-subtle: #efeafe; /* ✅ Card borders, table row rules */
+
+  /* ==================================================================
+     STATUS PALETTE — PRD §4.4
+
+     Each status carries three tokens, because one value cannot do both
+     jobs. --status-X is the house fill: solid fills, dots, bars, borders,
+     icons, chart series — non-text UI, so the bar is 3:1.
+     --status-X-ink is the darker same-hue value for TEXT on the tint.
+
+     Using a fill token for text fails contrast and is a review blocker.
+     PRD §4.4, §7. CLAUDE.md §4.
+     ================================================================== */
+
+  /* Green. Recorded, complete, within tolerance. Given. Low risk. */
+  --status-positive: #46bc4a; /* ✅ */
+  --status-positive-ink: #1f7a33;
+  --status-positive-tint: #eef9ee; /* ✅ */
+
+  /* Amber. Recorded and needs attention. Due soon. Moderate risk. */
+  --status-caution: #f07d13; /* ✅ */
+  --status-caution-ink: #a65200;
+  --status-caution-tint: #ffefe1; /* ✅ */
+
+  /* Red. Recorded and bad. High risk. Overdue. Critical incident. */
+  --status-critical: #dd4347; /* ✅ */
+  --status-critical-ink: #b3272b;
+  --status-critical-tint: #ffefef; /* ✅ */
+
+  /* Blue. Neutral information. "Medications due at 08:00" banner. */
+  --status-info: #1563ff; /* ✅ */
+  --status-info-ink: #0b45b8;
+  --status-info-tint: #ecf2ff; /* ✅ */
+
+  /* Unrecorded / Insufficient Evidence. Deliberately muted — it must never
+     compete with a recorded status for attention. This is the only state in
+     the system carried by PATTERN rather than hue; see §4.5 and
+     src/styles/unrecorded.module.css, which holds the only copy of it. */
+  --status-unrecorded: #8e86a8;
+  --status-unrecorded-ink: #5c5470;
+  --status-unrecorded-tint: #f2f1f6;
+  --border-unrecorded: #a8a1bc; /* The dashed border of the hatch. §4.5 */
+
+  /* ==================================================================
+     TYPE — PRD §4.3
+
+     The scale is CLOSED. Nine steps, five weights. No component may
+     introduce a size, line height or weight outside it; stylelint rejects
+     any font-size / line-height / font-weight that is not var(--*).
+     A tenth step is a conversation, not a local override. PRD §3.5.
+
+     Sizes are in rem so the app stays usable at 200% zoom (§7).
+     Manrope only — no secondary family. --text-mono-num is Manrope with
+     tabular numerals, not a monospace face.
+     ================================================================== */
+  --font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* ⚠️ unverified — sizes are proportioned to the screenshot, not measured. */
+  --text-display-size: 2rem; /* 32 — dashboard greeting, one per page */
+  --text-display-line: 2.5rem; /* 40 */
+  --text-h1-size: 1.5rem; /* 24 — page titles */
+  --text-h1-line: 2rem; /* 32 */
+  --text-h2-size: 1.25rem; /* 20 — card and section titles */
+  --text-h2-line: 1.75rem; /* 28 */
+  --text-h3-size: 1.0625rem; /* 17 — sub-sections, drawer titles */
+  --text-h3-line: 1.5rem; /* 24 */
+  --text-body-size: 0.9375rem; /* 15 — default body, form inputs */
+  --text-body-line: 1.375rem; /* 22 */
+  --text-body-sm-size: 0.8125rem; /* 13 — table cells, secondary text */
+  --text-body-sm-line: 1.25rem; /* 20 */
+  --text-caption-size: 0.75rem; /* 12 — labels, metadata, timestamps */
+  --text-caption-line: 1rem; /* 16 */
+  --text-micro-size: 0.6875rem; /* 11 — badge text, denominators */
+  --text-micro-line: 0.875rem; /* 14 */
+  --text-mono-num-size: 0.8125rem; /* 13 — MAR grid, controlled drug balances */
+  --text-mono-num-line: 1.25rem; /* 20 */
+
+  --weight-regular: 400; /* body */
+  --weight-medium: 500; /* emphasis */
+  --weight-semibold: 600; /* headings and buttons */
+  --weight-bold: 700; /* page titles */
+  --weight-extrabold: 800; /* display only */
+
+  /* ==================================================================
+     SPACING — PRD §4.6. 4px base. Nothing off-scale.
+     Named by value, so an off-scale step is obvious on sight.
+     ================================================================== */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-64: 64px;
+
+  /* ==================================================================
+     SHAPE AND ELEVATION — PRD §4.6
+     ================================================================== */
+  --radius-sm: 8px; /* ⚠️ unverified — inputs, small buttons */
+  --radius-md: 12px; /* ⚠️ unverified — buttons, tags */
+  --radius-lg: 16px; /* ⚠️ unverified — cards */
+  --radius-xl: 20px; /* ⚠️ unverified — drawers, large panels */
+  --radius-pill: 999px; /* ✅ status pills, avatars */
+
+  /* ⚠️ unverified */
+  --shadow-card: 0 1px 2px rgba(30, 0, 89, 0.04), 0 4px 12px rgba(30, 0, 89, 0.06);
+  --shadow-overlay: 0 8px 32px rgba(30, 0, 89, 0.16);
+
+  /* ==================================================================
+     LAYOUT — PRD §4.6
+     Desktop only in this build. Below --layout-min-width the app shows a
+     message directing the user to a wider screen rather than degrading.
+     ================================================================== */
+  --layout-max-width: 1440px;
+  --layout-min-width: 1280px;
+  --layout-gutter: 24px;
+  --layout-sidebar-width: 248px;
+  --layout-sidebar-width-collapsed: 72px;
+  --layout-topbar-height: 64px;
+
+  /* ==================================================================
+     FOCUS — PRD §7. 2px --purple-600 with 2px offset. Never removed.
+     ================================================================== */
+  --focus-ring: var(--purple-600);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}

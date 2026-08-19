@@ -1,0 +1,106 @@
+/**
+ * THE UNRECORDED TREATMENT — PRD §4.5, Rule 2.
+ *
+ * This file holds the ONLY copy of the hatch in the entire project.
+ * Every consumer reaches it with CSS Modules `composes:`, never by
+ * reimplementing it:
+ *
+ *     .myCell {
+ *       composes: unrecorded from '../../styles/unrecorded.module.css';
+ *     }
+ *
+ * scripts/check-hatch.mjs fails `npm run lint` if `repeating-linear-gradient`
+ * or the dashed unrecorded border appears in any other file, because stylelint
+ * cannot tell a hand-rolled hatch from a legitimate gradient.
+ *
+ * Why pattern and not hue: unrecorded is the only state in the system carried
+ * by a pattern. That makes it distinguishable at a glance, distinguishable in
+ * greyscale, and distinguishable to a colour-blind user — which matters
+ * because on the MAR chart the distinction is clinical, not cosmetic.
+ *
+ * Three things this must never become:
+ *   - a solid neutral fill, because a solid neutral fill reads as "fine";
+ *   - empty space;
+ *   - the same treatment as a recorded negative. A recorded "Not Given" uses
+ *     --status-caution with a SOLID tint and a settled, closed appearance.
+ *     An omission uses this hatch and reads as an open loop.
+ *
+ * The pattern is reinforcement, never the sole carrier of meaning. Every
+ * unrecorded element carries visible text saying what is missing — which is
+ * why components/status/Unrecorded.tsx makes `label` a required prop and is
+ * the only component permitted to apply these classes.
+ *
+ * Under prefers-reduced-motion nothing changes here; the hatch is static
+ * by design.
+ */
+
+.unrecorded {
+  border: 1.5px dashed var(--border-unrecorded);
+  background: repeating-linear-gradient(
+    45deg,
+    var(--status-unrecorded-tint) 0 6px,
+    transparent 6px 12px
+  );
+  color: var(--status-unrecorded-ink);
+}
+
+/* Inline badge / pill form — profile header badge strip, chips, list rows. */
+.unrecordedBadge {
+  composes: unrecorded;
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Table and MAR grid cell form. Fills the cell; no rounding, so the grid
+   keeps its rhythm and the hatch reads continuously down a column. */
+.unrecordedCell {
+  composes: unrecorded;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: var(--space-40);
+  padding: var(--space-4);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-medium);
+  text-align: center;
+}
+
+/* Panel form — Insufficient Evidence on a compliance Key Question, an
+   unstarted care plan domain, a timeline gap marker. */
+.unrecordedPanel {
+  composes: unrecorded;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-16) var(--space-20);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* Block form — a full-width row inside a list, e.g. a risk assessment
+   template that has never been completed. Absence from a list is the same
+   bug as a blank cell, so these are rendered, never omitted. */
+.unrecordedRow {
+  composes: unrecorded;
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}

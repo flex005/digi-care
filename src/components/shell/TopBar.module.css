@@ -1,0 +1,129 @@
+.topbar {
+  display: flex;
+  gap: var(--space-24);
+  align-items: center;
+  height: var(--layout-topbar-height);
+  padding: 0 var(--layout-gutter);
+  background-color: var(--purple-900);
+  color: var(--bg-surface);
+}
+
+.wordmark {
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/**
+ * The active site, always visible — including for single-site users, who do
+ * not get a switcher but do get the label. PRD §2.4. A record saved into the
+ * wrong site is the second-worst failure available, so the site is never
+ * inferred and never hidden.
+ */
+.site {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  min-height: var(--space-32);
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid var(--purple-400);
+  border-radius: var(--radius-pill);
+  background-color: transparent;
+  color: var(--bg-surface);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.siteLabel {
+  color: var(--purple-200);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.search {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  width: 320px;
+  min-height: var(--space-40);
+  padding: 0 var(--space-12);
+  border: 1px solid var(--purple-400);
+  border-radius: var(--radius-pill);
+  color: var(--purple-200);
+}
+
+.searchInput {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--bg-surface);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.searchInput::placeholder {
+  color: var(--purple-200);
+}
+
+.searchInput:focus-visible {
+  outline: none;
+}
+
+.iconButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-40);
+  height: var(--space-40);
+  border-radius: var(--radius-pill);
+  color: var(--bg-surface);
+}
+
+.iconButton:hover {
+  background-color: var(--purple-600);
+}
+
+/* The alert count. A bare number would break Rule 4, so the accessible name
+   spells it out and the badge never appears without one. */
+.count {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  min-width: var(--space-16);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  background-color: var(--status-critical);
+  color: var(--bg-surface);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  text-align: center;
+}
+
+.user {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  min-height: var(--space-40);
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-pill);
+  color: var(--bg-surface);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.user:hover {
+  background-color: var(--purple-600);
+}

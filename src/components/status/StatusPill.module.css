@@ -1,0 +1,111 @@
+/**
+ * A recorded status. Rule 3: a recorded value looks SETTLED.
+ *
+ * Solid tint, solid border, closed shape. Everything about it says finished,
+ * because "Not Given — resident refused — C. Nwosu, 08:04" is a complete and
+ * correct clinical record, not a gap. The contrast with the dashed, hatched,
+ * open-looking unrecorded treatment has to be readable peripherally, without
+ * reading the words.
+ *
+ * Text always uses --status-X-ink, never --status-X. The fill tokens are for
+ * dots, bars, borders and icons; on text they fail contrast, and that is a
+ * review blocker. PRD §4.4, §7.
+ */
+
+.pill {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-4) var(--space-12);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* The dot is a second, non-textual carrier of the same meaning, so the pill
+   survives greyscale and colour-blindness alongside its label. */
+.dot {
+  flex-shrink: 0;
+  width: var(--space-8);
+  height: var(--space-8);
+  border-radius: var(--radius-pill);
+}
+
+.detail {
+  font-weight: var(--weight-regular);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.positive {
+  border-color: var(--status-positive);
+  background-color: var(--status-positive-tint);
+  color: var(--status-positive-ink);
+}
+
+.positive .dot {
+  background-color: var(--status-positive);
+}
+
+.caution {
+  border-color: var(--status-caution);
+  background-color: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+.caution .dot {
+  background-color: var(--status-caution);
+}
+
+.critical {
+  border-color: var(--status-critical);
+  background-color: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+.critical .dot {
+  background-color: var(--status-critical);
+}
+
+.info {
+  border-color: var(--status-info);
+  background-color: var(--status-info-tint);
+  color: var(--status-info-ink);
+}
+
+.info .dot {
+  background-color: var(--status-info);
+}
+
+/* Brand tone. DNAR uses it because a DNAR in place is neither good news nor
+   bad news — it is a recorded clinical decision, and colouring it red or
+   green would editorialise. PRD §6.2. */
+.brand {
+  border-color: var(--purple-600);
+  background-color: var(--purple-50);
+  color: var(--purple-900);
+}
+
+.brand .dot {
+  background-color: var(--purple-600);
+}
+
+/* Block form, for a cell in the MAR grid rather than an inline badge. */
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--space-40);
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  text-transform: none;
+  letter-spacing: normal;
+}

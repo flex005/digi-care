@@ -1,0 +1,29 @@
+.list {
+  display: flex;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.trigger {
+  padding: var(--space-12) var(--space-16);
+  border-bottom: 2px solid transparent;
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.trigger:hover {
+  color: var(--purple-900);
+}
+
+/* The active tab carries a colour AND a rule, so it is not colour alone. */
+.trigger[data-state='active'] {
+  border-bottom-color: var(--purple-600);
+  color: var(--purple-900);
+}
+
+.content {
+  padding-top: var(--space-20);
+}
