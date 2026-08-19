@@ -50,14 +50,5 @@
   font-weight: var(--weight-regular);
 }
 
-/* The second signature on a controlled drug, or its conspicuous absence. */
-.witness {
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-  font-weight: var(--weight-medium);
-}
-
-.witnessMissing {
-  color: var(--status-critical-ink);
-  font-weight: var(--weight-semibold);
-}
+/* A missing second signature is not styled here. It is a hole in the record,
+   so it goes through <Unrecorded> like every other hole — see MarCell.tsx. */

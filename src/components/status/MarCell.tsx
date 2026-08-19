@@ -109,15 +109,26 @@ function CellBody({ state }: { state: MarCellState }) {
 
     case 'given': {
       const witness = witnessText(state.witness)
+      // Two facts, two treatments. The administration IS recorded, so it keeps
+      // the settled green pill. A required second signature that was never
+      // captured is a hole in that record, so it gets the hatch — inside the
+      // same cell. Rendering the whole thing green with the omission as small
+      // print would make an incomplete controlled-drug record read as fine,
+      // which is the exact failure Rule 3 exists to prevent.
       return (
-        <StatusPill
-          block
-          tone="positive"
-          label="Given"
-          detail={`${formatTime(state.givenAt)} · ${state.givenBy.displayName}${
-            witness.text ? ` · ${witness.text}` : ''
-          }`}
-        />
+        <>
+          <StatusPill
+            block
+            tone="positive"
+            label="Given"
+            detail={`${formatTime(state.givenAt)} · ${state.givenBy.displayName}${
+              witness.missing || !witness.text ? '' : ` · ${witness.text}`
+            }`}
+          />
+          {witness.missing ? (
+            <Unrecorded label="Second signature not recorded" />
+          ) : null}
+        </>
       )
     }
 
