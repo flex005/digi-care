@@ -14,6 +14,7 @@ Rules that hold in every session. Read `FRONTEND_PRD.md` for the full spec; this
 
 - **No clinical or compliance status is optional.** Every one is a closed discriminated union with an explicit unrecorded member. No `status?:`, no `| null`, no `| undefined`, no default parameter standing in for a missing record. The compiler must reject a screen that forgot the unrecorded case.
 - **Unrecorded gets the hatched treatment** (`--status-unrecorded`, dashed border, diagonal hatch) plus visible text saying what is missing. Never empty space. Never a solid neutral fill. Never a RAG colour.
+- **A compound state renders as separate facts.** Given-but-no-second-signature is a green "Given" pill *and* a hatched "Second signature not recorded" — two facts, two treatments. Never merged into one pill with the gap in small print.
 - **A recorded negative is not an unrecorded value.** "Not Given — resident refused — signed 08:04" is a complete record and looks settled. An omission looks unfinished. Never the same treatment.
 - **Every aggregate carries its denominator.** No bare counts, no bare percentages, anywhere. Use the `Aggregate` type. Where coverage is too thin to support a claim, render **Insufficient Evidence** — which is not a milder Red, it is the absence of a finding.
 - **Absence from a list is the same bug as a blank cell.** All ten risk assessment templates are listed even if none is completed. All eight consent types. All care plan domains.
@@ -58,6 +59,7 @@ If you find yourself writing a fallback like `?? 'Low risk'`, `|| 'None'`, `?? 0
 
 - British English in code and UI copy. `Organisation`, `Authorised`, `Finalise`.
 - Dates `DD/MM/YYYY`, times 24-hour. Relative time only alongside an absolute timestamp, never instead of it.
+- **Clinical timestamps render in the site's timezone, never the viewer's.** Show the zone label where ambiguous. Relative time is the exception — it is about now, not the record.
 - Every clinical record shows its author and timestamp. Always visible, never hover-only.
 - Care notes are immutable after submission. There is no edit control. Corrections create a new linked note.
 - No `any`. No `@ts-expect-error` without a comment naming what removes it.

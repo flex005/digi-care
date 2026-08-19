@@ -59,6 +59,9 @@ Not empty space, not neutral grey, not the same as a recorded negative. In this 
 **Rule 3 — A recorded negative looks settled; an unrecorded value looks unfinished.**
 "Not Given — resident refused — C. Nwosu, 08:04" is a finished record and should read as finished. An omission should read as an open loop. Users must be able to tell these apart peripherally, without reading.
 
+**Rule 3a — A compound state renders as separate facts, not a merged one.**
+Where a record is partly complete, each part keeps its own treatment. A dose that was given but whose required second signature was never recorded shows a solid green "Given" pill *and* a hatched "Second signature not recorded" beneath it — two facts, two treatments. Never one pill with the gap in small print, and never a single treatment averaging the two.
+
 **Rule 4 — Every aggregate carries its denominator.**
 No bare counts, no bare percentages, anywhere in the product. Not "3 incidents" but "3 incidents across 32 residents". Not "92% compliance" but "92% — 46 of 50 expected notes; 12 residents have no expected frequency set". Where coverage is too thin to support a judgement, the aggregate shows **Insufficient Evidence** rather than a figure.
 
@@ -162,6 +165,7 @@ The scale in §4.3 is the complete set. Nine steps, five weights. A component ma
 
 - **British English throughout**, in code and in UI copy. `Organisation`, `Authorised`, `Finalise`.
 - **Dates `DD/MM/YYYY`, times 24-hour.** Never `MM/DD`, never am/pm. Relative time ("2 hours ago") is allowed alongside, never instead of, an absolute timestamp on any clinical record.
+- **Clinical timestamps render in the site's timezone, never the viewer's.** A dose given at 08:04 at Rosewood Court reads 08:04 to every viewer, anywhere, forever — that is what the care worker signed and what the paper record says. Rendering viewer-local would make the screen contradict the record, which is the core risk in another costume. Show the zone label wherever ambiguity is possible. Relative time is the one exception: it is about now, not about the record, so it is computed against real elapsed time.
 - **Every clinical record displays its author and its timestamp.** No exceptions, no hover-to-reveal.
 - **No `any`.** No `@ts-expect-error` without a comment naming what will remove it.
 - **No `localStorage` or `sessionStorage`** for record data. In-memory only; fixtures reset on reload, which is correct and intended.
@@ -247,7 +251,7 @@ Measured contrast: every ink value holds ≥4.88:1 on its own tint and ≥5.4:1 
 `--status-unrecorded` is the only state in the system carried by **pattern, not hue**:
 
 ```
-border: 1.5px dashed var(--border-unrecorded);   /* #A8A1BC */
+border: 1.5px dashed var(--border-unrecorded);   /* = var(--status-unrecorded), #8E86A8 */
 background: repeating-linear-gradient(
   45deg,
   var(--status-unrecorded-tint) 0 6px,
@@ -285,7 +289,7 @@ Layout: 12-column fluid grid, 24px gutters, max content width 1440px, app shell 
 diGi-Care gets **its own navigation**, carrying the diGiLog visual language (deep purple bar, white cards on pale lavender, pill controls, generous radii) but not its information architecture.
 
 - **Top bar** `--purple-900`: diGi-Care wordmark, site name (always visible), site switcher (multi-site users only), global search, alerts bell with count, user menu.
-- **Left sidebar**, collapsible: Dashboard · Residents · Care Notes · Medications · Incidents · Risk Assessments · Care Plans · Reviews · Goals · Activities · Consent · Documents · Compliance · Reports · Team · Settings. Items carry a count badge where the source PRD specifies one (overdue reviews, open incidents).
+- **Left sidebar**, collapsible: Dashboard · Residents · Care Notes · Handover · Medications · Incidents · Risk Assessments · Care Plans · Reviews · Goals · Activities · Consent · Documents · Compliance · Reports · Team · Settings. (Dashboard is built in Phase 12 — see §8 — and stays disabled until then; `/` redirects to `/residents` in the meantime.) Items carry a count badge where the source PRD specifies one (overdue reviews, open incidents).
 - Sidebar items for modules not yet built are present but disabled with a "Coming in a later phase" tooltip, so the shell does not change shape as phases land.
 
 ---
@@ -522,7 +526,7 @@ One module per phase. Each phase ends with a stop for review. Within Phase 1, we
 | 9 | **Activities** | Calendar, list, planning drawer, completion | |
 | 10 | **Consent** | Consent tab, capacity gate, withdrawal, dashboard | |
 | 11 | **Documents** | Resident and organisation libraries, expiry tracking | |
-| 12 | **CQC Compliance** | Five Key Questions, Insufficient Evidence, gap drill-down, inspection pack, statutory notifications | Needs most modules to have data to aggregate |
+| 12 | **CQC Compliance + Dashboard** | Five Key Questions, Insufficient Evidence, gap drill-down, inspection pack, statutory notifications — **and the manager Dashboard at `/`**, which is the same aggregate machinery pointed at daily operations rather than inspection | Needs most modules to have data to aggregate. The Dashboard is built here and not earlier because a dashboard over three modules would be rebuilt twice; until then `/` redirects to `/residents` and the Dashboard nav item stays disabled |
 | 13 | **Reports** | All 15 reports, filters, export | Needs 12 |
 | 14 | **Team Management** | Staff list, permissions, activity log | |
 | 15 | **Multi-site** | Switcher, group overview, site settings | Last because it re-scopes everything before it |
