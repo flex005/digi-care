@@ -1821,3 +1821,38 @@ Frank asked for a "date selector". This is a **period** selector for the
 figures. If he meant a date-range filter on the list itself, that is different
 work and nothing in the PRD scopes a resident roster by date — say so and I
 will build it.
+
+---
+
+## Analytics cards — change moves to the bottom line — 20/08/2026
+
+Frank: take "No change this month" as it is, put it where "residents" is, and
+drop "residents". Done for all five.
+
+### One change to what was asked
+
+Following it literally would have left "16" alone above "−5 this month" — a
+**bare count**, which is what Rule 4 exists to prevent and what Frank set as
+rule 1 for these very cards two turns ago: *"Every tile carries its
+denominator — Aggregate type, no bare counts."*
+
+So the denominator moved **inline with the figure** rather than off the card:
+"16" large, "of 28 residents" small on the same baseline. The bottom line is
+the change, exactly as asked; the standalone "residents" line is gone, exactly
+as asked; and no card states a number nobody can size.
+
+Attached rather than stacked on purpose. "16" and "of 28 residents" are one
+statement, and a layout that can separate them is a layout that can drop one —
+which is how this rule gets broken, not by anybody deciding to break it. A big
+figure on a card looks finished without a denominator, which makes this the
+easiest place on the screen to reach for a bare number.
+
+**The census card is the exception**, and only because its figure *is* the
+population — "28 residents" has nothing to be out of. Its scope is the section
+heading, which names the site. So it reads "28" then "No change this month",
+which is what Frank described.
+
+Insufficient Evidence has no movement to report, so its bottom line carries the
+coverage instead — the figure it could not compute, and out of what.
+
+263 tests.
