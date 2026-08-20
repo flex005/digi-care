@@ -824,3 +824,80 @@ state, and should equally guarantee every success state.
 showing "No secondary diagnoses" and "No consultants or specialists involved"
 as settled green claims with their authors, beside a hatched "Medical history
 not recorded".
+
+---
+
+## Phase 1, Screen 4 — Needs tab
+
+Completed 20/08/2026. `/residents/:residentId/needs`.
+
+Read-only, generated from the care plan. PRD §6.2 and source PRD §16.2: "Each
+need summary is a read-only view generated from the care plan."
+
+### ⚠️ Found — §16.2's five need groups cover only nine of the ten domains
+
+The five groups in §16.2 — physical care, cognitive and mental health, social
+and emotional, communication, clinical — map between them to **nine** care plan
+domains. **`end_of_life` belongs to none of them**, because §16.2 handles end of
+life under Future Plans instead.
+
+Rendering only the five would have dropped a care plan domain off this screen
+entirely. **Absence from a list is the same bug as a blank cell**: a reader
+scanning the Needs tab would have seen nine domains and had no way to know a
+tenth existed, and nothing on screen would have said so.
+
+Fixed by computing the leftovers rather than hardcoding the groups. Any domain
+no group claims lands in a final "Other care plan domains" section, which
+explains itself and points at Future Plans. If `NEED_GROUPS` and
+`CARE_PLAN_DOMAINS` ever drift apart again the domain surfaces there instead of
+vanishing, and a test asserts every domain appears **exactly once** across all
+sections — so neither a disappearance nor a duplicate can pass.
+
+This is the third time a list has been the failure surface rather than a field:
+absence from the risk column, absence from the array types, and now absence
+from a section grouping. Worth watching for on every remaining screen.
+
+### The tab
+
+All ten domains listed for every resident, whether or not anybody has written
+them. Each row carries its domain status, its support level, and the care plan
+text in the resident's own voice (source PRD §3.3 — "I like to…" rather than
+clinical language, so it is quoted as theirs).
+
+A domain with no content gets the hatch twice over, because two different
+things are missing: `NOT STARTED` for the domain and `SUPPORT LEVEL NOT
+ASSESSED` for the level. "Independent" and "nobody has assessed them" are
+opposite claims about somebody's safety, and reading the second as the first is
+how a person gets left to manage the stairs alone.
+
+The "write this domain" affordance is present and disabled — the care plan
+editor is Phase 6, and a live link would be a dead control.
+
+### Stale — applicable here, unlike General Information
+
+General Information has no review dates, so Stale was recorded as not
+applicable to it. **Care plan domains do carry review dates**, so this tab has a
+real Stale state and it is tested: Grace Adeyemi's mobility domain reads
+`REVIEW DUE · due 20/06/2026 · 61 days overdue · finalised 20/06/2025` — PRD
+§5.3 gap 7, finalised fourteen months ago and never reviewed.
+
+Empty does not exist separately here either: every resident has all ten domains
+listed, so the emptiest state is Sowande's, where all ten are `not_started`.
+That is Partial, and it is tested.
+
+### Small fixture fix
+
+A care plan summary in the pool read "I miss my wife", assigned at random and
+landing on female residents. Changed to "my late partner". Fixture texture, not
+a product defect, but a jarring detail in review is a distraction from real
+ones.
+
+### Verification
+
+`npm run verify` green — **181 tests across 11 files**, including one that
+renders the Needs tab for **all 32 residents** and asserts every one of the ten
+domains is present and non-empty. Screenshots read back for Grace Adeyemi
+(Stale, and the leftover section) and Ismail Sowande (all ten hatched).
+
+Still to check by eye at review: keyboard pass over the tab strip and the
+disabled domain links, and 200% zoom on the four-column domain rows.

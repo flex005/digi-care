@@ -504,7 +504,7 @@ const DOMAIN_SUMMARIES: Record<string, string[]> = {
   ],
   social_emotional: [
     'I like company but not crowds. I enjoy the gardening group.',
-    'I miss my wife. I like to talk about her and I do not want that avoided.',
+    'I miss my late partner. I like to talk about them and I do not want that avoided.',
   ],
   end_of_life: [
     'I want to stay here. I do not want to go back into hospital.',

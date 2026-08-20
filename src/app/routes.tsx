@@ -4,6 +4,7 @@ import { StatesRoute } from '@/dev/StatesRoute'
 import { ResidentsRoute } from '@/features/residents/ResidentsRoute'
 import { ResidentProfileRoute } from '@/features/residents/ResidentProfileRoute'
 import { GeneralInformationTab } from '@/features/residents/GeneralInformationTab'
+import { NeedsTab } from '@/features/residents/NeedsTab'
 import { NotFound } from './NotFound'
 
 /**
@@ -33,7 +34,10 @@ export const router = createBrowserRouter([
         // tab rather than being rebuilt by each one. §2.4.
         path: 'residents/:residentId',
         element: <ResidentProfileRoute />,
-        children: [{ index: true, element: <GeneralInformationTab /> }],
+        children: [
+          { index: true, element: <GeneralInformationTab /> },
+          { path: 'needs', element: <NeedsTab /> },
+        ],
       },
       {
         // Not deleted after Phase 0. This is how the Evidence Invariant is

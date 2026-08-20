@@ -392,3 +392,79 @@
   border-bottom-color: var(--purple-600);
   color: var(--purple-900);
 }
+
+/* ---- Needs tab ---- */
+
+.tabIntro {
+  max-width: 80ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.domainList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.domainRow {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(200px, auto) minmax(260px, 2fr) auto;
+  gap: var(--space-16);
+  align-items: start;
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.domainRow:last-child {
+  border-bottom: none;
+}
+
+.domainName {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.domainBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.domainSummary {
+  min-width: 0;
+}
+
+/* The care plan is written in the resident's own voice — source PRD §3.3,
+   "I like to..." rather than clinical language. Quoted so it reads as theirs. */
+.domainQuote {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-style: italic;
+}
+
+.domainAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.domainLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--space-32);
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--ink-400);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  cursor: not-allowed;
+}

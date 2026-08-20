@@ -31,7 +31,7 @@ import styles from './profile.module.css'
  */
 const TABS = [
   { label: 'General Information', path: '.', end: true, screen: 3, built: true },
-  { label: 'Needs', path: 'needs', end: false, screen: 4, built: false },
+  { label: 'Needs', path: 'needs', end: false, screen: 4, built: true },
   { label: 'Important People', path: 'people', end: false, screen: 5, built: false },
   { label: 'Future Plans', path: 'future-plans', end: false, screen: 6, built: false },
 ]
