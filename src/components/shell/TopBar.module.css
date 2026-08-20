@@ -133,7 +133,10 @@
   /* Tighter on the left, where the avatar sits. */
   padding: var(--space-4) var(--space-12) var(--space-4) var(--space-4);
   border-radius: var(--radius-pill);
-  background-color: var(--purple-50);
+
+  /* The search field's fill, so the two controls either side of the bar read
+     as the same kind of surface. */
+  background-color: var(--bg-page);
   color: var(--ink-900);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);

@@ -137,7 +137,12 @@ export function TopBar({
                 the name sits beside it, and Avatar's own "no photograph on
                 file" label is a resident-record concern, not a chrome one. */}
             <span aria-hidden="true">
-              <Avatar photo={{ kind: 'not_on_file' }} name={userName} size="small" />
+              <Avatar
+                photo={{ kind: 'not_on_file' }}
+                name={userName}
+                size="small"
+                tone="brand"
+              />
             </span>
             {userName}
           </DropdownMenuTrigger>

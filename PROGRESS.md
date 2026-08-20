@@ -2143,3 +2143,32 @@ reaches it by what is written on it (WCAG 2.5.3).
 as a name nothing renders. 33 icons in the registry, down from 34.
 
 263 tests.
+
+---
+
+## Account pill — search-field fill, brand avatar — 21/08/2026
+
+The pill takes `--bg-page`, the search field's fill, so the two controls either
+end of the bar's right-hand cluster read as the same kind of surface. Hover and
+the open menu still deepen to `--purple-200`, which is clearly distinct from
+`--bg-page` where `--purple-50` would not have been — the two are within 0.03
+of each other against white.
+
+The avatar goes solid `--purple-600` with white initials, 6.97:1.
+
+### Why that is a prop and not a restyle
+
+`Avatar` draws all 28 rows of the residents list. Recolouring it where it lives
+would have turned every resident's monogram purple to change one control in the
+chrome, so it gained a `tone`:
+
+- `neutral` — the record surface. A resident in a list, a profile header.
+- `brand` — chrome. The account pill, which is **the one avatar on screen that
+  is not a resident**, and the last thing that should be mistakable for one on
+  a product whose second-worst failure is writing against the wrong person.
+
+The border goes transparent in the brand tone rather than away, so the box is
+exactly the size it is in the neutral tone and the two cannot drift apart.
+
+263 tests, and the resident avatars are untouched — `tone` defaults to
+`neutral`, so nothing that did not ask for the change got it.

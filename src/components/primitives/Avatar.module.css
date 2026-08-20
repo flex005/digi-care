@@ -13,6 +13,19 @@
   text-transform: uppercase;
 }
 
+/**
+ * Brand tone — the account pill, and nothing that represents a resident.
+ *
+ * Solid primary with white initials: 6.97:1, past AA for text. The border goes
+ * transparent rather than away, so the box is exactly the size it is in the
+ * neutral tone and the two cannot drift apart.
+ */
+.brand {
+  border-color: transparent;
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+}
+
 .image {
   width: 100%;
   height: 100%;

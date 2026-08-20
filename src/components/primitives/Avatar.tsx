@@ -18,11 +18,19 @@ import styles from './Avatar.module.css'
 
 export type AvatarSize = 'small' | 'medium' | 'large'
 
+/**
+ * `neutral` is the record surface — a resident in a list or a profile header.
+ * `brand` is chrome: the account pill in the top bar, which is the one avatar
+ * on screen that is not a resident and should not be mistaken for one.
+ */
+export type AvatarTone = 'neutral' | 'brand'
+
 export interface AvatarProps {
   photo: PhotoStatus
   /** Full name — used for the initials and for the accessible name. */
   name: string
   size?: AvatarSize
+  tone?: AvatarTone
 }
 
 const SIZE_CLASS: Record<AvatarSize, string> = {
@@ -38,8 +46,19 @@ function initialsOf(name: string): string {
   return `${first}${last}`
 }
 
-export function Avatar({ photo, name, size = 'medium' }: AvatarProps) {
-  const className = [styles.avatar, SIZE_CLASS[size]].join(' ')
+export function Avatar({
+  photo,
+  name,
+  size = 'medium',
+  tone = 'neutral',
+}: AvatarProps) {
+  const className = [
+    styles.avatar,
+    SIZE_CLASS[size],
+    tone === 'brand' ? styles.brand : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   switch (photo.kind) {
     case 'not_on_file':
