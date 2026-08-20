@@ -198,6 +198,10 @@ export const shellIcons = {
   user: 'users/user-circle',
   siteSwitcher: 'arrows-round/arrow-down-02-round',
   collapseSidebar: 'dashboard/sidebar-left',
+  /** The app switcher grid. The set has no 3x3; this is its 2x2 dot grid,
+   *  and it is not dashboard/dashboard-square-01, which the Dashboard nav
+   *  item already wears. */
+  appSwitcher: 'more-menu/menu-circle',
 } satisfies Record<string, IconName>
 
 /**

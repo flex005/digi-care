@@ -1,0 +1,40 @@
+/* One definition of the round top-bar icon button, shared with the bell. */
+.trigger {
+  composes: iconButton from './TopBar.module.css';
+}
+
+.app {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  min-width: 260px;
+}
+
+.appText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.appName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.appDescription {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/* Visible, never a tooltip — see AppSwitcher.tsx. */
+.appState {
+  flex-shrink: 0;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  white-space: nowrap;
+}

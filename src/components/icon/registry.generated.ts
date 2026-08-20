@@ -33,6 +33,7 @@ import IconLegal_LegalDocument01 from '@/assets/icons-generated/legal/legal-docu
 import IconMedical_Healtcare from '@/assets/icons-generated/medical/healtcare.svg?react'
 import IconMedical_Medicine01 from '@/assets/icons-generated/medical/medicine-01.svg?react'
 import IconMedical_Stethoscope from '@/assets/icons-generated/medical/stethoscope.svg?react'
+import IconMoreMenu_MenuCircle from '@/assets/icons-generated/more-menu/menu-circle.svg?react'
 import IconNoteTask_Note01 from '@/assets/icons-generated/note-task/note-01.svg?react'
 import IconSearch_Search from '@/assets/icons-generated/search/search.svg?react'
 import IconSettings_Setting02 from '@/assets/icons-generated/settings/setting-02.svg?react'
@@ -42,7 +43,7 @@ import IconUsers_UserMultiple from '@/assets/icons-generated/users/user-multiple
 import IconUsers_UserSwitch from '@/assets/icons-generated/users/user-switch.svg?react'
 
 /**
- * Only the 30 icons actually used in source. Importing all of them
+ * Only the 31 icons actually used in source. Importing all of them
  * would compile every icon in the set into the bundle.
  *
  * Partial because it is keyed by the full IconName union. A missing entry
@@ -75,6 +76,7 @@ export const iconRegistry: Partial<
   'medical/healtcare': IconMedical_Healtcare,
   'medical/medicine-01': IconMedical_Medicine01,
   'medical/stethoscope': IconMedical_Stethoscope,
+  'more-menu/menu-circle': IconMoreMenu_MenuCircle,
   'note-task/note-01': IconNoteTask_Note01,
   'search/search': IconSearch_Search,
   'settings/setting-02': IconSettings_Setting02,

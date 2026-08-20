@@ -8,8 +8,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  Tooltip,
 } from '@/components/primitives'
 import { shellIcons } from '@/app/nav-items.icons'
+import { AppSwitcher } from './AppSwitcher'
 import styles from './TopBar.module.css'
 
 /**
@@ -88,18 +90,22 @@ export function TopBar({
         />
       </div>
 
-      <button
-        type="button"
-        className={styles.iconButton}
-        aria-label={`Alerts — ${alertCount} unread`}
-      >
-        <Icon name={shellIcons.alerts} size={20} />
-        {alertCount > 0 ? (
-          <span className={styles.count} aria-hidden="true">
-            {alertCount}
-          </span>
-        ) : null}
-      </button>
+      <Tooltip content={`Alerts — ${alertCount} unread`}>
+        <button
+          type="button"
+          className={styles.iconButton}
+          aria-label={`Alerts — ${alertCount} unread`}
+        >
+          <Icon name={shellIcons.alerts} size={20} />
+          {alertCount > 0 ? (
+            <span className={styles.count} aria-hidden="true">
+              {alertCount}
+            </span>
+          ) : null}
+        </button>
+      </Tooltip>
+
+      <AppSwitcher />
 
       <DropdownMenu>
         <DropdownMenuTrigger className={styles.user}>

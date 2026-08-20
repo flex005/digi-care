@@ -1377,3 +1377,87 @@ back: bar and rail unmoved, content passing under the gutter. Worth repeating
 whenever the shell's scroll container changes.
 
 `npm run verify` green, 212 tests.
+
+---
+
+## App switcher — 20/08/2026
+
+Frank asked for a More Menu icon beside the notification icon, then clarified:
+*"it's suppose to be a button that leads to other digi app, like digilog, etc,
+just like google has"* — an app launcher, not a kebab overflow menu.
+
+### The icon
+
+**The set has no 3×3 dot grid.** Rendered every plausible candidate to a sheet
+and read it back rather than guessing from filenames: `MORE MENU` holds
+`menu-01`–`menu-11` (all hamburgers), `more-horizontal`/`more-vertical`
+(ellipses), and two 2×2 grids — `menu-circle` (dots) and `menu-square`.
+
+Chose `more-menu/menu-circle`: a 2×2 dot grid, the closest thing the set has to
+Google's 3×3, in the semantically right category. Deliberately **not**
+`dashboard/dashboard-square-01`, which the Dashboard nav item already wears —
+two different things in the same chrome wearing one glyph is its own confusion.
+
+This is a density difference, not a substitution of one concept for another, so
+it does not trip CLAUDE.md §3's stop-and-ask. Flagged to Frank anyway, since he
+named Google's specifically.
+
+*(Noticed while looking: the vendor's `DASHBOARD` folder also contains clothing
+icons — `baby-boy-dress`, `belt`, `cardigan`. Vendor packaging, harmless, but
+it means category names are not a reliable guide to contents. Look before
+choosing.)*
+
+### What is in it, and what is not
+
+**Only apps the documents name.** Two qualify, and both are cited in
+`digi-apps.ts` beside the entry:
+
+- **diGiLog** — PRD §4.3 and §4.7, the design language this product inherits;
+  §4.3 cites its dashboard and the Alerts card the status pills were sampled
+  from. Described as "Dashboard and alerts".
+- **diGi-Time** — PRD §6.3, "shift (auto from diGi-Time fixture)". Described as
+  "Shifts".
+
+A launcher is exactly the surface that invites invention — diGi-Pay,
+diGi-Recruit — and each made-up name would be a fictional product sitting in
+real chrome, indistinguishable from a real one to anybody reviewing this. Same
+reason every description is grounded in the sentence cited above it rather than
+written to sound plausible.
+
+### Nothing navigates, and it says so
+
+This build is frontend-only with no backend and no shared session, so there is
+**nowhere to send anyone**. Every item is disabled and states its own reason in
+visible text inside the item — "Current app" or "Not in this prototype" —
+rather than in a tooltip. Radix skips disabled items in focus order, so a
+tooltip on one would be a reason a keyboard user cannot reach, and a reason
+nobody can reach is not a reason.
+
+This follows PRD §6.4's rule for the stubbed MAR export: present, honest,
+**never a silent no-op**. A link that 404s or quietly does nothing would be
+worse than the disabled state. `DigiApp` gains a `url` the day there is one.
+
+### One thing fixed in passing
+
+**The alerts bell has been icon-only with an `aria-label` and no tooltip since
+Phase 0**, which PRD §7 does not allow — it requires a visible adjacent label,
+or a name *plus* a tooltip. It now has one. Fixed because the new control sits
+directly beside it and would otherwise have been correct next to something that
+was not.
+
+### Also
+
+The menu heading is "Apps", not "diGi apps": `.menuLabel` uppercases, and
+"DIGI APPS" mangles a brand whose casing is the point. The trigger's accessible
+name and tooltip keep the full "diGi apps".
+
+Tests hold the two things that stop a launcher drifting into fiction: the
+rendered list is exactly the declared list, and every app with nowhere to go
+says so in reachable text. 217 tests green.
+
+### Needs Frank's decision
+
+**PRD §4.7 lists five things in the top bar — wordmark, site name, site
+switcher, search, alerts bell, user menu — and no app switcher.** Third
+outstanding correction to that section, after the wordmark moving to the
+sidebar and the bar turning white.
