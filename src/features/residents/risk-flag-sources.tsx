@@ -91,13 +91,21 @@ export const RISK_FLAG_SOURCES: RiskFlagSource[] = [
       // into the "all assessed" claim rather than filling the column with
       // reassurance nobody acts on.
       if (resident.allergies.kind !== 'allergies') return []
-      return resident.allergies.items.map((allergy) => (
+      // ONE badge listing every allergen, not one badge per allergen. Three
+      // stacked pills said "allergies" three times and made a resident with
+      // three mild sensitivities out-shout a resident with no falls
+      // assessment. Every substance is still named in full — nothing is
+      // summarised to a count and there is no "+2 more"; the reduction is in
+      // chrome, not in evidence. `items` is non-empty by construction.
+      return [
         <StatusPill
-          key={`allergy-${allergy.substance}`}
+          key="allergies"
           tone="critical"
-          label={`Allergy: ${allergy.substance}`}
-        />
-      ))
+          label={`Allergies: ${resident.allergies.items
+            .map((allergy) => allergy.substance)
+            .join(', ')}`}
+        />,
+      ]
     },
   },
   {

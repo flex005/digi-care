@@ -1,5 +1,5 @@
 import type { Resident } from '@/data/types'
-import { StatusPill } from '@/components/status'
+import { Settled } from '@/components/status'
 import { RISK_FLAG_SOURCES } from './risk-flag-sources'
 import styles from './residents.module.css'
 
@@ -36,9 +36,15 @@ export function RiskFlagsCell({ resident }: { resident: Resident }) {
   if (flags.length === 0) {
     // Not a blank. A claim: all four have been looked at, and none of them
     // needs attention today.
+    //
+    // Quiet, not absent. It was a green pill, which made the residents with
+    // nothing wrong the most eye-catching rows in the table — reassurance
+    // shouting over risk. The claim still has to be made, because a blank cell
+    // here would mean either this or "nobody looked"; it just does not need to
+    // be the loudest thing on the row.
     return (
       <div className={styles.flags}>
-        <StatusPill tone="positive" label="All assessed — no flags" />
+        <Settled label="All assessed — no flags" />
       </div>
     )
   }

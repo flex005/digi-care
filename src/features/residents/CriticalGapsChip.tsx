@@ -1,6 +1,6 @@
 import type { Resident } from '@/data/types'
 import { recordCompleteness } from '@/data/completeness'
-import { StatusPill, Unrecorded } from '@/components/status'
+import { Settled, Unrecorded } from '@/components/status'
 import styles from './residents.module.css'
 
 /**
@@ -22,16 +22,15 @@ import styles from './residents.module.css'
 export function CriticalGapsChip({ resident }: { resident: Resident }) {
   const { critical, missing } = recordCompleteness(resident)
   const standardCount = missing.length - critical.length
+  const standardLabel = `${standardCount} non-critical gap${standardCount === 1 ? '' : 's'}`
 
   if (critical.length === 0) {
     return (
       <div className={styles.gaps}>
-        <StatusPill tone="positive" label="Critical records complete" />
-        {standardCount > 0 ? (
-          <span className={styles.standardGaps}>
-            {standardCount} non-critical gap{standardCount === 1 ? '' : 's'}
-          </span>
-        ) : null}
+        <Settled
+          label="Critical records complete"
+          {...(standardCount > 0 ? { detail: standardLabel } : {})}
+        />
       </div>
     )
   }
@@ -41,13 +40,17 @@ export function CriticalGapsChip({ resident }: { resident: Resident }) {
       <Unrecorded
         variant="chip"
         label="Critical records missing"
-        detail={critical.map((gap) => gap.shortLabel).join(' · ')}
+        // The named gaps and the count of the rest on ONE line. They were two
+        // stacked lines, which made a three-line block in every row and broke
+        // the vertical rhythm of the column — and scanning down this column is
+        // what the screen is for. The em dash keeps the two kinds apart: what
+        // is named is critical, what is counted is not.
+        detail={
+          standardCount > 0
+            ? `${critical.map((gap) => gap.shortLabel).join(' · ')} — plus ${standardLabel}`
+            : critical.map((gap) => gap.shortLabel).join(' · ')
+        }
       />
-      {standardCount > 0 ? (
-        <span className={styles.standardGaps}>
-          and {standardCount} non-critical gap{standardCount === 1 ? '' : 's'}
-        </span>
-      ) : null}
     </div>
   )
 }

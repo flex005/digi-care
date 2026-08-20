@@ -100,7 +100,7 @@
 /* Rule 3 head-to-head: the recorded thing beside its unrecorded counterpart. */
 .compare {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-16);
 }
 

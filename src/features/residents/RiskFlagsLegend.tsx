@@ -23,30 +23,41 @@ import styles from './residents.module.css'
 export function RiskFlagsLegend() {
   return (
     <div className={styles.legend} aria-label="Risk flags legend" role="note">
+      {/* Two tight lines, not a paragraph block. The convention has to be
+          stated where it applies and it has to stay stated — but a legend
+          taller than the rows it governs is its own density problem, and a
+          reader who has to get past a paragraph to reach the table reads
+          neither. Compressed in layout only: still in the flow, still
+          selectable, still reachable by keyboard and screen reader. */}
       <p className={styles.legendIntro}>
-        <strong>Risk flags</strong> covers{' '}
-        {RISK_FLAG_SOURCES.map((source) => source.name.toLowerCase()).join(', ')}. EOLC
-        and isolation are on each resident’s profile, where every state is shown.
+        <strong>Risk flags:</strong>{' '}
+        {RISK_FLAG_SOURCES.map((source) => source.name.toLowerCase()).join(', ')}.
       </p>
-      <ul className={styles.legendItems}>
-        <li className={styles.legendItem}>
-          <Unrecorded label="Not assessed" />
-          <span className={styles.legendText}>
-            Nobody has looked. This is a gap, not a reassurance.
-          </span>
-        </li>
-        <li className={styles.legendItem}>
-          <StatusPill tone="critical" label="Falls — HIGH" />
-          <span className={styles.legendText}>Recorded, and it needs attention.</span>
-        </li>
-        <li className={styles.legendItem}>
-          <span className={styles.legendNothing} aria-hidden="true" />
-          <span className={styles.legendText}>
-            <strong>Not shown</strong> means recorded and unremarkable — never “nobody
-            looked”, because every gap above is drawn.
-          </span>
-        </li>
-      </ul>
+      <div className={styles.legendRow}>
+        <ul className={styles.legendItems}>
+          <li className={styles.legendItem}>
+            <Unrecorded label="Not assessed" />
+            <span className={styles.legendText}>nobody has looked — a gap</span>
+          </li>
+          <li className={styles.legendItem}>
+            <StatusPill tone="critical" label="Falls — HIGH" />
+            <span className={styles.legendText}>recorded, needs attention</span>
+          </li>
+          <li className={styles.legendItem}>
+            <span className={styles.legendNothing} aria-hidden="true" />
+            <span className={styles.legendText}>
+              <strong>not shown</strong> — recorded and unremarkable, never “nobody
+              looked”
+            </span>
+          </li>
+        </ul>
+        {/* Never dropped, only moved onto the same line: it scopes the rule.
+            "Not shown" means unremarkable for these four, not for everything
+            about a resident, and without this the convention overclaims. */}
+        <p className={styles.legendScope}>
+          EOLC and isolation are on each resident’s profile, where every state is shown.
+        </p>
+      </div>
     </div>
   )
 }

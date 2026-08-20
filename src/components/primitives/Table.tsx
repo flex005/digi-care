@@ -24,6 +24,14 @@ export interface TableColumn<TSortKey extends string> {
   sortKey?: TSortKey
   /** Numeric columns get tabular numerals via base.css. */
   numeric?: boolean
+  /**
+   * Column width, as a CSS length. Declared here rather than as a min-width on
+   * whatever happens to be inside the cell, so the column edges are identical
+   * on every row and the eye can run straight down one. Scanning a column is
+   * the primary motion on a list of 32 residents; it does not work if each
+   * row negotiates its own widths.
+   */
+  width?: string
 }
 
 export interface TableProps<TSortKey extends string> {
@@ -52,6 +60,18 @@ export function Table<TSortKey extends string>({
     <div className={styles.scroll}>
       <table className={styles.table}>
         <caption className={styles.caption}>{caption}</caption>
+        {/* Driven off the same `columns` array as the headers, so the widths
+            cannot drift out of step with what they are sizing. */}
+        <colgroup>
+          {columns.map((column) => (
+            <col
+              key={column.label}
+              {...(column.width === undefined
+                ? {}
+                : { style: { width: column.width } })}
+            />
+          ))}
+        </colgroup>
         <thead>
           <tr>
             {columns.map((column) => {

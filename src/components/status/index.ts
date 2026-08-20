@@ -4,6 +4,9 @@ export type { UnrecordedProps, UnrecordedVariant } from './Unrecorded'
 export { StatusPill } from './StatusPill'
 export type { StatusPillProps, StatusTone } from './StatusPill'
 
+export { Settled } from './Settled'
+export type { SettledProps } from './Settled'
+
 export { RecordedValue } from './RecordedValue'
 export { RiskBadge } from './RiskBadge'
 export { ResuscitationBadge } from './ResuscitationBadge'

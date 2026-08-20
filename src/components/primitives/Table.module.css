@@ -11,15 +11,18 @@
   overflow-x: auto;
 }
 
+/* Fixed layout so the declared column widths are honoured exactly rather than
+   treated as hints the browser may renegotiate per row. */
 .table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
 }
 
 .headerCell {
-  padding: var(--space-12) var(--space-16);
+  padding: var(--space-8) var(--space-12);
   border-bottom: 1px solid var(--border-strong);
   background-color: var(--bg-surface-sunken);
   color: var(--ink-500);
@@ -72,14 +75,17 @@
   background-color: var(--purple-50);
 }
 
+/* Tighter vertical padding, and top-aligned so the first line of every cell
+   sits on one horizontal — the row rhythm comes from the content lining up,
+   not from generous space around it. */
 .cell {
-  padding: var(--space-12) var(--space-16);
+  padding: var(--space-8) var(--space-12);
   color: var(--ink-700);
   vertical-align: top;
 }
 
 .caption {
-  padding: var(--space-12) var(--space-16);
+  padding: var(--space-8) var(--space-12);
   color: var(--ink-500);
   font-size: var(--text-caption-size);
   line-height: var(--text-caption-line);

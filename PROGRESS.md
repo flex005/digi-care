@@ -1095,3 +1095,110 @@ tooltip and phase tag as well as colour — never colour alone.
    Button and input already uses it. Both border tokens are marked ✅ verified
    in `tokens.css`, so changing one is a token decision (CLAUDE.md §8), not
    something to fix quietly in one stylesheet. Flagged, not touched.
+
+---
+
+## Residents list — visual density pass — 20/08/2026
+
+Frank's note: the screen shouted reassurance as loudly as risk. The loudest
+thing in the table was a green *completed review* — the least actionable fact
+on it — while "FALLS — NOT ASSESSED" was a quiet grey outline. Hierarchy
+inverted, on the one screen whose job is finding neglect.
+
+His corollary is the one that made this tractable, and it is now a rule:
+
+> Not shown means recorded and unremarkable.
+> **Shown but unremarkable should be quiet.**
+
+### The missing third weight
+
+The system had two: `StatusPill` (recorded) and `Unrecorded` (a hole). So
+"recorded and fine" had to borrow the treatment built for "recorded and
+urgent". That is the whole defect — not a styling slip, a gap in the
+vocabulary.
+
+Added `<Settled>`: plain secondary text, no fill, no border, no radius. It
+renders the same complete record a pill would, author and timestamp included,
+always visible and never hover-only (PRD §3.6). It is simply not shouted.
+
+**It is not for gaps, and the doc comment says so in as many words.** Reaching
+for it to calm down an inconvenient omission would be the exact bug this
+product exists to prevent, and it is the obvious way this component gets
+misused later.
+
+`/dev/states` gained a **Three weights, in order of demand** panel. A new
+weight nobody can see side by side with the other two is a weight that drifts;
+the panel also asks the question Rule 3's panel cannot — do they rank in the
+right *order*, and does the order survive greyscale.
+
+### The seven changes
+
+1. **Completed and in-date reviews are plain text.** `ReviewBadge` gained
+   `emphasis`. `compact` (the list) drops settled states to `<Settled>`;
+   `comfortable` (the profile, where there is one badge not 28) is unchanged.
+   Pills stay for `due` and `overdue`; `never_scheduled` stays hatched in both.
+   One component, one exhaustive switch — a second renderer would let a union
+   member get dropped.
+2. **One allergy badge listing every allergen.** Three stacked pills said
+   "allergies" three times and let three mild sensitivities out-shout a missing
+   falls assessment. Every substance is still named; there is no "+2 more".
+3. **The dots are gone.** Their stated justification — "a second, non-textual
+   carrier so the pill survives greyscale" — was **never true**. In greyscale a
+   red dot and an amber dot are the same grey, exactly as their fills are. The
+   dot carried hue and only hue. What actually survives greyscale is the label,
+   and for the distinction that matters, solid border against dashed hatch.
+4. **Lighter badges**: 1px border, `--radius-sm`, tighter padding. They read as
+   buttons and none of them are pressable. **Text was already at
+   `--text-micro`, the smallest step in the scale — it did not go lower.** A
+   tenth step is a conversation (CLAUDE.md §4), not something to slip in
+   during a density pass.
+5. **The non-critical count folded into the chip**, one line, em dash between
+   the named criticals and the counted rest: what is named is critical, what is
+   counted is not.
+6. **Row rhythm**: `<colgroup>` widths declared off the same array as the
+   headers, `table-layout: fixed`, padding 12/16 → 8/12. Scanning a column only
+   works if the column has the same edges on all 28 rows.
+7. **Legend compressed** to two tight lines from four. Layout only — still in
+   the flow, still selectable, still keyboard- and screen-reader-reachable.
+   Nothing moved behind an interaction.
+
+### Judgement calls Frank did not specify — reversible, and flagged
+
+- **`scheduled` reviews went quiet too.** He named due, overdue and
+  never-scheduled as keeping pills. A review booked for October is exactly as
+  unremarkable as one completed in August, and leaving one blue pill in a
+  column of quiet text would rebuild the same inverted hierarchy at lower
+  volume.
+- **"All assessed — no flags" and "Critical records complete" went quiet.**
+  Both were green pills. Neither is hidden — the claim still has to be made,
+  because a blank cell there means either that or "nobody looked" — but making
+  the residents with nothing wrong the most eye-catching rows was the original
+  complaint in a second place.
+- **Items 3 and 4 were applied to `StatusPill` globally**, not just here. The
+  critique is of the component, not of one screen's use of it; a `density` prop
+  making the same fact two different weights is the local override CLAUDE.md
+  §4 warns about. This changes the already-approved Screens 2, 3 and 4.
+  Screenshot of Emmanuel Okafor's profile read back — the badge strip is
+  tighter and the hatched "falls risk — not assessed" stands out **more**
+  against the lighter pills, not less.
+
+### Greyscale, re-run as instructed
+
+Dropping the dots cost nothing. In greyscale "FALLS — NOT ASSESSED" (dashed,
+hatched) against "DYSPHAGIA — HIGH" (solid border) is unmistakable, and the
+Records chip's hatch is the most conspicuous thing on the row. The distinction
+the product turns on was never carried by the dot.
+
+Contrast re-measured for the new quiet text, including on the hovered row
+background, which is the case easy to forget: label 10.24 / 8.86, detail
+5.36 / 4.64. All clear AA. **Quiet is a matter of weight and chrome, never of
+contrast — a record nobody can read is not a quiet record.**
+
+### One test loosened, deliberately
+
+`residents.test.tsx` asserted the legend's exact wording (`/Not shown/`), which
+broke on a casing change. Rewritten to assert the legend's own text contains
+all three claims, case-insensitively. The guard should be *that the convention
+is still stated*, not that it is worded a particular way — the first survives
+copy edits, the second just gets updated to match whatever the code now says,
+which is not a guard at all.

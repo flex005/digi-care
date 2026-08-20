@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Switch } from '@/components/primitives'
 import { RuleThreeComparison } from './RuleThreeComparison'
+import { EmphasisLadder } from './EmphasisLadder'
 import { StatusStates } from './StatusStates'
 import { Phase1States } from './Phase1States'
 import { FixtureAudit } from './FixtureAudit'
@@ -49,6 +50,7 @@ export function StatesRoute() {
         <div className={styles.page}>
           <FixtureAudit />
           <RuleThreeComparison />
+          <EmphasisLadder />
           <StatusStates />
           <Phase1States />
           <PrimitiveGallery />

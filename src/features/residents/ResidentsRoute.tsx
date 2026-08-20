@@ -46,20 +46,25 @@ function columnsFor(sortKey: SortKey, showSite: boolean): TableColumn<SortKey>[]
     // PRD §6.2 lists both; putting them together keeps every column visible at
     // 1440px, and the Records column is the one this screen exists for — it
     // cannot be the one that falls off the right-hand edge.
-    { label: 'Resident', sortKey: 'name' },
-    { label: 'Room', sortKey: 'room' },
+    // Widths are declared, not inferred. The eye's job here is running down a
+    // column; that only works if the column has the same edges on all 28 rows.
+    // Risk flags and Records are the widest because they carry the evidence
+    // this screen exists to surface — they are not the columns that give way.
+    { label: 'Resident', sortKey: 'name', width: '19%' },
+    { label: 'Room', sortKey: 'room', width: '6%' },
     // Only when the list spans sites. §2.4 requires the active site to be
     // permanently visible, and it is — in the top bar, in the filter, and in
     // the table caption. A column repeating "Rosewood Court" 28 times adds no
     // information and costs the Records column its place on screen.
-    ...(showSite ? [{ label: 'Site' } as TableColumn<SortKey>] : []),
-    { label: 'Risk flags' },
-    { label: 'Review status' },
+    ...(showSite ? [{ label: 'Site', width: '10%' } as TableColumn<SortKey>] : []),
+    { label: 'Risk flags', width: showSite ? '21%' : '24%' },
+    { label: 'Review status', width: '15%' },
     {
       label: sortKey === 'oldestNote' ? 'Last care note — oldest' : 'Last care note',
       sortKey: sortKey === 'oldestNote' ? 'oldestNote' : 'newestNote',
+      width: '16%',
     },
-    { label: 'Records' },
+    { label: 'Records', width: showSite ? '13%' : '20%' },
   ]
 }
 
@@ -267,7 +272,11 @@ export function ResidentsRoute() {
                       <RiskFlagsCell resident={resident} />
                     </TableCell>
                     <TableCell>
-                      <ReviewBadge state={resident.carePlanReview} />
+                      {/* compact: a review that is done and in date, or
+                          booked and not yet due, is plain text here. Only the
+                          ones needing work stay pills, and a review nobody
+                          ever scheduled stays hatched. */}
+                      <ReviewBadge state={resident.carePlanReview} emphasis="compact" />
                     </TableCell>
                     <TableCell>
                       <LastNoteCell note={latestNote} />

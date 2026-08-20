@@ -313,10 +313,23 @@ describe('the legend states the convention on screen', () => {
     renderList()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
 
-    // Present without any interaction at all.
-    expect(screen.getByText(/Not shown/)).toBeVisible()
-    expect(screen.getByText(/recorded and unremarkable/)).toBeVisible()
-    expect(screen.getByText(/Nobody has looked/)).toBeVisible()
+    // Present without any interaction at all. Asserted on the legend's own
+    // text, case-insensitively: the guard is that all three claims are made
+    // on screen, not that the copy is worded a particular way. Wording gets
+    // tightened; the convention must not quietly stop being stated.
+    const legend = screen.getByRole('note', { name: 'Risk flags legend' })
+    expect(legend).toBeVisible()
+    const said = legend.textContent?.toLowerCase() ?? ''
+    expect(said, 'the legend must say what a hatched badge means').toContain(
+      'nobody has looked',
+    )
+    expect(said, 'the legend must say what a coloured badge means').toContain(
+      'needs attention',
+    )
+    expect(said, 'the legend must say what an ABSENT badge means').toContain(
+      'not shown',
+    )
+    expect(said).toContain('recorded and unremarkable')
   })
 
   it('names every source it covers, so "not shown" has a declared scope', async () => {

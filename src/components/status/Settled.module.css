@@ -1,0 +1,28 @@
+/**
+ * Plain secondary text. No fill, no border, no radius — nothing that could be
+ * mistaken for a control, and nothing that competes with a hatched gap two
+ * columns away.
+ *
+ * ink-700 for the fact and ink-500 for its supporting detail: both clear
+ * 4.5:1 on white (10.24 and 5.36). Quiet is a matter of weight and chrome,
+ * never of contrast — a record nobody can read is not a quiet record.
+ */
+
+.settled {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-medium);
+}
+
+.detail {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
