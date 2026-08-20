@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import type { ResidentSummary } from '@/data/access/client'
 import { getResidentSummaries } from '@/data/access/client'
@@ -20,6 +20,7 @@ import { SiteTimeZone } from '@/app/session/SessionProvider'
 import type { TableColumn } from '@/components/primitives'
 import { ResidentsFilterBar } from './ResidentsFilterBar'
 import { AnalyticsTiles } from './AnalyticsTiles'
+import { DEFAULT_PERIOD, type AnalyticsPeriod } from './analytics-tiles'
 import { listName } from './list-name'
 import { RiskFlagsCell } from './RiskFlagsCell'
 import { RiskFlagsLegend } from './RiskFlagsLegend'
@@ -95,12 +96,10 @@ export function ResidentsRoute() {
   const summaries = resource.kind === 'ready' ? resource.data : []
   const {
     filters,
-    setSite,
     setRisk,
     setReview,
     setRecords,
     setNote,
-    applyFilters,
     sortKey,
     sortDirection,
     toggleSort,
@@ -110,12 +109,13 @@ export function ResidentsRoute() {
     visible,
   } = useResidentFilters(simulation === 'empty' ? [] : summaries, activeSite.id)
 
-  const siteLabel =
-    filters.site === 'all'
-      ? 'all sites'
-      : (sites.find((site) => site.id === filters.site)?.name ?? 'this site')
+  // The site comes from the header and nowhere else, so the label is simply
+  // the active site's name. There is no "all sites" reading of this screen any
+  // more, and therefore no Site column: it would repeat one value per row.
+  const siteLabel = activeSite.name
+  const showSite = false
 
-  const showSite = filters.site === 'all'
+  const [period, setPeriod] = useState<AnalyticsPeriod>(DEFAULT_PERIOD)
   const isLoading = simulation === 'loading' || resource.kind === 'loading'
   const isError = simulation === 'error' || resource.kind === 'error'
 
@@ -158,23 +158,18 @@ export function ResidentsRoute() {
       ) : null}
 
       {isLoading || isError ? null : (
-        <AnalyticsTiles
-          atSite={atSite}
-          siteLabel={siteLabel}
-          filters={filters}
-          onApply={applyFilters}
-        />
+        <AnalyticsTiles atSite={atSite} siteLabel={siteLabel} period={period} />
       )}
 
       <Card>
         <ResidentsFilterBar
-          sites={sites}
           filters={filters}
-          onSiteChange={setSite}
           onRiskChange={setRisk}
           onReviewChange={setReview}
           onRecordsChange={setRecords}
           onNoteChange={setNote}
+          period={period}
+          onPeriodChange={setPeriod}
         />
         <RiskFlagsLegend />
 

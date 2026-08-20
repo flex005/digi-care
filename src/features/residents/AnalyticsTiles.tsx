@@ -1,82 +1,67 @@
 import { assertNever } from '@/lib/assert-never'
 import { Icon } from '@/components/icon/Icon'
 import { Unrecorded } from '@/components/status'
-import {
-  ANALYTICS_TILE_SOURCES,
-  CLEARED_FILTERS,
-  buildAnalyticsTiles,
-  isTileActive,
-} from './analytics-tiles'
+import { VisuallyHidden } from '@/components/primitives'
+import { buildAnalyticsTiles, type AnalyticsPeriod } from './analytics-tiles'
 import type { ResidentSummary } from '@/data/access/client'
-import type { ResidentFilters } from './use-resident-filters'
 import { LIST_CLOCK } from './list-clock'
 import styles from './residents.module.css'
 
 /**
- * The analytics row above the residents list.
+ * The figures for the active site.
  *
- * Every tile is a button that narrows the table, and the active one clears on
- * a second click. A tile that only displayed would be decoration repeating the
- * rows underneath it — the click is what earns the space.
+ * **Read-only.** They were buttons that filtered the table; they are not any
+ * more. Filtering now lives entirely in the row beneath, where a reader can
+ * see every narrowing at once instead of inferring it from which card is lit.
  *
- * **Deliberately quieter than the table.** These are a way in, not the
- * headline: light surfaces, one modest figure each, and the row occupies less
- * vertical space than three rows of the thing it points at. Nothing here is
- * green, because none of it is good news to celebrate — a zero is a quiet
- * zero, the same reasoning that took the tick off completed reviews.
+ * Nothing here is green. These exist to find problems, not to congratulate,
+ * so a zero is a quiet zero and a movement is a signed number rather than a
+ * coloured arrow — the sign is the carrier, and it survives greyscale.
  *
- * The figures recompute against the site filter and name the site they counted,
- * so a tile can never be read against the wrong home.
+ * The change figure is **reconstructed, never estimated**: every record that
+ * closes a gap carries the instant it was written, and care notes hold 90 days
+ * of history, so the same question can be asked of a past instant. Where the
+ * present figure cannot be computed the change is omitted rather than shown as
+ * zero — a movement between two unknowns is not a number.
+ *
+ * The site name is not printed on each card. It is in the header above, is now
+ * the only control that scopes this screen, and repeating it five times said
+ * less than it cost. It stays in each card's accessible name, so a reader who
+ * cannot see the header still gets the whole claim.
  */
 
 export interface AnalyticsTilesProps {
-  /** Everyone at the active site, before the other filters. */
+  /** Everyone at the active site. */
   atSite: ResidentSummary[]
   siteLabel: string
-  filters: ResidentFilters
-  onApply: (filters: Omit<ResidentFilters, 'site'>) => void
+  period: AnalyticsPeriod
 }
 
-export function AnalyticsTiles({
-  atSite,
-  siteLabel,
-  filters,
-  onApply,
-}: AnalyticsTilesProps) {
-  const tiles = buildAnalyticsTiles(atSite, LIST_CLOCK)
+function changeLabel(change: number, phrase: string): string {
+  if (change === 0) return `No change ${phrase}`
+  // An explicit sign, because "3" and "−3" are opposite findings and the
+  // difference must not rest on a colour.
+  return `${change > 0 ? '+' : '−'}${Math.abs(change)} ${phrase}`
+}
+
+export function AnalyticsTiles({ atSite, siteLabel, period }: AnalyticsTilesProps) {
+  const tiles = buildAnalyticsTiles(atSite, LIST_CLOCK, period)
 
   return (
-    <section
-      className={styles.tiles}
-      // A sectioning element for the layout, but role="group": these are five
-      // related controls, not a landmark. A <section> with a name would become
-      // a region, and five buttons do not earn a place in the landmark list.
-      role="group"
-      aria-label="Filter the list by figure"
-    >
-      {tiles.map(({ source, aggregate, excludedReason }) => {
-        const active = isTileActive(source, filters)
-        // The census tile IS the cleared state, so it has no narrowing to
-        // remove. Saying "select again to clear" on it would promise something
-        // that cannot happen.
-        const clearable = source.kind === 'subset'
-
-        // The whole claim, in one sentence, for the accessible name. A screen
-        // reader gets the figure and its denominator together or not at all.
-        let spoken: string
+    <section className={styles.tiles} aria-label={`Figures for ${siteLabel}`}>
+      {tiles.map(({ source, aggregate, excludedReason, change }) => {
         let figure: React.ReactNode
         let denominator: string
-        let scope: string
+        let spoken: string
 
         switch (aggregate.kind) {
           case 'measured':
             figure = <span className={styles.tileValue}>{aggregate.value}</span>
             denominator =
               source.kind === 'census'
-                ? ''
+                ? 'residents'
                 : `of ${aggregate.coverage.covered} ${source.denominatorNoun}`
-            scope = `at ${siteLabel}`
-            spoken = `${source.label} — ${aggregate.value} ${denominator} ${scope}.`
+            spoken = `${source.label} — ${aggregate.value} ${denominator} at ${siteLabel}.`
             break
 
           case 'insufficient_evidence':
@@ -84,17 +69,13 @@ export function AnalyticsTiles({
             // treatment, never in a RAG hue. PRD §2.3.
             figure = (
               <Unrecorded
-                // chip, not badge: the badge form is uppercase and lays label
-                // and detail side by side, which in a 190px tile wraps into an
-                // unreadable block. Same hatch, same required label.
                 variant="chip"
                 label="Insufficient evidence"
                 detail={aggregate.missingDescription}
               />
             )
-            denominator = ''
-            scope = `${aggregate.coverage.covered} of ${aggregate.coverage.total} ${source.denominatorNoun} at ${siteLabel}`
-            spoken = `${source.label} — insufficient evidence. ${aggregate.missingDescription} ${scope}.`
+            denominator = `${aggregate.coverage.covered} of ${aggregate.coverage.total} ${source.denominatorNoun}`
+            spoken = `${source.label} — insufficient evidence. ${aggregate.missingDescription} ${denominator} at ${siteLabel}.`
             break
 
           default:
@@ -102,22 +83,7 @@ export function AnalyticsTiles({
         }
 
         return (
-          <button
-            key={source.id}
-            type="button"
-            className={[styles.tile, active ? styles.tileActive : '']
-              .filter(Boolean)
-              .join(' ')}
-            aria-pressed={active}
-            aria-label={
-              active
-                ? clearable
-                  ? `${spoken} Filtering the list. Select again to clear.`
-                  : `${spoken} Showing every resident.`
-                : spoken
-            }
-            onClick={() => onApply(active ? CLEARED_FILTERS : source.filter)}
-          >
+          <div key={source.id} className={styles.tile}>
             <span className={styles.tileHead}>
               <span className={styles.tileLabel}>{source.label}</span>
               <span className={styles.tileIcon} aria-hidden="true">
@@ -127,33 +93,24 @@ export function AnalyticsTiles({
 
             <span className={styles.tileFigure}>
               {figure}
-              {/* The reference design puts a percentage delta here. This slot
-                  carries the denominator instead: it is the thing Rule 4 will
-                  not let a figure appear without, and a week-on-week delta
-                  would need historical record states nobody has stored. */}
-              {denominator ? (
-                <span className={styles.tileDenominator}>{denominator}</span>
-              ) : null}
+              {change === null ? null : (
+                <span className={styles.tileChange}>
+                  {changeLabel(change, period.phrase)}
+                </span>
+              )}
             </span>
 
-            <span className={styles.tileCoverage}>
-              {scope}
+            <span className={styles.tileDenominator}>
+              {denominator}
               {excludedReason ? ` · ${excludedReason}` : ''}
             </span>
-            {/* Selection is never carried by the border colour alone. */}
-            {active ? (
-              <span className={styles.tileActiveNote}>
-                {clearable
-                  ? 'Filtering the list — select again to clear'
-                  : 'Showing every resident'}
-              </span>
-            ) : null}
-          </button>
+
+            {/* The whole claim in one sentence, including the site the visible
+                card leaves to the header. */}
+            <VisuallyHidden>{spoken}</VisuallyHidden>
+          </div>
         )
       })}
     </section>
   )
 }
-
-/** Re-exported so the structural guard has one import site. */
-export { ANALYTICS_TILE_SOURCES }

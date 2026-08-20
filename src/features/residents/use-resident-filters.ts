@@ -111,8 +111,17 @@ function matchesRecords(summary: ResidentSummary, filter: RecordsFilter): boolea
   return filter === 'critical' ? completeness.hasCriticalGaps : !completeness.isComplete
 }
 
+/**
+ * The list scopes to the site in the top bar.
+ *
+ * There is no site control in the filter row any more: §2.4 requires the
+ * active site to be permanently visible, and it is — in the header, above
+ * everything. A second control for the same fact could disagree with the
+ * first, and a resident list showing one home under a header naming another
+ * is the wrong-subject failure at the scale of a whole building.
+ */
 export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: SiteId) {
-  const [site, setSite] = useState<SiteFilter>(activeSiteId)
+  const site: SiteFilter = activeSiteId
   const [risk, setRisk] = useState<RiskFilter>(DEFAULT_FILTERS.risk)
   const [review, setReview] = useState<ReviewFilter>(DEFAULT_FILTERS.review)
   const [records, setRecords] = useState<RecordsFilter>(DEFAULT_FILTERS.records)
@@ -129,10 +138,7 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
    * result set.
    */
   const atSite = useMemo(
-    () =>
-      site === 'all'
-        ? summaries
-        : summaries.filter((summary) => summary.resident.siteId === site),
+    () => summaries.filter((summary) => summary.resident.siteId === site),
     [summaries, site],
   )
 
@@ -211,14 +217,6 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
     setNote(DEFAULT_FILTERS.note)
   }
 
-  /** Apply a whole filter set at once — what an analytics tile does. */
-  function applyFilters(next: Omit<ResidentFilters, 'site'>) {
-    setRisk(next.risk)
-    setReview(next.review)
-    setRecords(next.records)
-    setNote(next.note)
-  }
-
   const hasNarrowingFilters =
     risk !== 'all' || review !== 'all' || records !== 'all' || note !== 'all'
 
@@ -238,12 +236,10 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
 
   return {
     filters,
-    setSite,
     setRisk,
     setReview,
     setRecords,
     setNote,
-    applyFilters,
     sortKey,
     sortDirection,
     toggleSort,

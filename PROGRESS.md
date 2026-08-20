@@ -1725,3 +1725,99 @@ window has not elapsed for them."*
 
 229 tests. Greyscale re-checked: figures, denominators and the active card's
 selection all survive without colour.
+
+---
+
+## Residents list — figures become read-only, filters restructured — 20/08/2026
+
+### The cards no longer filter
+
+Last turn's rule was *"a tile that only displays is decoration; the click is
+what earns the space."* Reversed on request. `filter` is gone from the tile
+source, along with `isTileActive` and `CLEARED_FILTERS`, and the cards render
+as divs with no hover, no cursor and no pressed state — nothing suggesting they
+do something when clicked, because they no longer do.
+
+Filtering lives entirely in the row beneath now, which is arguably where it
+belonged: every narrowing is visible at once rather than inferred from which
+card is lit.
+
+### The change figure is reconstructed, not invented
+
+Frank asked for the denominator to move below the number and the pill to carry
+something like "+10 this month". Last turn I said three of the five could not
+have an honest delta. **Checked properly, all five can.**
+
+Every record that closes a critical gap carries the instant it was written —
+`recordedAt`, `assessedAt`, `signedOn`, `on`, `decidedOn` — and care notes hold
+90 days of history. So the same question can be asked of a past instant rather
+than guessed at. `hadCriticalGapAt(resident, at)` does it for the seven
+criticals; each tile source gained a required `matchesAt`.
+
+**The assumption, written down because it is not safe forever:** records here
+are only ever added, never removed. The day a consent can be withdrawn back to
+`not_sought`, or a DNAR superseded, this reconstruction silently starts
+answering a different question and the honest answer becomes stored history
+rather than derivation.
+
+**Two guards, because two definitions of "critical gap" is exactly the shape
+that drifts.** `completeness.test.ts` asserts `hadCriticalGapAt` agrees with
+`recordCompleteness` for all 32 residents at the present instant — so an eighth
+critical added to one and forgotten in the other fails the build. And a second
+test asserts at least one resident's position actually changed in the last
+month, so the figure is live rather than a permanent zero dressed as a finding.
+
+Real movement at Rosewood this month: critical gaps −5, reviews +1, no care
+note in 48h +1, falls +1... and residents unchanged.
+
+**Periods are bounded by the data, not by what reads well.** 7 / 30 / 60 days.
+No "last year" option: the fixtures carry 90 days of care notes, so a year-ago
+comparison would report that every resident had no care note then — the history
+ending, presented as a finding.
+
+**Still no green.** The reference colours its deltas; these are neutral, and
+the sign carries the direction. "+3 critical gaps this month" is not good news
+in a hue, and a signed number survives greyscale where a green arrow does not.
+
+### Site left the cards, and left the filter row
+
+The site name is off the card faces — Frank's call, and sound: the header is
+the only thing scoping this screen now, and repeating it five times said less
+than it cost. It stays in each card's accessible name via `VisuallyHidden`, so
+a reader who cannot see the header still gets the whole claim, and the section
+is named "Figures for Rosewood Court".
+
+The site **filter** is gone too, and the list now scopes to the header's site
+directly. That closes a bug the removal would otherwise have created: the
+filter held its own site in `useState` seeded once, so after removing the
+Select the top-bar switcher would have changed the header and left the list
+showing the other home — the wrong-subject failure at the scale of a building.
+The Site column goes with it; it would repeat one value per row.
+
+### Filters
+
+Records is a segmented control now, per the reference. Three mutually exclusive
+options worth seeing at once — including "All residents", which a reader needs
+to know exists when the list opens already narrowed to critical gaps.
+
+`role="group"` with `aria-pressed`, not a tablist: these are radio buttons in
+appearance and behaviour, and a tablist would promise panels nothing here
+implements.
+
+The period selector sits at the far end, pushed apart deliberately, because it
+is the one control there that does not filter the list — it sets how far back
+the figures above look.
+
+### Also
+
+Stylelint caught a raw `rgb()` in the segmented control's shadow, correctly.
+`--shadow-card` already existed; no token was added.
+
+263 tests.
+
+### Open
+
+Frank asked for a "date selector". This is a **period** selector for the
+figures. If he meant a date-range filter on the list itself, that is different
+work and nothing in the PRD scopes a resident roster by date — say so and I
+will build it.

@@ -11,7 +11,7 @@ import { ResidentsRoute } from './ResidentsRoute'
 import { RiskFlagsCell } from './RiskFlagsCell'
 import { RISK_FLAG_SOURCES } from './risk-flag-sources'
 import { CriticalGapsChip } from './CriticalGapsChip'
-import { ANALYTICS_TILE_SOURCES } from './analytics-tiles'
+import { ANALYTICS_PERIODS, ANALYTICS_TILE_SOURCES } from './analytics-tiles'
 import { listName } from './list-name'
 
 /**
@@ -354,116 +354,66 @@ describe('the legend states the convention on screen', () => {
  * a lie: a figure without its denominator, a tile that does not filter, and a
  * category silently dropped out of a count.
  */
-describe('analytics tiles', () => {
-  it('gives every tile a filter, so none is decoration', () => {
-    // PRD Rule 2 as Frank put it: the click is what earns the space. `filter`
-    // being required means a tile cannot be added without one, and this
-    // asserts none is the no-op set that would leave the table untouched.
-    expect(ANALYTICS_TILE_SOURCES.length).toBeGreaterThan(0)
-    for (const source of ANALYTICS_TILE_SOURCES) {
-      expect(source.filter, `${source.label} has no filter`).toBeTruthy()
-    }
-  })
-
-  it('never renders a figure without its denominator', async () => {
+describe('analytics figures', () => {
+  it('is read-only — the cards are not controls', async () => {
     renderList()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+    const figures = screen.getByRole('region', { name: /^Figures for/ })
+    // They were buttons that filtered the table. Filtering lives in the row
+    // beneath now, where every narrowing is visible at once rather than
+    // inferred from which card is lit.
+    expect(within(figures).queryAllByRole('button')).toHaveLength(0)
+    expect(within(figures).queryAllByRole('link')).toHaveLength(0)
+  })
 
-    const group = screen.getByRole('group', { name: 'Filter the list by figure' })
-    const tiles = within(group).getAllByRole('button')
-    expect(tiles).toHaveLength(ANALYTICS_TILE_SOURCES.length)
-
-    for (const tile of tiles) {
-      // Rule 4. The accessible name is the whole claim, so a screen reader
-      // gets figure and denominator together or not at all.
-      const name = tile.getAttribute('aria-label') ?? ''
-      expect(name, `a tile speaks a bare figure: "${name}"`).toMatch(
-        /\bat [A-Z]|insufficient evidence/i,
+  it('never states a figure without its denominator', async () => {
+    renderList()
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+    const figures = screen.getByRole('region', { name: /^Figures for/ })
+    const said = figures.textContent ?? ''
+    // Rule 4. Every card either counts residents out of a stated population,
+    // or says it has insufficient evidence to count at all.
+    for (const source of ANALYTICS_TILE_SOURCES) {
+      expect(said, `${source.label} is missing from the figures`).toContain(
+        source.label,
       )
     }
+    expect(said).toMatch(/of \d+ residents|residents at |Insufficient evidence/)
   })
 
-  it('names the site it counted, so a figure cannot be read against the wrong home', async () => {
+  it('names the site in each claim, even though the card does not print it', async () => {
     renderList()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
-    const group = screen.getByRole('group', { name: 'Filter the list by figure' })
-    for (const tile of within(group).getAllByRole('button')) {
-      expect(tile.getAttribute('aria-label')).toContain('Rosewood Court')
-    }
+    const figures = screen.getByRole('region', { name: /^Figures for/ })
+    // The site left the card face — it is in the header and is the only thing
+    // scoping this screen. A reader who cannot see the header still gets it.
+    expect(figures).toHaveAccessibleName('Figures for Rosewood Court')
+    expect(figures.textContent).toContain('Rosewood Court')
   })
 
-  it('is never green — no tile carries a positive treatment', async () => {
+  it('is never green — no card carries a positive treatment', async () => {
     const { container } = renderList()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
-    const group = screen.getByRole('group', { name: 'Filter the list by figure' })
-    // A zero reads as a quiet zero, not a tick. There is no tone on a tile to
-    // set, so this asserts the rule stays impossible to break by accident.
-    expect(group.querySelectorAll('[data-tone="positive"]')).toHaveLength(0)
     expect(container.querySelectorAll('[data-tone="positive"]')).toHaveLength(0)
   })
 
-  it('filters the table, and clears when the active tile is selected again', async () => {
-    const user = userEvent.setup()
+  it('signs the change in text, so direction never rests on colour', async () => {
     renderList()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
-
-    const group = screen.getByRole('group', { name: 'Filter the list by figure' })
-    const fallsTile = within(group).getByRole('button', {
-      name: /Never assessed for falls/,
-    })
-    expect(fallsTile).toHaveAttribute('aria-pressed', 'false')
-
-    await user.click(fallsTile)
-    expect(fallsTile).toHaveAttribute('aria-pressed', 'true')
-    // Every visible row is now a resident with no falls assessment.
-    const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1)
-    expect(rows.length).toBeGreaterThan(0)
-    for (const row of rows) {
-      // The badge is uppercased by CSS, so the DOM text keeps its source case.
-      expect(row.textContent?.toLowerCase()).toContain('falls — not assessed')
-    }
-
-    await user.click(fallsTile)
-    expect(fallsTile).toHaveAttribute('aria-pressed', 'false')
+    const figures = screen.getByRole('region', { name: /^Figures for/ })
+    expect(figures.textContent).toMatch(/[+−]\d+ this month|No change this month/)
   })
 
-  it('says it is filtering in words, not only in colour', async () => {
-    const user = userEvent.setup()
-    renderList()
-    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
-    const group = screen.getByRole('group', { name: 'Filter the list by figure' })
-
-    // The list OPENS on critical gaps only, so this tile is active from the
-    // first paint and must say so without being clicked.
-    const critical = within(group).getByRole('button', { name: /Critical gaps/ })
-    expect(critical).toHaveAttribute('aria-pressed', 'true')
-    // PRD §7 — colour is never the sole carrier. The tint and border are
-    // reinforcement; this sentence is the carrier.
-    expect(critical.textContent).toContain('Filtering the list')
-
-    // Clearing it widens to everyone, which is a different state from the
-    // default the list opened in — otherwise "select again to clear" would be
-    // a control that does nothing when you use it.
-    await user.click(critical)
-    expect(critical).toHaveAttribute('aria-pressed', 'false')
-    const all = within(group).getByRole('button', { name: /^Residents —/ })
-    expect(all).toHaveAttribute('aria-pressed', 'true')
-    expect(all.textContent).toContain('Showing every resident')
-  })
-
-  it('counts never-scheduled reviews, which an "overdue" tile would have hidden', () => {
-    // The catch this tile exists for. At Ashgrove nothing is overdue and three
-    // of four residents have never had a review scheduled — an overdue-only
-    // tile reads "0 of 4" and looks settled, which is PRD §2.1's named failure.
+  it('counts never-scheduled reviews, which an "overdue" card would have hidden', () => {
+    // At Ashgrove nothing is overdue and three of four residents have never had
+    // a review scheduled — an overdue-only figure reads "0 of 4" and looks
+    // settled, which is PRD §2.1's named failure.
     const reviews = ANALYTICS_TILE_SOURCES.find((source) => source.id === 'reviews')
     expect(reviews).toBeDefined()
     const neverScheduled = residents.find(
       (resident) => resident.carePlanReview.kind === 'never_scheduled',
     )
-    expect(
-      neverScheduled,
-      'fixtures have no never-scheduled review to test',
-    ).toBeDefined()
+    expect(neverScheduled, 'fixtures have no never-scheduled review').toBeDefined()
     expect(
       reviews?.matches(
         { resident: neverScheduled!, latestNote: 'none' },
@@ -471,6 +421,28 @@ describe('analytics tiles', () => {
       ),
     ).toBe(true)
     expect(reviews?.label).toMatch(/never scheduled/i)
+  })
+
+  it('never looks further back than the history that exists', () => {
+    // Care notes carry 90 days. A "last year" period would report that every
+    // resident had no care note a year ago — the history ending, presented as
+    // a finding.
+    for (const period of ANALYTICS_PERIODS) {
+      expect(
+        period.days,
+        `${period.label} reaches past the fixture history`,
+      ).toBeLessThanOrEqual(90)
+    }
+  })
+
+  it('gives every card an as-of counterpart, so no movement is invented', () => {
+    // `matchesAt` being required is what makes the change a reconstruction. A
+    // card cannot be declared that shows a movement it cannot account for.
+    for (const source of ANALYTICS_TILE_SOURCES) {
+      expect(typeof source.matchesAt, `${source.label} has no as-of rule`).toBe(
+        'function',
+      )
+    }
   })
 })
 
@@ -513,7 +485,7 @@ describe('the tiles do not speak before the data arrives', () => {
     renderList(entry)
     await waitFor(() => expect(screen.getByText(/Simulated/)).toBeInTheDocument())
     expect(
-      screen.queryByRole('group', { name: 'Filter the list by figure' }),
+      screen.queryByRole('region', { name: /^Figures for/ }),
     ).not.toBeInTheDocument()
     expect(screen.queryByText(/no residents here to count/i)).not.toBeInTheDocument()
   })
@@ -522,11 +494,9 @@ describe('the tiles do not speak before the data arrives', () => {
     renderList('/residents?sim=empty')
     // Loaded, and genuinely nobody here. Now the claim is earned — and the
     // subset tiles say Insufficient Evidence rather than a reassuring "0 of 0".
-    const group = await screen.findByRole('group', {
-      name: 'Filter the list by figure',
-    })
-    expect(within(group).getAllByText('Insufficient evidence').length).toBeGreaterThan(
-      0,
-    )
+    const figures = await screen.findByRole('region', { name: /^Figures for/ })
+    expect(
+      within(figures).getAllByText('Insufficient evidence').length,
+    ).toBeGreaterThan(0)
   })
 })

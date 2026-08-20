@@ -1,4 +1,3 @@
-import type { Site } from '@/data/types'
 import { Select } from '@/components/primitives'
 import type {
   NoteFilter,
@@ -6,52 +5,77 @@ import type {
   ResidentFilters,
   ReviewFilter,
   RiskFilter,
-  SiteFilter,
 } from './use-resident-filters'
 import { STALE_NOTE_HOURS } from './use-resident-filters'
+import { ANALYTICS_PERIODS, type AnalyticsPeriod } from './analytics-tiles'
 import styles from './residents.module.css'
 
 /**
- * Filters for the residents list. PRD §6.2 — site, risk level, review status,
- * records.
+ * Filters for the residents list. PRD §6.2 — risk level, review status,
+ * records; and care note recency, which the figures above made worth having.
  *
- * The records filter offers **both** severity levels. "Critical gaps only" is
- * the default because that is what the chip shouts about and what a manager
- * acts on first; "Any incomplete record" is one click away. Nothing is hidden,
- * it is just not shouted.
+ * **No site control.** §2.4 requires the active site to be permanently
+ * visible, and it is, in the header. A second control for the same fact could
+ * disagree with the first, and a list showing one home under a header naming
+ * another is the wrong-subject failure at the scale of a building.
+ *
+ * The records filter is a segmented control rather than a dropdown. It is the
+ * primary narrowing on this screen — the one the whole list is built around —
+ * and its three options are mutually exclusive and worth seeing at once. A
+ * dropdown hides two of the three, including "All residents", which is the
+ * one a reader needs to know exists when the list opens already narrowed.
  */
 
+const RECORDS_TABS: { value: RecordsFilter; label: string }[] = [
+  { value: 'critical', label: 'Critical gaps' },
+  { value: 'any_incomplete', label: 'Any incomplete record' },
+  { value: 'all', label: 'All residents' },
+]
+
 export interface ResidentsFilterBarProps {
-  sites: Site[]
   filters: ResidentFilters
-  onSiteChange: (site: SiteFilter) => void
   onRiskChange: (risk: RiskFilter) => void
   onReviewChange: (review: ReviewFilter) => void
   onRecordsChange: (records: RecordsFilter) => void
   onNoteChange: (note: NoteFilter) => void
+  period: AnalyticsPeriod
+  onPeriodChange: (period: AnalyticsPeriod) => void
 }
 
 export function ResidentsFilterBar({
-  sites,
   filters,
-  onSiteChange,
   onRiskChange,
   onReviewChange,
   onRecordsChange,
   onNoteChange,
+  period,
+  onPeriodChange,
 }: ResidentsFilterBarProps) {
   return (
     <div className={styles.filterBar}>
-      <Select
-        label="Site"
-        placeholder="Choose a site"
-        value={filters.site}
-        onValueChange={(value) => onSiteChange(value as SiteFilter)}
-        options={[
-          { value: 'all', label: 'All sites' },
-          ...sites.map((site) => ({ value: site.id, label: site.name })),
-        ]}
-      />
+      {/* A real tablist would imply panels to switch between; these are radio
+          buttons in appearance and behaviour — one of three, always exactly
+          one chosen. `aria-pressed` on toggle buttons in a named group says
+          that without promising tab semantics nothing here implements. */}
+      <div className={styles.segmented} role="group" aria-label="Show residents">
+        {RECORDS_TABS.map((tab) => {
+          const active = filters.records === tab.value
+          return (
+            <button
+              key={tab.value}
+              type="button"
+              className={[styles.segment, active ? styles.segmentActive : '']
+                .filter(Boolean)
+                .join(' ')}
+              aria-pressed={active}
+              onClick={() => onRecordsChange(tab.value)}
+            >
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+
       <Select
         label="Falls risk level"
         placeholder="Any falls risk"
@@ -79,19 +103,6 @@ export function ResidentsFilterBar({
         ]}
       />
       <Select
-        label="Records"
-        placeholder="Records"
-        value={filters.records}
-        onValueChange={(value) => onRecordsChange(value as RecordsFilter)}
-        options={[
-          { value: 'critical', label: 'Critical gaps only' },
-          { value: 'any_incomplete', label: 'Any incomplete record' },
-          { value: 'all', label: 'All residents' },
-        ]}
-      />
-      {/* Present as a real control, not only as a tile, so a filter applied by
-          clicking a tile is never invisible state in the bar. */}
-      <Select
         label="Care note recency"
         placeholder="Any care note"
         value={filters.note}
@@ -101,6 +112,26 @@ export function ResidentsFilterBar({
           { value: 'none_in_48h', label: `No care note in ${STALE_NOTE_HOURS}h` },
         ]}
       />
+
+      {/* At the far end, and deliberately apart: this one does not filter the
+          list. It sets how far back the figures above look, and it is bounded
+          by the history that exists rather than by what reads well. */}
+      <div className={styles.periodSlot}>
+        <Select
+          label="Figures period"
+          placeholder="Period"
+          value={period.id}
+          onValueChange={(value) =>
+            onPeriodChange(
+              ANALYTICS_PERIODS.find((entry) => entry.id === value) ?? period,
+            )
+          }
+          options={ANALYTICS_PERIODS.map((entry) => ({
+            value: entry.id,
+            label: entry.label,
+          }))}
+        />
+      </div>
     </div>
   )
 }

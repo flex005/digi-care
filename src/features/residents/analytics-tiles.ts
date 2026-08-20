@@ -2,13 +2,9 @@ import type { Aggregate } from '@/data/types'
 import type { ResidentSummary } from '@/data/access/client'
 import { INSUFFICIENT_EVIDENCE_THRESHOLD, coverageRatio } from '@/data/types'
 import type { IconName } from '@/components/icon/registry.names.generated'
-import { recordCompleteness } from '@/data/completeness'
+import { hadCriticalGapAt, recordCompleteness } from '@/data/completeness'
 import { tileIcons, type TileId } from './analytics-tiles.icons'
-import {
-  STALE_NOTE_HOURS,
-  hasNoNoteWithinWindow,
-  type ResidentFilters,
-} from './use-resident-filters'
+import { STALE_NOTE_HOURS, hasNoNoteWithinWindow } from './use-resident-filters'
 
 /**
  * The analytics tiles above the residents list — declared, not assembled in a
@@ -51,8 +47,12 @@ export interface AnalyticsTileSource {
   denominatorNoun: string
   /** Said when the denominator is smaller than the population, and why. */
   excludedReason: (excluded: number) => string
-  /** REQUIRED. Applied to the table when the tile is clicked. */
-  filter: Omit<ResidentFilters, 'site'>
+  /**
+   * The same measurement, as it stood at an earlier instant — what makes the
+   * change figure a reconstruction rather than an invention. REQUIRED, so a
+   * card cannot be added that shows a movement it cannot account for.
+   */
+  matchesAt: (summary: ResidentSummary, at: number) => boolean
 }
 
 const everyone = (summaries: ResidentSummary[]) => summaries
@@ -67,11 +67,10 @@ export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
     kind: 'census',
     assessable: everyone,
     matches: () => true,
+    // Resident here then, too. The census change is admissions since.
+    matchesAt: (summary, at) => new Date(summary.resident.admittedOn).getTime() <= at,
     denominatorNoun: 'residents',
     excludedReason: noExclusions,
-    // Everyone. Note this is NOT DEFAULT_FILTERS: the list opens on critical
-    // gaps only, so "show me all of them" is its own state.
-    filter: { risk: 'all', review: 'all', records: 'all', note: 'all' },
   },
   {
     id: 'critical',
@@ -80,9 +79,9 @@ export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
     kind: 'subset',
     assessable: everyone,
     matches: (summary) => recordCompleteness(summary.resident).hasCriticalGaps,
+    matchesAt: (summary, at) => hadCriticalGapAt(summary.resident, at),
     denominatorNoun: 'residents',
     excludedReason: noExclusions,
-    filter: { risk: 'all', review: 'all', records: 'critical', note: 'all' },
   },
   {
     /**
@@ -102,9 +101,17 @@ export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
     matches: (summary) =>
       summary.resident.carePlanReview.kind === 'overdue' ||
       summary.resident.carePlanReview.kind === 'never_scheduled',
+    // Never scheduled was never scheduled then either. Overdue is a date, so
+    // it can be asked of any instant: it was overdue at `at` if it was already
+    // past its due date by then.
+    matchesAt: (summary, at) => {
+      const review = summary.resident.carePlanReview
+      if (review.kind === 'never_scheduled') return true
+      if (review.kind === 'overdue') return Date.parse(review.dueOn) <= at
+      return false
+    },
     denominatorNoun: 'residents',
     excludedReason: noExclusions,
-    filter: { risk: 'all', review: 'not_up_to_date', records: 'all', note: 'all' },
   },
   {
     /**
@@ -127,6 +134,9 @@ export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
           STALE_NOTE_HOURS * 3_600_000,
       ),
     matches: (summary, now) => hasNoNoteWithinWindow(summary, now),
+    // Care notes carry 90 days of history, so the same question answers for a
+    // past instant — provided the period stays inside that history.
+    matchesAt: (summary, at) => hasNoNoteWithinWindow(summary, at),
     // Just "residents". The denominator IS restricted to those here long
     // enough, but saying so in the pill is noise on every site where nobody is
     // excluded — and `excludedReason` says it in full on the one where somebody
@@ -134,7 +144,6 @@ export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
     denominatorNoun: 'residents',
     excludedReason: (excluded) =>
       `${excluded} admitted under ${STALE_NOTE_HOURS}h ago, so the window has not elapsed for them.`,
-    filter: { risk: 'all', review: 'all', records: 'all', note: 'none_in_48h' },
   },
   {
     id: 'falls',
@@ -143,9 +152,12 @@ export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
     kind: 'subset',
     assessable: everyone,
     matches: (summary) => summary.resident.risks.falls.kind === 'not_assessed',
+    matchesAt: (summary, at) => {
+      const falls = summary.resident.risks.falls
+      return falls.kind === 'not_assessed' || Date.parse(falls.assessedAt) > at
+    },
     denominatorNoun: 'residents',
     excludedReason: noExclusions,
-    filter: { risk: 'not_assessed', review: 'all', records: 'all', note: 'all' },
   },
 ]
 
@@ -154,6 +166,12 @@ export interface AnalyticsTile {
   aggregate: Aggregate
   /** How many residents left the denominator, and why. Empty when none did. */
   excludedReason: string
+  /**
+   * Movement over the chosen period: today's figure less the same figure
+   * reconstructed at the start of it. Null where the figure itself could not
+   * be computed, because a change between two unknowns is not a number.
+   */
+  change: number | null
 }
 
 /**
@@ -167,13 +185,16 @@ export interface AnalyticsTile {
 export function buildAnalyticsTiles(
   summaries: ResidentSummary[],
   now: number,
+  period: AnalyticsPeriod = DEFAULT_PERIOD,
 ): AnalyticsTile[] {
+  const since = now - period.days * 86_400_000
   return ANALYTICS_TILE_SOURCES.map((source) => {
     const assessable = source.assessable(summaries, now)
     const coverage = { covered: assessable.length, total: summaries.length }
     const excluded = coverage.total - coverage.covered
 
     if (source.kind === 'census') {
+      const thenCount = summaries.filter((s) => source.matchesAt(s, since)).length
       return {
         source,
         aggregate: {
@@ -183,6 +204,7 @@ export function buildAnalyticsTiles(
           coverage,
         },
         excludedReason: '',
+        change: summaries.length - thenCount,
       }
     }
 
@@ -201,6 +223,9 @@ export function buildAnalyticsTiles(
               : 'Too few of them have been here long enough to say.',
         },
         excludedReason: excluded > 0 ? source.excludedReason(excluded) : '',
+        // No figure, so no movement. A change between two unknowns is not a
+        // number, and a zero here would read as "nothing moved".
+        change: null,
       }
     }
 
@@ -213,36 +238,35 @@ export function buildAnalyticsTiles(
         coverage,
       },
       excludedReason: excluded > 0 ? source.excludedReason(excluded) : '',
+      // Measured against the same denominator at both ends, so the movement is
+      // in the metric rather than in who was counted.
+      change:
+        assessable.filter((summary) => source.matches(summary, now)).length -
+        assessable.filter((summary) => source.matchesAt(summary, since)).length,
     }
   })
 }
 
-/** True when the table is showing exactly what this tile selects. */
-export function isTileActive(
-  source: AnalyticsTileSource,
-  filters: ResidentFilters,
-): boolean {
-  return (
-    filters.risk === source.filter.risk &&
-    filters.review === source.filter.review &&
-    filters.records === source.filter.records &&
-    filters.note === source.filter.note
-  )
+/**
+ * How far back the change figure looks.
+ *
+ * Bounded by the data, not by what reads well: the fixtures carry 90 days of
+ * care notes, so a "last year" option would report that every resident had no
+ * care note a year ago — an artefact of the history ending, presented as a
+ * finding. Nothing here reaches past 60 days.
+ */
+export interface AnalyticsPeriod {
+  id: string
+  label: string
+  /** How the change reads on a card: "+3 this month". */
+  phrase: string
+  days: number
 }
 
-/**
- * Clicking the active tile removes its narrowing — which means showing
- * everyone, not returning to `DEFAULT_FILTERS`.
- *
- * The distinction is load-bearing. The list opens on critical gaps only, so
- * `DEFAULT_FILTERS` is itself a narrowing and the Critical gaps tile is active
- * from the first paint. Clearing to the default would put the filters back
- * exactly where they already were: a control promising "select again to clear"
- * that does nothing when you do.
- */
-export const CLEARED_FILTERS: Omit<ResidentFilters, 'site'> = {
-  risk: 'all',
-  review: 'all',
-  records: 'all',
-  note: 'all',
-}
+export const ANALYTICS_PERIODS: AnalyticsPeriod[] = [
+  { id: '7', label: 'Last 7 days', phrase: 'this week', days: 7 },
+  { id: '30', label: 'Last 30 days', phrase: 'this month', days: 30 },
+  { id: '60', label: 'Last 60 days', phrase: 'in 60 days', days: 60 },
+]
+
+export const DEFAULT_PERIOD: AnalyticsPeriod = ANALYTICS_PERIODS[1] as AnalyticsPeriod

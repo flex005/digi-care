@@ -61,6 +61,8 @@
   gap: var(--space-16);
 }
 
+/* Read-only. No hover, no pointer, no pressed state — nothing that suggests
+   these do something when clicked, because they no longer do. */
 .tile {
   display: flex;
   flex-direction: column;
@@ -72,18 +74,6 @@
   border-radius: var(--radius-lg);
   background-color: var(--bg-surface);
   text-align: left;
-  cursor: pointer;
-}
-
-.tile:hover {
-  border-color: var(--border-strong);
-}
-
-/* Selected. Border and tint are reinforcement only; .tileActiveNote carries
-   the meaning in words, so selection survives greyscale. */
-.tileActive {
-  border-color: var(--purple-600);
-  background-color: var(--purple-50);
 }
 
 .tileHead {
@@ -123,20 +113,26 @@
   align-items: baseline;
 }
 
+/* The figure is the thing on the card. --text-display is the top of the closed
+   scale; nothing above it exists to reach for. */
 .tileValue {
   color: var(--ink-900);
-  font-size: var(--text-h2-size);
-  line-height: var(--text-h2-line);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
   font-weight: var(--weight-extrabold);
   font-variant-numeric: tabular-nums;
 }
 
 /**
- * The denominator, in the slot the reference design gives a percentage delta.
- * Neutral, never a status hue: it is not good news or bad news, it is the
- * thing without which the figure beside it means nothing. Rule 4.
+ * The movement over the chosen period, in the slot the reference design gives
+ * a coloured percentage.
+ *
+ * Neutral, and never green or red. "+3 critical gaps this month" is not good
+ * news dressed in a hue — it is a direction, and the sign carries it. That
+ * survives greyscale and colour blindness, which an up-arrow in green does
+ * not.
  */
-.tileDenominator {
+.tileChange {
   padding: 2px var(--space-8);
   border-radius: var(--radius-pill);
   background-color: var(--bg-page);
@@ -145,22 +141,16 @@
   line-height: var(--text-micro-line);
   font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-/* Which site was counted. Rule 5 — a figure must never be readable against
-   the wrong home. */
-.tileCoverage {
+/* The denominator, beneath the figure. Never optional: the number above is
+   meaningless without it. Rule 4. */
+.tileDenominator {
   margin-top: auto;
   color: var(--ink-500);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
-}
-
-.tileActiveNote {
-  color: var(--purple-900);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-  font-weight: var(--weight-semibold);
 }
 
 .filterBar {
@@ -170,6 +160,49 @@
   align-items: center;
   padding: var(--space-16) var(--space-24);
   border-bottom: 1px solid var(--border-subtle);
+}
+
+/**
+ * The records filter, as a segmented control. Three mutually exclusive options
+ * worth seeing at once — including "All residents", which a reader needs to
+ * know exists when the list opens already narrowed to critical gaps.
+ */
+.segmented {
+  display: inline-flex;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-page);
+}
+
+.segment {
+  padding: var(--space-4) var(--space-16);
+  border-radius: var(--radius-pill);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.segment:hover {
+  color: var(--purple-900);
+}
+
+/* Chosen. The raised white surface is reinforcement; aria-pressed carries the
+   state, and the weight change carries it without colour. */
+.segmentActive {
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+  color: var(--purple-900);
+  font-weight: var(--weight-semibold);
+}
+
+/* Pushed to the far end, because it does not filter the list — it sets how far
+   back the figures above look. */
+.periodSlot {
+  margin-left: auto;
 }
 
 /* ---- cells ---- */

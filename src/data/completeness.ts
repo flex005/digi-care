@@ -245,3 +245,71 @@ export function staleRecords(resident: Resident): string[] {
 
   return stale
 }
+
+/**
+ * Was this a critical gap as at `at`?
+ *
+ * Every recorded branch of every critical record carries the instant it was
+ * recorded, so the state of the record a month ago can be reconstructed from
+ * the record as it stands: it was a gap then if it is a gap now, or if the
+ * thing that closed it was written after that date.
+ *
+ * **The assumption, stated because it is not safe forever: records here are
+ * only ever added, never removed.** In this build nothing un-records, so
+ * "recorded before X" and "was recorded as at X" are the same question. The
+ * day a record can be retracted — a withdrawn consent that reverts to
+ * not_sought, a superseded DNAR — this reconstruction silently starts
+ * answering a different question, and the honest answer becomes a stored
+ * history rather than a derivation.
+ *
+ * `completeness.test.ts` asserts this agrees with `recordCompleteness` for
+ * every resident at the present instant, so the two lists of criticals cannot
+ * drift apart: adding an eighth critical to one and not the other fails.
+ */
+export function hadCriticalGapAt(resident: Resident, at: number): boolean {
+  /** When the gap closed, or null while it is still open. */
+  const closedAt: (number | null)[] = [
+    recordedInstant(resident.allergies),
+    recordedInstant(resident.resuscitation),
+    recordedInstant(resident.risks.falls),
+    recordedInstant(resident.risks.choking),
+    recordedInstant(resident.gp),
+    recordedInstant(resident.importantPeople.nextOfKin),
+    recordedInstant(resident.consents.care_and_support),
+  ]
+  return closedAt.some((closed) => closed === null || closed > at)
+}
+
+/**
+ * The instant a record stopped being a gap, or null while it still is one.
+ * Every union member that means "somebody looked" carries a date; the ones
+ * that mean "nobody has" do not, which is the whole point of them.
+ */
+function recordedInstant(record: unknown): number | null {
+  const value = record as { kind: string } & Record<string, string>
+  switch (value.kind) {
+    // The gaps.
+    case 'not_recorded':
+    case 'no_decision_recorded':
+    case 'not_assessed':
+    case 'unrecorded':
+    case 'not_sought':
+      return null
+
+    // Everything else is a record, and names the day it was made.
+    case 'dnar_in_place':
+      return Date.parse(value.signedOn)
+    case 'assessed':
+      return Date.parse(value.assessedAt)
+    case 'pending':
+      return Date.parse(value.requestedOn)
+    case 'consented':
+    case 'refused':
+    case 'withdrawn':
+      return Date.parse(value.on)
+    case 'best_interest':
+      return Date.parse(value.decidedOn)
+    default:
+      return Date.parse(value.recordedAt)
+  }
+}
