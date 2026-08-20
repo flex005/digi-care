@@ -2,6 +2,7 @@ import type { Site } from '@/data/types'
 import type { AccessMode } from '@/data/access/resource'
 import { Icon } from '@/components/icon/Icon'
 import {
+  Avatar,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -123,8 +124,21 @@ export function TopBar({
         <AppSwitcher />
 
         <DropdownMenu>
-          <DropdownMenuTrigger className={styles.user}>
-            <Icon name={shellIcons.user} size={20} />
+          {/* Named explicitly for the same reason as the site pill: a button
+              whose accessible name is just "A. Okonkwo" does not say what it
+              does. The visible text is contained in the name, so voice control
+              still reaches it by what is written on it — WCAG 2.5.3. */}
+          <DropdownMenuTrigger
+            className={styles.user}
+            aria-label={`${userName} — account menu`}
+          >
+            {/* A real image container, not a glyph: it shows a photograph the
+                day staff carry one, and initials until then. Decorative here —
+                the name sits beside it, and Avatar's own "no photograph on
+                file" label is a resident-record concern, not a chrome one. */}
+            <span aria-hidden="true">
+              <Avatar photo={{ kind: 'not_on_file' }} name={userName} size="small" />
+            </span>
             {userName}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

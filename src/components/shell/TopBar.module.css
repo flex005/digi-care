@@ -114,19 +114,33 @@
   text-align: center;
 }
 
+/**
+ * The account pill carries its tint at rest rather than on hover, so the
+ * profile reads as a block of chrome in its own right — matching the site pill
+ * at the other end of the bar, which has always done this.
+ *
+ * Hover and the open menu both deepen to --purple-200 (ink-900 on it measures
+ * 11.09:1), so the control still answers a pointer and still shows when its
+ * menu is open. Losing that feedback is the cost of a permanent tint, and it
+ * is not one worth paying.
+ */
 .user {
   display: flex;
   gap: var(--space-8);
   align-items: center;
   min-height: var(--space-40);
-  padding: var(--space-4) var(--space-12);
+
+  /* Tighter on the left, where the avatar sits. */
+  padding: var(--space-4) var(--space-12) var(--space-4) var(--space-4);
   border-radius: var(--radius-pill);
+  background-color: var(--purple-50);
   color: var(--ink-900);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
 }
 
-.user:hover {
-  background-color: var(--purple-50);
+.user:hover,
+.user[data-state='open'] {
+  background-color: var(--purple-200);
 }

@@ -195,7 +195,6 @@ export const shellIcons = {
   logo: 'medical/healtcare',
   search: 'search/search',
   alerts: 'alert-notification/notification-02',
-  user: 'users/user-circle',
   siteSwitcher: 'arrows-sharp/arrow-down-01-sharp',
   collapseSidebar: 'dashboard/sidebar-left',
   /** The app switcher grid — 3x3 circles, the launcher glyph. Not

@@ -40,13 +40,12 @@ import IconNoteTask_Note01 from '@/assets/icons-generated/note-task/note-01.svg?
 import IconNoteTask_NoteRemove from '@/assets/icons-generated/note-task/note-remove.svg?react'
 import IconSearch_Search from '@/assets/icons-generated/search/search.svg?react'
 import IconSettings_Setting02 from '@/assets/icons-generated/settings/setting-02.svg?react'
-import IconUsers_UserCircle from '@/assets/icons-generated/users/user-circle.svg?react'
 import IconUsers_UserGroup from '@/assets/icons-generated/users/user-group.svg?react'
 import IconUsers_UserMultiple from '@/assets/icons-generated/users/user-multiple.svg?react'
 import IconUsers_UserSwitch from '@/assets/icons-generated/users/user-switch.svg?react'
 
 /**
- * Only the 34 icons actually used in source. Importing all of them
+ * Only the 33 icons actually used in source. Importing all of them
  * would compile every icon in the set into the bundle.
  *
  * Partial because it is keyed by the full IconName union. A missing entry
@@ -86,7 +85,6 @@ export const iconRegistry: Partial<
   'note-task/note-remove': IconNoteTask_NoteRemove,
   'search/search': IconSearch_Search,
   'settings/setting-02': IconSettings_Setting02,
-  'users/user-circle': IconUsers_UserCircle,
   'users/user-group': IconUsers_UserGroup,
   'users/user-multiple': IconUsers_UserMultiple,
   'users/user-switch': IconUsers_UserSwitch,

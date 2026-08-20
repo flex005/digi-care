@@ -2101,3 +2101,45 @@ and it is now the only thing scoping the residents list, so it is doing more
 work than when it had a label.
 
 263 tests.
+
+---
+
+## Top bar — the account pill, tinted and given a photo container — 21/08/2026
+
+The tint is the resting state now, not the hover state, so the profile reads as
+a block of chrome in its own right — matching the site pill at the other end of
+the bar, which has always done this.
+
+**Hover did not simply go.** A permanently tinted control that stops answering
+a pointer has lost something, so hover *and* the open menu both deepen to
+`--purple-200` — ink-900 measures 11.09:1 on it. The `[data-state='open']` half
+matters: with a resting tint there would otherwise be nothing to say the menu
+beneath it is showing.
+
+### A container, not a glyph
+
+The `users/user-circle` icon is replaced by the existing `Avatar` primitive, so
+there is a real image container: it shows a photograph the day staff carry one,
+and initials — "AO" — until then. Nothing was invented to do it; the component
+already existed for residents.
+
+**Staff have no photograph in the data model.** `StaffRef` carries id,
+displayName, fullName, role and isActive, and nothing else. Adding a field is a
+fixture type change and Frank's call (CLAUDE.md §8), so the avatar is passed
+`{ kind: 'not_on_file' }` — which is not a placeholder but the true state, and
+already the exact shape a real photo would arrive in.
+
+The avatar is `aria-hidden` here. `Avatar` labels itself "no photograph on
+file", which is a *resident record* concern — a control against wrong-subject
+writes, per its own doc — and repeating it in the chrome beside a name that is
+already written out would be noise. The name text carries identity.
+
+The trigger gained an explicit name for the same reason the site pill did: a
+button whose accessible name is just "A. Okonkwo" does not say what it does.
+"A. Okonkwo — account menu" contains the visible text, so voice control still
+reaches it by what is written on it (WCAG 2.5.3).
+
+`shellIcons.user` was left with no consumer, so it is removed rather than kept
+as a name nothing renders. 33 icons in the registry, down from 34.
+
+263 tests.
