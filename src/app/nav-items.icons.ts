@@ -196,7 +196,7 @@ export const shellIcons = {
   search: 'search/search',
   alerts: 'alert-notification/notification-02',
   user: 'users/user-circle',
-  siteSwitcher: 'arrows-round/arrow-down-02-round',
+  siteSwitcher: 'arrows-sharp/arrow-down-01-sharp',
   collapseSidebar: 'dashboard/sidebar-left',
   /** The app switcher grid — 3x3 circles, the launcher glyph. Not
    *  dashboard/dashboard-square-01, which the Dashboard nav item wears. */

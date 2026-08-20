@@ -41,7 +41,7 @@ export function Select({
       <RadixSelect.Trigger className={styles.trigger} aria-label={label}>
         <RadixSelect.Value placeholder={placeholder} />
         <RadixSelect.Icon>
-          <Icon name="arrows-round/arrow-down-02-round" size={16} />
+          <Icon name="arrows-sharp/arrow-down-01-sharp" size={16} />
         </RadixSelect.Icon>
       </RadixSelect.Trigger>
       <RadixSelect.Portal>

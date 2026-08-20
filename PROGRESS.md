@@ -1915,3 +1915,34 @@ from a component that cannot render a figure without its denominator. This
 relaxation is one screen's rendering, not a change to the shape of the data.
 
 263 tests.
+
+---
+
+## Arrows — chevrons from the -01 family — 20/08/2026
+
+Frank: the arrows should be `arrow-down-01`, or that group.
+
+**`arrow-down-01-round` cannot be used: the vendor ships it as a PNG, not an
+SVG.** So do `arrow-up-01-round`, `arrow-left-01-round` and
+`arrow-right-01-round` — four names that read as available in a folder of
+SVGs and are not. The pipeline only compiles SVGs (`182 non-SVG files ignored`
+in every icons run), so asking for one fails the build rather than shipping a
+broken glyph, but it is worth knowing they are missing before reaching for
+them. Second vendor packaging oddity after the `DASHBOARD` folder full of
+clothing icons.
+
+`ARROWS (SHARP)` has the same shapes as real SVGs, so the -01 family is
+reachable as `arrows-sharp/arrow-down-01-sharp`.
+
+**Rendered them before choosing, again.** `arrow-down-01-sharp` turns out to be
+a **chevron**, not a scaled-down arrow — which is what makes this the right
+change rather than a cosmetic one. The old `arrow-down-02-round` is a full
+downward arrow, and a full ↓ on a dropdown reads as *download*; a chevron says
+*this opens*. Four surfaces changed: the Select trigger, the Accordion, the top
+bar's site switcher, and the table's sort indicator, which takes the matching
+`arrow-up-01-sharp` so the whole screen agrees.
+
+The back link on the resident profile keeps `arrow-left-02-round`. It is a
+direction of travel, not a disclosure, and a full arrow is right for it.
+
+263 tests.

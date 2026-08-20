@@ -14,9 +14,9 @@ import IconAddRemoveDelete_Add01 from '@/assets/icons-generated/add-remove-delet
 import IconAlertNotification_Alert02 from '@/assets/icons-generated/alert-notification/alert-02.svg?react'
 import IconAlertNotification_AlertDiamond from '@/assets/icons-generated/alert-notification/alert-diamond.svg?react'
 import IconAlertNotification_Notification02 from '@/assets/icons-generated/alert-notification/notification-02.svg?react'
-import IconArrowsRound_ArrowDown02Round from '@/assets/icons-generated/arrows-round/arrow-down-02-round.svg?react'
 import IconArrowsRound_ArrowLeft02Round from '@/assets/icons-generated/arrows-round/arrow-left-02-round.svg?react'
-import IconArrowsRound_ArrowUp02Round from '@/assets/icons-generated/arrows-round/arrow-up-02-round.svg?react'
+import IconArrowsSharp_ArrowDown01Sharp from '@/assets/icons-generated/arrows-sharp/arrow-down-01-sharp.svg?react'
+import IconArrowsSharp_ArrowUp01Sharp from '@/assets/icons-generated/arrows-sharp/arrow-up-01-sharp.svg?react'
 import IconBusinessAndFinance_Analytics01 from '@/assets/icons-generated/business-and-finance/analytics-01.svg?react'
 import IconBusinessAndFinance_Target01 from '@/assets/icons-generated/business-and-finance/target-01.svg?react'
 import IconCheckValidation_CheckmarkBadge01 from '@/assets/icons-generated/check-validation/checkmark-badge-01.svg?react'
@@ -59,9 +59,9 @@ export const iconRegistry: Partial<
   'alert-notification/alert-02': IconAlertNotification_Alert02,
   'alert-notification/alert-diamond': IconAlertNotification_AlertDiamond,
   'alert-notification/notification-02': IconAlertNotification_Notification02,
-  'arrows-round/arrow-down-02-round': IconArrowsRound_ArrowDown02Round,
   'arrows-round/arrow-left-02-round': IconArrowsRound_ArrowLeft02Round,
-  'arrows-round/arrow-up-02-round': IconArrowsRound_ArrowUp02Round,
+  'arrows-sharp/arrow-down-01-sharp': IconArrowsSharp_ArrowDown01Sharp,
+  'arrows-sharp/arrow-up-01-sharp': IconArrowsSharp_ArrowUp01Sharp,
   'business-and-finance/analytics-01': IconBusinessAndFinance_Analytics01,
   'business-and-finance/target-01': IconBusinessAndFinance_Target01,
   'check-validation/checkmark-badge-01': IconCheckValidation_CheckmarkBadge01,

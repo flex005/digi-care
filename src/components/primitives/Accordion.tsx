@@ -27,7 +27,7 @@ export function AccordionSection({ value, title, children }: AccordionSectionPro
         <RadixAccordion.Trigger className={styles.trigger}>
           {title}
           <Icon
-            name="arrows-round/arrow-down-02-round"
+            name="arrows-sharp/arrow-down-01-sharp"
             size={20}
             className={styles.chevron}
           />

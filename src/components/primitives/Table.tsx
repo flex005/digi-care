@@ -100,8 +100,8 @@ export function Table<TSortKey extends string>({
                         <Icon
                           name={
                             sortDirection === 'ascending'
-                              ? 'arrows-round/arrow-up-02-round'
-                              : 'arrows-round/arrow-down-02-round'
+                              ? 'arrows-sharp/arrow-up-01-sharp'
+                              : 'arrows-sharp/arrow-down-01-sharp'
                           }
                           size={12}
                           className={styles.sortArrow}
