@@ -198,3 +198,20 @@ export const shellIcons = {
   siteSwitcher: 'arrows-round/arrow-down-02-round',
   collapseSidebar: 'dashboard/sidebar-left',
 } satisfies Record<string, IconName>
+
+/**
+ * The prototype's status kitchen sink at /dev/states. Not a product module, so
+ * it is not in `navItems` and no structural guard counts it — but it is
+ * declared here rather than in the sidebar because this file is what the icon
+ * usage scanner reads. An icon name written in a plain object literal in a
+ * .tsx file is invisible to the JSX scan, drops out of the generated registry,
+ * and throws when the component renders. That is how this landed here.
+ */
+export const devStatesItem: NavItem = {
+  label: 'Status states',
+  path: '/dev/states',
+  icon: 'check-validation/validation',
+  phase: 0,
+  enabled: true,
+  section: 'overview',
+}

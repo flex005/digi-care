@@ -1,11 +1,19 @@
+/**
+ * The top bar reads as a light header rather than a deep purple band, so the
+ * page's one strong surface is the content, not the chrome. Every colour that
+ * used to sit on purple has moved to its ink equivalent — a white bar with
+ * white text would be the kind of contrast failure PRD §7 exists to prevent,
+ * so this is a full recolour, not a background swap.
+ */
 .topbar {
   display: flex;
   gap: var(--space-24);
   align-items: center;
   height: var(--layout-topbar-height);
   padding: 0 var(--layout-gutter);
-  background-color: var(--purple-900);
-  color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
 }
 
 /**
@@ -20,17 +28,17 @@
   align-items: center;
   min-height: var(--space-32);
   padding: var(--space-4) var(--space-12);
-  border: 1px solid var(--purple-400);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-pill);
-  background-color: transparent;
-  color: var(--bg-surface);
+  background-color: var(--purple-50);
+  color: var(--purple-900);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
 }
 
 .siteLabel {
-  color: var(--purple-200);
+  color: var(--ink-500);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
   font-weight: var(--weight-medium);
@@ -49,22 +57,23 @@
   width: 320px;
   min-height: var(--space-40);
   padding: 0 var(--space-12);
-  border: 1px solid var(--purple-400);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-pill);
-  color: var(--purple-200);
+  background-color: var(--bg-page);
+  color: var(--ink-500);
 }
 
 .searchInput {
   width: 100%;
   border: none;
   background: transparent;
-  color: var(--bg-surface);
+  color: var(--ink-900);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
 }
 
 .searchInput::placeholder {
-  color: var(--purple-200);
+  color: var(--ink-500);
 }
 
 .searchInput:focus-visible {
@@ -79,11 +88,12 @@
   width: var(--space-40);
   height: var(--space-40);
   border-radius: var(--radius-pill);
-  color: var(--bg-surface);
+  color: var(--ink-700);
 }
 
 .iconButton:hover {
-  background-color: var(--purple-600);
+  background-color: var(--purple-50);
+  color: var(--purple-900);
 }
 
 /* The alert count. A bare number would break Rule 4, so the accessible name
@@ -110,12 +120,12 @@
   min-height: var(--space-40);
   padding: var(--space-4) var(--space-12);
   border-radius: var(--radius-pill);
-  color: var(--bg-surface);
+  color: var(--ink-900);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
 }
 
 .user:hover {
-  background-color: var(--purple-600);
+  background-color: var(--purple-50);
 }

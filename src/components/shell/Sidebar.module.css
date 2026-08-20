@@ -1,23 +1,32 @@
+/**
+ * The rail is a card, not a wall: it sits inset from the window edge on the
+ * page background with its own radius and border, the same surface language
+ * the tables and panels use. AppShell.module.css owns the inset.
+ */
 .sidebar {
   display: flex;
   flex-direction: column;
   width: var(--layout-sidebar-width);
   height: 100%;
-  border-right: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   background-color: var(--bg-surface);
+  overflow: hidden;
 }
 
 .collapsed {
   width: var(--layout-sidebar-width-collapsed);
 }
 
-/* The product mark, in its own block at the top of the rail. */
+/* The product mark and the collapse control, together at the top.
+   The height is the top bar's less the inset above the card, so this block's
+   rule lands on the same line as the top bar's rather than 12px below it. */
 .brand {
   display: flex;
   gap: var(--space-12);
   align-items: center;
-  height: var(--layout-topbar-height);
-  padding: 0 var(--space-16);
+  min-height: calc(var(--layout-topbar-height) - var(--space-12));
+  padding: 0 var(--space-12);
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -34,6 +43,7 @@
 }
 
 .wordmark {
+  flex: 1;
   color: var(--purple-900);
   font-size: var(--text-h3-size);
   line-height: var(--text-h3-line);
@@ -42,11 +52,37 @@
   white-space: nowrap;
 }
 
+.collapseButton {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-32);
+  height: var(--space-32);
+  border-radius: var(--radius-md);
+  color: var(--ink-500);
+}
+
+.collapseButton:hover {
+  background-color: var(--purple-50);
+  color: var(--purple-900);
+}
+
+/* Collapsed there is no room for mark and control side by side, so the block
+   stacks. Both stay visible — hiding the mark would lose the product, and
+   hiding the control would strand the reader in the narrow rail. */
+.collapsed .brand {
+  flex-direction: column;
+  gap: var(--space-8);
+  justify-content: center;
+  padding: var(--space-12) 0;
+}
+
 /* Seventeen items plus headings will not fit a short viewport, so the list
-   scrolls and the collapse control stays reachable at the bottom. */
+   scrolls. */
 .scroll {
   flex: 1;
-  padding: var(--space-12) var(--space-12) var(--space-8);
+  padding: var(--space-12) var(--space-12) var(--space-16);
   overflow-y: auto;
 }
 
@@ -60,9 +96,12 @@
   border-top: 1px solid var(--border-subtle);
 }
 
+/* ink-500, not ink-400: a section heading is real text and has to clear 4.5:1
+   on white (5.36). ink-400 reaches 2.93 and is only permissible inside the
+   disabled items, which WCAG 2.2 exempts as inactive controls. */
 .sectionLabel {
   padding: 0 var(--space-12) var(--space-4);
-  color: var(--ink-400);
+  color: var(--ink-500);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
   font-weight: var(--weight-semibold);
@@ -170,11 +209,6 @@
   background-color: var(--status-critical);
 }
 
-.collapsed .brand {
-  justify-content: center;
-  padding: 0;
-}
-
 .collapsed .wordmark,
 .collapsed .label,
 .collapsed .phaseTag,
@@ -189,30 +223,5 @@
 }
 
 .collapsed .scroll {
-  padding: var(--space-12) var(--space-8) var(--space-8);
-}
-
-.collapseButton {
-  display: flex;
-  gap: var(--space-12);
-  align-items: center;
-  min-height: var(--space-40);
-  margin: 0 var(--space-12) var(--space-12);
-  padding: var(--space-8) var(--space-12);
-  border-radius: var(--radius-md);
-  color: var(--ink-500);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-  font-weight: var(--weight-medium);
-}
-
-.collapseButton:hover {
-  background-color: var(--purple-50);
-  color: var(--purple-900);
-}
-
-.collapsed .collapseButton {
-  justify-content: center;
-  margin: 0 var(--space-8) var(--space-12);
-  padding: var(--space-8);
+  padding: var(--space-12) var(--space-8) var(--space-16);
 }

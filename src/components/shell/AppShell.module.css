@@ -11,6 +11,7 @@
     'sidebar topbar'
     'sidebar main';
   min-height: 100vh;
+  background-color: var(--bg-page);
 }
 
 .topbar {
@@ -21,10 +22,13 @@
   grid-area: sidebar;
 
   /* Sticky so seventeen nav items stay reachable on a long page without
-     scrolling the whole shell back to the top. */
+     scrolling the whole shell back to the top. The padding is what lifts the
+     rail off the window edge and lets it read as a card with its own radius,
+     rather than a wall running to the crop. */
   position: sticky;
   top: 0;
   height: 100vh;
+  padding: var(--space-12) 0 var(--space-12) var(--space-12);
 }
 
 .main {

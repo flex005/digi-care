@@ -1004,3 +1004,94 @@ test was confirmed to fail with the clamp removed.
 arithmetic is not itself validated. Care notes, then administration, then
 refusal records in the same function. Worth a look wherever a fixture computes
 one time from another.
+
+---
+
+## Navigation bar — four corrections — 20/08/2026
+
+Frank's review of the restyle: move the collapse control into the logo block,
+make the top bar white, give the rail curved edges, and fix the Residents icon,
+which when collapsed was displaced and had no active state.
+
+### The collapsed active item was a bug, not a styling slip
+
+Worth writing down because the cause was invisible from the symptom.
+
+The rail rendered enabled and disabled items through **different branches**.
+The disabled branch built its class list as a string. The enabled branch used
+NavLink's *function* form of `className` — and when collapsed, wrapped it in a
+Radix `Tooltip`. Radix's Slot merges a trigger's className with its child's by
+**joining them as strings**, so the function was stringified. The item lost
+every class it had: no padding, no centring, no active pill. Fourteen disabled
+items looked correct and the one enabled item did not, which is exactly the
+shape that reads as "a CSS problem with that icon".
+
+Fixed by collapsing all four cases — enabled, disabled, collapsed, expanded —
+into a single `SidebarItem` that computes `isActive` with `useMatch` and builds
+a **string** class list in every branch. The divergence now has nowhere to live.
+
+`Sidebar.test.tsx` gained the tests that would have caught it: the current item
+carries `.item` and `.active` in both states, and *every* row carries the base
+`.item` class in both states. Confirmed by restoring the old component — the
+collapsed cases fail, the expanded ones pass, which matches the bug exactly.
+
+**The general lesson: every existing sidebar test asked about accessible
+names. None asked whether an item still looked like an item.** The naming
+tests all passed throughout — the accessible name was never affected.
+
+### A second silent failure, from the same edit
+
+Moving the `/dev/states` item into an object literal in `Sidebar.tsx` took its
+icon name out of the Tier-1 JSX scan's reach. `npm run icons` regenerated the
+registry **without** it, `icons:check` reported the registry current — because
+it was current, for the wrong input — and the screen threw at runtime.
+
+The declaration now lives in `nav-items.icons.ts` as `devStatesItem`, which the
+Tier-2 scan reads. Noting the gap rather than redesigning around it: an icon
+name that is valid (`IconName` covers all 3,559) but no longer *detected as
+used* is caught by neither the type system nor `icons:check`. It is caught by
+rendering, and the component tests do render — `npm run verify` would have
+failed. It only escaped because a build was run out of order.
+
+### The three visual changes
+
+**Top bar white.** A background swap alone would have put white text on white,
+so every colour that sat on the deep purple moved to its ink equivalent, and
+the borders moved to `--border-strong`, which is what Select, Button and
+`control.module.css` already use on white. The bar is now consistent with the
+rest of the app rather than the one surface with its own rules.
+
+**The rail is a card.** `AppShell.module.css` insets it by `--space-12`; the
+sidebar carries `--radius-lg` and a `--border-subtle` edge — the same surface
+language as the tables and panels, rather than a wall running to the crop.
+
+**Collapse control in the logo block.** Expanded, it sits at the right of the
+mark and wordmark. Collapsed, the block stacks: mark above, control below.
+Both stay visible — hiding the mark loses the product, hiding the control
+strands the reader in the narrow rail. The block's height is the top bar's
+height less the inset, so its rule lands on the same line as the top bar's
+instead of 12px below it.
+
+### Contrast, checked rather than assumed
+
+Recolouring onto white re-opened every ratio in the bar. Fifteen pairs
+measured; one genuine failure found and fixed, and it was **pre-existing from
+yesterday's work, not from the recolour**: section headings were `--ink-400`,
+2.93:1 on white. Now `--ink-500`, 5.36:1.
+
+Disabled item text stays `--ink-400`. WCAG 2.2 exempts inactive controls
+(1.4.3, "Incidental"), and disabled is carried by cursor, `aria-disabled`,
+tooltip and phase tag as well as colour — never colour alone.
+
+### Needs Frank's decision
+
+1. **PRD §4.7's "diGi-Care wordmark" in the top bar** — still outstanding from
+   the previous entry. The wordmark is in the sidebar.
+2. **PRD §4.7 / the diGiLog language describe a deep purple top bar.** It is
+   now white, at Frank's instruction. Same class of correction needed.
+3. **`--border-strong` on white is 1.24:1.** WCAG 2.2 §1.4.11 wants 3:1 for a
+   control boundary that identifies the control — a text input's edge
+   qualifies. This is **app-wide**, not local to the top bar: every Select,
+   Button and input already uses it. Both border tokens are marked ✅ verified
+   in `tokens.css`, so changing one is a token decision (CLAUDE.md §8), not
+   something to fix quietly in one stylesheet. Flagged, not touched.

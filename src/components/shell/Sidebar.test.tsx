@@ -3,6 +3,7 @@ import { render, screen, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { TooltipProvider } from '@/components/primitives'
 import { navItems, navSections } from '@/app/nav-items.icons'
+import itemStyles from './Sidebar.module.css'
 import { Sidebar } from './Sidebar'
 import type { NavCount } from './NavBadge'
 
@@ -21,17 +22,17 @@ const COUNTS: Partial<Record<string, NavCount>> = {
   },
 }
 
-function renderSidebar(collapsed = false) {
+function renderSidebar(collapsed = false, at = '/residents') {
   const router = createMemoryRouter(
     [
       {
-        path: '/',
+        path: '*',
         element: (
           <Sidebar collapsed={collapsed} onToggleCollapsed={() => {}} counts={COUNTS} />
         ),
       },
     ],
-    { initialEntries: ['/'] },
+    { initialEntries: [at] },
   )
   return render(
     <TooltipProvider>
@@ -96,6 +97,52 @@ describe('count badges are never the whole claim', () => {
   })
 })
 
+describe('collapsing changes what is shown, never what an item is', () => {
+  /**
+   * The regression this exists for: the collapsed rail rendered its enabled
+   * items through a different branch from its disabled ones, and that branch
+   * passed NavLink's *function* form of className into a Radix Tooltip. Slot
+   * merges a trigger's className with its child's by joining strings, so the
+   * function was stringified and the item lost every class it had — the active
+   * item sat unpadded against the left edge with no active state, while the
+   * fourteen disabled items looked fine.
+   *
+   * Nothing caught it, because every test asked about names and none asked
+   * whether an item still looked like an item. These do.
+   */
+  it.each([
+    ['expanded', false],
+    ['collapsed', true],
+  ])('marks the current item active when %s', (_label, collapsed) => {
+    renderSidebar(collapsed)
+    const residents = screen.getByRole('link', { name: /Residents/ })
+    expect(residents).toHaveClass(itemStyles.item, itemStyles.active)
+    expect(residents).toHaveAttribute('aria-current', 'page')
+  })
+
+  it.each([
+    ['expanded', false],
+    ['collapsed', true],
+  ])('gives every item the same base class when %s', (_label, collapsed) => {
+    renderSidebar(collapsed)
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' })
+    const rows = within(nav).getAllByRole('link', { hidden: true })
+    expect(rows.length).toBeGreaterThanOrEqual(navItems.length)
+    for (const row of rows) {
+      expect(row, `${row.getAttribute('aria-label')} lost its item class`).toHaveClass(
+        itemStyles.item,
+      )
+    }
+  })
+
+  it('leaves items that are not current unmarked', () => {
+    renderSidebar()
+    expect(screen.getByRole('link', { name: /Goals/ })).not.toHaveClass(
+      itemStyles.active,
+    )
+  })
+})
+
 describe('collapsing never removes an accessible name', () => {
   /**
    * PRD §7 permits an icon-only control only where a visible label sits
@@ -122,6 +169,8 @@ describe('collapsing never removes an accessible name', () => {
   )
 
   it('keeps the collapse control named in both states', () => {
+    // It sits in the brand block with the mark, and is icon-only in both
+    // states, so the name is the only thing carrying it. PRD §7.
     const expanded = renderSidebar(false)
     expect(screen.getByRole('button', { name: 'Collapse sidebar' })).toBeInTheDocument()
     expanded.unmount()

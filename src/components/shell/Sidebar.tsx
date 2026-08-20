@@ -1,7 +1,7 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useMatch } from 'react-router-dom'
 import { Icon } from '@/components/icon/Icon'
 import { Tooltip } from '@/components/primitives'
-import { navItems, navSections, shellIcons } from '@/app/nav-items.icons'
+import { devStatesItem, navItems, navSections, shellIcons } from '@/app/nav-items.icons'
 import type { NavItem } from '@/app/nav-items.icons'
 import { NavBadge, type NavCount } from './NavBadge'
 import styles from './Sidebar.module.css'
@@ -18,11 +18,12 @@ import styles from './Sidebar.module.css'
  * blank cell (CLAUDE.md §1): a manager who cannot find "Compliance" should
  * learn that it is coming, not conclude it does not exist.
  *
- * The sidebar carries the product mark in its own block at the top. Collapsed,
- * the block keeps the mark and drops the wordmark, and every item becomes
- * icon-only with a tooltip — which PRD §7 permits precisely because each one
- * keeps an `aria-label`. An icon-only control with no accessible name would
- * not be permitted, and is the thing to watch for if items are added here.
+ * The sidebar carries the product mark and the collapse control together in
+ * its own block at the top. Collapsed, the block keeps both and drops the
+ * wordmark, and every item becomes icon-only with a tooltip — which PRD §7
+ * permits precisely because each one keeps an `aria-label`. An icon-only
+ * control with no accessible name would not be permitted, and is the thing to
+ * watch for if items are added here.
  */
 
 export interface SidebarProps {
@@ -37,6 +38,89 @@ function itemAccessibleName(item: NavItem, count: NavCount | undefined): string 
   return count ? `${base}. ${count.description}` : base
 }
 
+/**
+ * One row.
+ *
+ * Enabled, disabled, collapsed and expanded all render through here, and all
+ * four build the class list the same way — as a **string**.
+ *
+ * That is not incidental tidiness. The earlier version passed NavLink's
+ * function form of `className` and, when collapsed, wrapped it in a Tooltip.
+ * Radix's Slot merges a trigger's className with its child's by joining them,
+ * which silently stringified the function — so the active item lost every
+ * class it had, sat unpadded against the left edge, and showed no active
+ * state. It looked like a styling slip; it was the two branches diverging.
+ * One renderer, one string, and the divergence has nowhere to live.
+ */
+function SidebarItem({
+  item,
+  count,
+  collapsed,
+}: {
+  item: NavItem
+  count: NavCount | undefined
+  collapsed: boolean
+}) {
+  // Matched here rather than via NavLink's render prop, so the class list is
+  // a plain string in every branch. `end: false` keeps the parent item active
+  // on a child route — /residents stays lit on /residents/:id.
+  const match = useMatch({ path: item.path, end: false })
+  const isActive = item.enabled && match !== null
+  const name = itemAccessibleName(item, count)
+
+  const className = [
+    styles.item,
+    isActive ? styles.active : '',
+    item.enabled ? '' : styles.disabled,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  const inner = (
+    <>
+      <Icon name={item.icon} size={20} />
+      <span className={styles.label}>{item.label}</span>
+      {count ? <NavBadge count={count} collapsed={collapsed} /> : null}
+      {item.enabled || collapsed ? null : (
+        <span className={styles.phaseTag} aria-hidden="true">
+          P{item.phase}
+        </span>
+      )}
+    </>
+  )
+
+  const control = item.enabled ? (
+    <NavLink to={item.path} aria-label={name} className={className}>
+      {inner}
+    </NavLink>
+  ) : (
+    <span
+      className={className}
+      role="link"
+      aria-disabled="true"
+      aria-label={name}
+      tabIndex={0}
+    >
+      {inner}
+    </span>
+  )
+
+  // A tooltip when the label is not readable (collapsed) or the item cannot be
+  // followed (disabled). Where the visible label is present and the item works,
+  // a tooltip would only repeat it.
+  return (
+    <li>
+      {collapsed || !item.enabled ? (
+        <Tooltip side="right" content={name}>
+          {control}
+        </Tooltip>
+      ) : (
+        control
+      )}
+    </li>
+  )
+}
+
 export function Sidebar({ collapsed, onToggleCollapsed, counts }: SidebarProps) {
   return (
     <nav
@@ -45,11 +129,28 @@ export function Sidebar({ collapsed, onToggleCollapsed, counts }: SidebarProps) 
         .join(' ')}
       aria-label="Main navigation"
     >
+      {/* Mark and collapse control share the top block. The control belongs
+          with the thing it acts on, and it stays in the same place in both
+          states rather than moving between the top and the foot of the rail. */}
       <div className={styles.brand}>
         <span className={styles.mark} aria-hidden="true">
           <Icon name={shellIcons.logo} size={20} />
         </span>
         <span className={styles.wordmark}>diGi-Care</span>
+        <Tooltip
+          side="right"
+          content={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <button
+            type="button"
+            className={styles.collapseButton}
+            onClick={onToggleCollapsed}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-expanded={!collapsed}
+          >
+            <Icon name={shellIcons.collapseSidebar} size={20} />
+          </button>
+        </Tooltip>
       </div>
 
       <div className={styles.scroll}>
@@ -63,71 +164,14 @@ export function Sidebar({ collapsed, onToggleCollapsed, counts }: SidebarProps) 
                 <p className={styles.sectionLabel}>{section.label}</p>
               )}
               <ul className={styles.items}>
-                {items.map((item) => {
-                  const count = counts[item.path]
-                  const name = itemAccessibleName(item, count)
-
-                  const inner = (
-                    <>
-                      <Icon name={item.icon} size={20} />
-                      <span className={styles.label}>{item.label}</span>
-                      {count ? <NavBadge count={count} collapsed={collapsed} /> : null}
-                      {item.enabled || collapsed ? null : (
-                        <span className={styles.phaseTag} aria-hidden="true">
-                          P{item.phase}
-                        </span>
-                      )}
-                    </>
-                  )
-
-                  return (
-                    <li key={item.path}>
-                      {item.enabled ? (
-                        collapsed ? (
-                          <Tooltip side="right" content={name}>
-                            <NavLink
-                              to={item.path}
-                              aria-label={name}
-                              className={({ isActive }) =>
-                                [styles.item, isActive ? styles.active : '']
-                                  .filter(Boolean)
-                                  .join(' ')
-                              }
-                            >
-                              {inner}
-                            </NavLink>
-                          </Tooltip>
-                        ) : (
-                          <NavLink
-                            to={item.path}
-                            // The visible label is hidden when collapsed, so
-                            // the name is carried here either way. PRD §7.
-                            aria-label={name}
-                            className={({ isActive }) =>
-                              [styles.item, isActive ? styles.active : '']
-                                .filter(Boolean)
-                                .join(' ')
-                            }
-                          >
-                            {inner}
-                          </NavLink>
-                        )
-                      ) : (
-                        <Tooltip side="right" content={name}>
-                          <span
-                            className={[styles.item, styles.disabled].join(' ')}
-                            role="link"
-                            aria-disabled="true"
-                            aria-label={name}
-                            tabIndex={0}
-                          >
-                            {inner}
-                          </span>
-                        </Tooltip>
-                      )}
-                    </li>
-                  )
-                })}
+                {items.map((item) => (
+                  <SidebarItem
+                    key={item.path}
+                    item={item}
+                    count={counts[item.path]}
+                    collapsed={collapsed}
+                  />
+                ))}
               </ul>
             </div>
           )
@@ -136,32 +180,14 @@ export function Sidebar({ collapsed, onToggleCollapsed, counts }: SidebarProps) 
         <div className={styles.section}>
           <p className={styles.sectionLabel}>Review</p>
           <ul className={styles.items}>
-            <li>
-              <NavLink
-                to="/dev/states"
-                aria-label="Status states"
-                className={({ isActive }) =>
-                  [styles.item, isActive ? styles.active : ''].filter(Boolean).join(' ')
-                }
-              >
-                <Icon name="check-validation/validation" size={20} />
-                <span className={styles.label}>Status states</span>
-              </NavLink>
-            </li>
+            <SidebarItem
+              item={devStatesItem}
+              count={counts[devStatesItem.path]}
+              collapsed={collapsed}
+            />
           </ul>
         </div>
       </div>
-
-      <button
-        type="button"
-        className={styles.collapseButton}
-        onClick={onToggleCollapsed}
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        aria-expanded={!collapsed}
-      >
-        <Icon name={shellIcons.collapseSidebar} size={20} />
-        <span className={styles.label}>Collapse sidebar</span>
-      </button>
     </nav>
   )
 }
