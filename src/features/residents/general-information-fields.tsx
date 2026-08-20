@@ -3,7 +3,7 @@ import type { Resident } from '@/data/types'
 import { FUNDING_SOURCES } from '@/data/types'
 import { Avatar } from '@/components/primitives'
 import { formatDate, ageFrom } from '@/lib/format'
-import { PlainValue, RecordedValueField } from './FieldList'
+import { PlainValue, RecordedListField, RecordedValueField } from './FieldList'
 import styles from './profile.module.css'
 
 /**
@@ -225,11 +225,12 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
         id: 'secondary-diagnoses',
         label: 'Secondary diagnoses',
         whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.secondaryDiagnoses.kind === 'unrecorded',
+        isUnrecorded: (resident) => resident.secondaryDiagnoses.kind === 'not_recorded',
         render: (resident) => (
-          <RecordedValueField
-            record={resident.secondaryDiagnoses}
+          <RecordedListField
+            list={resident.secondaryDiagnoses}
             label="Secondary diagnoses"
+            noneLabel="No secondary diagnoses"
             attributed
             render={(values) => (
               <ul className={styles.inlineList}>
@@ -290,27 +291,36 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
         id: 'consultants',
         label: 'Consultants and specialists',
         whenMissing: 'hatch',
-        // An empty array cannot distinguish "no consultants involved" from
-        // "nobody recorded them", so it is read as the safer of the two —
-        // unrecorded. Flagged in PROGRESS.md: the field wants to be
-        // Recorded<ProfessionalContact[]>, which is a fixture type change.
-        isUnrecorded: (resident) => resident.consultants.length === 0,
+        isUnrecorded: (resident) => resident.consultants.kind === 'not_recorded',
         render: (resident) => (
-          <ul className={styles.contactList}>
-            {resident.consultants.map((contact) => (
-              <li key={`${contact.name}-${contact.role}`}>
-                <span>
-                  {contact.name} · {contact.role}
-                </span>
-                <br />
-                <span className={styles.contactMeta}>{contact.organisation}</span>
-                <br />
-                <a className={styles.contactLink} href={`tel:${contact.contact.phone}`}>
-                  {contact.contact.phone}
-                </a>
-              </li>
-            ))}
-          </ul>
+          <RecordedListField
+            list={resident.consultants}
+            label="Consultants and specialists"
+            // A recorded negative, not a gap: somebody asked and there are
+            // none under this resident's care.
+            noneLabel="No consultants or specialists involved"
+            attributed
+            render={(contacts) => (
+              <ul className={styles.contactList}>
+                {contacts.map((contact) => (
+                  <li key={`${contact.name}-${contact.role}`}>
+                    <span>
+                      {contact.name} · {contact.role}
+                    </span>
+                    <br />
+                    <span className={styles.contactMeta}>{contact.organisation}</span>
+                    <br />
+                    <a
+                      className={styles.contactLink}
+                      href={`tel:${contact.contact.phone}`}
+                    >
+                      {contact.contact.phone}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          />
         ),
       },
       {

@@ -11,6 +11,35 @@ import type { CarePlanDomainId } from './reference'
 import type { IsoDate, IsoDateTime, StaffRef } from './primitives'
 
 /**
+ * A list that can be absent, empty by decision, or present.
+ *
+ * The third shape of the Evidence Invariant, after `Recorded<T>` and the
+ * bespoke unions. A bare `T[]` cannot tell "nobody recorded who is involved"
+ * from "somebody asked and there is nobody" — an empty array is exactly the
+ * ambiguity `AllergyStatus` was split into three members to remove, and it
+ * came back through the arrays after being driven out of the scalars.
+ *
+ * `Recorded<T[]>` does not fix it: an empty array inside a `recorded` wrapper
+ * reintroduces the same ambiguity one level down. Hence three explicit
+ * members, and `items` typed non-empty so `recorded` cannot be empty.
+ *
+ * `none_involved` carries an author because **"we asked, there is no LPA" is a
+ * positive claim somebody made** — the same reason a recorded "No known
+ * allergies" carries one, and the same reason it must look settled rather than
+ * unfinished (Rule 3).
+ */
+export type RecordedList<T> =
+  | { kind: 'not_recorded' }
+  | { kind: 'none_involved'; recordedBy: StaffRef; recordedAt: IsoDateTime }
+  | {
+      kind: 'recorded'
+      /** Non-empty by construction: `recorded` with nothing in it is a lie. */
+      items: [T, ...T[]]
+      recordedBy: StaffRef
+      recordedAt: IsoDateTime
+    }
+
+/**
  * Allergies. Three states, not `Recorded<Allergy[]>`.
  *
  * An empty array standing for "confirmed none known" is exactly the subtlety
@@ -33,7 +62,9 @@ export type AllergyStatus =
   | { kind: 'none_known'; recordedBy: StaffRef; recordedAt: IsoDateTime }
   | {
       kind: 'allergies'
-      items: Allergy[]
+      /** Non-empty: this member asserts allergies exist, so listing none
+       *  would contradict it. Use `none_known` for a recorded negative. */
+      items: [Allergy, ...Allergy[]]
       recordedBy: StaffRef
       recordedAt: IsoDateTime
     }

@@ -748,3 +748,79 @@ present on clinical fields and absent on person-centred ones).
 
 Still to check by eye at review: a keyboard pass over the tab strip, and 200%
 zoom on the field grid.
+
+---
+
+## Array fields — the ambiguity that came back
+
+Done before Screen 4, on instruction: cheap while three fields consume it,
+expensive once a screen is built on it.
+
+### The shape
+
+```ts
+export type RecordedList<T> =
+  | { kind: 'not_recorded' }
+  | { kind: 'none_involved'; recordedBy; recordedAt }
+  | { kind: 'recorded'; items: [T, ...T[]]; recordedBy; recordedAt }
+```
+
+**Not `Recorded<T[]>`.** An empty array inside a `recorded` wrapper
+reintroduces the same ambiguity one level down, so `items` is typed non-empty
+and `recorded` cannot be empty.
+
+`none_involved` carries an author because **"we asked, there is no LPA" is a
+positive claim somebody made** — the same reason a recorded "No known
+allergies" carries one, and the same reason it renders settled rather than
+hatched (Rule 3). It is on `/dev/states` under `RecordedList<T>` with all three
+states.
+
+### The sweep — all eight array-typed fields reachable from `Resident`
+
+| Field | Verdict |
+| --- | --- |
+| `consultants` | **Defect** → `RecordedList` |
+| `importantPeople.familyWithVisitingRights` | **Defect** → `RecordedList` |
+| `importantPeople.otherProfessionals` | **Defect** → `RecordedList` |
+| `secondaryDiagnoses: Recorded<string[]>` | **Defect** → `RecordedList`. This was already the `Recorded<T[]>` shape, ambiguous one level down |
+| `AllergyStatus.allergies.items` | **Defect** → `[Allergy, ...Allergy[]]`. An `allergies` record listing none contradicts its own member |
+| `ConsentStatus.best_interest.consulted` | **Defect** → `[string, ...string[]]`. A best-interest decision reached without consulting anybody is not one (MCA 2005) |
+| `Medication.roundTimes` | **Defect** → `[string, ...string[]]`. A scheduled medication with no rounds is not scheduled |
+| `carePlan` | **Not a defect.** A complete enumeration of all ten domains, always fully populated, asserted. An absence would be a bug, not an ambiguity |
+
+Also checked and clear: `risks` and `consents` are `Record<>` maps with every
+key always present, asserted by existing tests.
+
+Two shapes, not one. Where the array **is** the field, three members. Where the
+array sits **inside a member that already asserts existence**, a non-empty
+tuple — because there the emptiness is not ambiguous, it is contradictory, and
+the type can simply forbid it.
+
+### Fixtures and tests
+
+Every `RecordedList` field has a resident in all three states, pinned rather
+than left to probability: Ismail Sowande `not_recorded` (admitted yesterday,
+nobody has asked), Grace Adeyemi `none_involved`, Emmanuel Okafor `recorded`.
+`fixtures.test.ts` asserts all three exist per field, that `recorded` is never
+empty, and that the non-empty tuples hold.
+
+### Found while doing it — a positive claim went dead, silently
+
+Changing the list fields shifted the generator's random stream, and afterwards
+**no resident had an entirely settled risk picture** — so the residents list
+could never render "All assessed — no flags". The branch had been reachable
+when Screen 1 was reviewed; it went dead as a side effect of unrelated work,
+and nothing would have caught it.
+
+Cyril Broadbent is now pinned settled, with a test asserting at least one
+resident is. The reassuring case has to exist for the same reason the alarming
+ones do: **a screen reviewed only against gaps is a screen nobody has seen
+working.** Worth generalising — the fixtures already guarantee every failure
+state, and should equally guarantee every success state.
+
+### Verification
+
+`npm run verify` green — 141 tests. Screenshot read back of Grace Adeyemi
+showing "No secondary diagnoses" and "No consultants or specialists involved"
+as settled green claims with their authors, beside a hatched "Medical history
+not recorded".

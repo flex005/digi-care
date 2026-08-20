@@ -32,6 +32,7 @@ import type {
   IsolationStatus,
   MoodRecord,
   PhotoStatus,
+  RecordedList,
 } from './clinical'
 import type {
   CareNoteCategoryId,
@@ -109,8 +110,8 @@ export interface ImportantPeople {
   lpaHolder: Recorded<LpaHolder>
   socialWorker: Recorded<SocialWorker>
   advocate: Recorded<ImportantPerson>
-  familyWithVisitingRights: ImportantPerson[]
-  otherProfessionals: ProfessionalContact[]
+  familyWithVisitingRights: RecordedList<ImportantPerson>
+  otherProfessionals: RecordedList<ProfessionalContact>
 }
 
 // ---------------------------------------------------------------------------
@@ -181,7 +182,8 @@ export interface Medication {
   dose: string
   route: string
   /** 24-hour times, in the SITE's zone: ['08:00', '20:00']. */
-  roundTimes: string[]
+  /** Non-empty: a scheduled medication with no rounds is not scheduled. */
+  roundTimes: [string, ...string[]]
   isControlledDrug: boolean
   isPrn: boolean
 }
@@ -220,7 +222,7 @@ export interface Resident {
   // Clinical
   allergies: AllergyStatus
   primaryDiagnosis: Recorded<string>
-  secondaryDiagnoses: Recorded<string[]>
+  secondaryDiagnoses: RecordedList<string>
   medicalHistory: Recorded<string>
 
   // Badge strip — every one a closed union, every one always rendered.
@@ -232,7 +234,7 @@ export interface Resident {
   // Professional contacts
   gp: Recorded<GpRecord>
   pharmacy: Recorded<PharmacyRecord>
-  consultants: ProfessionalContact[]
+  consultants: RecordedList<ProfessionalContact>
 
   // Person
   primaryLanguage: Recorded<string>

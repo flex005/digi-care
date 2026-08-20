@@ -24,7 +24,7 @@ interface DrugTemplate {
   name: string
   dose: string
   route: string
-  roundTimes: string[]
+  roundTimes: [string, ...string[]]
   isControlledDrug: boolean
   isPrn: boolean
 }

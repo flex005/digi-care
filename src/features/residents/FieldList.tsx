@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import type { Recorded } from '@/data/types'
-import { Unrecorded } from '@/components/status'
+import type { Recorded, RecordedList } from '@/data/types'
+import { StatusPill, Unrecorded } from '@/components/status'
 import { useSiteFormat } from '@/app/session/use-session'
 import styles from './profile.module.css'
 
@@ -84,6 +84,61 @@ export function RecordedValueField<T>({
           , <span data-numeric>{format.instantDate(record.recordedAt)}</span>
         </p>
       ) : null}
+    </>
+  )
+}
+
+/**
+ * A `RecordedList<T>` rendered as its three states.
+ *
+ * The middle one is the point. **"We asked, and there are none" is a positive
+ * claim somebody made** — it looks settled, carries its author, and must never
+ * wear the hatch, exactly like a recorded "No known allergies". Only
+ * `not_recorded` is a gap.
+ */
+export function RecordedListField<T>({
+  list,
+  label,
+  /** How the "none" case reads: "No consultants or specialists involved". */
+  noneLabel,
+  attributed,
+  render,
+}: {
+  list: RecordedList<T>
+  label: string
+  noneLabel: string
+  attributed: boolean
+  render: (items: [T, ...T[]]) => ReactNode
+}) {
+  const format = useSiteFormat()
+
+  if (list.kind === 'not_recorded') {
+    return <Unrecorded label={`${label} not recorded`} />
+  }
+
+  const attribution = attributed ? (
+    <p className={styles.attribution}>
+      Recorded by{' '}
+      {list.recordedBy.isActive
+        ? list.recordedBy.displayName
+        : `${list.recordedBy.displayName} (deactivated)`}
+      , <span data-numeric>{format.instantDate(list.recordedAt)}</span>
+    </p>
+  ) : null
+
+  if (list.kind === 'none_involved') {
+    return (
+      <>
+        <StatusPill tone="positive" label={noneLabel} />
+        {attribution}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <div className={styles.value}>{render(list.items)}</div>
+      {attribution}
     </>
   )
 }

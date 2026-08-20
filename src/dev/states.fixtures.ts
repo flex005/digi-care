@@ -10,6 +10,7 @@ import type {
   MoodRecord,
   PhotoStatus,
   Recorded,
+  RecordedList,
   ResuscitationStatus,
   ReviewState,
   RiskStatus,
@@ -449,6 +450,33 @@ export const photoStates: ByKind<PhotoStatus> = {
       url: samplePhoto,
       uploadedBy: staffOkonkwo,
       uploadedAt: '2026-04-02T13:10:00+01:00',
+    },
+  ],
+}
+
+/**
+ * The third general shape, after `Recorded<T>` and the bespoke unions.
+ *
+ * `none_involved` is the member that earns the type: "we asked, and there is
+ * nobody" is a positive claim with an author, and it must look settled rather
+ * than unfinished — the same treatment as a recorded "No known allergies", for
+ * the same reason.
+ */
+export const recordedListStates: ByKind<RecordedList<string>> = {
+  not_recorded: [{ kind: 'not_recorded' }],
+  none_involved: [
+    {
+      kind: 'none_involved',
+      recordedBy: staffOkonkwo,
+      recordedAt: '2026-07-06T10:15:00+01:00',
+    },
+  ],
+  recorded: [
+    {
+      kind: 'recorded',
+      items: ['Hypertension', 'Atrial fibrillation'],
+      recordedBy: staffOkonkwo,
+      recordedAt: '2026-07-06T10:15:00+01:00',
     },
   ],
 }

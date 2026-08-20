@@ -5,6 +5,7 @@ import { residents } from './residents'
 import { careNotes } from './care-notes'
 import { hasStockDiscrepancy, marRecordsAll, stockCounts } from './medications'
 import { sites, staff } from './organisation'
+import type { RecordedList, Resident } from '../types'
 
 /**
  * PRD §5.3's ten deliberate gaps, asserted in CI.
@@ -233,5 +234,121 @@ describe('records cannot be in the future', () => {
       // `due` and `not_due` are about the future by definition — they are
       // expectations, not records — so they are exempt.
     }
+  })
+})
+
+describe('list fields cannot smuggle back the ambiguity', () => {
+  /**
+   * A bare `T[]` cannot tell "nobody recorded who is involved" from "somebody
+   * asked and there is nobody". That is the same ambiguity `AllergyStatus` was
+   * split into three members to remove, and it came back through the arrays
+   * after being driven out of the scalars — twice, in `consultants` and in
+   * `secondaryDiagnoses`.
+   *
+   * These tests hold the line for the whole class. Every list field must be a
+   * three-member union, every one must have real fixtures in all three states,
+   * and `recorded` must never be empty — an empty `recorded` is `Recorded<T[]>`
+   * reintroducing the ambiguity one level down.
+   */
+
+  const LIST_FIELDS: Array<{
+    name: string
+    read: (resident: Resident) => RecordedList<unknown>
+  }> = [
+    { name: 'secondaryDiagnoses', read: (r) => r.secondaryDiagnoses },
+    { name: 'consultants', read: (r) => r.consultants },
+    {
+      name: 'importantPeople.familyWithVisitingRights',
+      read: (r) => r.importantPeople.familyWithVisitingRights,
+    },
+    {
+      name: 'importantPeople.otherProfessionals',
+      read: (r) => r.importantPeople.otherProfessionals,
+    },
+  ]
+
+  it.each(LIST_FIELDS.map((field) => [field.name, field] as const))(
+    '%s has a resident in all three states',
+    (name, field) => {
+      const kinds = new Set(residents.map((resident) => field.read(resident).kind))
+      for (const required of ['not_recorded', 'none_involved', 'recorded']) {
+        expect(
+          kinds.has(required as never),
+          `${name} has no resident in the "${required}" state, so a screen built on it is reviewed against part of the shape`,
+        ).toBe(true)
+      }
+    },
+  )
+
+  it.each(LIST_FIELDS.map((field) => [field.name, field] as const))(
+    '%s is never recorded-but-empty',
+    (name, field) => {
+      for (const resident of residents) {
+        const list = field.read(resident)
+        if (list.kind === 'recorded') {
+          expect(
+            list.items.length,
+            `${resident.fullLegalName}: ${name} is "recorded" with nothing in it, which says nothing about whether anybody looked`,
+          ).toBeGreaterThan(0)
+        }
+      }
+    },
+  )
+
+  it('never records allergies with an empty list', () => {
+    // The same defect inside a member that already asserts existence: an
+    // `allergies` record listing none contradicts itself.
+    for (const resident of residents) {
+      if (resident.allergies.kind === 'allergies') {
+        expect(resident.allergies.items.length).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('never records a best-interest decision with nobody consulted', () => {
+    // A best-interest decision reached without consulting anybody is not one.
+    // Mental Capacity Act 2005.
+    for (const resident of residents) {
+      for (const consent of Object.values(resident.consents)) {
+        if (consent.kind === 'best_interest') {
+          expect(consent.consulted.length).toBeGreaterThan(0)
+        }
+      }
+    }
+  })
+
+  it('carePlan is a complete enumeration, not an ambiguous list', () => {
+    // Listed here so the sweep is on the record: this array is NOT the same
+    // defect. It always holds every domain, so an absence would be a bug
+    // rather than an ambiguity, and that is asserted above.
+    for (const resident of residents) {
+      expect(resident.carePlan).toHaveLength(CARE_PLAN_DOMAINS.length)
+    }
+  })
+})
+
+describe('the reassuring case exists too', () => {
+  /**
+   * The residents list claims "All assessed — no flags" when nothing is
+   * unrecorded and nothing needs attention. That branch went dead once
+   * already — silently, when a change elsewhere shifted the generator's
+   * random stream — so it is pinned rather than left to probability.
+   *
+   * A screen reviewed only against gaps is a screen nobody has seen working.
+   */
+  it('has a resident whose risk picture is entirely settled', () => {
+    const settled = residents.filter(
+      (resident) =>
+        resident.risks.falls.kind === 'assessed' &&
+        resident.risks.falls.level === 'low' &&
+        resident.risks.choking.kind === 'assessed' &&
+        resident.risks.choking.level !== 'high' &&
+        resident.allergies.kind === 'none_known' &&
+        resident.resuscitation.kind === 'for_resuscitation',
+    )
+    expect(
+      settled.length,
+      'no resident has a settled risk picture, so the residents list can never render "All assessed — no flags"',
+    ).toBeGreaterThan(0)
   })
 })

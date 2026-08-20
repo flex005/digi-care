@@ -43,6 +43,7 @@ export type {
   MoodRecord,
   MoodScore,
   PhotoStatus,
+  RecordedList,
   SupportLevel,
 } from './clinical'
 export { MOOD_LABELS } from './clinical'

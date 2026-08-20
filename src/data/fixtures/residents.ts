@@ -23,6 +23,7 @@ import type {
   IsoDate,
   FuturePlans,
   Recorded,
+  RecordedList,
   ResidentId,
   Resident,
   ResuscitationStatus,
@@ -57,6 +58,35 @@ const UNRECORDED = { kind: 'unrecorded' } as const
 
 function recorded<T>(value: T, by: StaffRef, at: Date): Recorded<T> {
   return { kind: 'recorded', value, recordedBy: by, recordedAt: toIsoDateTime(at) }
+}
+
+const NOT_RECORDED_LIST = { kind: 'not_recorded' } as const
+
+/**
+ * A list in one of its three states.
+ *
+ * `soughtChance` decides whether anybody asked at all. If they did, an empty
+ * result becomes `none_involved` — a positive claim with an author — rather
+ * than an empty array, which would say nothing about whether anybody looked.
+ */
+function makeRecordedList<T>(
+  rng: Rng,
+  soughtChance: number,
+  build: () => T[],
+  by: StaffRef,
+  at: Date,
+): RecordedList<T> {
+  if (!rng.chance(soughtChance)) return NOT_RECORDED_LIST
+  const [first, ...rest] = build()
+  if (first === undefined) {
+    return { kind: 'none_involved', recordedBy: by, recordedAt: toIsoDateTime(at) }
+  }
+  return {
+    kind: 'recorded',
+    items: [first, ...rest],
+    recordedBy: by,
+    recordedAt: toIsoDateTime(at),
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -359,9 +389,16 @@ function makeAllergies(rng: Rng): AllergyStatus {
       recordedAt: toIsoDateTime(at),
     }
   }
+  const [first, ...rest] = rng.sample(ALLERGY_POOL, rng.int(1, 2))
+  if (!first)
+    return {
+      kind: 'none_known',
+      recordedBy: rng.pick(managers),
+      recordedAt: toIsoDateTime(at),
+    }
   return {
     kind: 'allergies',
-    items: rng.sample(ALLERGY_POOL, rng.int(1, 2)),
+    items: [first, ...rest],
     recordedBy: rng.pick(managers),
     recordedAt: toIsoDateTime(at),
   }
@@ -635,24 +672,35 @@ function makeImportantPeople(rng: Rng, richness: number): ImportantPeople {
     advocate: rng.chance(richness * 0.2)
       ? recorded(person(false), staffOkonkwo, daysAgo(150))
       : UNRECORDED,
-    familyWithVisitingRights: Array.from({ length: rng.int(0, 2) }, () =>
-      person(false),
+    familyWithVisitingRights: makeRecordedList(
+      rng,
+      richness,
+      () => Array.from({ length: rng.int(0, 2) }, () => person(false)),
+      rng.pick(managers),
+      daysAgo(rng.int(30, 300)),
     ),
-    otherProfessionals: Array.from({ length: rng.int(0, 3) }, () => ({
-      name: `${rng.pick(FAMILY_FORENAMES)} ${rng.pick(FAMILY_SURNAMES)}`,
-      role: rng.pick([
-        'Occupational therapist',
-        'Physiotherapist',
-        'Dietitian',
-        'Speech and language therapist',
-        'Community psychiatric nurse',
-      ]),
-      organisation: 'Thornfield Community Health',
-      contact: {
-        phone: `0161 ${rng.int(100, 999)} ${rng.int(1000, 9999)}`,
-        email: 'chs@example.invalid',
-      },
-    })),
+    otherProfessionals: makeRecordedList(
+      rng,
+      richness * 0.9,
+      () =>
+        Array.from({ length: rng.int(0, 3) }, () => ({
+          name: `${rng.pick(FAMILY_FORENAMES)} ${rng.pick(FAMILY_SURNAMES)}`,
+          role: rng.pick([
+            'Occupational therapist',
+            'Physiotherapist',
+            'Dietitian',
+            'Speech and language therapist',
+            'Community psychiatric nurse',
+          ]),
+          organisation: 'Thornfield Community Health',
+          contact: {
+            phone: `0161 ${rng.int(100, 999)} ${rng.int(1000, 9999)}`,
+            email: 'chs@example.invalid',
+          },
+        })),
+      rng.pick(managers),
+      daysAgo(rng.int(30, 300)),
+    ),
   }
 }
 
@@ -792,13 +840,15 @@ function makeResident(person: Person, siteId: SiteId, index: number): Resident {
     primaryDiagnosis: rng.chance(richness)
       ? recorded(rng.pick(DIAGNOSES), rng.pick(managers), admittedOn)
       : UNRECORDED,
-    secondaryDiagnoses: rng.chance(richness * 0.8)
-      ? recorded(
-          rng.sample(SECONDARY_DIAGNOSES, rng.int(1, 3)),
-          rng.pick(managers),
-          admittedOn,
-        )
-      : UNRECORDED,
+    secondaryDiagnoses: makeRecordedList(
+      rng,
+      richness * 0.9,
+      // Zero is a real outcome here: plenty of residents genuinely have no
+      // secondary diagnosis, and that is a different fact from nobody asking.
+      () => rng.sample(SECONDARY_DIAGNOSES, rng.int(0, 3)),
+      rng.pick(managers),
+      admittedOn,
+    ),
     medicalHistory: rng.chance(richness * 0.7)
       ? recorded(
           'Admitted following a fall at home and a short hospital stay. Mobility has declined gradually since.',
@@ -839,19 +889,26 @@ function makeResident(person: Person, siteId: SiteId, index: number): Resident {
           admittedOn,
         )
       : UNRECORDED,
-    consultants: Array.from({ length: rng.int(0, 2) }, () => ({
-      name: `Dr ${rng.pick(FAMILY_SURNAMES)}`,
-      role: rng.pick([
-        'Consultant geriatrician',
-        'Consultant cardiologist',
-        'Old age psychiatrist',
-      ]),
-      organisation: 'Thornfield General Hospital',
-      contact: {
-        phone: `0161 ${rng.int(100, 999)} ${rng.int(1000, 9999)}`,
-        email: 'secretary@example.invalid',
-      },
-    })),
+    consultants: makeRecordedList(
+      rng,
+      richness * 0.85,
+      () =>
+        Array.from({ length: rng.int(0, 2) }, () => ({
+          name: `Dr ${rng.pick(FAMILY_SURNAMES)}`,
+          role: rng.pick([
+            'Consultant geriatrician',
+            'Consultant cardiologist',
+            'Old age psychiatrist',
+          ]),
+          organisation: 'Thornfield General Hospital',
+          contact: {
+            phone: `0161 ${rng.int(100, 999)} ${rng.int(1000, 9999)}`,
+            email: 'secretary@example.invalid',
+          },
+        })),
+      rng.pick(managers),
+      admittedOn,
+    ),
 
     primaryLanguage: rng.chance(richness)
       ? recorded(rng.pick(LANGUAGES), rng.pick(managers), admittedOn)
@@ -946,7 +1003,7 @@ patch('okafor', (resident) => ({
     items: [ALLERGY_POOL[0] as Allergy],
     recordedBy: staffOkonkwo,
     recordedAt: toIsoDateTime(daysAgo(200)),
-  },
+  } satisfies AllergyStatus,
   room: recorded('14', staffOkonkwo, daysAgo(400)),
 }))
 
@@ -976,11 +1033,11 @@ patch('sowande', (resident) => ({
   fundingSource: UNRECORDED,
   anticipatedLengthOfStay: UNRECORDED,
   primaryDiagnosis: UNRECORDED,
-  secondaryDiagnoses: UNRECORDED,
+  secondaryDiagnoses: NOT_RECORDED_LIST,
   medicalHistory: UNRECORDED,
   gp: UNRECORDED,
   pharmacy: UNRECORDED,
-  consultants: [],
+  consultants: NOT_RECORDED_LIST,
   primaryLanguage: UNRECORDED,
   communicationNeeds: UNRECORDED,
   religion: UNRECORDED,
@@ -1007,8 +1064,8 @@ patch('sowande', (resident) => ({
     lpaHolder: UNRECORDED,
     socialWorker: UNRECORDED,
     advocate: UNRECORDED,
-    familyWithVisitingRights: [],
-    otherProfessionals: [],
+    familyWithVisitingRights: NOT_RECORDED_LIST,
+    otherProfessionals: NOT_RECORDED_LIST,
   },
 }))
 
@@ -1056,6 +1113,157 @@ patch('adeyemi', (resident) => ({
 /** Gap 9 — Ashgrove thin enough that Key Questions render Insufficient
  *  Evidence. Enforced by the `thin` branch in makeResident and asserted by
  *  the Fixture Audit rather than left to chance. */
+
+/**
+ * Coverage for the three-state lists.
+ *
+ * Every `RecordedList` field must have at least one resident in each of its
+ * three states, or a screen built on it is reviewed against two thirds of the
+ * shape. The generator makes all three likely; these patches make them
+ * certain, and `fixtures.test.ts` asserts it rather than trusting the odds.
+ *
+ * `none_involved` is the one that would otherwise go missing, and it is the
+ * whole reason the type exists — "we asked, there is nobody" is a positive
+ * claim, not an absence.
+ */
+const listCoverageAuthor = staffOkonkwo
+const listCoverageAt = toIsoDateTime(daysAgo(45))
+
+patch('adeyemi', (resident) => ({
+  ...resident,
+  // All four lists answered, and the answer is "none".
+  secondaryDiagnoses: {
+    kind: 'none_involved',
+    recordedBy: listCoverageAuthor,
+    recordedAt: listCoverageAt,
+  },
+  consultants: {
+    kind: 'none_involved',
+    recordedBy: listCoverageAuthor,
+    recordedAt: listCoverageAt,
+  },
+  importantPeople: {
+    ...resident.importantPeople,
+    familyWithVisitingRights: {
+      kind: 'none_involved',
+      recordedBy: listCoverageAuthor,
+      recordedAt: listCoverageAt,
+    },
+    otherProfessionals: {
+      kind: 'none_involved',
+      recordedBy: listCoverageAuthor,
+      recordedAt: listCoverageAt,
+    },
+  },
+}))
+
+patch('okafor', (resident) => ({
+  ...resident,
+  // All four lists answered, and the answer is a real list.
+  secondaryDiagnoses: {
+    kind: 'recorded',
+    items: ['Hypertension', 'Atrial fibrillation'],
+    recordedBy: listCoverageAuthor,
+    recordedAt: listCoverageAt,
+  },
+  consultants: {
+    kind: 'recorded',
+    items: [
+      {
+        name: 'Dr I. Farooq',
+        role: 'Consultant geriatrician',
+        organisation: 'Thornfield General Hospital',
+        contact: { phone: '0161 413 3366', email: 'secretary@example.invalid' },
+      },
+    ],
+    recordedBy: listCoverageAuthor,
+    recordedAt: listCoverageAt,
+  },
+  importantPeople: {
+    ...resident.importantPeople,
+    familyWithVisitingRights: {
+      kind: 'recorded',
+      items: [
+        {
+          name: 'Grace Adeyemi',
+          relationship: 'Daughter',
+          contact: { phone: '07678 478100', email: 'family@example.invalid' },
+          address: '12 Chapel Road, Thornfield',
+          isPrimaryContact: false,
+          communicationPreference: {
+            kind: 'recorded',
+            value: { method: 'phone', language: 'English' },
+            recordedBy: listCoverageAuthor,
+            recordedAt: listCoverageAt,
+          },
+        },
+      ],
+      recordedBy: listCoverageAuthor,
+      recordedAt: listCoverageAt,
+    },
+    otherProfessionals: {
+      kind: 'recorded',
+      items: [
+        {
+          name: 'Helen Rowntree',
+          role: 'Speech and language therapist',
+          organisation: 'Thornfield Community Health',
+          contact: { phone: '0161 204 7781', email: 'chs@example.invalid' },
+        },
+      ],
+      recordedBy: listCoverageAuthor,
+      recordedAt: listCoverageAt,
+    },
+  },
+}))
+
+// res-sowande already carries `not_recorded` on all four — admitted yesterday,
+// nobody has asked anything yet.
+
+/**
+ * One resident with an entirely settled risk picture.
+ *
+ * The residents list claims "All assessed — no flags" when nothing is
+ * unrecorded and nothing needs attention. If no resident is ever in that
+ * state the claim is dead code — and it went dead once already, silently,
+ * when a change elsewhere shifted the generator's random stream. So it is
+ * pinned rather than left to probability, and `fixtures.test.ts` asserts it.
+ *
+ * The reassuring case has to exist for the same reason the alarming ones do:
+ * a screen reviewed only against gaps is a screen nobody has seen working.
+ */
+patch('broadbent', (resident) => ({
+  ...resident,
+  risks: {
+    ...resident.risks,
+    falls: {
+      kind: 'assessed',
+      level: 'low',
+      score: 10,
+      assessedAt: toIsoDateTime(daysAgo(40)),
+      assessedBy: staffOkonkwo,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(140)) },
+    },
+    choking: {
+      kind: 'assessed',
+      level: 'low',
+      score: 5,
+      assessedAt: toIsoDateTime(daysAgo(40)),
+      assessedBy: staffOkonkwo,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(140)) },
+    },
+  },
+  allergies: {
+    kind: 'none_known',
+    recordedBy: staffOkonkwo,
+    recordedAt: toIsoDateTime(daysAgo(40)),
+  },
+  resuscitation: {
+    kind: 'for_resuscitation',
+    recordedBy: staffOkonkwo,
+    recordedAt: toIsoDateTime(daysAgo(40)),
+  },
+}))
 
 export const residents: Resident[] = generated
 

@@ -8,6 +8,7 @@ import {
   SupportLevelBadge,
 } from '@/components/status'
 import { Avatar } from '@/components/primitives'
+import { RecordedListField } from '@/features/residents/FieldList'
 import {
   allergyStates,
   domainStatusStates,
@@ -15,6 +16,7 @@ import {
   isolationStates,
   moodStates,
   photoStates,
+  recordedListStates,
   supportLevelStates,
 } from './states.fixtures'
 import styles from './dev.module.css'
@@ -133,6 +135,35 @@ export function Phase1States() {
           <Group key={kind} title={kind}>
             {moods.map((mood, index) => (
               <MoodBadge key={index} mood={mood} />
+            ))}
+          </Group>
+        ))}
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>RecordedList&lt;T&gt; — three states</h2>
+        <p className={styles.sectionNote}>
+          A bare <code>T[]</code> cannot tell “nobody recorded who is involved” from
+          “somebody asked and there is nobody”. That is the same ambiguity{' '}
+          <code>AllergyStatus</code> was split into three members to remove, and it came
+          back through the arrays after being driven out of the scalars.{' '}
+          <code>Recorded&lt;T[]&gt;</code> does not fix it either — an empty array
+          inside a <code>recorded</code> wrapper reintroduces it one level down, so{' '}
+          <code>items</code> is typed non-empty.
+          <strong> none_involved carries an author</strong>, because “we asked, there is
+          no LPA” is a positive claim somebody made.
+        </p>
+        {Object.entries(recordedListStates).map(([kind, lists]) => (
+          <Group key={kind} title={kind}>
+            {lists.map((list, index) => (
+              <RecordedListField
+                key={index}
+                list={list}
+                label="Secondary diagnoses"
+                noneLabel="No secondary diagnoses"
+                attributed
+                render={(items) => <span>{items.join(' · ')}</span>}
+              />
             ))}
           </Group>
         ))}

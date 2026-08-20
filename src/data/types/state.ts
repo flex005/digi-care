@@ -124,7 +124,9 @@ export type ConsentStatus =
   | {
       kind: 'best_interest'
       decidedOn: IsoDate
-      consulted: string[]
+      /** Non-empty: a best-interest decision reached without consulting
+       *  anybody is not a best-interest decision. Mental Capacity Act 2005. */
+      consulted: [string, ...string[]]
       rationale: string
       decidedBy: StaffRef
     }
