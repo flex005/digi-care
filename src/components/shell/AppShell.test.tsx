@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { AppShell } from './AppShell'
+import { SessionProvider } from '@/app/session/SessionProvider'
 import { navItems } from '@/app/nav-items.icons'
 
 /**
@@ -20,7 +21,11 @@ function renderShell() {
     ],
     { initialEntries: ['/'] },
   )
-  return render(<RouterProvider router={router} />)
+  return render(
+    <SessionProvider>
+      <RouterProvider router={router} />
+    </SessionProvider>,
+  )
 }
 
 describe('AppShell', () => {
@@ -34,7 +39,7 @@ describe('AppShell', () => {
     renderShell()
     const nav = await screen.findByRole('navigation', { name: 'Main navigation' })
 
-    expect(navItems).toHaveLength(16)
+    expect(navItems).toHaveLength(17)
     for (const item of navItems) {
       // Absence from a list is the same bug as a blank cell. CLAUDE.md §1.
       expect(
@@ -50,8 +55,9 @@ describe('AppShell', () => {
       .getAllByRole('link', { hidden: true })
       .filter((el) => el.getAttribute('aria-disabled') === 'true')
 
-    // Every module is unbuilt in Phase 0.
-    expect(disabled).toHaveLength(16)
+    // Every module is still unbuilt at Step 0 — Residents is enabled by
+    // Step 1, which is the stop that actually builds the list.
+    expect(disabled).toHaveLength(17)
     for (const el of disabled) {
       expect(el).toHaveAccessibleName(/coming in a later phase/i)
     }

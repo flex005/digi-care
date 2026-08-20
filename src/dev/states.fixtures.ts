@@ -1,13 +1,21 @@
 import type {
   Aggregate,
+  AllergyStatus,
+  CarePlanDomainStatus,
   ConsentStatus,
+  EolcStatus,
+  IsolationStatus,
   MarCellState,
   MarWitness,
+  MoodRecord,
+  PhotoStatus,
   Recorded,
   ResuscitationStatus,
   ReviewState,
   RiskStatus,
+  SupportLevel,
 } from '@/data/types'
+import samplePhoto from './sample-photo.svg'
 import {
   staffDeactivated,
   staffHalloran,
@@ -293,5 +301,154 @@ export const aggregateStates: ByKind<Aggregate> = {
       coverage: { covered: 46, total: 50 },
     },
     { kind: 'measured', unit: 'count', value: 3, coverage: { covered: 3, total: 32 } },
+  ],
+}
+
+// ---------------------------------------------------------------------------
+// Phase 1 unions
+// ---------------------------------------------------------------------------
+
+export const allergyStates: ByKind<AllergyStatus> = {
+  not_recorded: [{ kind: 'not_recorded' }],
+  none_known: [
+    {
+      // A recorded NEGATIVE. Somebody asked, and the answer was none. This is
+      // a complete clinical record and must look settled.
+      kind: 'none_known',
+      recordedBy: staffOkonkwo,
+      recordedAt: '2026-03-12T11:05:00Z',
+    },
+  ],
+  allergies: [
+    {
+      kind: 'allergies',
+      items: [
+        { substance: 'Penicillin', reaction: 'Anaphylaxis', severity: 'anaphylaxis' },
+        {
+          substance: 'Codeine',
+          reaction: 'Nausea and confusion',
+          severity: 'moderate',
+        },
+      ],
+      recordedBy: staffOkonkwo,
+      recordedAt: '2026-03-12T09:20:00Z',
+    },
+  ],
+}
+
+export const eolcStates: ByKind<EolcStatus> = {
+  not_recorded: [{ kind: 'not_recorded' }],
+  not_applicable: [
+    {
+      kind: 'not_applicable',
+      recordedBy: staffOkonkwo,
+      recordedAt: '2026-05-02T10:00:00+01:00',
+    },
+  ],
+  in_place: [
+    {
+      kind: 'in_place',
+      startedOn: '2026-07-14',
+      recordedBy: staffHalloran,
+      recordedAt: '2026-07-14T09:30:00+01:00',
+    },
+  ],
+}
+
+export const isolationStates: ByKind<IsolationStatus> = {
+  not_recorded: [{ kind: 'not_recorded' }],
+  not_isolating: [
+    {
+      kind: 'not_isolating',
+      recordedBy: staffNwosu,
+      recordedAt: '2026-08-18T07:15:00+01:00',
+    },
+  ],
+  isolating: [
+    {
+      kind: 'isolating',
+      reason: 'Suspected norovirus',
+      since: '2026-08-17',
+      recordedBy: staffNwosu,
+      recordedAt: '2026-08-17T22:40:00+01:00',
+    },
+  ],
+}
+
+export const supportLevelStates: ByKind<SupportLevel> = {
+  not_assessed: [{ kind: 'not_assessed' }],
+  independent: [{ kind: 'independent' }],
+  prompting_only: [{ kind: 'prompting_only' }],
+  partial_assistance: [{ kind: 'partial_assistance' }],
+  full_assistance: [{ kind: 'full_assistance' }],
+}
+
+export const domainStatusStates: ByKind<CarePlanDomainStatus> = {
+  not_started: [{ kind: 'not_started' }],
+  in_progress: [
+    {
+      kind: 'in_progress',
+      updatedBy: staffHalloran,
+      updatedAt: '2026-08-11T14:20:00+01:00',
+    },
+  ],
+  complete: [
+    {
+      kind: 'complete',
+      finalisedBy: staffOkonkwo,
+      finalisedOn: '2026-06-30',
+      nextReviewOn: '2026-12-30',
+    },
+  ],
+  review_due: [
+    {
+      // PRD §5.3 gap 7 shape: finalised 14 months ago and never reviewed.
+      kind: 'review_due',
+      finalisedBy: staffHalloran,
+      finalisedOn: '2025-06-19',
+      dueOn: '2026-06-19',
+      daysOverdue: 62,
+    },
+  ],
+}
+
+export const moodStates: ByKind<MoodRecord> = {
+  not_recorded: [{ kind: 'not_recorded' }],
+  recorded: [
+    {
+      kind: 'recorded',
+      score: 1,
+      recordedBy: staffNwosu,
+      recordedAt: '2026-08-19T09:00:00+01:00',
+    },
+    {
+      kind: 'recorded',
+      score: 3,
+      recordedBy: staffNwosu,
+      recordedAt: '2026-08-19T09:00:00+01:00',
+    },
+    {
+      kind: 'recorded',
+      score: 5,
+      recordedBy: staffNwosu,
+      recordedAt: '2026-08-19T09:00:00+01:00',
+    },
+  ],
+}
+
+/**
+ * Both photo branches. No resident in the fixtures has a photograph on file,
+ * so without this the `on_file` path would be dead code that nobody ever
+ * looked at until the day real images arrived.
+ */
+export const photoStates: ByKind<PhotoStatus> = {
+  not_on_file: [{ kind: 'not_on_file' }],
+  on_file: [
+    {
+      kind: 'on_file',
+      url: samplePhoto,
+      uploadedBy: staffOkonkwo,
+      uploadedAt: '2026-04-02T13:10:00+01:00',
+    },
   ],
 }

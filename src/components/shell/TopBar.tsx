@@ -1,4 +1,5 @@
 import type { Site } from '@/data/types'
+import type { AccessMode } from '@/data/access/resource'
 import { Icon } from '@/components/icon/Icon'
 import {
   DropdownMenu,
@@ -28,6 +29,8 @@ export interface TopBarProps {
   alertCount: number
   userName: string
   userRoleLabel: string
+  accessMode: AccessMode
+  onAccessModeChange: (mode: AccessMode) => void
 }
 
 export function TopBar({
@@ -37,6 +40,8 @@ export function TopBar({
   alertCount,
   userName,
   userRoleLabel,
+  accessMode,
+  onAccessModeChange,
 }: TopBarProps) {
   const isMultiSite = sites.length > 1
 
@@ -101,6 +106,17 @@ export function TopBar({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>{userRoleLabel}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {/* Read-only is one of the seven states every screen is reviewed
+              against (PRD §6). This makes it reachable without a build flag —
+              an auditor sees every record and can change none of them. */}
+          <DropdownMenuLabel>View as</DropdownMenuLabel>
+          <DropdownMenuItem onSelect={() => onAccessModeChange('read_write')}>
+            {accessMode === 'read_write' ? '✓ ' : ''}Registered Manager
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => onAccessModeChange('read_only')}>
+            {accessMode === 'read_only' ? '✓ ' : ''}Read-only — Auditor
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem disabled>
             Profile — coming in a later phase

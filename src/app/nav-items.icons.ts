@@ -29,7 +29,7 @@ export const navItems: NavItem[] = [
     label: 'Dashboard',
     path: '/dashboard',
     icon: 'dashboard/dashboard-square-01',
-    phase: 1,
+    phase: 12,
     enabled: false,
   },
   {
@@ -37,12 +37,22 @@ export const navItems: NavItem[] = [
     path: '/residents',
     icon: 'users/user-multiple',
     phase: 1,
+    // Enabled by Step 1, which builds the list. Step 0 ships the data layer
+    // and the Fixture Audit; a nav item pointing at a screen that does not
+    // exist yet would be a dead control.
     enabled: false,
   },
   {
     label: 'Care Notes',
     path: '/care-notes',
     icon: 'note-task/note-01',
+    phase: 2,
+    enabled: false,
+  },
+  {
+    label: 'Handover',
+    path: '/handover',
+    icon: 'users/user-switch',
     phase: 2,
     enabled: false,
   },

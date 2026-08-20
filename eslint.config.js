@@ -38,6 +38,12 @@ export default tseslint.config(
 
       // CLAUDE.md §3: one <Icon> component is the only way an icon reaches a
       // screen. No raw <svg> in feature code, no direct imports from assets.
+      //
+      // CLAUDE.md §6 and PRD §3.6: clinical timestamps render in the SITE's
+      // timezone, never the viewer's. date-fns formats in the machine's local
+      // zone, so a component importing it directly would silently contradict
+      // the paper record. src/lib/format.ts is the one place allowed to touch
+      // it, and it requires an explicit timeZone at every call site.
       'no-restricted-imports': [
         'error',
         {
@@ -51,6 +57,14 @@ export default tseslint.config(
               group: ['**/assets/icons-generated/*', '@/assets/icons-generated/*'],
               message:
                 'icons-generated/ is a build artefact. Use <Icon name="category/name" />. CLAUDE.md §3.',
+            },
+          ],
+          paths: [
+            {
+              name: 'date-fns',
+              importNames: ['format', 'parseISO', 'formatISO', 'lightFormat'],
+              message:
+                "Clinical timestamps render in the site timezone, not the viewer's. Use useSiteFormat() — or src/lib/format.ts if you are outside a component. PRD §3.6.",
             },
           ],
         },
@@ -79,6 +93,12 @@ export default tseslint.config(
     // accessible name on its <td> directly.
     files: ['src/components/primitives/**/*.tsx', 'src/components/status/MarCell.tsx'],
     rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
+    // The single sanctioned home for date formatting. Everything else reaches
+    // it through useSiteFormat(), which binds the site's timezone.
+    files: ['src/lib/format.ts'],
+    rules: { 'no-restricted-imports': 'off' },
   },
   {
     // Node-side build scripts.

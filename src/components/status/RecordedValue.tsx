@@ -1,6 +1,6 @@
 import type { Recorded } from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
-import { formatAttribution } from '@/lib/format'
+import { useSiteFormat } from '@/app/session/use-session'
 import { StatusPill } from './StatusPill'
 import { Unrecorded } from './Unrecorded'
 
@@ -38,6 +38,8 @@ export function RecordedValue<T>({
   render,
   tone = 'positive',
 }: RecordedValueProps<T>) {
+  const format = useSiteFormat()
+
   switch (record.kind) {
     case 'unrecorded':
       return <Unrecorded label={`${name} not recorded`} />
@@ -47,7 +49,7 @@ export function RecordedValue<T>({
         <StatusPill
           tone={tone}
           label={render(record.value)}
-          detail={formatAttribution(
+          detail={format.attribution(
             record.recordedBy.displayName,
             record.recordedAt,
             record.recordedBy.isActive,

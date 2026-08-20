@@ -1,8 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { MarCell, marCellDescription, RiskBadge, Unrecorded } from './index'
 import { staffNwosu } from '@/data/fixtures/organisation'
 import type { MarCellState } from '@/data/types'
+
+/** Rosewood Court's zone. Every clinical time below renders in it, never
+ *  in whatever zone the machine running the tests happens to be in. */
+const SITE_ZONE = 'Europe/London'
+
+/** Status components read the site's zone from context — there is no
+ *  viewer-local fallback, by design, so tests supply it explicitly. */
+function renderAtSite(ui: React.ReactNode) {
+  return render(<SiteTimeZone timeZone={SITE_ZONE}>{ui}</SiteTimeZone>)
+}
 
 /**
  * The Evidence Invariant, asserted rather than assumed.
@@ -36,7 +47,7 @@ describe('Rule 2 — unrecorded always carries visible text', () => {
 
 describe('Rule 1 — a status is never absent from the page', () => {
   it('renders a badge for an unassessed risk rather than nothing', () => {
-    const { container } = render(
+    const { container } = renderAtSite(
       <RiskBadge name="Falls risk" status={{ kind: 'not_assessed' }} />,
     )
     expect(container).not.toBeEmptyDOMElement()
@@ -61,7 +72,7 @@ describe('Rule 3 — a recorded negative is not an unrecorded value', () => {
   }
 
   it('gives a recorded "not given" the settled treatment, not the hatch', () => {
-    const { container } = render(
+    const { container } = renderAtSite(
       <MarCell state={notGiven} context="08:00 Amlodipine" />,
     )
     expect(container.querySelector('[data-state="recorded"]')).toBeInTheDocument()
@@ -69,7 +80,9 @@ describe('Rule 3 — a recorded negative is not an unrecorded value', () => {
   })
 
   it('gives an omission the hatch, not the settled treatment', () => {
-    const { container } = render(<MarCell state={omitted} context="08:00 Amlodipine" />)
+    const { container } = renderAtSite(
+      <MarCell state={omitted} context="08:00 Amlodipine" />,
+    )
     expect(container.querySelector('[data-state="unrecorded"]')).toBeInTheDocument()
     expect(container.querySelector('[data-state="recorded"]')).not.toBeInTheDocument()
   })
@@ -109,7 +122,11 @@ describe('PRD §6.4 — every MAR cell has a full-sentence accessible name', () 
   ]
 
   it.each(cases)('describes %s as a sentence', (_name, state, pattern) => {
-    const sentence = marCellDescription(state, '08:00, 19 August, Amlodipine 5mg')
+    const sentence = marCellDescription(
+      state,
+      '08:00, 19 August, Amlodipine 5mg',
+      SITE_ZONE,
+    )
     expect(sentence).toMatch(pattern)
     expect(sentence).toContain('Amlodipine 5mg')
   })
@@ -123,6 +140,7 @@ describe('PRD §6.4 — every MAR cell has a full-sentence accessible name', () 
         witness: { kind: 'witnessed', by: staffNwosu },
       },
       'ctx',
+      SITE_ZONE,
     )
     const notRequired = marCellDescription(
       {
@@ -132,6 +150,7 @@ describe('PRD §6.4 — every MAR cell has a full-sentence accessible name', () 
         witness: { kind: 'not_required' },
       },
       'ctx',
+      SITE_ZONE,
     )
     const missing = marCellDescription(
       {
@@ -141,6 +160,7 @@ describe('PRD §6.4 — every MAR cell has a full-sentence accessible name', () 
         witness: { kind: 'required_not_recorded' },
       },
       'ctx',
+      SITE_ZONE,
     )
     // The whole reason MarWitness is a union: these must not read alike.
     expect(new Set([witnessed, notRequired, missing]).size).toBe(3)

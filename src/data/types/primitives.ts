@@ -61,6 +61,12 @@ export interface Site {
   id: SiteId
   organisationId: OrganisationId
   name: string
+  /**
+   * IANA timezone, e.g. 'Europe/London'. Clinical timestamps for this site's
+   * residents render in THIS zone, never the viewer's — a dose given at 08:04
+   * here reads 08:04 to an auditor anywhere in the world. PRD §3.6.
+   */
+  timeZone: string
 }
 
 export interface Organisation {

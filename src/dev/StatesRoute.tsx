@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Switch } from '@/components/primitives'
 import { RuleThreeComparison } from './RuleThreeComparison'
 import { StatusStates } from './StatusStates'
+import { Phase1States } from './Phase1States'
+import { FixtureAudit } from './FixtureAudit'
 import { TokenSheet } from './TokenSheet'
 import { PrimitiveGallery } from './PrimitiveGallery'
 import styles from './dev.module.css'
@@ -45,8 +47,10 @@ export function StatesRoute() {
 
       <div className={greyscale ? styles.greyscale : undefined}>
         <div className={styles.page}>
+          <FixtureAudit />
           <RuleThreeComparison />
           <StatusStates />
+          <Phase1States />
           <PrimitiveGallery />
           <TokenSheet />
         </div>

@@ -1,6 +1,13 @@
-import type { MarCellState, MarWitness, NotGivenReason } from '@/data/types'
+import type {
+  IsoDateTime,
+  MarCellState,
+  MarWitness,
+  NotGivenReason,
+} from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
 import { formatTime } from '@/lib/format'
+import type { TimeZone } from '@/lib/format'
+import { useSiteFormat } from '@/app/session/use-session'
 import { StatusPill } from './StatusPill'
 import { Unrecorded } from './Unrecorded'
 import styles from './MarCell.module.css'
@@ -55,26 +62,31 @@ function witnessText(witness: MarWitness): { text: string; missing: boolean } {
  *
  * Exported so the Phase 3 MAR table can put it on the <td> directly.
  */
-export function marCellDescription(state: MarCellState, context: string): string {
+export function marCellDescription(
+  state: MarCellState,
+  context: string,
+  timeZone: TimeZone,
+): string {
+  const at = (value: IsoDateTime) => formatTime(value, timeZone)
   switch (state.kind) {
     case 'not_due':
       return `${context} — not due.`
     case 'due':
-      return `${context} — due, window open from ${formatTime(state.windowOpensAt)} until ${formatTime(state.windowClosesAt)}, no record yet.`
+      return `${context} — due, window open from ${at(state.windowOpensAt)} until ${at(state.windowClosesAt)}, no record yet.`
     case 'given': {
       const witness = witnessText(state.witness)
-      return `${context} — given by ${state.givenBy.displayName} at ${formatTime(state.givenAt)}${
+      return `${context} — given by ${state.givenBy.displayName} at ${at(state.givenAt)}${
         witness.text ? `, ${witness.text}` : ''
       }.`
     }
     case 'not_given':
-      return `${context} — not given, ${NOT_GIVEN_REASON[state.reason]}, recorded by ${state.recordedBy.displayName} at ${formatTime(state.recordedAt)}.${
+      return `${context} — not given, ${NOT_GIVEN_REASON[state.reason]}, recorded by ${state.recordedBy.displayName} at ${at(state.recordedAt)}.${
         state.note ? ` Note: ${state.note}.` : ''
       }`
     case 'omitted':
-      return `${context} — omitted. Due at ${formatTime(state.dueAt)}, window closed with no record.${
+      return `${context} — omitted. Due at ${at(state.dueAt)}, window closed with no record.${
         state.escalation.kind === 'escalated'
-          ? ` Escalated at ${formatTime(state.escalation.at)}.`
+          ? ` Escalated at ${at(state.escalation.at)}.`
           : ' Not yet escalated.'
       }`
     default:
@@ -89,6 +101,8 @@ export interface MarCellProps {
 }
 
 function CellBody({ state }: { state: MarCellState }) {
+  const format = useSiteFormat()
+
   switch (state.kind) {
     case 'not_due':
       return (
@@ -103,7 +117,7 @@ function CellBody({ state }: { state: MarCellState }) {
           block
           tone="info"
           label="Due"
-          detail={`${formatTime(state.windowOpensAt)}–${formatTime(state.windowClosesAt)}`}
+          detail={`${format.time(state.windowOpensAt)}–${format.time(state.windowClosesAt)}`}
         />
       )
 
@@ -121,7 +135,7 @@ function CellBody({ state }: { state: MarCellState }) {
             block
             tone="positive"
             label="Given"
-            detail={`${formatTime(state.givenAt)} · ${state.givenBy.displayName}${
+            detail={`${format.time(state.givenAt)} · ${state.givenBy.displayName}${
               witness.missing || !witness.text ? '' : ` · ${witness.text}`
             }`}
           />
@@ -139,7 +153,7 @@ function CellBody({ state }: { state: MarCellState }) {
           block
           tone="caution"
           label="Not given"
-          detail={`${NOT_GIVEN_REASON[state.reason]} · ${state.recordedBy.displayName}, ${formatTime(state.recordedAt)}`}
+          detail={`${NOT_GIVEN_REASON[state.reason]} · ${state.recordedBy.displayName}, ${format.time(state.recordedAt)}`}
         />
       )
 
@@ -150,8 +164,8 @@ function CellBody({ state }: { state: MarCellState }) {
           label="Omitted"
           detail={
             state.escalation.kind === 'escalated'
-              ? `due ${formatTime(state.dueAt)} · escalated ${formatTime(state.escalation.at)}`
-              : `due ${formatTime(state.dueAt)} · not yet escalated`
+              ? `due ${format.time(state.dueAt)} · escalated ${format.time(state.escalation.at)}`
+              : `due ${format.time(state.dueAt)} · not yet escalated`
           }
         />
       )
@@ -162,12 +176,16 @@ function CellBody({ state }: { state: MarCellState }) {
 }
 
 export function MarCell({ state, context }: MarCellProps) {
+  const { timeZone } = useSiteFormat()
+
   return (
     <>
       <span aria-hidden="true">
         <CellBody state={state} />
       </span>
-      <span className="visuallyHidden">{marCellDescription(state, context)}</span>
+      <span className="visuallyHidden">
+        {marCellDescription(state, context, timeZone)}
+      </span>
     </>
   )
 }

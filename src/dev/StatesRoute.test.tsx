@@ -3,6 +3,7 @@ import { render } from '@testing-library/react'
 import { axe } from 'vitest-axe'
 import { TooltipProvider, ToastProvider } from '@/components/primitives'
 import { StatesRoute } from './StatesRoute'
+import { SiteTimeZone } from '@/app/session/SessionProvider'
 
 /**
  * The automated accessibility check PRD §7 requires per screen.
@@ -18,11 +19,13 @@ import { StatesRoute } from './StatesRoute'
 describe('/dev/states', () => {
   it('has no detectable accessibility violations', async () => {
     const { container } = render(
-      <TooltipProvider>
-        <ToastProvider>
-          <StatesRoute />
-        </ToastProvider>
-      </TooltipProvider>,
+      <SiteTimeZone timeZone="Europe/London">
+        <TooltipProvider>
+          <ToastProvider>
+            <StatesRoute />
+          </ToastProvider>
+        </TooltipProvider>
+      </SiteTimeZone>,
     )
     const results = await axe(container)
     expect(results).toHaveNoViolations()

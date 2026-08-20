@@ -1,6 +1,7 @@
 import type { ResuscitationStatus } from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
-import { formatDate, formatAttribution } from '@/lib/format'
+import { formatDate } from '@/lib/format'
+import { useSiteFormat } from '@/app/session/use-session'
 import { StatusPill } from './StatusPill'
 import { Unrecorded } from './Unrecorded'
 
@@ -17,6 +18,8 @@ import { Unrecorded } from './Unrecorded'
  * Colouring it would editorialise a legal document.
  */
 export function ResuscitationBadge({ status }: { status: ResuscitationStatus }) {
+  const format = useSiteFormat()
+
   switch (status.kind) {
     case 'no_decision_recorded':
       return <Unrecorded label="No decision recorded" />
@@ -35,7 +38,7 @@ export function ResuscitationBadge({ status }: { status: ResuscitationStatus }) 
         <StatusPill
           tone="positive"
           label="For resuscitation"
-          detail={formatAttribution(
+          detail={format.attribution(
             status.recordedBy.displayName,
             status.recordedAt,
             status.recordedBy.isActive,

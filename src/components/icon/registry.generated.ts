@@ -35,9 +35,10 @@ import IconSettings_Setting02 from '@/assets/icons-generated/settings/setting-02
 import IconUsers_UserCircle from '@/assets/icons-generated/users/user-circle.svg?react'
 import IconUsers_UserGroup from '@/assets/icons-generated/users/user-group.svg?react'
 import IconUsers_UserMultiple from '@/assets/icons-generated/users/user-multiple.svg?react'
+import IconUsers_UserSwitch from '@/assets/icons-generated/users/user-switch.svg?react'
 
 /**
- * Only the 25 icons actually used in source. Importing all of them
+ * Only the 26 icons actually used in source. Importing all of them
  * would compile every icon in the set into the bundle.
  *
  * Partial because it is keyed by the full IconName union. A missing entry
@@ -72,4 +73,5 @@ export const iconRegistry: Partial<
   'users/user-circle': IconUsers_UserCircle,
   'users/user-group': IconUsers_UserGroup,
   'users/user-multiple': IconUsers_UserMultiple,
+  'users/user-switch': IconUsers_UserSwitch,
 }

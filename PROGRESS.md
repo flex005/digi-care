@@ -244,3 +244,178 @@ solid tint. Rule 2 holds without hue.
 - Whether `--border-unrecorded` at 2.20:1 is acceptable in the flesh, on a
   real monitor at a real working distance. That is a judgement call, and the
   measurement above is only one input to it.
+
+---
+
+## Phase 1, Step 0 — data model, fixtures, timezone, session
+
+Completed 20/08/2026. Reviewed through the Fixture Audit panel on
+`/dev/states`. No user-facing screens — Residents is enabled by Step 1, which
+builds the list; a nav item pointing at a screen that does not exist yet would
+be a dead control.
+
+### Decisions carried in from the Phase 0 review
+
+1. `--border-unrecorded` is now `var(--status-unrecorded)`. As its own literal
+   it measured 2.20:1 on the tint, below the 3:1 PRD §7 requires of a status
+   boundary. At `--status-unrecorded` it measures **3.05:1** and passes, and
+   there is one value that cannot drift from the other.
+2. Clinical timestamps render in the **site's** timezone. Built into the data
+   layer now rather than deferred to Phase 3.
+3. Rule 3a — compound states render as separate facts.
+
+### ⚠️ Deliberate departure from the source PRD — EOLC badge colour
+
+Source PRD §16.3 specifies the EOLC badge as **grey**. It is built **blue**
+(`--status-info`).
+
+**Why.** Grey is reserved system-wide for unrecorded — it is the hatch, and it
+is the one visual in the product that means "nobody has looked yet". A
+*recorded* EOLC decision rendered grey would therefore read as an absence of a
+decision, which is Rule 2 failing in precisely the place it must not: end of
+life care is where the difference between "a decision was made" and "nobody
+has asked" is least survivable.
+
+`--status-info` is a recorded, factual, neutral state — right for a clinical
+decision that is neither good news nor bad news — and it is visibly distinct
+from DNAR's brand purple and ISOLATION's amber, so the two most consequential
+badges on the strip cannot be confused peripherally.
+
+**The source PRD should be corrected rather than this deviation persisting
+silently.** Both are rendered side by side on `/dev/states` under EolcStatus,
+and the greyscale toggle is the check.
+
+### The timezone layer
+
+`src/lib/format.ts` was rewritten around `Intl.DateTimeFormat` with an explicit
+`timeZone`. **No new dependency** — `Intl` does this natively. `date-fns` now
+supplies only `formatDistanceToNowStrict`, which is about elapsed time and is
+correctly viewer-relative.
+
+Three things make it hard to get wrong:
+
+- **Every formatter that renders an instant requires a `timeZone`.** No
+  defaulted parameter, no viewer-local fallback — a default is exactly how the
+  wrong zone creeps back in. The compiler caught all 17 existing call sites the
+  moment the signature changed.
+- **A date-only `IsoDate` is never zone-converted.** `'2026-03-12'` is a date,
+  not an instant; parsing it to UTC midnight and shifting it into a zone behind
+  UTC moves it to the 11th — a silently wrong date on a DNAR or a consent
+  record. `formatDate` takes no zone at all, and `src/lib/format.test.ts` pins
+  that regression explicitly.
+- **ESLint blocks `format`/`parseISO` imports from `date-fns`** outside
+  `src/lib/format.ts`. Rendering a clinical time viewer-local is now a lint
+  error rather than a review note. Verified by adding one and watching it fail.
+
+`TimeZoneContext` nests deliberately: the app provides the active site's zone,
+and a resident's subtree will provide *that resident's* site zone, so a
+cross-site list renders each row in its own site's time rather than flattening
+everything into whichever site happens to be selected.
+
+**Zone labelling.** Shown when the viewer's resolved zone differs from the
+site's. A UK manager sees `08:04`; an auditor abroad sees `08:04 BST` and
+cannot misread the record.
+
+### Found while building — fixtures that looked right but were not
+
+Three problems the Fixture Audit surfaced that a description would not have:
+
+1. **303 medication omissions, where PRD §5.3 asks for three.** The generator
+   was producing ~2% omissions across 16,200 MAR records. Three hundred
+   omissions would swamp the Phase 3 omissions view and make the escalation
+   distinction — the entire reason `MarEscalation` is a union — impossible to
+   see. Random omissions removed; the three are hand-authored with distinct
+   escalation states (past 60 min, inside the 30–60 min window, not escalated).
+2. **32 of 32 residents flagged "records incomplete".** True, and useless — a
+   chip that fires on everyone is not a signal, and the list filter built on it
+   in Step 1 would have discriminated nothing. `MissingRecord` now carries a
+   `severity`: the chip fires on `critical` gaps (allergies, resuscitation,
+   falls, GP, next of kin), while the profile still lists everything. Now
+   **20 of 32**.
+3. **31 of 32 residents carrying a stale record.** Care plan review dates were
+   generated as "finalised up to 400 days ago, review 30–200 days later", which
+   is almost always in the past. Rebalanced so 4% of domains are genuinely
+   overdue. Now **23 of 32** — still a home under pressure, which is the point,
+   but the Stale state discriminates.
+
+A fourth thing worth recording: choking and dysphagia was being generated as a
+rarely-assessed template while also being treated as clinically critical, which
+by itself pushed almost every resident over the threshold. Dysphagia screening
+is routine on admission in practice, so it moved to the core template set.
+
+### Fixtures
+
+32 residents (28 Rosewood Court, 4 Ashgrove Lodge), 14 staff across the seven
+roles including one deactivated, 4,782 care notes and 16,200 MAR records across
+106 medications, 90 days of history. Generated from a fixed seed with
+Mulberry32 — no `Math.random`, so a review finding can be reproduced. `NOW` is
+captured once at module load, because "admitted yesterday" and "due in the next
+two hours" are inherently relative, and is exported so tests reason about the
+same instant.
+
+All ten §5.3 gaps are pinned to named residents and asserted twice: on
+`/dev/states` for a human, and in `src/data/fixtures/fixtures.test.ts` for the
+build. A generator quietly losing a gap would mean every screen built
+afterwards was reviewed against tidy data and signed off for the wrong reason —
+silent and expensive, so it fails CI instead.
+
+Scope boundary: **incidents and activities are not generated.** Neither appears
+in §5.3's ten gaps and neither is rendered by any Phase 1 screen, so designing
+their types without their consumers is the guesswork that leads to a
+fixture-shape change later — which CLAUDE.md §8 makes a stop-and-ask. They land
+with their screens in Phases 4 and 9.
+
+### Seven new status unions
+
+`AllergyStatus` · `EolcStatus` · `IsolationStatus` · `SupportLevel` ·
+`CarePlanDomainStatus` · `PhotoStatus` · `MoodRecord`. Each is closed, each has
+an explicit unrecorded member, each has a `ByKind` entry in
+`states.fixtures.ts` — so adding a member to any of them breaks the build until
+it is rendered on `/dev/states`.
+
+`AllergyStatus` is three members rather than `Recorded<Allergy[]>` on purpose.
+An empty array standing for "confirmed none known" would put the most
+consequential distinction in the product one `.length` check away from being
+lost. PRD §6.2 wants three visibly different things, so there are three
+members and the compiler insists on all three.
+
+### Photos
+
+No resident has a photograph on file, so all 32 render an initials monogram —
+which is what the system genuinely shows in the absence of a photograph, not a
+stand-in for one. A silhouette was rejected: §2.4 makes the photo a control
+against wrong-subject writes, and a control that looks identical for every
+resident is not a control.
+
+The monogram is **not** hatched and does not feed the "records incomplete"
+chip. A missing photograph is an identity aid, not a clinical or compliance
+record, and spending the hatch on non-clinical gaps blunts the one signal that
+matters.
+
+The `on_file` branch is exercised on `/dev/states` against a synthetic sample
+(`src/dev/sample-photo.svg`) so it is not dead code. That sample is dev-only,
+deliberately abstract, and never appears on a real screen or in the fixtures.
+
+### Nav and routing
+
+§4.7 now lists **17** sidebar items — Handover was added (Phase 2). Dashboard
+re-tagged to **Phase 12**, where §8 builds it alongside CQC Compliance on the
+same aggregate machinery. `/` still redirects to `/dev/states` for this step
+and moves to `/residents` in Step 1, when there is a residents list to land on.
+
+### Verification
+
+`npm run verify` green: icons:check, typecheck under `strict`, eslint,
+stylelint, hatch guard, prettier, **50 tests across 7 files**. Production build
+succeeds. Each guard checked by deliberately breaking it — a `date-fns`
+`format` import rejected by ESLint, a stale icon registry caught by the
+generator (the new Handover icon triggered it for real), and the timezone tests
+formatting the same instant for London, New York and Tokyo so viewer-local
+formatting fails on any machine rather than only on an unusually-configured one.
+
+### Still to check at review
+
+- The Fixture Audit panel at the top of `/dev/states` — ten of ten present.
+- The new unions under Phase 1 states, with the greyscale toggle on. EOLC
+  beside DNAR and ISOLATION is the one to look at hardest.
+- Both `PhotoStatus` branches side by side.

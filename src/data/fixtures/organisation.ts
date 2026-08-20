@@ -1,9 +1,9 @@
 /**
- * Phase 0 fixtures — only what the app shell needs to render honestly.
+ * Organisation, sites and staff. PRD §5.2.
  *
- * The 32 residents, 14 staff and 90 days of history described in PRD §5.2
- * land with Phase 1, messy by design. Fixtures stay messy on purpose: missing
- * assessments, omissions, thin sites. The gaps are the test. CLAUDE.md §6.
+ * 14 staff across the seven roles, including one deactivated — records
+ * outlive access (PRD §5.3), and a care note authored by someone who has
+ * since left must still render its author.
  */
 
 import type { Organisation, Site, StaffRef } from '../types'
@@ -15,65 +15,148 @@ export const organisation: Organisation = {
 
 /**
  * Two sites. Ashgrove is deliberately small so every dashboard and report is
- * exercised against a thin dataset — it is where Key Questions will render
+ * exercised against a thin dataset — it is where Key Questions render
  * Insufficient Evidence. PRD §5.2, §5.3.
+ *
+ * Both carry an IANA timezone. Clinical timestamps for a site's residents
+ * render in THAT zone, never the viewer's. PRD §3.6.
  */
 export const sites: Site[] = [
   {
     id: 'site-rosewood-court',
     organisationId: 'org-thornfield',
     name: 'Rosewood Court',
+    timeZone: 'Europe/London',
   },
   {
     id: 'site-ashgrove-lodge',
     organisationId: 'org-thornfield',
     name: 'Ashgrove Lodge',
+    timeZone: 'Europe/London',
   },
 ]
 
-/**
- * Enough staff to author the records shown on /dev/states.
- *
- * `staffDeactivated` exists from the start because records outlive access
- * (PRD §5.3): a record authored by a now-deactivated staff member must still
- * render its author.
- */
-export const staffNwosu: StaffRef = {
-  id: 'staff-c-nwosu',
-  displayName: 'C. Nwosu',
-  fullName: 'Chidinma Nwosu',
-  role: 'senior_carer',
-  isActive: true,
-}
+const makeStaff = (
+  id: string,
+  displayName: string,
+  fullName: string,
+  role: StaffRef['role'],
+  isActive = true,
+): StaffRef => ({
+  id: `staff-${id}`,
+  displayName,
+  fullName,
+  role,
+  isActive,
+})
 
-export const staffOkonkwo: StaffRef = {
-  id: 'staff-a-okonkwo',
-  displayName: 'A. Okonkwo',
-  fullName: 'Adaeze Okonkwo',
-  role: 'registered_manager',
-  isActive: true,
-}
-
-export const staffHalloran: StaffRef = {
-  id: 'staff-m-halloran',
-  displayName: 'M. Halloran',
-  fullName: 'Marie Halloran',
-  role: 'deputy_manager',
-  isActive: true,
-}
+export const staffOkonkwo = makeStaff(
+  'a-okonkwo',
+  'A. Okonkwo',
+  'Adaeze Okonkwo',
+  'registered_manager',
+)
+export const staffHalloran = makeStaff(
+  'm-halloran',
+  'M. Halloran',
+  'Marie Halloran',
+  'deputy_manager',
+)
+export const staffNwosu = makeStaff(
+  'c-nwosu',
+  'C. Nwosu',
+  'Chidinma Nwosu',
+  'senior_carer',
+)
 
 /** Deactivated. Their records remain, and remain attributed. PRD §5.3. */
-export const staffDeactivated: StaffRef = {
-  id: 'staff-j-whitfield',
-  displayName: 'J. Whitfield',
-  fullName: 'Joseph Whitfield',
-  role: 'care_worker',
-  isActive: false,
-}
+export const staffDeactivated = makeStaff(
+  'j-whitfield',
+  'J. Whitfield',
+  'Joseph Whitfield',
+  'care_worker',
+  false,
+)
+
+export const staffAdebayo = makeStaff(
+  'f-adebayo',
+  'F. Adebayo',
+  'Folake Adebayo',
+  'senior_carer',
+)
+export const staffClarke = makeStaff(
+  'r-clarke',
+  'R. Clarke',
+  'Ruth Clarke',
+  'organisation_admin',
+)
+export const staffEze = makeStaff('n-eze', 'N. Eze', 'Ngozi Eze', 'care_worker')
+export const staffPatel = makeStaff(
+  's-patel',
+  'S. Patel',
+  'Sunita Patel',
+  'care_worker',
+)
+export const staffMorrison = makeStaff(
+  'd-morrison',
+  'D. Morrison',
+  'Douglas Morrison',
+  'care_worker',
+)
+export const staffIbrahim = makeStaff(
+  'y-ibrahim',
+  'Y. Ibrahim',
+  'Yusuf Ibrahim',
+  'care_worker',
+)
+export const staffOsei = makeStaff('k-osei', 'K. Osei', 'Kwame Osei', 'care_worker')
+export const staffBennett = makeStaff(
+  'l-bennett',
+  'L. Bennett',
+  'Laura Bennett',
+  'activities_coordinator',
+)
+export const staffFitzgerald = makeStaff(
+  'p-fitzgerald',
+  'P. Fitzgerald',
+  'Peter Fitzgerald',
+  'auditor',
+)
+export const staffAkinyemi = makeStaff(
+  't-akinyemi',
+  'T. Akinyemi',
+  'Tolu Akinyemi',
+  'senior_carer',
+)
 
 export const staff: StaffRef[] = [
+  staffClarke,
   staffOkonkwo,
   staffHalloran,
   staffNwosu,
+  staffAdebayo,
+  staffAkinyemi,
+  staffEze,
+  staffPatel,
+  staffMorrison,
+  staffIbrahim,
+  staffOsei,
+  staffBennett,
+  staffFitzgerald,
   staffDeactivated,
 ]
+
+/** Staff who write care notes and administer medication. */
+export const carersAndSeniors: StaffRef[] = [
+  staffNwosu,
+  staffAdebayo,
+  staffAkinyemi,
+  staffEze,
+  staffPatel,
+  staffMorrison,
+  staffIbrahim,
+  staffOsei,
+]
+
+/** Staff who sign off assessments, care plans and reviews. */
+export const managers: StaffRef[] = [staffOkonkwo, staffHalloran]

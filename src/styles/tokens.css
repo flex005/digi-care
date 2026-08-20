@@ -78,7 +78,13 @@
   --status-unrecorded: #8e86a8;
   --status-unrecorded-ink: #5c5470;
   --status-unrecorded-tint: #f2f1f6;
-  --border-unrecorded: #a8a1bc; /* The dashed border of the hatch. §4.5 */
+
+  /* The dashed border of the hatch. §4.5. Deliberately the same value as
+     --status-unrecorded rather than a separate literal: as its own colour it
+     measured 2.20:1 on the tint, below the 3:1 PRD §7 requires of a status
+     boundary. At --status-unrecorded it measures 3.05:1 and passes, and there
+     is now one value that cannot drift from the other. */
+  --border-unrecorded: var(--status-unrecorded);
 
   /* ==================================================================
      TYPE — PRD §4.3

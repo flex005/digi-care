@@ -1,0 +1,12 @@
+<svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Synthetic sample image">
+  <!--
+    A synthetic sample used ONLY on /dev/states, to exercise the `on_file`
+    branch of PhotoStatus so it is not dead code. Deliberately abstract and
+    unmistakably not a photograph of a person: no resident in the fixtures
+    references it, and it never appears on a real screen.
+  -->
+  <rect width="160" height="160" fill="#D5C6FB" />
+  <circle cx="80" cy="60" r="28" fill="#6935CF" />
+  <path d="M20 160c0-33 27-60 60-60s60 27 60 60z" fill="#1E0059" />
+  <circle cx="128" cy="32" r="10" fill="#A284F1" />
+</svg>
