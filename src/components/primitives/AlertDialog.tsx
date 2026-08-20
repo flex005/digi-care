@@ -8,10 +8,16 @@ import buttonStyles from './Button.module.css'
  * Used for anything consequential: changing a DNAR, recording medications,
  * withdrawing consent, switching site with unsaved input.
  *
- * `title` and `confirmLabel` are both REQUIRED and both must name the subject.
+ * `title` and `confirmLabel` are both REQUIRED, and both must name the subject.
  * PRD §2.4 is unambiguous: never "Are you sure?", always "Record 08:00
- * medications for Emmanuel Okafor?". The type is what enforces it — a
- * confirmation cannot be built here without a sentence naming who it is about.
+ * medications for Emmanuel Okafor?".
+ *
+ * **The type enforces that they are present, not that they name anybody.**
+ * `title="Are you sure?"` compiles. A required `string` cannot check its own
+ * contents, so this one is carried by review, not by the compiler — unlike
+ * `Unrecorded`'s label, where a missing prop is a type error and an empty one
+ * is caught by a test. Closing it would take a branded type minted by a helper
+ * that takes the resident, or a test over every call site.
  *
  * The action button is `large`, clearing the 44px target PRD §7 requires for
  * anything destructive or clinical.

@@ -9,9 +9,16 @@ import styles from './dev.module.css'
  * rule it exists to document. The values themselves live in
  * src/styles/tokens.css, which is the only place they may.
  *
- * Contrast ratios are measured, not asserted. PRD §4.4 claims every ink holds
- * ≥4.88:1 on its own tint and ≥5.4:1 on white; the figures below are what the
- * palette actually computes to.
+ * **The contrast figures below are hand-measured constants, not computed.**
+ * They were checked against the palette by hand and typed in; nothing on this
+ * page recalculates them, so a token edit changes the swatch and leaves the
+ * ratio beside it saying whatever it said before.
+ *
+ * This comment previously read "measured, not asserted … what the palette
+ * actually computes to", which described a page that has never existed. Last
+ * verified by hand 20/08/2026. Computing them from getComputedStyle would make
+ * the sentence true and self-maintaining — see PROGRESS.md, it is an open
+ * decision.
  */
 
 const BRAND = [

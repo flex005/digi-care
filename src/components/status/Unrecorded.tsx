@@ -4,12 +4,19 @@ import styles from './Unrecorded.module.css'
  * The single entry point to the unrecorded treatment. Rule 2 of the Evidence
  * Invariant, PRD §2.2 and §4.5.
  *
- * Nothing else in the project applies the hatch. That is enforced three ways:
- * this component is the only consumer of the classes,
- * scripts/check-hatch.mjs fails the lint if the pattern is redrawn anywhere,
- * and `label` is a REQUIRED prop — so there is no way to render the hatch
- * without visible text saying what is missing. "The pattern is reinforcement,
- * never the sole carrier" stops being a review note and becomes a type error.
+ * Nothing else in the project applies the hatch. Two mechanisms hold that,
+ * and one gap is left open on purpose — stated here rather than implied:
+ *
+ *  - scripts/check-hatch.mjs fails the lint if the pattern is REDRAWN
+ *    anywhere else. Enforced.
+ *  - `label` is a REQUIRED prop, so there is no way to render the hatch
+ *    through this component without visible text saying what is missing.
+ *    "The pattern is reinforcement, never the sole carrier" stops being a
+ *    review note and becomes a type error. Enforced.
+ *  - Being the only *consumer* of the classes is currently just true, not
+ *    enforced. `composes:` reaches them from any stylesheet, and the guard
+ *    script recommends exactly that. A second component composing them would
+ *    apply the hatch with no required label and nothing would fail.
  *
  *     <Unrecorded label="Falls risk — not assessed" />
  *     <Unrecorded

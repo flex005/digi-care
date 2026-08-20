@@ -1202,3 +1202,125 @@ all three claims, case-insensitively. The guard should be *that the convention
 is still stated*, not that it is worded a particular way — the first survives
 copy edits, the second just gets updated to match whatever the code now says,
 which is not a guard at all.
+
+---
+
+## Comment sweep — justifications checked against what the code does — 20/08/2026
+
+Frank, on the dots finding: *"A comment asserting a justification that was
+never true is worse than no comment — the next reader believes it and stops
+checking. That pattern rarely occurs once."* It did not. Ten found.
+
+Split by what is actually wrong, because the fix differs.
+
+### A. The guarantee does not exist — the dot pattern proper
+
+**1. `src/dev/TokenSheet.tsx` — "Contrast ratios are measured, not asserted …
+the figures below are what the palette actually computes to."**
+
+They are hardcoded string literals: `inkOnTint: '4.99'`. Nothing on the page
+computes anything. The sentence draws a distinction and then does the thing it
+says it is not doing — on the page whose entire job is proving the palette
+meets WCAG. Edit a token and the swatch changes while the ratio beside it goes
+on saying whatever it said before.
+
+**2. `src/lib/format.ts` — "ESLint enforces it, so a component cannot quietly
+render viewer-local time."**
+
+The rule bans four `date-fns` names. It does nothing about `toLocaleString`,
+`toLocaleDateString`, `toDateString`, or `new Intl.DateTimeFormat()` with no
+`timeZone` — all render viewer-local, all pass lint today. Checked: no rule
+anywhere covers them.
+
+**And the hole is already occupied.** `src/data/fixtures/medications.ts` keys
+every MAR record by `date.toDateString()` — machine-local. Harmless while it is
+an internal key and both sites are Europe/London. It must not reach Phase 3's
+grid unexamined, where a day boundary in the wrong zone puts a round on the
+wrong date.
+
+**3. `src/components/primitives/AlertDialog.tsx` — "The type is what enforces
+it — a confirmation cannot be built here without a sentence naming who it is
+about."**
+
+`title: string` and `confirmLabel: string` are required strings. A required
+string enforces *presence*, not *content*: `title="Are you sure?"` compiles.
+This one guards §2, wrong-subject writes — the second pillar of the product —
+and it is carried by review, not by the compiler. Contrast `Unrecorded`'s
+label, where a missing prop is a type error *and* a test catches an empty one.
+
+**4. `src/components/icon/Icon.tsx` — "predev/prebuild make that impossible in
+a fresh session."**
+
+Disproved in a fresh production build earlier today. The comment names one
+cause (registry stale). There is a second: the registry is *current* but the
+scanner could not see the name, so it is regenerated **out**, `icons:check`
+reports current — correctly, for the wrong input — and this throws at runtime.
+A valid `IconName`, so the type system cannot catch it either.
+
+**5. `src/components/status/Unrecorded.tsx` — "enforced three ways."**
+
+Two of the three are enforced. The first — "this component is the only consumer
+of the classes" — is a description wearing an enforcement's clothes. `composes:`
+reaches the canonical classes from any stylesheet, and `check-hatch.mjs` prints
+instructions recommending exactly that. A second component composing them would
+apply the hatch with no required label and nothing would fail.
+
+### B. True once, stale now
+
+6. `nav-items.icons.ts` — "All **sixteen** items are listed." There are 17, and
+   the same file says "seventeen" 26 lines later. A comment contradicted by its
+   own file.
+7. `routes.tsx` — "Phase 0 registers **three** routes and no more." Seven now,
+   and the very next paragraph describes routes this sentence forbids.
+8. `session/context.ts` — "**Three** screens in Phase 1 need all of it."
+   Phase 1 is six screens.
+9. `needs-sections.ts` — cites `needs.test.ts`; the file is `needs.test.tsx`.
+   (The claim it makes is true — that test does assert every domain appears
+   exactly once.)
+10. `EolcBadge.tsx` — "so **the two** most consequential badges cannot be
+    confused at a glance", after listing three. And the distinctness rests on
+    hue: in greyscale the three tints are close and the labels do the work.
+    Acceptable under PRD §7 — but not what it said.
+
+### What was checked and holds
+
+Not every claim was wrong, and the ones that hold are the ones with a test
+behind them: `risk-flag-sources`' hatch precondition (asserted per source, with
+a non-empty-text check), `general-information-fields`' declaration guard
+(present, non-empty, and not an em dash, per field per resident),
+`needs-sections`' exactly-once, `AggregateFigure`'s inseparable denominator
+(`coverage` is required on both members of `Aggregate`), `tokens.css`'s
+stylelint claim, and `main.tsx`'s five font weights against five imports.
+
+**The pattern in the failures:** every false claim named a mechanism that
+sounded like it should work — a type, a lint rule, a build step — where the
+mechanism enforced something adjacent to the claim but narrower. Presence
+rather than content. One import path rather than a capability. Redrawing rather
+than reuse. None was a lie; each was a guarantee described one size too large.
+
+### Done now
+
+All ten comments corrected to say what the code actually does, including
+naming the gap where one is left open. No behaviour changed. `npm run verify`
+green, 212 tests.
+
+### Three open decisions for Frank
+
+Correcting the words removed the false confidence. It did not close the holes,
+and each has a real cost:
+
+1. **Compute the contrast figures** from `getComputedStyle` on the dev page, so
+   the sentence becomes true and self-maintaining. Small, contained, dev-only.
+2. **Extend the timezone guard** — an ESLint `no-restricted-syntax` rule for
+   `toLocaleString`/`toDateString`/`Intl.DateTimeFormat` without `timeZone`,
+   exempting `src/lib/format.ts`. Would have caught the `medications.ts` case.
+   Also needs a decision on that MAR record key before Phase 3.
+3. **Make AlertDialog's subject naming checkable** — a branded type minted by a
+   helper that takes the resident, so the compiler sees the subject; or a test
+   over every call site. The first is stronger and more intrusive. There are no
+   AlertDialog call sites yet, so this is cheapest to decide now and free to
+   apply later.
+
+And one guard worth extending cheaply: **`check-hatch.mjs` could also flag
+`composes:` of the canonical classes outside `Unrecorded.module.css`**, which
+would turn finding 5's open gap into an enforced one.

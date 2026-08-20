@@ -3,7 +3,7 @@ import type { IconName } from '@/components/icon/registry.names.generated'
 /**
  * The left sidebar. PRD §4.7.
  *
- * All sixteen items are listed from Phase 0 onward, in this order, and the
+ * All seventeen items are listed from Phase 0 onward, in this order, and the
  * ones whose module is not yet built are present but disabled with a "Coming
  * in a later phase" tooltip — so the shell does not change shape as phases
  * land, and nobody has to relearn where things are.
@@ -31,7 +31,8 @@ export interface NavItem {
  * exactly — the headings are inserted at boundaries that already fall in that
  * sequence, so nothing is reordered. They exist because seventeen unbroken
  * rows is a wall: a manager looking for Consent should not have to read
- * sixteen labels to find out it is there.
+ * sixteen labels to find out it is there. `navItems.length` is the count that
+ * matters; prose repeating it goes stale, as this comment did.
  */
 export type NavSectionId = 'overview' | 'delivery' | 'planning' | 'governance' | 'admin'
 

@@ -12,9 +12,14 @@ import { Unrecorded } from './Unrecorded'
  * Grey is reserved system-wide for unrecorded, so a *recorded* EOLC decision
  * rendered grey would read as "nobody has looked" — Rule 2 failing in the one
  * place it must not. `--status-info` instead: a recorded, factual, neutral
- * clinical state, visibly distinct from DNAR's brand purple and ISOLATION's
- * amber so the two most consequential badges cannot be confused at a glance.
- * Recorded in PROGRESS.md so the source PRD can be corrected.
+ * clinical state, distinct in hue from DNAR's brand purple and ISOLATION's
+ * amber. Recorded in PROGRESS.md so the source PRD can be corrected.
+ *
+ * Hue is where that distinctness stops: in greyscale these three tints are
+ * close, and it is the LABELS that tell them apart. That is acceptable —
+ * PRD §7 requires colour never be the sole carrier, and the words carry it —
+ * but this comment used to claim they "cannot be confused at a glance", which
+ * overstated what colour alone does.
  *
  * `not_applicable` is a recorded decision — a manager looked and concluded
  * EOLC does not apply — and is not the same as nobody having looked.

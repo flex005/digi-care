@@ -6,7 +6,7 @@ import type { Organisation, Site, StaffRef } from '@/data/types'
  * Who is looking, at which site, and in whose timezone.
  *
  * Phase 0 hard-coded the user into `AppShell` and held the active site in
- * local state. Three screens in Phase 1 need all of it, so it lives here once.
+ * local state. Every screen in Phase 1 needs some of it, so it lives here once.
  */
 export interface Session {
   organisation: Organisation

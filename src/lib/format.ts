@@ -14,8 +14,19 @@
  * default is exactly how the wrong zone would creep back in. Components reach
  * these through `useSiteFormat()`, which binds the active site's zone.
  *
- * This is the only module allowed to import formatting from `date-fns` —
- * ESLint enforces it, so a component cannot quietly render viewer-local time.
+ * ESLint bans four `date-fns` names — format, parseISO, formatISO,
+ * lightFormat — everywhere, which is what pushes callers here.
+ *
+ * **That rule does NOT mean a component cannot render viewer-local time.** It
+ * covers one import path and nothing else. `toLocaleString`, `toLocaleDateString`,
+ * `toDateString`, and `new Intl.DateTimeFormat()` with no `timeZone` all render
+ * in the viewer's zone and all pass lint today. The convention is what holds
+ * here; the lint rule only makes the convention easy to follow.
+ *
+ * `src/data/fixtures/medications.ts` already uses `toDateString()` to key MAR
+ * records by day. Machine-local, so a site west or east of the runner gets its
+ * day boundaries from the wrong zone. Harmless while it is an internal key and
+ * both sites are Europe/London; it must not reach Phase 3's grid unexamined.
  */
 
 import { formatDistanceToNowStrict } from 'date-fns'

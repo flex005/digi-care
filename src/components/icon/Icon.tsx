@@ -36,10 +36,20 @@ export function Icon({ name, size = 20, label, className, ...rest }: IconProps) 
   const Svg = iconRegistry[name]
 
   if (!Svg) {
-    // Only reachable when the registry is stale — an icon name was added and
-    // `npm run icons` has not run since. predev/prebuild make that impossible
-    // in a fresh session, but it happens mid-session during HMR. Say so
-    // instead of substituting a similar-looking glyph. CLAUDE.md §3.
+    // Reachable two ways, and prebuild only closes the first:
+    //
+    //  1. The registry is stale — a name was added and `npm run icons` has
+    //     not run since. predev/prebuild handle this; it happens mid-session
+    //     during HMR.
+    //  2. The registry is CURRENT but the scanner could not see the name.
+    //     A name written somewhere the scan does not read is regenerated
+    //     *out* of the registry, `icons:check` reports it current — because
+    //     it is, for the wrong input — and this throws at runtime. It is a
+    //     valid IconName, so the type system cannot catch it either.
+    //     Happened on 20/08/2026 in a fresh production build.
+    //
+    // Either way: say so, rather than substituting a similar-looking glyph.
+    // CLAUDE.md §3.
     throw new Error(
       `Icon "${name}" is not in the generated registry. Run \`npm run icons\`.`,
     )

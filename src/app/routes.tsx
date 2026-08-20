@@ -10,10 +10,11 @@ import { NotFound } from './NotFound'
 /**
  * Routing. React Router 7, data router API. PRD §3.1.
  *
- * Phase 0 registers three routes and no more. Modules get their routes in
- * their own phase — stubbing them now would mean shipping placeholder
- * screens, which CLAUDE.md §6 forbids. The sidebar already tells the user
- * they are coming, which is the honest version of the same information.
+ * A route is registered by the phase that builds its screen, never before.
+ * Stubbing the unbuilt modules now would mean shipping placeholder screens,
+ * which CLAUDE.md §6 forbids; the sidebar already tells the user they are
+ * coming, which is the honest version of the same information. So the table
+ * below grows phase by phase, and what is in it is what exists.
  *
  * `/` redirects to /residents. /dev/states is never deleted — it is how the
  * Evidence Invariant is checked visually at the end of every phase.

@@ -18,7 +18,7 @@ import { CARE_PLAN_DOMAINS, NEED_GROUPS } from '@/data/types'
  * So the leftovers are computed rather than hardcoded: any domain no group
  * claims lands in a final section. If `NEED_GROUPS` and `CARE_PLAN_DOMAINS`
  * ever drift apart again, the domain surfaces here instead of vanishing, and
- * `needs.test.ts` asserts every domain appears exactly once across all
+ * `needs.test.tsx` asserts every domain appears exactly once across all
  * sections.
  */
 
