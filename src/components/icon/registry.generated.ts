@@ -26,6 +26,7 @@ import IconCommunications_Call from '@/assets/icons-generated/communications/cal
 import IconDashboard_DashboardSquare01 from '@/assets/icons-generated/dashboard/dashboard-square-01.svg?react'
 import IconDashboard_SidebarLeft from '@/assets/icons-generated/dashboard/sidebar-left.svg?react'
 import IconDateAndTime_Calendar01 from '@/assets/icons-generated/date-and-time/calendar-01.svg?react'
+import IconDateAndTime_CalendarBlock01 from '@/assets/icons-generated/date-and-time/calendar-block-01.svg?react'
 import IconEducation_Clipboard from '@/assets/icons-generated/education/clipboard.svg?react'
 import IconGameSports_Puzzle from '@/assets/icons-generated/game-sports/puzzle.svg?react'
 import IconLegal_Agreement02 from '@/assets/icons-generated/legal/agreement-02.svg?react'
@@ -35,6 +36,7 @@ import IconMedical_Medicine01 from '@/assets/icons-generated/medical/medicine-01
 import IconMedical_Stethoscope from '@/assets/icons-generated/medical/stethoscope.svg?react'
 import IconMoreMenu_More02 from '@/assets/icons-generated/more-menu/more-02.svg?react'
 import IconNoteTask_Note01 from '@/assets/icons-generated/note-task/note-01.svg?react'
+import IconNoteTask_NoteRemove from '@/assets/icons-generated/note-task/note-remove.svg?react'
 import IconSearch_Search from '@/assets/icons-generated/search/search.svg?react'
 import IconSettings_Setting02 from '@/assets/icons-generated/settings/setting-02.svg?react'
 import IconUsers_UserCircle from '@/assets/icons-generated/users/user-circle.svg?react'
@@ -43,7 +45,7 @@ import IconUsers_UserMultiple from '@/assets/icons-generated/users/user-multiple
 import IconUsers_UserSwitch from '@/assets/icons-generated/users/user-switch.svg?react'
 
 /**
- * Only the 31 icons actually used in source. Importing all of them
+ * Only the 33 icons actually used in source. Importing all of them
  * would compile every icon in the set into the bundle.
  *
  * Partial because it is keyed by the full IconName union. A missing entry
@@ -69,6 +71,7 @@ export const iconRegistry: Partial<
   'dashboard/dashboard-square-01': IconDashboard_DashboardSquare01,
   'dashboard/sidebar-left': IconDashboard_SidebarLeft,
   'date-and-time/calendar-01': IconDateAndTime_Calendar01,
+  'date-and-time/calendar-block-01': IconDateAndTime_CalendarBlock01,
   'education/clipboard': IconEducation_Clipboard,
   'game-sports/puzzle': IconGameSports_Puzzle,
   'legal/agreement-02': IconLegal_Agreement02,
@@ -78,6 +81,7 @@ export const iconRegistry: Partial<
   'medical/stethoscope': IconMedical_Stethoscope,
   'more-menu/more-02': IconMoreMenu_More02,
   'note-task/note-01': IconNoteTask_Note01,
+  'note-task/note-remove': IconNoteTask_NoteRemove,
   'search/search': IconSearch_Search,
   'settings/setting-02': IconSettings_Setting02,
   'users/user-circle': IconUsers_UserCircle,

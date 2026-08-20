@@ -1,7 +1,9 @@
 import type { Aggregate } from '@/data/types'
 import type { ResidentSummary } from '@/data/access/client'
 import { INSUFFICIENT_EVIDENCE_THRESHOLD, coverageRatio } from '@/data/types'
+import type { IconName } from '@/components/icon/registry.names.generated'
 import { recordCompleteness } from '@/data/completeness'
+import { tileIcons, type TileId } from './analytics-tiles.icons'
 import {
   STALE_NOTE_HOURS,
   hasNoNoteWithinWindow,
@@ -24,11 +26,13 @@ import {
  *     zero overdue reviews is a quiet "0", never a tick.
  */
 
-export type TileId = 'residents' | 'critical' | 'reviews' | 'notes' | 'falls'
+export type { TileId }
 
 export interface AnalyticsTileSource {
   id: TileId
   label: string
+  /** REQUIRED, like the filter. A card without one is not the card. */
+  icon: IconName
   /**
    * `census` counts the population itself — "how many residents are here" is
    * an exact fact about an empty home too, so it stays a number at n = 0.
@@ -58,6 +62,7 @@ const noExclusions = () => ''
 export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
   {
     id: 'residents',
+    icon: tileIcons.residents,
     label: 'Residents',
     kind: 'census',
     assessable: everyone,
@@ -70,6 +75,7 @@ export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
   },
   {
     id: 'critical',
+    icon: tileIcons.critical,
     label: 'Critical gaps',
     kind: 'subset',
     assessable: everyone,
@@ -89,6 +95,7 @@ export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
      * render as untroubled.
      */
     id: 'reviews',
+    icon: tileIcons.reviews,
     label: 'Reviews overdue or never scheduled',
     kind: 'subset',
     assessable: everyone,
@@ -110,6 +117,7 @@ export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
      * live case: admitted 45 hours ago, PRD §5.3's gap 3.
      */
     id: 'notes',
+    icon: tileIcons.notes,
     label: `No care note in ${STALE_NOTE_HOURS}h`,
     kind: 'subset',
     assessable: (summaries, now) =>
@@ -119,13 +127,18 @@ export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
           STALE_NOTE_HOURS * 3_600_000,
       ),
     matches: (summary, now) => hasNoNoteWithinWindow(summary, now),
-    denominatorNoun: `residents here ${STALE_NOTE_HOURS}h or longer`,
+    // Just "residents". The denominator IS restricted to those here long
+    // enough, but saying so in the pill is noise on every site where nobody is
+    // excluded — and `excludedReason` says it in full on the one where somebody
+    // is, which is exactly when it changes the reading.
+    denominatorNoun: 'residents',
     excludedReason: (excluded) =>
-      `${excluded} admitted more recently than that, so the window has not elapsed for them.`,
+      `${excluded} admitted under ${STALE_NOTE_HOURS}h ago, so the window has not elapsed for them.`,
     filter: { risk: 'all', review: 'all', records: 'all', note: 'none_in_48h' },
   },
   {
     id: 'falls',
+    icon: tileIcons.falls,
     label: 'Never assessed for falls',
     kind: 'subset',
     assessable: everyone,

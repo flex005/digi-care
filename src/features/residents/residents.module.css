@@ -44,30 +44,32 @@
 }
 
 /**
- * The analytics row. PRD Rule 4 lives in the markup, not here — what this file
- * decides is weight, and the decision is that the row is LIGHTER than the
- * table it points at. Small figures, hairline borders, no fills, no status
- * colour. They are a way in, not the headline.
+ * The analytics cards. Their own section, above the card that holds the table
+ * — they are a way in, not part of it.
  *
- * No positive treatment exists in here on purpose. There is no rule to forget:
- * there is simply no green to reach for.
+ * Weight still sits below the table: the figure is one step down from the page
+ * title, the surfaces are hairline, and the row is shorter than three rows of
+ * the thing it points at.
+ *
+ * There is no positive treatment in this file. Not "we remember not to use
+ * green" — there is no green here to reach for. These exist to find problems,
+ * not to congratulate, so a zero is a quiet zero.
  */
 .tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: var(--space-8);
-  padding: var(--space-12) var(--space-12) 0;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-16);
 }
 
 .tile {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  align-items: flex-start;
+  gap: var(--space-8);
+  align-items: stretch;
   height: 100%;
-  padding: var(--space-8) var(--space-12);
+  padding: var(--space-16);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background-color: var(--bg-surface);
   text-align: left;
   cursor: pointer;
@@ -75,40 +77,86 @@
 
 .tile:hover {
   border-color: var(--border-strong);
-  background-color: var(--purple-50);
 }
 
-/* Selected. The border and tint are reinforcement; .tileActiveNote carries the
-   meaning in words, so the selection survives greyscale. */
+/* Selected. Border and tint are reinforcement only; .tileActiveNote carries
+   the meaning in words, so selection survives greyscale. */
 .tileActive {
   border-color: var(--purple-600);
   background-color: var(--purple-50);
 }
 
+.tileHead {
+  display: flex;
+  gap: var(--space-8);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+/* Two lines' worth whether the label needs them or not, so the figures below
+   sit on one horizontal across the row. "Reviews overdue or never scheduled"
+   wraps; a figure that dropped with it would break the line the eye reads. */
 .tileLabel {
-  color: var(--ink-500);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
+  min-height: calc(var(--text-body-sm-line) * 2);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
   font-weight: var(--weight-medium);
+}
+
+.tileIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-32);
+  height: var(--space-32);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-page);
+  color: var(--ink-500);
+}
+
+.tileFigure {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  align-items: baseline;
 }
 
 .tileValue {
   color: var(--ink-900);
-  font-size: var(--text-h3-size);
-  line-height: var(--text-h3-line);
-  font-weight: var(--weight-bold);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-extrabold);
   font-variant-numeric: tabular-nums;
 }
 
-/* Never optional. The figure above is meaningless without it. */
+/**
+ * The denominator, in the slot the reference design gives a percentage delta.
+ * Neutral, never a status hue: it is not good news or bad news, it is the
+ * thing without which the figure beside it means nothing. Rule 4.
+ */
+.tileDenominator {
+  padding: 2px var(--space-8);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-page);
+  color: var(--ink-700);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Which site was counted. Rule 5 — a figure must never be readable against
+   the wrong home. */
 .tileCoverage {
+  margin-top: auto;
   color: var(--ink-500);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
 }
 
 .tileActiveNote {
-  margin-top: var(--space-4);
   color: var(--purple-900);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);

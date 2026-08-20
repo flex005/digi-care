@@ -1,4 +1,5 @@
 import { assertNever } from '@/lib/assert-never'
+import { Icon } from '@/components/icon/Icon'
 import { Unrecorded } from '@/components/status'
 import {
   ANALYTICS_TILE_SOURCES,
@@ -45,7 +46,14 @@ export function AnalyticsTiles({
   const tiles = buildAnalyticsTiles(atSite, LIST_CLOCK)
 
   return (
-    <div className={styles.tiles} role="group" aria-label="Filter the list by figure">
+    <section
+      className={styles.tiles}
+      // A sectioning element for the layout, but role="group": these are five
+      // related controls, not a landmark. A <section> with a name would become
+      // a region, and five buttons do not earn a place in the landmark list.
+      role="group"
+      aria-label="Filter the list by figure"
+    >
       {tiles.map(({ source, aggregate, excludedReason }) => {
         const active = isTileActive(source, filters)
         // The census tile IS the cleared state, so it has no narrowing to
@@ -57,16 +65,18 @@ export function AnalyticsTiles({
         // reader gets the figure and its denominator together or not at all.
         let spoken: string
         let figure: React.ReactNode
-        let coverage: string
+        let denominator: string
+        let scope: string
 
         switch (aggregate.kind) {
           case 'measured':
             figure = <span className={styles.tileValue}>{aggregate.value}</span>
-            coverage =
+            denominator =
               source.kind === 'census'
-                ? `at ${siteLabel}`
-                : `of ${aggregate.coverage.covered} ${source.denominatorNoun} at ${siteLabel}`
-            spoken = `${source.label} — ${aggregate.value} ${coverage}.`
+                ? ''
+                : `of ${aggregate.coverage.covered} ${source.denominatorNoun}`
+            scope = `at ${siteLabel}`
+            spoken = `${source.label} — ${aggregate.value} ${denominator} ${scope}.`
             break
 
           case 'insufficient_evidence':
@@ -82,8 +92,9 @@ export function AnalyticsTiles({
                 detail={aggregate.missingDescription}
               />
             )
-            coverage = `${aggregate.coverage.covered} of ${aggregate.coverage.total} ${source.denominatorNoun} at ${siteLabel}`
-            spoken = `${source.label} — insufficient evidence. ${aggregate.missingDescription} ${coverage}.`
+            denominator = ''
+            scope = `${aggregate.coverage.covered} of ${aggregate.coverage.total} ${source.denominatorNoun} at ${siteLabel}`
+            spoken = `${source.label} — insufficient evidence. ${aggregate.missingDescription} ${scope}.`
             break
 
           default:
@@ -107,11 +118,27 @@ export function AnalyticsTiles({
             }
             onClick={() => onApply(active ? CLEARED_FILTERS : source.filter)}
           >
-            <span className={styles.tileLabel}>{source.label}</span>
-            {figure}
+            <span className={styles.tileHead}>
+              <span className={styles.tileLabel}>{source.label}</span>
+              <span className={styles.tileIcon} aria-hidden="true">
+                <Icon name={source.icon} size={16} />
+              </span>
+            </span>
+
+            <span className={styles.tileFigure}>
+              {figure}
+              {/* The reference design puts a percentage delta here. This slot
+                  carries the denominator instead: it is the thing Rule 4 will
+                  not let a figure appear without, and a week-on-week delta
+                  would need historical record states nobody has stored. */}
+              {denominator ? (
+                <span className={styles.tileDenominator}>{denominator}</span>
+              ) : null}
+            </span>
+
             <span className={styles.tileCoverage}>
-              {coverage}
-              {excludedReason ? ` ${excludedReason}` : ''}
+              {scope}
+              {excludedReason ? ` · ${excludedReason}` : ''}
             </span>
             {/* Selection is never carried by the border colour alone. */}
             {active ? (
@@ -124,7 +151,7 @@ export function AnalyticsTiles({
           </button>
         )
       })}
-    </div>
+    </section>
   )
 }
 

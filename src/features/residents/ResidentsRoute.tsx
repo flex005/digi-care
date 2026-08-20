@@ -124,10 +124,12 @@ export function ResidentsRoute() {
       <header className={styles.header}>
         <div>
           <h1 className={styles.pageTitle}>Residents</h1>
+          {/* Short, and still says what the screen is FOR. PRD §6.2: the
+              oldest-note sort exists so a manager can find neglected records;
+              it is not decoration. The old lede said the same thing in three
+              clauses and read like an explanation of itself. */}
           <p className={styles.lede}>
-            Sort by oldest care note to find the records nobody has looked at —
-            residents nobody has ever written up sort first, because that is the most
-            neglected record in the home.
+            Sort by oldest care note to find the residents nobody has written up.
           </p>
         </div>
         {/* Resident admission is not built by any phase in the PRD. Present
@@ -155,26 +157,16 @@ export function ResidentsRoute() {
         </p>
       ) : null}
 
-      <Card>
-        {/*
-          Above the table, and lighter than it. A way in, not the headline.
+      {isLoading || isError ? null : (
+        <AnalyticsTiles
+          atSite={atSite}
+          siteLabel={siteLabel}
+          filters={filters}
+          onApply={applyFilters}
+        />
+      )}
 
-          Rendered only once the read has resolved. While it is loading,
-          `atSite` is empty — and an empty list of residents renders tiles that
-          say "Insufficient evidence — there are no residents here to count",
-          which is a claim about the home nobody is yet entitled to make. The
-          two are opposites: "we have not looked yet" and "we looked and there
-          is nobody". That is the Evidence Invariant applied to the fetch, and
-          it is why these do not simply render through it.
-        */}
-        {isLoading || isError ? null : (
-          <AnalyticsTiles
-            atSite={atSite}
-            siteLabel={siteLabel}
-            filters={filters}
-            onApply={applyFilters}
-          />
-        )}
+      <Card>
         <ResidentsFilterBar
           sites={sites}
           filters={filters}

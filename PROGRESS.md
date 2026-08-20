@@ -1642,3 +1642,86 @@ compiler rejects it. The tiles and the 48-hour filter now share one clock
 (`list-clock.ts`) pinned to the instant the fixtures were generated against —
 so a row reading "2 hours ago" and the window that counts it cannot be measured
 against different instants.
+
+---
+
+## Analytics cards — reference design applied — 20/08/2026
+
+Frank supplied a reference (a "Total tasks / Tasks Due Today" card row), asked
+for that form, for the cards in their own section, and for a shorter lede.
+
+### The form, adopted
+
+Label top-left, icon in a rounded chip top-right, large figure with a small
+pill beside it, supporting line beneath. Five cards, one row, figures aligned
+on a single horizontal — `.tileLabel` carries two lines' worth of height
+whether it needs them or not, because "Reviews overdue or never scheduled"
+wraps and a figure that dropped with it would break the line the eye reads.
+
+Moved out of the table's `Card` into their own `<section>`. `role="group"`
+rather than letting it become a landmark: five related controls, not a region
+worth a place in the landmark list.
+
+Icons picked by rendering candidates and looking, not by reading filenames —
+`users/user-multiple`, `alert-02`, `calendar-block-01` (blocked, because the
+tile counts never-scheduled too), `note-remove` (the note that is not there),
+`stethoscope` (not assessed is not examined). They live in
+`analytics-tiles.icons.ts`, because an icon name in an ordinary `.ts` file is
+invisible to the usage scanner — the failure from earlier today.
+
+### Two things in the reference that contradict rules set last turn
+
+Taken as design intent, not as a reversal, and resolved rather than silently
+followed:
+
+**The green and red delta pills.** Last turn's rule 3 was *"No tile is ever
+green. These exist to find problems, not to congratulate."* The reference's
+`+8%` / `+12%` pills are exactly that. The pill slot is kept — it is what gives
+the card its rhythm — but it carries **the denominator** instead: "16" then
+"of 28 residents". Neutral, never a status hue. That slot now holds the one
+thing Rule 4 will not let a figure appear without, which is a better use of it
+than a percentage.
+
+**The `+8%` and "+12 new this week" deltas.** Both are bare percentages and
+bare counts, which Rule 4 forbids outright. More to the point, **we could not
+compute them honestly.** A week-on-week change in "critical gaps" needs the
+completeness of every record as it stood seven days ago, and nothing stores
+that: the fixtures hold current state plus a care note history. Inventing a
+plausible "+12%" on a compliance figure is the precise failure this build
+exists to prevent — it would look exactly like a real one.
+
+**Open for Frank.** Some deltas *are* computable and would be honest: residents
+admitted in the last 7 days, reviews that fell overdue in the last 7 days, and
+"no care note in 48h" recomputed as it stood a week ago, since care notes are
+dated. Each would need to carry its denominator and its direction in words
+rather than as a coloured percentage. Say the word and they go in; they are not
+in now because three of the five could not be computed and a row where two
+cards have a delta and three do not reads as broken.
+
+### The lede
+
+Was three clauses explaining themselves:
+
+> Sort by oldest care note to find the records nobody has looked at — residents
+> nobody has ever written up sort first, because that is the most neglected
+> record in the home.
+
+Now one:
+
+> Sort by oldest care note to find the residents nobody has written up.
+
+Still says what the screen is for — PRD §6.2's point that the oldest-note sort
+is an instrument, not decoration — without narrating its own reasoning at the
+reader.
+
+### Also
+
+The "no care note in 48h" denominator pill said "of 28 residents here 48h or
+longer", which wrapped to two lines and was noise on every site where nobody
+is excluded. It is now "of 28 residents", and the restriction is stated in
+full on the one site where it changes the reading — Ashgrove, which reads
+*"0 of 3 residents · at Ashgrove Lodge · 1 admitted under 48h ago, so the
+window has not elapsed for them."*
+
+229 tests. Greyscale re-checked: figures, denominators and the active card's
+selection all survive without colour.
