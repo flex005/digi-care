@@ -250,3 +250,145 @@
   line-height: var(--text-body-sm-line);
   text-align: center;
 }
+
+/* ---- tab panels ---- */
+
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.sectionBody {
+  padding: var(--space-20) var(--space-24);
+}
+
+/**
+ * A read-only field list. Two columns so the label and its value sit on one
+ * line and the eye can run down the labels.
+ */
+.fieldList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-20) var(--space-32);
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.fieldLabel {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fieldValue {
+  margin: 0;
+}
+
+.value {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+}
+
+/* The author and date of a clinical record. Always visible, never
+   hover-only. CLAUDE.md §6. */
+.attribution {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.inlineList {
+  margin: 0;
+  padding-left: var(--space-20);
+}
+
+.contactList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  margin: 0;
+  padding: 0;
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  list-style: none;
+}
+
+.contactMeta {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.contactLink {
+  color: var(--purple-600);
+  font-weight: var(--weight-semibold);
+}
+
+.contactLink:hover {
+  text-decoration: underline;
+}
+
+.photoField {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+.photoNote {
+  max-width: 44ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* Allergies get a panel, not a row. PRD §6.2. */
+.allergyPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  align-items: flex-start;
+  padding: var(--space-20) var(--space-24);
+}
+
+.allergyDetail {
+  margin: 0;
+  padding-left: var(--space-20);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.allergyNote {
+  max-width: 70ch;
+  color: var(--status-critical-ink);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-medium);
+}
+
+/* A built tab is a real link; an unbuilt one is a disabled span. */
+.tabBuilt {
+  color: var(--ink-500);
+  cursor: pointer;
+}
+
+.tabBuilt:hover {
+  color: var(--purple-900);
+}
+
+.tabActive {
+  border-bottom-color: var(--purple-600);
+  color: var(--purple-900);
+}

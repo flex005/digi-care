@@ -643,3 +643,108 @@ the list legend, the profile header, and both timezone cases.
 
 Still to check by eye at review: a keyboard pass over the profile, 200% zoom,
 and whether the sticky header behaves on a long page once the tabs have content.
+
+---
+
+## Phase 1, Screen 3 — General Information tab
+
+Completed 20/08/2026. `/residents/:residentId` is now a layout route; General
+Information is its index child, so the subject header stays mounted rather than
+being rebuilt by each tab. That is what makes it safe to write against (§2.4),
+and it only holds because the tabs are children rather than separate pages.
+
+### All sixteen §16.2 bullets, as twenty-one fields
+
+Several bullets bundle two facts — "Full legal name and preferred name",
+"Admission date and anticipated length of stay", "Diagnosis and medical history
+(free text, plus structured fields for primary and secondary diagnoses)".
+Splitting them is more precise, not less faithful: each half can be recorded or
+missing on its own, and a bundled row would have to hedge about which half was
+absent.
+
+Grouped into five sections — Identity · Placement · Clinical · Care team · The
+person. Presentation only; no field added, dropped or reworded.
+
+### The guard
+
+`general-information-fields.tsx` declares every field. The tab maps over the
+declaration, and `general-information.test.tsx` asserts, for **all 32
+residents**, that every field renders something non-empty, that none renders an
+em dash, and that any field reading `unrecorded` renders the hatch.
+
+The guard runs against `ProfileSections` — the real component the tab uses —
+not a test harness that re-implements the logic. An earlier draft used a
+harness; a guard that tests a copy of the logic proves only that the copy
+agrees with itself.
+
+**One declared exception, asserted exactly.** A photograph is an identity aid,
+not a clinical or compliance record, so it renders an initials monogram and
+says plainly that none is on file rather than taking the hatch. The test
+asserts the exception list is `['photo']` — any *other* field opting out is a
+hole in the invariant, so it fails rather than being quietly permitted.
+Verified by flipping `religion` to `plain`: the test failed with
+`expected [ 'photo', 'religion' ] to deeply equal [ 'photo' ]`.
+
+### The three calls, as built
+
+**Attribution on clinical and compliance fields only** — NHS number, funding
+source, diagnoses, medical history, GP, pharmacy — plus **dietary
+requirements**. That last one reads like a preference but is a clinical
+instruction that reaches a plate; a field mixing "no pork" with "IDDSI level 4"
+needs a source. Person-centred fields (language, communication needs, religion,
+cultural background, pronouns, room) carry none, because twenty attribution
+lines would bury the values they annotate.
+
+**No invented staleness threshold.** Every recorded field shows its date and the
+reader judges.
+
+> **Stale is not applicable to this tab.** These fields carry no review or
+> expiry date, so there is nothing to be past. Marking a value "may be out of
+> date" after some number of months would be a clinical judgement with no
+> backing in either document, and an invented number in a care record becomes
+> fact the moment somebody acts on it. The other six states are answered:
+> Loading and Error from `AsyncResource`, Populated on any well-recorded
+> resident, **Partial** on Ismail Sowande, Read-only unchanged because there is
+> nothing to write. **Empty does not exist here either** — a resident always
+> has a legal name, date of birth and admission date, so the emptiest possible
+> profile is Sowande's, and that is Partial.
+
+**No edit controls, and no disabled Edit button.** Add Resident earned its
+disabled state because §6.2 names the action; editing is named nowhere, so a
+disabled button would be inventing a feature in order to disable it. A test
+asserts no edit control exists.
+
+### Allergies
+
+A panel, not a row. §6.2 requires `--status-critical` wherever they appear, and
+as one row among twenty they would read like any other. Where unrecorded, the
+panel says it in words: *"Nobody has recorded whether this person has allergies.
+That is not the same as having none, and medication must not be given on the
+assumption that it is."*
+
+### ⚠️ Modelling gap found — array fields cannot say "none"
+
+`consultants: ProfessionalContact[]` cannot distinguish **"no consultants are
+involved"** from **"nobody recorded them"**. An empty array is exactly the
+empty-array ambiguity `AllergyStatus` was deliberately split into three members
+to avoid, and it has reappeared here.
+
+Read as the safer of the two for now — an empty list renders "Consultants and
+specialists not recorded" — but that is a rendering decision papering over a
+type that cannot express the distinction. The field wants to be
+`Recorded<ProfessionalContact[]>`.
+
+**The same gap affects `familyWithVisitingRights` and `otherProfessionals`,
+which Screen 5 renders.** Changing them is a fixture type change and therefore
+a stop-and-ask (CLAUDE.md §8), so it is raised here rather than done. Worth
+settling before Screen 5, since that screen is mostly these lists.
+
+### Verification
+
+`npm run verify` green — **129 tests across 10 files**. Guard broken
+deliberately and confirmed failing. Screenshots read back for Sowande (Partial,
+almost everything hatched, no blank rows) and Okafor (Populated, attribution
+present on clinical fields and absent on person-centred ones).
+
+Still to check by eye at review: a keyboard pass over the tab strip, and 200%
+zoom on the field grid.

@@ -3,6 +3,7 @@ import { AppShell } from '@/components/shell/AppShell'
 import { StatesRoute } from '@/dev/StatesRoute'
 import { ResidentsRoute } from '@/features/residents/ResidentsRoute'
 import { ResidentProfileRoute } from '@/features/residents/ResidentProfileRoute'
+import { GeneralInformationTab } from '@/features/residents/GeneralInformationTab'
 import { NotFound } from './NotFound'
 
 /**
@@ -27,7 +28,13 @@ export const router = createBrowserRouter([
       // stopgap.
       { index: true, element: <Navigate to="/residents" replace /> },
       { path: 'residents', element: <ResidentsRoute /> },
-      { path: 'residents/:residentId', element: <ResidentProfileRoute /> },
+      {
+        // A layout route, so the subject header stays mounted across every
+        // tab rather than being rebuilt by each one. §2.4.
+        path: 'residents/:residentId',
+        element: <ResidentProfileRoute />,
+        children: [{ index: true, element: <GeneralInformationTab /> }],
+      },
       {
         // Not deleted after Phase 0. This is how the Evidence Invariant is
         // checked visually in every later review. PRD §6.1.
