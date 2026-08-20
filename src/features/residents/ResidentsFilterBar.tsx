@@ -1,12 +1,14 @@
 import type { Site } from '@/data/types'
 import { Select } from '@/components/primitives'
 import type {
+  NoteFilter,
   RecordsFilter,
   ResidentFilters,
   ReviewFilter,
   RiskFilter,
   SiteFilter,
 } from './use-resident-filters'
+import { STALE_NOTE_HOURS } from './use-resident-filters'
 import styles from './residents.module.css'
 
 /**
@@ -26,6 +28,7 @@ export interface ResidentsFilterBarProps {
   onRiskChange: (risk: RiskFilter) => void
   onReviewChange: (review: ReviewFilter) => void
   onRecordsChange: (records: RecordsFilter) => void
+  onNoteChange: (note: NoteFilter) => void
 }
 
 export function ResidentsFilterBar({
@@ -35,6 +38,7 @@ export function ResidentsFilterBar({
   onRiskChange,
   onReviewChange,
   onRecordsChange,
+  onNoteChange,
 }: ResidentsFilterBarProps) {
   return (
     <div className={styles.filterBar}>
@@ -71,6 +75,7 @@ export function ResidentsFilterBar({
           { value: 'overdue', label: 'Review overdue' },
           { value: 'due', label: 'Review due' },
           { value: 'never_scheduled', label: 'Review never scheduled' },
+          { value: 'not_up_to_date', label: 'Overdue or never scheduled' },
         ]}
       />
       <Select
@@ -82,6 +87,18 @@ export function ResidentsFilterBar({
           { value: 'critical', label: 'Critical gaps only' },
           { value: 'any_incomplete', label: 'Any incomplete record' },
           { value: 'all', label: 'All residents' },
+        ]}
+      />
+      {/* Present as a real control, not only as a tile, so a filter applied by
+          clicking a tile is never invisible state in the bar. */}
+      <Select
+        label="Care note recency"
+        placeholder="Any care note"
+        value={filters.note}
+        onValueChange={(value) => onNoteChange(value as NoteFilter)}
+        options={[
+          { value: 'all', label: 'Any care note' },
+          { value: 'none_in_48h', label: `No care note in ${STALE_NOTE_HOURS}h` },
         ]}
       />
     </div>

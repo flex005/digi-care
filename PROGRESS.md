@@ -1503,3 +1503,142 @@ Grouping is layout only. Nothing moved in the DOM order, so tab order is
 unchanged: bell → apps → user.
 
 217 tests green.
+
+---
+
+## Residents list — analytics tiles and the name column — 20/08/2026
+
+Five tiles above the table, each clickable and each carrying its denominator;
+the name column down to one line.
+
+### Figures come from fixtures, not from the brief
+
+Frank's example figures were 28 / 16 / 3 / 4 / 6. The fixtures say 28 / 16 /
+4 / 1 / 4 at Rosewood. Fixtures are the specification (CLAUDE.md §6), so the
+tiles compute and the numbers are what they are — tuning fixtures to match an
+illustration is the failure this project has been avoiding since the 303
+omissions.
+
+### The catch: an "overdue" tile would have hidden a whole category
+
+The brief said **Reviews overdue · 3 of 28**. Counting `kind === 'overdue'`
+alone drops `never_scheduled` — a separate member of the same union.
+
+At **Ashgrove Lodge that tile reads 0 of 4**, and three of its four residents
+have never had a review scheduled at all. A tile saying "0" over a home where
+75% of reviews were never booked is untrue by omission, and it is PRD §2.1's
+named failure verbatim: *"'Never scheduled' and 'scheduled and completed on
+time' must not both render as untroubled."*
+
+The tile is now **"Reviews overdue or never scheduled"** — the label names both
+categories, the count is both, and a new `ReviewFilter` member
+(`not_up_to_date`) lets the click select both. Rosewood reads 4 (2 overdue,
+2 never scheduled); Ashgrove reads 3.
+
+### Rule 4 — thin denominators, and where Insufficient Evidence honestly fires
+
+Frank's rule: *a tile whose denominator is too thin to support the figure shows
+Insufficient Evidence rather than a number — Ashgrove with 4 residents is the
+case to check.* Checked. **It does not fire at n = 4, and it should not.**
+
+"1 of 4 residents has a critical gap" is an exact, complete count over the
+whole population — not an estimate from a sample. There is nothing to be
+insufficiently evident about; suppressing it would hide four true facts. And
+inventing a minimum-n rule would need a number neither document contains,
+which is the thing Frank ruled out on Screen 3: *"Fabricating a clinical
+judgement with no backing in either document is how invented numbers become
+fact."* The only documented threshold is §2.3's 60% **coverage**.
+
+So Insufficient Evidence fires on coverage, and there are two real triggers:
+
+1. **Nobody to count.** `total === 0`. A subset over an empty population is
+   undefined, and `coverageRatio` already returns 0 for an empty denominator
+   precisely so it never reads as reassuring. Reachable and reviewable at
+   `?sim=empty`, where four tiles hatch and the census tile correctly still
+   says "0 at Rosewood Court" — because *how many residents are here* is an
+   exact fact about an empty home too. That `census` / `subset` split is the
+   whole reason the distinction is in the type.
+2. **The window has not elapsed.** "No care note in 48h" cannot be asserted
+   about somebody resident for 20 hours — the answer is not "no problem", it is
+   not yet knowable. Those residents leave the denominator and the tile says so
+   in words. **Ismail Sowande at Ashgrove is the live case**: admitted 45 hours
+   ago, PRD §5.3's gap 3. Ashgrove reads *"0 of 3 residents here 48h or longer
+   at Ashgrove Lodge — 1 admitted more recently than that, so the window has
+   not elapsed for them."* Coverage 75%, above the threshold, so the figure
+   still shows. Below 60% it would hatch.
+
+**Open for Frank:** if a minimum population is wanted regardless of coverage,
+that needs a number from him, not from me.
+
+### Loading is not empty
+
+Placing the tiles above the table put them above the loading branch too, so
+during a load `atSite` was `[]` and four tiles announced *"Insufficient
+evidence — there are no residents here to count."* That is a claim about the
+home nobody is entitled to make yet.
+
+"We have not looked yet" and "we looked and there is nobody" are opposites —
+the Evidence Invariant applied to the fetch state, not to a record. Tiles now
+render only once the read resolves. `?sim=empty` still shows them, because
+that state has genuinely loaded and the claim is earned. Both directions
+tested.
+
+### The other rules
+
+- **Every tile is an `Aggregate`.** There is no shape in `analytics-tiles.ts`
+  that can hold a number without a `Coverage`, and the accessible name is the
+  whole claim so a screen reader gets figure and denominator together or not
+  at all.
+- **Every tile has a required `filter`.** A tile cannot be declared without
+  one, so a display-only tile cannot be added. The click is what earns the
+  space.
+- **Nothing is ever green.** No tone exists on a tile to set — there is no rule
+  to remember because there is no green to reach for. A zero is a quiet zero.
+- **Selection is not colour.** The active tile carries the sentence "Filtering
+  the list — select again to clear", plus `aria-pressed`. Verified in
+  greyscale.
+- **Every tile names its site**, so a figure cannot be read against the wrong
+  home. Tested.
+- **Weight sits below the table**: hairline borders, no fills, one modest
+  figure each, and the whole row is shorter than three table rows.
+
+**A bug in my own clear semantics, caught by using it:** the list opens on
+critical gaps only, so the Critical gaps tile is active from first paint — and
+"clear" was set to `DEFAULT_FILTERS`, which is that same state. The control
+promised "select again to clear" and did nothing. Clearing now means *show
+everyone*, which is genuinely different, and the census tile says "Showing
+every resident" instead, because it has no narrowing to remove.
+
+**Also added the care note recency filter to the bar**, not only to the tile.
+A filter applied by clicking a tile would otherwise be invisible state in a bar
+showing four unrelated Selects.
+
+### Name column
+
+One line: preferred first name plus surname — "Ada Nwachukwu". Row heights drop
+and the column stops reading as a form field. The full legal name stays on the
+profile header, where identity confirmation actually happens with photo, DOB
+and room beside it.
+
+**The surname is derived, not stored** — `Resident` has `preferredName` and
+`fullLegalName` and nothing between them, so `listName()` takes the last token.
+Right for every fixture name, wrong for the first one with a particle: "Anna
+van der Berg" would render "Anna Berg", which is somebody's name mangled by a
+string split.
+
+So there is a guard: `residents.test.tsx` fails if any fixture legal name stops
+being two tokens. The answer that day is a real `surname` field, which is a
+fixture type change and Frank's call — the test exists to force that
+conversation rather than let the mangling ship quietly.
+
+### Verification
+
+229 tests. Greyscale re-checked on Ashgrove — selection survives, nothing reads
+as positive. axe on the list unchanged and passing. Screenshots read back for
+Rosewood, Ashgrove, and `?sim=empty`.
+
+Also fixed while in there: `Date.now()` during render is impure and React's
+compiler rejects it. The tiles and the 48-hour filter now share one clock
+(`list-clock.ts`) pinned to the instant the fixtures were generated against —
+so a row reading "2 hours ago" and the window that counts it cannot be measured
+against different instants.

@@ -43,6 +43,78 @@
   font-weight: var(--weight-medium);
 }
 
+/**
+ * The analytics row. PRD Rule 4 lives in the markup, not here — what this file
+ * decides is weight, and the decision is that the row is LIGHTER than the
+ * table it points at. Small figures, hairline borders, no fills, no status
+ * colour. They are a way in, not the headline.
+ *
+ * No positive treatment exists in here on purpose. There is no rule to forget:
+ * there is simply no green to reach for.
+ */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-12) 0;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  height: 100%;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.tile:hover {
+  border-color: var(--border-strong);
+  background-color: var(--purple-50);
+}
+
+/* Selected. The border and tint are reinforcement; .tileActiveNote carries the
+   meaning in words, so the selection survives greyscale. */
+.tileActive {
+  border-color: var(--purple-600);
+  background-color: var(--purple-50);
+}
+
+.tileLabel {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-medium);
+}
+
+.tileValue {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Never optional. The figure above is meaningless without it. */
+.tileCoverage {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.tileActiveNote {
+  margin-top: var(--space-4);
+  color: var(--purple-900);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+}
+
 .filterBar {
   display: flex;
   flex-wrap: wrap;
@@ -60,12 +132,6 @@
   align-items: center;
 }
 
-.nameText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .preferredName {
   color: var(--purple-600);
   font-size: var(--text-body-size);
@@ -76,14 +142,6 @@
 .preferredName:hover {
   color: var(--purple-900);
   text-decoration: underline;
-}
-
-/* The full legal name sits under the preferred name because both are needed:
-   one to find a person, one to be certain it is them. PRD §2.4. */
-.legalName {
-  color: var(--ink-500);
-  font-size: var(--text-caption-size);
-  line-height: var(--text-caption-line);
 }
 
 .flags {

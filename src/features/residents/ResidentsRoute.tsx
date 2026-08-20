@@ -19,6 +19,8 @@ import { useSession } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import type { TableColumn } from '@/components/primitives'
 import { ResidentsFilterBar } from './ResidentsFilterBar'
+import { AnalyticsTiles } from './AnalyticsTiles'
+import { listName } from './list-name'
 import { RiskFlagsCell } from './RiskFlagsCell'
 import { RiskFlagsLegend } from './RiskFlagsLegend'
 import { CriticalGapsChip } from './CriticalGapsChip'
@@ -97,6 +99,8 @@ export function ResidentsRoute() {
     setRisk,
     setReview,
     setRecords,
+    setNote,
+    applyFilters,
     sortKey,
     sortDirection,
     toggleSort,
@@ -152,6 +156,25 @@ export function ResidentsRoute() {
       ) : null}
 
       <Card>
+        {/*
+          Above the table, and lighter than it. A way in, not the headline.
+
+          Rendered only once the read has resolved. While it is loading,
+          `atSite` is empty — and an empty list of residents renders tiles that
+          say "Insufficient evidence — there are no residents here to count",
+          which is a claim about the home nobody is yet entitled to make. The
+          two are opposites: "we have not looked yet" and "we looked and there
+          is nobody". That is the Evidence Invariant applied to the fetch, and
+          it is why these do not simply render through it.
+        */}
+        {isLoading || isError ? null : (
+          <AnalyticsTiles
+            atSite={atSite}
+            siteLabel={siteLabel}
+            filters={filters}
+            onApply={applyFilters}
+          />
+        )}
         <ResidentsFilterBar
           sites={sites}
           filters={filters}
@@ -159,6 +182,7 @@ export function ResidentsRoute() {
           onRiskChange={setRisk}
           onReviewChange={setReview}
           onRecordsChange={setRecords}
+          onNoteChange={setNote}
         />
         <RiskFlagsLegend />
 
@@ -241,17 +265,12 @@ export function ResidentsRoute() {
                           name={resident.fullLegalName}
                           size="medium"
                         />
-                        <span className={styles.nameText}>
-                          <Link
-                            to={`/residents/${resident.id}`}
-                            className={styles.preferredName}
-                          >
-                            {resident.preferredName}
-                          </Link>
-                          <span className={styles.legalName}>
-                            {resident.fullLegalName}
-                          </span>
-                        </span>
+                        <Link
+                          to={`/residents/${resident.id}`}
+                          className={styles.preferredName}
+                        >
+                          {listName(resident)}
+                        </Link>
                       </span>
                     </TableCell>
                     <TableCell numeric>
