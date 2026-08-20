@@ -196,3 +196,42 @@ describe('determinism', () => {
     expect(new Set(residents.map((r) => r.id)).size).toBe(residents.length)
   })
 })
+
+describe('records cannot be in the future', () => {
+  /**
+   * A care note timestamped after now is not messy data, it is impossible
+   * data — and it renders as "in 12 hours", which reads as a plan rather than
+   * an observation. The deliberate gaps in these fixtures are all absences;
+   * none of them is a record of something that has not happened.
+   */
+  it('records no care note, mood or review later than now', () => {
+    const now = Date.now()
+    for (const note of careNotes) {
+      expect(new Date(note.recordedAt).getTime()).toBeLessThanOrEqual(now)
+      if (note.mood.kind === 'recorded') {
+        expect(new Date(note.mood.recordedAt).getTime()).toBeLessThanOrEqual(now)
+      }
+      if (note.review.kind === 'reviewed') {
+        expect(new Date(note.review.reviewedAt).getTime()).toBeLessThanOrEqual(now)
+      }
+      if (note.review.kind === 'flagged_not_reviewed') {
+        expect(new Date(note.review.flaggedAt).getTime()).toBeLessThanOrEqual(now)
+      }
+    }
+  })
+
+  it('records no administration later than now', () => {
+    const now = Date.now()
+    for (const record of marRecordsAll) {
+      const { state } = record
+      if (state.kind === 'given') {
+        expect(new Date(state.givenAt).getTime()).toBeLessThanOrEqual(now)
+      }
+      if (state.kind === 'not_given') {
+        expect(new Date(state.recordedAt).getTime()).toBeLessThanOrEqual(now)
+      }
+      // `due` and `not_due` are about the future by definition — they are
+      // expectations, not records — so they are exempt.
+    }
+  })
+})

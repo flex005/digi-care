@@ -20,6 +20,10 @@
   composes: unrecordedRow from '../../styles/unrecorded.module.css';
 }
 
+.chip {
+  composes: unrecordedChip from '../../styles/unrecorded.module.css';
+}
+
 /* The label is the carrier of meaning; the pattern is reinforcement. */
 .label {
   font-weight: var(--weight-semibold);

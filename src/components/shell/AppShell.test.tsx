@@ -35,7 +35,7 @@ describe('AppShell', () => {
     await waitFor(() => expect(screen.getByText('Rosewood Court')).toBeVisible())
   })
 
-  it('lists all sixteen modules, including the ones not yet built', async () => {
+  it('lists all seventeen modules, including the ones not yet built', async () => {
     renderShell()
     const nav = await screen.findByRole('navigation', { name: 'Main navigation' })
 
@@ -55,9 +55,10 @@ describe('AppShell', () => {
       .getAllByRole('link', { hidden: true })
       .filter((el) => el.getAttribute('aria-disabled') === 'true')
 
-    // Every module is still unbuilt at Step 0 — Residents is enabled by
-    // Step 1, which is the stop that actually builds the list.
-    expect(disabled).toHaveLength(17)
+    // Sixteen of seventeen. Residents is built and enabled; everything else
+    // stays present but disabled so the shell does not change shape as
+    // phases land.
+    expect(disabled).toHaveLength(16)
     for (const el of disabled) {
       expect(el).toHaveAccessibleName(/coming in a later phase/i)
     }

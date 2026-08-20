@@ -37,6 +37,20 @@ vi.stubGlobal(
   },
 )
 
+/**
+ * Radix Select drives its listbox from Pointer Events, which jsdom does not
+ * implement. Without these a filter dropdown throws the moment a test opens
+ * it — the component is fine, the environment is not.
+ */
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = () => false
+  Element.prototype.setPointerCapture = () => {}
+  Element.prototype.releasePointerCapture = () => {}
+}
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {}
+}
+
 afterEach(() => {
   cleanup()
 })

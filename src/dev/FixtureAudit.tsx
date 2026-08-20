@@ -271,7 +271,7 @@ export function FixtureAudit() {
                 : 'critical'
             }
             label={`${criticalGaps} of ${residents.length} residents have a CRITICAL gap`}
-            detail="what the Records incomplete chip fires on — allergies, resuscitation, falls, GP, next of kin"
+            detail="what the Critical records missing chip fires on — allergies · resuscitation decision · falls risk · dysphagia risk · GP · next of kin · care and support consent"
           />
           <StatusPill
             tone="info"

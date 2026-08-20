@@ -15,6 +15,7 @@ import IconAlertNotification_Alert02 from '@/assets/icons-generated/alert-notifi
 import IconAlertNotification_AlertDiamond from '@/assets/icons-generated/alert-notification/alert-diamond.svg?react'
 import IconAlertNotification_Notification02 from '@/assets/icons-generated/alert-notification/notification-02.svg?react'
 import IconArrowsRound_ArrowDown02Round from '@/assets/icons-generated/arrows-round/arrow-down-02-round.svg?react'
+import IconArrowsRound_ArrowUp02Round from '@/assets/icons-generated/arrows-round/arrow-up-02-round.svg?react'
 import IconBusinessAndFinance_Analytics01 from '@/assets/icons-generated/business-and-finance/analytics-01.svg?react'
 import IconBusinessAndFinance_Target01 from '@/assets/icons-generated/business-and-finance/target-01.svg?react'
 import IconCheckValidation_CheckmarkBadge01 from '@/assets/icons-generated/check-validation/checkmark-badge-01.svg?react'
@@ -38,7 +39,7 @@ import IconUsers_UserMultiple from '@/assets/icons-generated/users/user-multiple
 import IconUsers_UserSwitch from '@/assets/icons-generated/users/user-switch.svg?react'
 
 /**
- * Only the 26 icons actually used in source. Importing all of them
+ * Only the 27 icons actually used in source. Importing all of them
  * would compile every icon in the set into the bundle.
  *
  * Partial because it is keyed by the full IconName union. A missing entry
@@ -53,6 +54,7 @@ export const iconRegistry: Partial<
   'alert-notification/alert-diamond': IconAlertNotification_AlertDiamond,
   'alert-notification/notification-02': IconAlertNotification_Notification02,
   'arrows-round/arrow-down-02-round': IconArrowsRound_ArrowDown02Round,
+  'arrows-round/arrow-up-02-round': IconArrowsRound_ArrowUp02Round,
   'business-and-finance/analytics-01': IconBusinessAndFinance_Analytics01,
   'business-and-finance/target-01': IconBusinessAndFinance_Target01,
   'check-validation/checkmark-badge-01': IconCheckValidation_CheckmarkBadge01,

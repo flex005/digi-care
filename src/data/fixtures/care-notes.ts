@@ -82,7 +82,7 @@ const NOTE_BODIES: Record<CareNoteCategoryId, string[]> = {
 const CATEGORIES = Object.keys(NOTE_BODIES) as CareNoteCategoryId[]
 const SHIFTS = ['early', 'late', 'night'] as const
 
-function makeMood(rng: ReturnType<typeof makeRandom>, index: number): MoodRecord {
+function makeMood(rng: ReturnType<typeof makeRandom>, at: Date): MoodRecord {
   // Roughly one note in six has no mood recorded — a real omission, and the
   // reason MoodRecord has an unrecorded member rather than defaulting to 3.
   if (rng.chance(0.17)) return { kind: 'not_recorded' }
@@ -90,7 +90,8 @@ function makeMood(rng: ReturnType<typeof makeRandom>, index: number): MoodRecord
     kind: 'recorded',
     score: rng.pick([1, 2, 3, 3, 3, 4, 4, 5] as const),
     recordedBy: rng.pick(carersAndSeniors),
-    recordedAt: toIsoDateTime(daysAgo(index)),
+    // The mood was recorded with the note, not at some unrelated moment.
+    recordedAt: toIsoDateTime(at),
   }
 }
 
@@ -114,6 +115,12 @@ for (const [residentIndex, resident] of residents.entries()) {
     for (let n = 0; n < count; n += 1) {
       const hour = rng.pick([7, 9, 11, 13, 15, 17, 19, 22])
       const at = atTime(daysAgo(day), hour, rng.int(0, 59))
+      // Today's later rounds have not happened yet. A care note timestamped
+      // in the future is not a messy record, it is an impossible one — and it
+      // would render as "in 12 hours", which reads as a plan rather than an
+      // observation. The gaps in these fixtures are deliberate; this would
+      // just be wrong.
+      if (at.getTime() > NOW.getTime()) continue
       const category = rng.pick(CATEGORIES)
       const bodies = NOTE_BODIES[category]
       notes.push({
@@ -121,7 +128,7 @@ for (const [residentIndex, resident] of residents.entries()) {
         residentId: resident.id,
         category,
         body: rng.pick(bodies),
-        mood: makeMood(rng, day),
+        mood: makeMood(rng, at),
         recordedBy: rng.pick(carersAndSeniors),
         recordedAt: toIsoDateTime(at),
         shift: hour < 14 ? SHIFTS[0] : hour < 21 ? SHIFTS[1] : SHIFTS[2],

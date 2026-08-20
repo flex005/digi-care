@@ -23,7 +23,7 @@ import styles from './Unrecorded.module.css'
  * <StatusPill tone="caution">. An omission looks unfinished. Rule 3.
  */
 
-export type UnrecordedVariant = 'badge' | 'cell' | 'panel' | 'row'
+export type UnrecordedVariant = 'badge' | 'cell' | 'chip' | 'panel' | 'row'
 
 export interface UnrecordedProps {
   /**
@@ -44,6 +44,8 @@ export interface UnrecordedProps {
 const VARIANT_CLASS: Record<UnrecordedVariant, string> = {
   badge: styles.badge,
   cell: styles.cell,
+  // Compact and stacked, for a table cell whose detail is a list of names.
+  chip: styles.chip,
   panel: styles.panel,
   row: styles.row,
 }

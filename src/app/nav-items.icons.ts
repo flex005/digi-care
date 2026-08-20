@@ -37,10 +37,7 @@ export const navItems: NavItem[] = [
     path: '/residents',
     icon: 'users/user-multiple',
     phase: 1,
-    // Enabled by Step 1, which builds the list. Step 0 ships the data layer
-    // and the Fixture Audit; a nav item pointing at a screen that does not
-    // exist yet would be a dead control.
-    enabled: false,
+    enabled: true,
   },
   {
     label: 'Care Notes',

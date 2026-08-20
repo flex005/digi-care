@@ -88,3 +88,27 @@ export function getMedications(residentId: ResidentId): Promise<Medication[]> {
 export function getMedicationsDueSoon(residentId: ResidentId): Promise<MarRecord[]> {
   return resolve(dueWithinTwoHours(residentId))
 }
+
+/**
+ * What the residents list needs, in one read rather than 33.
+ *
+ * `latestNote` is `'none'`, never `undefined` — "this resident has never been
+ * written up" is a real answer and one the list exists to surface, so it
+ * cannot be the same shape as "we did not fetch it".
+ */
+export interface ResidentSummary {
+  resident: Resident
+  latestNote: CareNote | 'none'
+}
+
+export function getResidentSummaries(
+  scope: SiteId | 'all',
+): Promise<ResidentSummary[]> {
+  const inScope = scope === 'all' ? residents : residentsBySite(scope)
+  return resolve(
+    inScope.map((resident) => ({
+      resident,
+      latestNote: latestNoteFor(resident.id) ?? 'none',
+    })),
+  )
+}

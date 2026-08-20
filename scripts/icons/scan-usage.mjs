@@ -30,9 +30,20 @@ const SKIP_DIRECTORIES = new Set(['node_modules', 'assets', 'dist', 'coverage', 
 
 const SKIP_FILES = new Set(['registry.generated.ts', 'registry.names.generated.ts'])
 
-/** <Icon … name="…" /> and <Icon … name={'…'} /> across newlines. */
-const JSX_USAGE =
-  /<Icon\b[^>]*?\bname=(?:"([^"]+)"|\{\s*'([^']+)'\s*\}|\{\s*"([^"]+)"\s*\})/g
+/**
+ * <Icon … name="…" /> and <Icon … name={…} /> across newlines.
+ *
+ * The braced form captures the whole expression rather than a single literal,
+ * because `name={condition ? 'a/b' : 'c/d'}` is a natural thing to write and
+ * an earlier version of this scanner silently missed it — the name typechecked
+ * (it is a valid IconName) and the generator saw no usage, so it failed at
+ * runtime instead of at build time. Every quoted string inside the braces is
+ * now treated as a used name.
+ */
+const JSX_USAGE = /<Icon\b[^>]*?\bname=(?:"([^"]+)"|\{([^}]*)\})/g
+
+/** Quoted strings inside a `name={…}` expression. */
+const NESTED_LITERAL = /'([^'\n]+)'|"([^"\n]+)"/g
 
 /** Any single- or double-quoted string, for *.icons.ts files. */
 const ANY_STRING_LITERAL = /'([^'\n]*)'|"([^"\n]*)"/g
@@ -74,8 +85,30 @@ export async function scanUsage(srcDir) {
 
     // Tier 1
     for (const match of text.matchAll(JSX_USAGE)) {
-      const name = match[1] ?? match[2] ?? match[3]
-      record(name, file, lineOf(text, match.index))
+      const line = lineOf(text, match.index)
+      if (match[1] !== undefined) {
+        record(match[1], file, line)
+        continue
+      }
+      // A braced expression: take the quoted strings that are shaped like an
+      // icon name. The shape filter matters — `name={cond ? 'a/b' : 'c/d'}`
+      // also contains the literal from the condition, and reporting
+      // `"ascending"` as a missing icon would be a false alarm that teaches
+      // people to distrust this check.
+      //
+      // A typo that keeps the shape ("medical/stethoscopee") is still caught
+      // here; one that loses it is caught by tsc, since it is not a member of
+      // the IconName union. Between them the coverage is complete.
+      //
+      // A name built by concatenation, or arriving from fixture data, remains
+      // undiscoverable — deliberately. It must be statically visible or the
+      // bundle cannot be correct.
+      for (const nested of (match[2] ?? '').matchAll(NESTED_LITERAL)) {
+        const name = nested[1] ?? nested[2]
+        if (name !== undefined && ICON_NAME_PATTERN.test(name)) {
+          record(name, file, line)
+        }
+      }
     }
 
     // Tier 2

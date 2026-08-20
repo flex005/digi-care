@@ -419,3 +419,134 @@ formatting fails on any machine rather than only on an unusually-configured one.
 - The new unions under Phase 1 states, with the greyscale toggle on. EOLC
   beside DNAR and ISOLATION is the one to look at hardest.
 - Both `PhotoStatus` branches side by side.
+
+---
+
+## Phase 1, Screen 1 — Residents list
+
+Completed 20/08/2026. `/residents`, and `/` now redirects to it.
+
+### The severity model, as built
+
+PRD §6.2 documents the chip as firing on critical gaps only. **Seven
+criticals**: allergies · resuscitation decision · falls risk · choking and
+dysphagia risk · GP · next of kin · care and support consent.
+
+§6.2's written list omits choking. That is an error in the document, to be
+corrected at the end of Phase 1: unassessed dysphagia is same-day dangerous,
+the same class of risk as falls and allergies, so it stays critical and the
+code leads the document here.
+
+**Demoted** — still in `missing`, no longer in `critical`: pressure ulcer risk
+(a weeks-scale harm, not a today-scale one), primary diagnosis, care plan
+domains not started, care plan review never scheduled.
+
+**The count: 19 of 32 residents carry a critical gap** — 15 of 28 at Rosewood,
+all 4 at Ashgrove. Thirteen residents are clean, so the chip and its filter
+discriminate. `fixtures.test.ts` bounds this, so a chip that fires on everyone
+fails the build rather than reaching review.
+
+Renamed from "Records incomplete", which overclaimed: it fires on a subset but
+read as all gaps.
+
+### Found while building
+
+**Care notes dated in the future.** The generator wrote notes at every round
+time on the current day, so a note could be timestamped twelve hours ahead and
+render as "in 12 hours" — reading as a plan rather than an observation. The
+deliberate gaps in these fixtures are all *absences*; a record of something
+that has not happened is not messy data, it is impossible data. Notes, moods
+and reviews are now clamped to `NOW`, and two tests pin it.
+
+**The icon scanner missed `name={condition ? 'a' : 'b'}`.** It matched
+`name="literal"` and `*.icons.ts` files but not a braced expression, so a valid
+`IconName` used in a ternary passed the generator *and* passed tsc, then threw
+at runtime. That is the one failure mode the pipeline was built to prevent, so
+the scanner now reads every quoted string inside `name={…}`, filtered to the
+namespaced shape — without the filter it reported `"ascending"` from the
+ternary's condition as a missing icon, a false alarm that would teach people to
+distrust the check. A typo that keeps the shape is caught by the scanner; one
+that loses it is caught by tsc. Between them the coverage is complete.
+
+**"All assessed — no flags" was unreachable.** The risk column rendered all
+three resuscitation states, so every row had at least one flag and the settled
+claim could never appear — dead code that looked like a feature. Fixed by not
+drawing `for_resuscitation`, which is the settled value.
+
+That last one produced the rule this column now runs on, and it is worth
+stating plainly because it is the whole design:
+
+> **Anything not shown in Risk flags has been recorded and is unremarkable.**
+
+It is safe only because every *unrecorded* state renders hatched. No badge
+therefore cannot mean "nobody looked" — it can only mean "looked, and it was
+the settled value". Absence of a resuscitation badge means for-resuscitation
+precisely because the other two states always render. The rule is stated in
+the page lede rather than left as folk knowledge, and the full badge strip
+with every state drawn is the profile header's job — that is the write
+surface, and this is the index.
+
+### Two empty states, deliberately different
+
+"No residents at this site yet" and "No residents match these filters" are
+different answers, and collapsing them would be the Evidence Invariant failing
+at the level of a result set. The first says it is not a filter result; the
+second says how many residents are still there and offers to clear the filters.
+
+### The oldest-note sort
+
+A resident with no care note at all sorts **first**, not last. Treating a
+missing note as a missing date pushes them to the bottom, which hides exactly
+the people PRD §6.2 built this sort to surface — never written up is more
+neglected than written up long ago. The note column carries both directions
+rather than reversing an array, so "oldest" keeps that handling.
+
+### Layout
+
+Eight columns did not fit at 1440px and the **Records** column — the one this
+screen exists for — was the one falling off the right edge. Photo moved inside
+the Resident cell, and the Site column now renders only when the list spans
+sites. §2.4 requires the active site to be permanently visible and it is: top
+bar, filter, and table caption. A column repeating "Rosewood Court" 28 times
+adds no information and cost the Records column its place on screen.
+
+A compact `chip` variant was added to `unrecorded.module.css` — the uppercase
+badge form wrapped "CRITICAL RECORDS MISSING" plus seven gap names into an
+unreadable block, and the names are the point.
+
+### Add resident
+
+Present but disabled with a "coming in a later phase" tooltip, matching the
+sidebar, because **no phase in the PRD builds resident admission**. Under
+read-only it is not rendered at all: an auditor has zero write (§1), and a
+disabled button implies a capability they will never have.
+
+### Prototype-only affordance
+
+`?sim=empty|error|loading` makes the states seeded fixtures cannot produce
+reviewable. It always renders a visible banner saying the state is simulated,
+so it cannot be mistaken for real data. **Remove when a backend lands.**
+
+### Also
+
+- jsdom implements neither `hasPointerCapture` nor `scrollIntoView`, so any
+  test opening a Radix Select threw. Stubbed in `src/test/setup.ts` alongside
+  the existing `matchMedia` and `ResizeObserver` stubs.
+- Each row renders in **its own site's** timezone via `SiteTimeZone`, not the
+  active site's. Invisible today — both sites are `Europe/London` — and
+  correct the moment one is not.
+- Three new primitives: `Table` (a real `<table>`, sortable headers as buttons
+  carrying `aria-sort`), `Card`, `EmptyState`. `EmptyState` requires a `body`,
+  because an empty state with only a title says "nothing here" without saying
+  why, which is the same failure as a blank cell one level up.
+
+### Verification
+
+`npm run verify` green — **67 tests across 8 files**. Rule 2 re-checked in
+greyscale on this screen: hatched and solid stay distinct without hue. Beryl
+Hutchinson (gap 1) shows a hatched "Falls — not assessed" and a chip naming
+falls risk. Both empty states, the simulated-state banner and the disabled Add
+resident confirmed by screenshot.
+
+Still to check by eye at review: a keyboard pass over the sort headers and
+filters, and 200% zoom.

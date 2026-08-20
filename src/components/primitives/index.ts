@@ -14,6 +14,15 @@ export type { AvatarProps, AvatarSize } from './Avatar'
 export { Button } from './Button'
 export type { ButtonProps, ButtonSize, ButtonVariant } from './Button'
 
+export { Card, CardHeader } from './Card'
+export type { CardProps, CardHeaderProps } from './Card'
+
+export { EmptyState } from './EmptyState'
+export type { EmptyStateProps } from './EmptyState'
+
+export { Table, TableRow, TableCell } from './Table'
+export type { SortDirection, TableColumn, TableProps } from './Table'
+
 export { Dialog, DialogTrigger, DialogClose } from './Dialog'
 export type { DialogProps } from './Dialog'
 

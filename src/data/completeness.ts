@@ -13,12 +13,32 @@
  * gaps would blunt the one signal that matters.
  */
 
-import type { Resident } from './types'
+import type { Resident, RiskTemplateId } from './types'
 import { CONSENT_TYPES, RISK_ASSESSMENT_TEMPLATES } from './types'
 
+/** Chip-length names for the risk templates. */
+const SHORT_RISK_LABELS: Partial<Record<RiskTemplateId, string>> = {
+  falls: 'Falls risk',
+  choking: 'Dysphagia risk',
+  pressure_ulcer: 'Pressure ulcer risk',
+  nutrition: 'Nutritional risk',
+  moving_handling: 'Moving and handling',
+  mental_capacity: 'Mental capacity',
+  skin_integrity: 'Skin integrity',
+  behaviour: 'Behaviour support',
+  environmental: 'Environmental risk',
+  coshh: 'COSHH',
+}
+
 export interface MissingRecord {
-  /** Shown in the chip. British English, plain language. */
+  /** The full sentence, shown on the profile. British English, plain language. */
   label: string
+  /**
+   * Two or three words, for the residents-list chip. Seven full sentences do
+   * not fit in a table cell, and truncating them would turn named gaps back
+   * into a vague warning — which is the thing the chip exists to avoid.
+   */
+  shortLabel: string
   /** Which tab or module would fix it. */
   area: 'general' | 'risk' | 'care-plan' | 'consent' | 'future-plans'
   /**
@@ -33,8 +53,19 @@ export interface MissingRecord {
   severity: 'critical' | 'standard'
 }
 
-/** Risk templates whose absence changes how a care worker enters a room. */
-const CRITICAL_RISKS = new Set(['falls', 'pressure_ulcer', 'choking'])
+/**
+ * Risk templates whose absence changes how a care worker enters a room, and
+ * is dangerous the same day rather than at the next audit.
+ *
+ * PRD §6.2's written list omits choking; that is an error in the document,
+ * to be corrected at the end of Phase 1. Unassessed dysphagia is same-day
+ * dangerous — the same class as falls and allergies — so it stays critical
+ * and the code leads the document here.
+ *
+ * Pressure ulcer risk is deliberately NOT critical. It matters, and it is
+ * still listed in `missing`; it is a weeks-scale harm, not a today-scale one.
+ */
+const CRITICAL_RISKS = new Set(['falls', 'choking'])
 
 export function recordCompleteness(resident: Resident): {
   missing: MissingRecord[]
@@ -49,6 +80,7 @@ export function recordCompleteness(resident: Resident): {
   if (resident.allergies.kind === 'not_recorded') {
     missing.push({
       label: 'Allergies not recorded',
+      shortLabel: 'Allergies',
       area: 'general',
       severity: 'critical',
     })
@@ -56,6 +88,7 @@ export function recordCompleteness(resident: Resident): {
   if (resident.resuscitation.kind === 'no_decision_recorded') {
     missing.push({
       label: 'No resuscitation decision',
+      shortLabel: 'Resuscitation decision',
       area: 'future-plans',
       severity: 'critical',
     })
@@ -63,6 +96,7 @@ export function recordCompleteness(resident: Resident): {
   if (resident.eolc.kind === 'not_recorded') {
     missing.push({
       label: 'EOLC status not recorded',
+      shortLabel: 'EOLC status',
       area: 'future-plans',
       severity: 'standard',
     })
@@ -70,6 +104,7 @@ export function recordCompleteness(resident: Resident): {
   if (resident.isolation.kind === 'not_recorded') {
     missing.push({
       label: 'Isolation status not recorded',
+      shortLabel: 'Isolation status',
       area: 'general',
       severity: 'standard',
     })
@@ -83,6 +118,7 @@ export function recordCompleteness(resident: Resident): {
   for (const template of unassessed) {
     missing.push({
       label: `${template.name} not assessed`,
+      shortLabel: SHORT_RISK_LABELS[template.id] ?? template.name,
       area: 'risk',
       severity: CRITICAL_RISKS.has(template.id) ? 'critical' : 'standard',
     })
@@ -92,23 +128,31 @@ export function recordCompleteness(resident: Resident): {
   if (resident.nhsNumber.kind === 'unrecorded') {
     missing.push({
       label: 'NHS number not recorded',
+      shortLabel: 'NHS number',
       area: 'general',
       severity: 'standard',
     })
   }
   if (resident.gp.kind === 'unrecorded') {
-    missing.push({ label: 'GP not recorded', area: 'general', severity: 'critical' })
+    missing.push({
+      label: 'GP not recorded',
+      shortLabel: 'GP',
+      area: 'general',
+      severity: 'critical',
+    })
   }
   if (resident.primaryDiagnosis.kind === 'unrecorded') {
     missing.push({
       label: 'Primary diagnosis not recorded',
+      shortLabel: 'Primary diagnosis',
       area: 'general',
-      severity: 'critical',
+      severity: 'standard',
     })
   }
   if (resident.dietaryRequirements.kind === 'unrecorded') {
     missing.push({
       label: 'Dietary requirements not recorded',
+      shortLabel: 'Dietary requirements',
       area: 'general',
       severity: 'standard',
     })
@@ -118,6 +162,7 @@ export function recordCompleteness(resident: Resident): {
   if (resident.importantPeople.nextOfKin.kind === 'unrecorded') {
     missing.push({
       label: 'Next of kin not recorded',
+      shortLabel: 'Next of kin',
       area: 'general',
       severity: 'critical',
     })
@@ -130,8 +175,21 @@ export function recordCompleteness(resident: Resident): {
   if (notStarted.length > 0) {
     missing.push({
       label: `${notStarted.length} of ${resident.carePlan.length} care plan domains not started`,
+      shortLabel: 'Care plan domains',
       area: 'care-plan',
-      severity: notStarted.length > 4 ? 'critical' : 'standard',
+      severity: 'standard',
+    })
+  }
+
+  // Care and support consent, named separately from the aggregate below.
+  // "Care is being delivered with no recorded consent to it" is a regulatory
+  // failure, and it is not the same fact as "3 of 8 consent types not sought".
+  if (resident.consents.care_and_support.kind === 'not_sought') {
+    missing.push({
+      label: 'No recorded consent to care and support',
+      shortLabel: 'Care and support consent',
+      area: 'consent',
+      severity: 'critical',
     })
   }
 
@@ -142,6 +200,7 @@ export function recordCompleteness(resident: Resident): {
   if (notSought.length > 0) {
     missing.push({
       label: `${notSought.length} of ${CONSENT_TYPES.length} consent types not sought`,
+      shortLabel: 'Consent types',
       area: 'consent',
       severity: 'standard',
     })
@@ -150,8 +209,9 @@ export function recordCompleteness(resident: Resident): {
   if (resident.carePlanReview.kind === 'never_scheduled') {
     missing.push({
       label: 'Care plan review never scheduled',
+      shortLabel: 'Care plan review',
       area: 'care-plan',
-      severity: 'critical',
+      severity: 'standard',
     })
   }
 

@@ -91,6 +91,22 @@
   line-height: var(--text-body-sm-line);
 }
 
+/* Compact stacked form for a table cell — a label with its named detail
+   beneath. Deliberately not uppercase: "CRITICAL RECORDS MISSING" plus seven
+   gap names in a column of a table wraps into an unreadable block, and the
+   names are the point. */
+.unrecordedChip {
+  composes: unrecorded;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-md);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
 /* Block form — a full-width row inside a list, e.g. a risk assessment
    template that has never been completed. Absence from a list is the same
    bug as a blank cell, so these are rendered, never omitted. */
