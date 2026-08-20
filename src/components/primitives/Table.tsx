@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Icon } from '../icon/Icon'
+import { Tooltip } from './Tooltip'
 import styles from './Table.module.css'
 
 /**
@@ -32,6 +33,16 @@ export interface TableColumn<TSortKey extends string> {
    * row negotiates its own widths.
    */
   width?: string
+  /**
+   * A convention the column cannot be read correctly without.
+   *
+   * Rendered as a focusable control in the header carrying the text as both
+   * its accessible name and its tooltip — NOT as a title attribute or a hover
+   * target on the label. A rule a keyboard user cannot reach is a rule that is
+   * not on the screen for them, and this one is load-bearing: the Risk flags
+   * column means something different if you have not read it.
+   */
+  note?: string
 }
 
 export interface TableProps<TSortKey extends string> {
@@ -86,7 +97,23 @@ export function Table<TSortKey extends string>({
                   {...(column.numeric ? { 'data-numeric': '' } : {})}
                 >
                   {column.sortKey === undefined ? (
-                    column.label
+                    <span className={styles.headerLabel}>
+                      {column.label}
+                      {column.note ? (
+                        <Tooltip content={column.note}>
+                          <button
+                            type="button"
+                            className={styles.headerNote}
+                            aria-label={`${column.label}: ${column.note}`}
+                          >
+                            <Icon
+                              name="alert-notification/information-circle"
+                              size={16}
+                            />
+                          </button>
+                        </Tooltip>
+                      ) : null}
+                    </span>
                   ) : (
                     <button
                       type="button"

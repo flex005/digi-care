@@ -1,12 +1,10 @@
 import { Select } from '@/components/primitives'
 import type {
-  NoteFilter,
   RecordsFilter,
   ResidentFilters,
   ReviewFilter,
   RiskFilter,
 } from './use-resident-filters'
-import { STALE_NOTE_HOURS } from './use-resident-filters'
 import { ANALYTICS_PERIODS, type AnalyticsPeriod } from './analytics-tiles'
 import styles from './residents.module.css'
 
@@ -26,10 +24,16 @@ import styles from './residents.module.css'
  * one a reader needs to know exists when the list opens already narrowed.
  */
 
+/**
+ * Widest first, narrowing left to right — so the reader meets the whole
+ * population before the subsets of it, and can see what they are a subset OF.
+ * The list still OPENS on critical gaps; where the default sits and where the
+ * options read from are different questions.
+ */
 const RECORDS_TABS: { value: RecordsFilter; label: string }[] = [
-  { value: 'critical', label: 'Critical gaps' },
-  { value: 'any_incomplete', label: 'Any incomplete record' },
   { value: 'all', label: 'All residents' },
+  { value: 'any_incomplete', label: 'Any incomplete record' },
+  { value: 'critical', label: 'Critical gaps' },
 ]
 
 export interface ResidentsFilterBarProps {
@@ -37,7 +41,6 @@ export interface ResidentsFilterBarProps {
   onRiskChange: (risk: RiskFilter) => void
   onReviewChange: (review: ReviewFilter) => void
   onRecordsChange: (records: RecordsFilter) => void
-  onNoteChange: (note: NoteFilter) => void
   period: AnalyticsPeriod
   onPeriodChange: (period: AnalyticsPeriod) => void
 }
@@ -47,7 +50,6 @@ export function ResidentsFilterBar({
   onRiskChange,
   onReviewChange,
   onRecordsChange,
-  onNoteChange,
   period,
   onPeriodChange,
 }: ResidentsFilterBarProps) {
@@ -102,17 +104,6 @@ export function ResidentsFilterBar({
           { value: 'not_up_to_date', label: 'Overdue or never scheduled' },
         ]}
       />
-      <Select
-        label="Care note recency"
-        placeholder="Any care note"
-        value={filters.note}
-        onValueChange={(value) => onNoteChange(value as NoteFilter)}
-        options={[
-          { value: 'all', label: 'Any care note' },
-          { value: 'none_in_48h', label: `No care note in ${STALE_NOTE_HOURS}h` },
-        ]}
-      />
-
       {/* At the far end, and deliberately apart: this one does not filter the
           list. It sets how far back the figures above look, and it is bounded
           by the history that exists rather than by what reads well. */}

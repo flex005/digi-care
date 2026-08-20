@@ -308,52 +308,48 @@ describe('the Risk flags precondition — structural guard', () => {
   })
 })
 
-describe('the legend states the convention on screen', () => {
-  /** A convention a reader has to infer is folk knowledge, and folk knowledge
-   *  is how "no badge" starts meaning "he's fine" to somebody nobody told. */
-  it('is permanently visible, not behind a tooltip or a disclosure', async () => {
+describe('the risk flags convention stays on screen', () => {
+  /**
+   * The legend beneath the filters is gone. The rule it carried is not, and
+   * must not be: this column means the opposite of what it looks like to
+   * somebody who has not read it — an empty cell reads as "nothing wrong" when
+   * it may mean nobody has looked.
+   *
+   * It now lives on the column header, which is the other option Frank named
+   * when he first asked for it: "a persistent legend or a Risk flags header
+   * tooltip". These assert the tooltip is not the only carrier — the control
+   * is focusable and its accessible name is the whole rule, so it is reachable
+   * without a pointer.
+   */
+  it('is reachable from the column header, not hover-only', async () => {
     renderList()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
 
-    // Present without any interaction at all. Asserted on the legend's own
-    // text, case-insensitively: the guard is that all three claims are made
-    // on screen, not that the copy is worded a particular way. Wording gets
-    // tightened; the convention must not quietly stop being stated.
-    const legend = screen.getByRole('note', { name: 'Risk flags legend' })
-    expect(legend).toBeVisible()
-    const said = legend.textContent?.toLowerCase() ?? ''
-    expect(said, 'the legend must say what a hatched badge means').toContain(
+    const note = screen.getByRole('button', { name: /^Risk flags:/ })
+    const said = note.getAttribute('aria-label')?.toLowerCase() ?? ''
+
+    expect(said, 'the rule must say what a hatched badge means').toContain(
       'nobody has looked',
     )
-    expect(said, 'the legend must say what a coloured badge means').toContain(
+    expect(said, 'the rule must say what a coloured badge means').toContain(
       'needs attention',
     )
-    expect(said, 'the legend must say what an ABSENT badge means').toContain(
-      'not shown',
+    expect(said, 'the rule must say what an ABSENT badge means').toContain(
+      'nothing shown means recorded and unremarkable',
     )
-    expect(said).toContain('recorded and unremarkable')
   })
 
   it('names every source it covers, so "not shown" has a declared scope', async () => {
     renderList()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
-
-    // Scoped to the legend: these names also appear in the filter options,
-    // and a legend that happens to match a dropdown is not a legend.
-    const legend = screen.getByRole('note', { name: 'Risk flags legend' })
+    const note = screen.getByRole('button', { name: /^Risk flags:/ })
+    const said = note.getAttribute('aria-label')?.toLowerCase() ?? ''
     for (const source of RISK_FLAG_SOURCES) {
-      expect(legend.textContent?.toLowerCase()).toContain(source.name.toLowerCase())
+      expect(said).toContain(source.name.toLowerCase())
     }
   })
 })
 
-/**
- * The analytics tiles.
- *
- * These guard the three things that would turn a useful row into decoration or
- * a lie: a figure without its denominator, a tile that does not filter, and a
- * category silently dropped out of a count.
- */
 describe('analytics figures', () => {
   it('is read-only — the cards are not controls', async () => {
     renderList()

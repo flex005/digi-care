@@ -1946,3 +1946,72 @@ The back link on the resident profile keeps `arrow-left-02-round`. It is a
 direction of travel, not a disclosure, and a full arrow is right for it.
 
 263 tests.
+
+---
+
+## Residents list — filter row trimmed, legend relocated — 20/08/2026
+
+Four changes from Frank: All residents first, drop the care note filter, drop
+the Risk flags section, centre the arrow icons.
+
+### The legend did not simply go
+
+Removing the Risk flags section removes the statement the column depends on:
+
+> Anything not shown has been recorded and is unremarkable.
+
+Without it an empty cell reads as "nothing wrong" when it may mean nobody has
+looked — PRD §2.1's failure, at the level of a column. Frank asked for that
+legend himself for exactly this reason: *"It can't become folk knowledge."*
+
+But the same instruction named the alternative: *"a persistent legend **or a
+Risk flags header tooltip**."* So the section is gone and the rule moved onto
+the column header, which is the option he already sanctioned.
+
+**Not hover-only.** `TableColumn` gained a `note`, rendered as a real
+`<button>` whose accessible name is the whole rule and whose tooltip repeats
+it. A rule a keyboard user cannot reach is a rule that is not on the screen for
+them, and this one changes what the column means. The guarding test is kept and
+rewritten against the header control rather than deleted — it still fails if
+the rule stops saying what a hatched badge means, what a coloured one means, or
+what an absent one means.
+
+`note` is on the Table primitive rather than this screen, because Phase 3's MAR
+grid has the same requirement — PRD §6.4 wants its legend permanently visible —
+and a second implementation there is how two legends drift apart.
+
+The header control uses `--ink-500`: `--ink-400` measures 2.80 on the header's
+sunken background, and WCAG 1.4.11 wants 3:1 for a control that identifies
+itself by its glyph. 5.13 now.
+
+### The care note filter
+
+Gone, along with its state, its type and its matcher — not left as a dead field
+in `ResidentFilters`. `hasNoNoteWithinWindow` stays, because the analytics card
+still counts it; only the filter went.
+
+### All residents first
+
+Widest first, narrowing left to right, so the reader meets the population
+before its subsets and can see what they are a subset of. The list still
+*opens* on critical gaps — where the default sits and where the options read
+from are different questions.
+
+### Arrow centring
+
+The cause was in `Icon.module.css`: `vertical-align: -0.125em`, a hand-tuned
+drop that suited an icon sitting in running text and left every icon inside a
+wrapper span a couple of pixels low. Fixed at the single entry point every icon
+in the product goes through, so this was one edit rather than a hunt.
+
+`vertical-align: middle` now. In a flex container the parent's `align-items`
+wins and this does nothing; where it applies, middle is the honest answer.
+Radix wraps the Select's chevron in its own span — which becomes the flex item,
+so the icon inside it never saw the trigger's `align-items` — and that span is
+now `inline-flex` too.
+
+Also caught by the type system on the way past: `size={14}` is not an
+`IconSize`. The scale is closed at 12/16/20/24/32, the same discipline as the
+type scale, and it held.
+
+263 tests.

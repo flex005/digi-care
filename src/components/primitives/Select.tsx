@@ -40,7 +40,7 @@ export function Select({
     <RadixSelect.Root value={value} onValueChange={onValueChange} disabled={disabled}>
       <RadixSelect.Trigger className={styles.trigger} aria-label={label}>
         <RadixSelect.Value placeholder={placeholder} />
-        <RadixSelect.Icon>
+        <RadixSelect.Icon className={styles.chevron}>
           <Icon name="arrows-sharp/arrow-down-01-sharp" size={16} />
         </RadixSelect.Icon>
       </RadixSelect.Trigger>

@@ -23,7 +23,7 @@ import { AnalyticsTiles } from './AnalyticsTiles'
 import { DEFAULT_PERIOD, type AnalyticsPeriod } from './analytics-tiles'
 import { listName } from './list-name'
 import { RiskFlagsCell } from './RiskFlagsCell'
-import { RiskFlagsLegend } from './RiskFlagsLegend'
+import { RISK_FLAG_SOURCES } from './risk-flag-sources'
 import { CriticalGapsChip } from './CriticalGapsChip'
 import { LastNoteCell } from './LastNoteCell'
 import { useResidentFilters, type SortKey } from './use-resident-filters'
@@ -60,7 +60,16 @@ function columnsFor(sortKey: SortKey, showSite: boolean): TableColumn<SortKey>[]
     // the table caption. A column repeating "Rosewood Court" 28 times adds no
     // information and costs the Records column its place on screen.
     ...(showSite ? [{ label: 'Site', width: '10%' } as TableColumn<SortKey>] : []),
-    { label: 'Risk flags', width: showSite ? '21%' : '24%' },
+    {
+      label: 'Risk flags',
+      width: showSite ? '21%' : '24%',
+      // The legend below the filters is gone, but the rule it carried is not:
+      // this column means the opposite of what it looks like if you have not
+      // read this. Frank's original instruction offered exactly this
+      // alternative — "a persistent legend OR a Risk flags header tooltip" —
+      // and the header control is focusable, so it is not hover-only.
+      note: `${RISK_FLAG_SOURCES.map((source) => source.name).join(', ')}. A hatched badge means nobody has looked — a gap, not a reassurance. A coloured badge is recorded and needs attention. Nothing shown means recorded and unremarkable, never "nobody looked", because every gap above is drawn. EOLC and isolation are on each resident's profile, where every state is shown.`,
+    },
     { label: 'Review status', width: '15%' },
     {
       label: sortKey === 'oldestNote' ? 'Last care note — oldest' : 'Last care note',
@@ -99,7 +108,6 @@ export function ResidentsRoute() {
     setRisk,
     setReview,
     setRecords,
-    setNote,
     sortKey,
     sortDirection,
     toggleSort,
@@ -167,11 +175,9 @@ export function ResidentsRoute() {
           onRiskChange={setRisk}
           onReviewChange={setReview}
           onRecordsChange={setRecords}
-          onNoteChange={setNote}
           period={period}
           onPeriodChange={setPeriod}
         />
-        <RiskFlagsLegend />
 
         {isError ? (
           <div className={styles.errorPanel}>

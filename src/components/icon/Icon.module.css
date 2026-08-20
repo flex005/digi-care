@@ -6,5 +6,11 @@
      their colour from whatever text colour surrounds them and never carry
      one of their own. */
   color: inherit;
-  vertical-align: -0.125em;
+
+  /* Centred on the line rather than nudged below the baseline. This was
+     -0.125em, a hand-tuned drop that suited icons sitting in running text and
+     left every icon inside a wrapper span — a Select's chevron, a disclosure —
+     a couple of pixels low. In a flex container the parent's align-items wins
+     and this does nothing; where it applies, middle is the honest answer. */
+  vertical-align: middle;
 }

@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import type { ResidentSummary } from '@/data/access/client'
 import type { RiskLevel, SiteId } from '@/data/types'
 import { recordCompleteness } from '@/data/completeness'
-import { LIST_CLOCK } from './list-clock'
 
 /**
  * Filtering and sorting for the residents list. PRD §6.2.
@@ -35,13 +34,6 @@ export type RiskFilter = RiskLevel | 'all' | 'not_assessed'
 export type ReviewFilter =
   'all' | 'overdue' | 'due' | 'never_scheduled' | 'not_up_to_date'
 
-/**
- * Care note recency. `none_in_48h` includes residents never written up at all:
- * never noted is not "recently noted", and dropping them would repeat the bug
- * the oldest-note sort exists to prevent.
- */
-export type NoteFilter = 'all' | 'none_in_48h'
-
 /** Frank's number, not an invented threshold. */
 export const STALE_NOTE_HOURS = 48
 export type RecordsFilter = 'critical' | 'any_incomplete' | 'all'
@@ -51,13 +43,11 @@ export interface ResidentFilters {
   risk: RiskFilter
   review: ReviewFilter
   records: RecordsFilter
-  note: NoteFilter
 }
 
 export const DEFAULT_FILTERS: Omit<ResidentFilters, 'site'> = {
   risk: 'all',
   review: 'all',
-  note: 'all',
   // Critical only. The chip and this default agree deliberately: what the
   // column shouts about is what the filter narrows to.
   records: 'critical',
@@ -96,15 +86,6 @@ export function hasNoNoteWithinWindow(summary: ResidentSummary, now: number): bo
   return age > STALE_NOTE_HOURS * 3_600_000
 }
 
-function matchesNote(
-  summary: ResidentSummary,
-  filter: NoteFilter,
-  now: number,
-): boolean {
-  if (filter === 'all') return true
-  return hasNoNoteWithinWindow(summary, now)
-}
-
 function matchesRecords(summary: ResidentSummary, filter: RecordsFilter): boolean {
   if (filter === 'all') return true
   const completeness = recordCompleteness(summary.resident)
@@ -125,11 +106,10 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
   const [risk, setRisk] = useState<RiskFilter>(DEFAULT_FILTERS.risk)
   const [review, setReview] = useState<ReviewFilter>(DEFAULT_FILTERS.review)
   const [records, setRecords] = useState<RecordsFilter>(DEFAULT_FILTERS.records)
-  const [note, setNote] = useState<NoteFilter>(DEFAULT_FILTERS.note)
   const [sortKey, setSortKey] = useState<SortKey>('name')
   const [descending, setDescending] = useState(false)
 
-  const filters: ResidentFilters = { site, risk, review, records, note }
+  const filters: ResidentFilters = { site, risk, review, records }
 
   /**
    * Filters other than site. Kept separate because "no residents at this site
@@ -143,15 +123,11 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
   )
 
   const visible = useMemo(() => {
-    // The shared clock, so the filter and the tile above it cannot disagree
-    // about who has gone 48 hours without a note. See list-clock.ts.
-    const now = LIST_CLOCK
     const matched = atSite.filter(
       (summary) =>
         matchesRisk(summary, risk) &&
         matchesReview(summary, review) &&
-        matchesRecords(summary, records) &&
-        matchesNote(summary, note, now),
+        matchesRecords(summary, records),
     )
 
     const sorted = [...matched].sort((a, b) => {
@@ -191,7 +167,7 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
     // one thing that sort must never do.
     const reversible = sortKey === 'name' || sortKey === 'room'
     return reversible && descending ? sorted.reverse() : sorted
-  }, [atSite, risk, review, records, note, sortKey, descending])
+  }, [atSite, risk, review, records, sortKey, descending])
 
   function toggleSort(key: SortKey) {
     // The care-note column carries both of PRD §6.2's note sorts. Clicking it
@@ -214,11 +190,9 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
     setRisk(DEFAULT_FILTERS.risk)
     setReview(DEFAULT_FILTERS.review)
     setRecords(DEFAULT_FILTERS.records)
-    setNote(DEFAULT_FILTERS.note)
   }
 
-  const hasNarrowingFilters =
-    risk !== 'all' || review !== 'all' || records !== 'all' || note !== 'all'
+  const hasNarrowingFilters = risk !== 'all' || review !== 'all' || records !== 'all'
 
   /**
    * "Most recent first" IS descending by date; "oldest first" IS ascending.
@@ -239,7 +213,6 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
     setRisk,
     setReview,
     setRecords,
-    setNote,
     sortKey,
     sortDirection,
     toggleSort,

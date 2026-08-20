@@ -37,6 +37,30 @@
 
 /* The sortable header is a button so it is reachable and operable by
    keyboard. A div with an onClick is not. */
+.headerLabel {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+/* A real button, so the convention it carries is reachable by keyboard and
+   announced by a screen reader. PRD §7. */
+
+/* ink-500, not ink-400: this is a control that identifies itself by its glyph,
+   so WCAG 1.4.11 wants 3:1. ink-400 reaches 2.90 on the header's sunken
+   background; ink-500 reaches 5.13. */
+.headerNote {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-500);
+  cursor: help;
+}
+
+.headerNote:hover {
+  color: var(--purple-900);
+}
+
 .sortButton {
   display: inline-flex;
   gap: var(--space-4);

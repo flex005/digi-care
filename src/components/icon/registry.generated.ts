@@ -13,6 +13,7 @@ import type { IconName } from './registry.names.generated'
 import IconAddRemoveDelete_Add01 from '@/assets/icons-generated/add-remove-delete/add-01.svg?react'
 import IconAlertNotification_Alert02 from '@/assets/icons-generated/alert-notification/alert-02.svg?react'
 import IconAlertNotification_AlertDiamond from '@/assets/icons-generated/alert-notification/alert-diamond.svg?react'
+import IconAlertNotification_InformationCircle from '@/assets/icons-generated/alert-notification/information-circle.svg?react'
 import IconAlertNotification_Notification02 from '@/assets/icons-generated/alert-notification/notification-02.svg?react'
 import IconArrowsRound_ArrowLeft02Round from '@/assets/icons-generated/arrows-round/arrow-left-02-round.svg?react'
 import IconArrowsSharp_ArrowDown01Sharp from '@/assets/icons-generated/arrows-sharp/arrow-down-01-sharp.svg?react'
@@ -45,7 +46,7 @@ import IconUsers_UserMultiple from '@/assets/icons-generated/users/user-multiple
 import IconUsers_UserSwitch from '@/assets/icons-generated/users/user-switch.svg?react'
 
 /**
- * Only the 33 icons actually used in source. Importing all of them
+ * Only the 34 icons actually used in source. Importing all of them
  * would compile every icon in the set into the bundle.
  *
  * Partial because it is keyed by the full IconName union. A missing entry
@@ -58,6 +59,7 @@ export const iconRegistry: Partial<
   'add-remove-delete/add-01': IconAddRemoveDelete_Add01,
   'alert-notification/alert-02': IconAlertNotification_Alert02,
   'alert-notification/alert-diamond': IconAlertNotification_AlertDiamond,
+  'alert-notification/information-circle': IconAlertNotification_InformationCircle,
   'alert-notification/notification-02': IconAlertNotification_Notification02,
   'arrows-round/arrow-left-02-round': IconArrowsRound_ArrowLeft02Round,
   'arrows-sharp/arrow-down-01-sharp': IconArrowsSharp_ArrowDown01Sharp,

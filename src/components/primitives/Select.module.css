@@ -25,6 +25,14 @@
   cursor: not-allowed;
 }
 
+/* Radix wraps the chevron in its own span, which becomes the flex item. The
+   icon inside it centres here rather than relying on the trigger's
+   align-items, which never reaches it. */
+.chevron {
+  display: inline-flex;
+  align-items: center;
+}
+
 .viewport {
   padding: var(--space-4);
 }
