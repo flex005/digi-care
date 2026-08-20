@@ -16,7 +16,14 @@ import type {
   ResidentId,
   StockCount,
 } from '../types'
-import { NOW, atTime, daysAgo, makeRandom, toIsoDateTime } from './generate'
+import {
+  NOW,
+  atTime,
+  daysAgo,
+  makeRandom,
+  recordedBetween,
+  toIsoDateTime,
+} from './generate'
 import { carersAndSeniors, staffHalloran, staffNwosu } from './organisation'
 import { residents } from './residents'
 
@@ -189,7 +196,9 @@ export interface MarRecord {
  * every other fixture downstream — is unaffected by which branch is taken.
  */
 export function recordedAfter(dueAt: Date, minutes: number): Date {
-  return new Date(Math.min(dueAt.getTime() + minutes * 60_000, NOW.getTime()))
+  // Delegates, so the "after the event, never after now" rule has exactly one
+  // implementation. See recordedBetween in generate.ts.
+  return recordedBetween(dueAt, new Date(dueAt.getTime() + minutes * 60_000))
 }
 
 const marRecords: MarRecord[] = []

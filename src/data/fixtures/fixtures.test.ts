@@ -237,6 +237,13 @@ describe('records cannot be in the future', () => {
         expect(new Date(note.mood.recordedAt).getTime()).toBeLessThanOrEqual(now)
       }
       if (note.review.kind === 'reviewed') {
+        // Not before the note either. A ceiling alone let a note written at
+        // 14:00 be "reviewed" at 09:00 the same morning — impossible in the
+        // other direction, and invisible to a test that only looks forward.
+        expect(
+          new Date(note.review.reviewedAt).getTime(),
+          `${note.id}: reviewed before it was written`,
+        ).toBeGreaterThanOrEqual(new Date(note.recordedAt).getTime())
         expect(new Date(note.review.reviewedAt).getTime()).toBeLessThanOrEqual(now)
       }
       if (note.review.kind === 'flagged_not_reviewed') {

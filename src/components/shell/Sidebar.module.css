@@ -133,15 +133,35 @@
   white-space: nowrap;
 }
 
+/* The tint is the hover state now. It used to be the active state as well,
+   which meant hovering any item made it look like the one you were on. */
 .item:hover {
   background-color: var(--purple-50);
   color: var(--purple-900);
 }
 
+/**
+ * The item you are on: solid primary, white label and icon (the icon takes
+ * currentColor, so it follows without being told).
+ *
+ * White on --purple-600 measures 6.97:1 — comfortably past AA for both the
+ * text and the icon as a UI component.
+ *
+ * Colour is not the only carrier: NavLink sets aria-current="page", and the
+ * weight steps up. Both survive greyscale, where the fill reads as a dark bar
+ * against a pale one.
+ */
 .active {
-  background-color: var(--purple-50);
-  color: var(--purple-900);
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
   font-weight: var(--weight-semibold);
+}
+
+/* Hovering the item you are already on deepens rather than reverting to the
+   hover tint, which would read as leaving the page you are on. */
+.active:hover {
+  background-color: var(--purple-900);
+  color: var(--bg-surface);
 }
 
 /**
@@ -194,6 +214,23 @@
   font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
   text-align: center;
+}
+
+/**
+ * A count badge on the active item.
+ *
+ * --status-critical against --purple-600 measures 1.65:1: the badge would all
+ * but vanish on the row you are standing on. It cannot happen today — the only
+ * badged item is Reviews, which is disabled until Phase 7 and so can never be
+ * active — but it will the day that module lands, and the fix is a line now
+ * rather than a puzzle then.
+ *
+ * Inverted instead: white fill, critical ink. Still red-coded, and it separates
+ * from the purple at 6.97:1.
+ */
+.active .badge {
+  background-color: var(--bg-surface);
+  color: var(--status-critical-ink);
 }
 
 /* Collapsed, there is no room for a legible figure and a truncated number is

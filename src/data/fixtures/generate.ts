@@ -107,3 +107,24 @@ export function daysBetween(earlier: Date, later: Date): number {
   const MS_PER_DAY = 86_400_000
   return Math.floor((later.getTime() - earlier.getTime()) / MS_PER_DAY)
 }
+
+/**
+ * A record is written **after the event it describes and never after now**.
+ *
+ * This is the fourth place that rule has had to be enforced by hand — care
+ * notes, medication administrations, refusals, and now note reviews — and
+ * every failure had the same shape: a timestamp derived by arithmetic from a
+ * valid one and never re-checked. `preferred` is where the derivation wanted
+ * to put it; `event` is the thing being recorded.
+ *
+ * Both ends matter. A ceiling alone still allows a note reviewed five hours
+ * before it was written, which is impossible in the other direction and is
+ * exactly what the previous version of the care note fixtures produced.
+ */
+export function recordedBetween(event: Date, preferred: Date): Date {
+  const floor = event.getTime()
+  // Events are generated at or before NOW, so the floor never exceeds the
+  // ceiling. If that ever stops being true, the event itself is the bug.
+  const ceiling = NOW.getTime()
+  return new Date(Math.min(Math.max(preferred.getTime(), floor), ceiling))
+}

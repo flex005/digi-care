@@ -2015,3 +2015,64 @@ Also caught by the type system on the way past: `size={14}` is not an
 type scale, and it held.
 
 263 tests.
+
+---
+
+## Sidebar — the active item goes solid purple — 21/08/2026
+
+`--purple-600` fill, white label, white icon (the icon takes `currentColor`, so
+it followed without being told). The old tint becomes the hover state.
+
+**That was a real defect, not just a restyle.** Hover and active were the *same
+declaration* — `--purple-50` with `--purple-900` — so hovering any item made it
+look like the page you were on. On a rail of seventeen items where fourteen are
+disabled, "which one am I on" is the only question it answers.
+
+White on `--purple-600` measures 6.97:1, past AA for the text and for the icon
+as a UI component. Colour is still not the sole carrier: `aria-current="page"`
+from NavLink, and the weight steps up. In greyscale the fill reads as a dark
+bar against a pale one, which is a bigger difference than before.
+
+Hovering the item you are already on deepens to `--purple-900` rather than
+reverting to the hover tint, which would read as leaving the page you are on.
+
+### One latent bug fixed while it was cheap
+
+`--status-critical` against `--purple-600` is **1.65:1** — a count badge on the
+row you are standing on would all but vanish. It cannot happen today: the only
+badged item is Reviews, which is disabled until Phase 7 and so can never be
+active. It will the day that module lands. `.active .badge` inverts to a white
+fill with critical ink — still red-coded, and separated from the purple at
+6.97:1. One line now rather than a puzzle then.
+
+---
+
+## The future-timestamp bug, fourth occurrence — and one definition at last
+
+`npm run verify` failed on an unrelated fixture test while the above was being
+made: a care note's `reviewedAt` was in the future. The clock had rolled past
+midnight, and reviews were stamped 09:00 the following morning.
+
+**Fourth instance of the same class** — care notes (Step 0), medication
+administrations, refusals, now note reviews. Every one had the identical shape:
+*a timestamp derived by arithmetic from a valid one and never re-checked.*
+
+**And a second bug in the same expression, which no test could have caught.**
+The review day was `max(day - 1, 0)`, so a note written **today at 14:00** was
+reviewed at **09:00 that same morning — five hours before it was written.**
+Every guard so far only looked forward; nothing asserted a record cannot
+predate the event it describes. It has been wrong the whole time and passed
+every run.
+
+Fixed at the class rather than the instance. `recordedBetween(event, preferred)`
+in `generate.ts` — beside `NOW`, which is what it clamps against — takes both
+bounds: after the event, never after now. `medications.ts`'s `recordedAfter`
+now delegates to it, so the rule has exactly one implementation instead of one
+per call site.
+
+The test gained the missing direction: `reviewedAt >= recordedAt`, with the
+message "reviewed before it was written". Confirmed by reverting the fix —
+it fails, and it fails on the backwards case, which is the one that was never
+being checked.
+
+263 tests.

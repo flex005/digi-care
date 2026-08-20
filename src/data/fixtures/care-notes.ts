@@ -19,7 +19,14 @@ import type {
   MoodRecord,
   ResidentId,
 } from '../types'
-import { NOW, atTime, daysAgo, makeRandom, toIsoDateTime } from './generate'
+import {
+  NOW,
+  atTime,
+  daysAgo,
+  recordedBetween,
+  makeRandom,
+  toIsoDateTime,
+} from './generate'
 import {
   carersAndSeniors,
   staffDeactivated,
@@ -136,8 +143,13 @@ for (const [residentIndex, resident] of residents.entries()) {
           ? {
               kind: 'reviewed',
               reviewedBy: staffHalloran,
+              // Nine the next morning, but never before the note it reviews
+              // and never after now. Both bounds are real: a note written at
+              // 14:00 today was previously "reviewed" at 09:00 today, and a
+              // note written yesterday evening was reviewed at a 09:00 that
+              // has not happened yet.
               reviewedAt: toIsoDateTime(
-                atTime(daysAgo(day - 1 < 0 ? 0 : day - 1), 9, 0),
+                recordedBetween(at, atTime(daysAgo(Math.max(day - 1, 0)), 9, 0)),
               ),
             }
           : { kind: 'not_flagged' },
