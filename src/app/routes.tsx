@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppShell } from '@/components/shell/AppShell'
 import { StatesRoute } from '@/dev/StatesRoute'
 import { ResidentsRoute } from '@/features/residents/ResidentsRoute'
+import { ResidentProfileRoute } from '@/features/residents/ResidentProfileRoute'
 import { NotFound } from './NotFound'
 
 /**
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
       // stopgap.
       { index: true, element: <Navigate to="/residents" replace /> },
       { path: 'residents', element: <ResidentsRoute /> },
+      { path: 'residents/:residentId', element: <ResidentProfileRoute /> },
       {
         // Not deleted after Phase 0. This is how the Evidence Invariant is
         // checked visually in every later review. PRD §6.1.

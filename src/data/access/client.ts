@@ -101,6 +101,49 @@ export interface ResidentSummary {
   latestNote: CareNote | 'none'
 }
 
+/**
+ * Everything the profile header needs, in one read. PRD §6.2, §16.3.
+ *
+ * Bundled rather than fetched per-panel because the header is a single
+ * subject statement: a version of it where the name has loaded but the
+ * allergies have not is a header that can be misread, and §2.4 makes
+ * misreading the subject the second-worst failure available.
+ */
+export interface DueMedication {
+  medication: Medication
+  record: MarRecord
+}
+
+export interface ResidentProfile {
+  resident: Resident
+  /** The resident's own site — whose timezone their records render in. */
+  site: Site
+  latestNote: CareNote | 'none'
+  /** Empty is a real answer: nothing is due. The header says so in words. */
+  dueSoon: DueMedication[]
+}
+
+export function getResidentProfile(id: ResidentId): Promise<ResidentProfile> {
+  const resident = residentById(id)
+  if (!resident) return reject(`No resident with id ${id}`)
+
+  const site = sites.find((entry) => entry.id === resident.siteId)
+  if (!site) return reject(`Resident ${id} belongs to an unknown site`)
+
+  const byId = new Map(medicationsFor(resident.id).map((med) => [med.id, med]))
+  const dueSoon = dueWithinTwoHours(resident.id).flatMap((record) => {
+    const medication = byId.get(record.medicationId)
+    return medication ? [{ medication, record }] : []
+  })
+
+  return resolve({
+    resident,
+    site,
+    latestNote: latestNoteFor(resident.id) ?? 'none',
+    dueSoon,
+  })
+}
+
 export function getResidentSummaries(
   scope: SiteId | 'all',
 ): Promise<ResidentSummary[]> {

@@ -20,6 +20,7 @@ import { SiteTimeZone } from '@/app/session/SessionProvider'
 import type { TableColumn } from '@/components/primitives'
 import { ResidentsFilterBar } from './ResidentsFilterBar'
 import { RiskFlagsCell } from './RiskFlagsCell'
+import { RiskFlagsLegend } from './RiskFlagsLegend'
 import { CriticalGapsChip } from './CriticalGapsChip'
 import { LastNoteCell } from './LastNoteCell'
 import { useResidentFilters, type SortKey } from './use-resident-filters'
@@ -115,10 +116,9 @@ export function ResidentsRoute() {
         <div>
           <h1 className={styles.pageTitle}>Residents</h1>
           <p className={styles.lede}>
-            Sort by oldest care note to find the records nobody has looked at. In Risk
-            flags, anything unrecorded is hatched and anything needing attention is
-            shown — so a flag that is <em>not</em> there has been recorded and is
-            unremarkable. A blank never means “nobody looked”.
+            Sort by oldest care note to find the records nobody has looked at —
+            residents nobody has ever written up sort first, because that is the most
+            neglected record in the home.
           </p>
         </div>
         {/* Resident admission is not built by any phase in the PRD. Present
@@ -155,6 +155,7 @@ export function ResidentsRoute() {
           onReviewChange={setReview}
           onRecordsChange={setRecords}
         />
+        <RiskFlagsLegend />
 
         {isError ? (
           <div className={styles.errorPanel}>

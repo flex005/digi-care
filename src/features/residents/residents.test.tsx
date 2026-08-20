@@ -9,6 +9,7 @@ import { residents } from '@/data/fixtures/residents'
 import { recordCompleteness } from '@/data/completeness'
 import { ResidentsRoute } from './ResidentsRoute'
 import { RiskFlagsCell } from './RiskFlagsCell'
+import { RISK_FLAG_SOURCES } from './risk-flag-sources'
 import { CriticalGapsChip } from './CriticalGapsChip'
 
 /**
@@ -222,6 +223,111 @@ describe('accessibility', () => {
     const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1)
     for (const row of rows) {
       expect(within(row).getAllByRole('link').length).toBeGreaterThan(0)
+    }
+  })
+})
+
+describe('the Risk flags precondition — structural guard', () => {
+  /**
+   * The column runs on one rule: *anything not shown has been recorded and is
+   * unremarkable*. That rule is a lie the moment any contributing status can
+   * render nothing when it is unrecorded — "no badge" would then mean either
+   * "recorded and fine" or "nobody looked", which is the ambiguity this whole
+   * product exists to destroy, reintroduced at the level of a column.
+   *
+   * These tests guard the precondition rather than the current implementation.
+   * A status can only reach the column by being in RISK_FLAG_SOURCES, every
+   * entry must supply `renderUnrecorded` (the type demands it), and the first
+   * test here proves each one actually draws a visible hatch. A future
+   * addition therefore cannot break the rule silently — it cannot be added at
+   * all without declaring what it looks like when nobody has looked.
+   */
+
+  it('has at least one source, or the rule guards nothing', () => {
+    expect(RISK_FLAG_SOURCES.length).toBeGreaterThan(0)
+  })
+
+  it.each(RISK_FLAG_SOURCES.map((source) => [source.name, source] as const))(
+    '%s renders a visible hatched badge when unrecorded',
+    (name, source) => {
+      const { container } = render(atSite(<>{source.renderUnrecorded()}</>))
+
+      const hatched = container.querySelector('[data-state="unrecorded"]')
+      expect(
+        hatched,
+        `${name} can render nothing when unrecorded, which makes "not shown means recorded" false`,
+      ).toBeInTheDocument()
+
+      // The pattern is never the sole carrier — there must be words too.
+      expect(container.textContent?.trim()).not.toBe('')
+    },
+  )
+
+  it('draws a hatch for every unrecorded source, for every real resident', () => {
+    for (const resident of residents) {
+      const unrecorded = RISK_FLAG_SOURCES.filter((source) =>
+        source.isUnrecorded(resident),
+      )
+      const { container, unmount } = render(
+        atSite(<RiskFlagsCell resident={resident} />),
+      )
+      const hatches = container.querySelectorAll('[data-state="unrecorded"]')
+
+      expect(
+        hatches.length,
+        `${resident.fullLegalName} has ${unrecorded.length} unrecorded sources (${unrecorded
+          .map((source) => source.name)
+          .join(', ')}) but ${hatches.length} hatched badges`,
+      ).toBe(unrecorded.length)
+      unmount()
+    }
+  })
+
+  it('claims "all assessed" only when nothing is unrecorded', () => {
+    for (const resident of residents) {
+      const { container, unmount } = render(
+        atSite(<RiskFlagsCell resident={resident} />),
+      )
+      const claimsAllAssessed = (container.textContent ?? '').includes(
+        'All assessed — no flags',
+      )
+      const anyUnrecorded = RISK_FLAG_SOURCES.some((source) =>
+        source.isUnrecorded(resident),
+      )
+      // The one thing this claim must never do is appear over a gap.
+      if (claimsAllAssessed) {
+        expect(
+          anyUnrecorded,
+          `${resident.fullLegalName} is claimed "all assessed" while a source is unrecorded`,
+        ).toBe(false)
+      }
+      unmount()
+    }
+  })
+})
+
+describe('the legend states the convention on screen', () => {
+  /** A convention a reader has to infer is folk knowledge, and folk knowledge
+   *  is how "no badge" starts meaning "he's fine" to somebody nobody told. */
+  it('is permanently visible, not behind a tooltip or a disclosure', async () => {
+    renderList()
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+
+    // Present without any interaction at all.
+    expect(screen.getByText(/Not shown/)).toBeVisible()
+    expect(screen.getByText(/recorded and unremarkable/)).toBeVisible()
+    expect(screen.getByText(/Nobody has looked/)).toBeVisible()
+  })
+
+  it('names every source it covers, so "not shown" has a declared scope', async () => {
+    renderList()
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+
+    // Scoped to the legend: these names also appear in the filter options,
+    // and a legend that happens to match a dropdown is not a legend.
+    const legend = screen.getByRole('note', { name: 'Risk flags legend' })
+    for (const source of RISK_FLAG_SOURCES) {
+      expect(legend.textContent?.toLowerCase()).toContain(source.name.toLowerCase())
     }
   })
 })

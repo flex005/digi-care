@@ -15,12 +15,14 @@ import IconAlertNotification_Alert02 from '@/assets/icons-generated/alert-notifi
 import IconAlertNotification_AlertDiamond from '@/assets/icons-generated/alert-notification/alert-diamond.svg?react'
 import IconAlertNotification_Notification02 from '@/assets/icons-generated/alert-notification/notification-02.svg?react'
 import IconArrowsRound_ArrowDown02Round from '@/assets/icons-generated/arrows-round/arrow-down-02-round.svg?react'
+import IconArrowsRound_ArrowLeft02Round from '@/assets/icons-generated/arrows-round/arrow-left-02-round.svg?react'
 import IconArrowsRound_ArrowUp02Round from '@/assets/icons-generated/arrows-round/arrow-up-02-round.svg?react'
 import IconBusinessAndFinance_Analytics01 from '@/assets/icons-generated/business-and-finance/analytics-01.svg?react'
 import IconBusinessAndFinance_Target01 from '@/assets/icons-generated/business-and-finance/target-01.svg?react'
 import IconCheckValidation_CheckmarkBadge01 from '@/assets/icons-generated/check-validation/checkmark-badge-01.svg?react'
 import IconCheckValidation_Tick02 from '@/assets/icons-generated/check-validation/tick-02.svg?react'
 import IconCheckValidation_Validation from '@/assets/icons-generated/check-validation/validation.svg?react'
+import IconCommunications_Call from '@/assets/icons-generated/communications/call.svg?react'
 import IconDashboard_DashboardSquare01 from '@/assets/icons-generated/dashboard/dashboard-square-01.svg?react'
 import IconDashboard_SidebarLeft from '@/assets/icons-generated/dashboard/sidebar-left.svg?react'
 import IconDateAndTime_Calendar01 from '@/assets/icons-generated/date-and-time/calendar-01.svg?react'
@@ -39,7 +41,7 @@ import IconUsers_UserMultiple from '@/assets/icons-generated/users/user-multiple
 import IconUsers_UserSwitch from '@/assets/icons-generated/users/user-switch.svg?react'
 
 /**
- * Only the 27 icons actually used in source. Importing all of them
+ * Only the 29 icons actually used in source. Importing all of them
  * would compile every icon in the set into the bundle.
  *
  * Partial because it is keyed by the full IconName union. A missing entry
@@ -54,12 +56,14 @@ export const iconRegistry: Partial<
   'alert-notification/alert-diamond': IconAlertNotification_AlertDiamond,
   'alert-notification/notification-02': IconAlertNotification_Notification02,
   'arrows-round/arrow-down-02-round': IconArrowsRound_ArrowDown02Round,
+  'arrows-round/arrow-left-02-round': IconArrowsRound_ArrowLeft02Round,
   'arrows-round/arrow-up-02-round': IconArrowsRound_ArrowUp02Round,
   'business-and-finance/analytics-01': IconBusinessAndFinance_Analytics01,
   'business-and-finance/target-01': IconBusinessAndFinance_Target01,
   'check-validation/checkmark-badge-01': IconCheckValidation_CheckmarkBadge01,
   'check-validation/tick-02': IconCheckValidation_Tick02,
   'check-validation/validation': IconCheckValidation_Validation,
+  'communications/call': IconCommunications_Call,
   'dashboard/dashboard-square-01': IconDashboard_DashboardSquare01,
   'dashboard/sidebar-left': IconDashboard_SidebarLeft,
   'date-and-time/calendar-01': IconDateAndTime_Calendar01,

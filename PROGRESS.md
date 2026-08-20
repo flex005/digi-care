@@ -550,3 +550,96 @@ resident confirmed by screenshot.
 
 Still to check by eye at review: a keyboard pass over the sort headers and
 filters, and 200% zoom.
+
+---
+
+## Phase 1, Screen 2 — Profile header and badge strip
+
+Completed 20/08/2026. `/residents/:residentId`.
+
+### Two additions to Screen 1, done first
+
+**The convention moved from prose to the column.** The Risk flags rule —
+*anything not shown has been recorded and is unremarkable* — was stated in the
+page lede, which is prose a reader skims once and then forgets. It now lives in
+a permanently visible legend beside the table, with real component samples
+rather than mock-ups so it cannot drift from what the column renders. Not a
+tooltip: PRD §6.4 sets the same rule for the MAR legend ("permanently visible
+above the grid, not hidden behind a tooltip"), hover-only would put it out of
+reach of a keyboard and a screen reader, and CLAUDE.md §6 forbids
+hover-to-reveal for anything clinical.
+
+**The precondition is now structural.** `risk-flag-sources.tsx` declares the
+statuses the column is built from. `renderUnrecorded` is a required field, a
+status can only reach the column by being in that list, and `residents.test.tsx`
+asserts each entry draws a visible hatch — plus, for all 32 residents, that the
+number of hatched badges equals the number of unrecorded sources, and that
+"All assessed — no flags" never appears over a gap. A future addition cannot
+break the rule silently: it cannot be added at all without declaring what it
+looks like when nobody has looked.
+
+Verified by adding a source whose `renderUnrecorded` returns `null`. Four tests
+failed, naming the offending source and the resident:
+*"Arthur Pemberton has 2 unrecorded sources (Probe status, Resuscitation
+decision) but 1 hatched badges."*
+
+**The scope narrowed to four while doing it.** Building the guard exposed that
+EOLC and isolation were in the column with their *recorded* states drawn but
+their unrecorded states silently absent — so the rule was already false. Fixing
+it either way meant a choice: draw two more hatches on roughly half the rows,
+or narrow the column. Narrowed, because volume that drowns a distinction is the
+same failure as a blank cell, and the legend now names the four so "not shown"
+has a declared scope rather than implying the column covers everything. EOLC and
+isolation are on the profile header, where every state is explicit.
+
+### The badge strip
+
+Five badges, every state drawn, on every resident — the deliberate opposite of
+the list. The list narrows and relies on a stated convention because it is a
+management index; this is the point-of-care surface a care worker reads in
+seconds before entering a room (PRD §1) and the one every write surface carries
+(§2.4), so nothing about a person's safety is left to inference. FOR
+RESUSCITATION is drawn here though it folds into a claim on the list. NO KNOWN
+ALLERGIES is drawn — a recorded negative, which §6.2 is explicit must look
+different again from both a finding and a gap.
+
+`BadgeStrip` uses the same five components as `/dev/states`, so what is reviewed
+there is literally what renders here. A test asserts all five list items are
+present and non-empty for all 32 residents.
+
+### The header
+
+Sticky, not collapsible, does not scroll away — it is the structural mitigation
+against a record written against the wrong resident. It carries the **site** as
+well as the person, because the app top bar scrolls away on a long profile and
+§2.4 requires the site to stay visible; a test pins that Nathaniel Brennan's
+header names Ashgrove Lodge even though the session's active site is Rosewood.
+
+Subject identity comes from the route parameter only. An unknown id renders an
+error naming it and **no partial header** — a subject header missing half its
+facts is one somebody can act on.
+
+"Nothing due in the next 2 hours" is stated in words. An empty medication panel
+would be indistinguishable from one that failed to load.
+
+### Timezone, confirmed end to end
+
+Screenshotted the same profile with the viewer in `Europe/London` and in
+`America/New_York`. Same site, same records: London shows `16:06`, New York
+shows `16:06 BST`. The wall-clock never moves — only the label appears, and only
+when the viewer's zone differs from the site's. PRD §3.6 holds.
+
+### Tabs
+
+The four tabs render present but disabled with "coming in a later phase"
+tooltips, matching the sidebar, so the profile does not change shape as they
+land. Below them an honest statement rather than a blank panel, which would read
+as a page that failed to load.
+
+### Verification
+
+`npm run verify` green — **84 tests across 9 files**. Screenshots read back for
+the list legend, the profile header, and both timezone cases.
+
+Still to check by eye at review: a keyboard pass over the profile, 200% zoom,
+and whether the sticky header behaves on a long page once the tabs have content.
