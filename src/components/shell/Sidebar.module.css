@@ -19,13 +19,13 @@
 }
 
 /* The product mark and the collapse control, together at the top.
-   The height is the top bar's less the inset above the card, so this block's
-   rule lands on the same line as the top bar's rather than 12px below it. */
+   Exactly the top bar's height: both cards begin at the same 12px inset, so
+   equal heights land this block's rule on the bar's bottom edge. */
 .brand {
   display: flex;
   gap: var(--space-12);
   align-items: center;
-  min-height: calc(var(--layout-topbar-height) - var(--space-12));
+  min-height: var(--layout-topbar-height);
   padding: 0 var(--space-12);
   border-bottom: 1px solid var(--border-subtle);
 }

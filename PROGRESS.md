@@ -1324,3 +1324,56 @@ and each has a real cost:
 And one guard worth extending cheaply: **`check-hatch.mjs` could also flag
 `composes:` of the canonical classes outside `Unrecorded.module.css`**, which
 would turn finding 5's open gap into an enforced one.
+
+---
+
+## Top bar — card treatment and fixed in place — 20/08/2026
+
+Frank: give the top bar curved edges too, and fix it in place.
+
+### Curved edges
+
+Both chrome surfaces are now cards on the page background, inset by the same
+`--space-12`, with the same `--radius-lg` and `--border-subtle` as the panels
+inside the content. The bar's `border-bottom` became a full border.
+
+The sidebar's brand block went back to the full `--layout-topbar-height`. It
+had been `topbar-height - space-12` to compensate for the rail being inset
+while the bar was flush; now that both cards start at the same 12px origin,
+equal heights put the brand's rule exactly on the bar's bottom edge. The
+compensation was removed rather than left in and re-tuned.
+
+### Fixed in place — why sticky would not have done it
+
+`position: sticky` on the top bar would not work: it is a grid item, so it can
+only stick **within its own grid area**, and that area is one row tall. It
+would have looked correct until the first scroll.
+
+So the shell fills the viewport and does not scroll — `height: 100vh`,
+`overflow: hidden` — and `.main` becomes the only scrolling region. The bar and
+the rail are then held by layout rather than by a scroll trick, which also
+means they cannot judder or detach.
+
+Checked first that nothing depended on window scroll: no `ScrollRestoration`,
+no `window.scrollTo`, no `scrollIntoView` outside tests. If Phase 2's care note
+timeline wants scroll restoration, it now belongs on `.main`, not the window.
+
+The sidebar no longer needs `position: sticky` and no longer has it.
+
+### A gutter, not a slice
+
+First pass had row one at `topbar-height + space-12` — inset above the card
+only. Scrolling content was then clipped flush against the card's bottom edge,
+which read as the table being cut rather than passing beneath. Row one is now
+`topbar-height + space-12 * 2`, leaving a strip of page background under the
+bar. The card floats over a gutter, matching the rail.
+
+### Verified by scrolling, not by assertion
+
+A layout claim that only holds at scroll position zero is the kind that passes
+review and fails in use. Checked by loading the app in an iframe, polling until
+`main` was actually scrollable, scrolling it 1200px, and reading the screenshot
+back: bar and rail unmoved, content passing under the gutter. Worth repeating
+whenever the shell's scroll container changes.
+
+`npm run verify` green, 212 tests.

@@ -11,7 +11,8 @@
   align-items: center;
   height: var(--layout-topbar-height);
   padding: 0 var(--layout-gutter);
-  border-bottom: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   background-color: var(--bg-surface);
   color: var(--ink-900);
 }
