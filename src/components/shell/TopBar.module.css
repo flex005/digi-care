@@ -51,6 +51,15 @@
   flex: 1;
 }
 
+/* Alerts, apps and user, tight together. They are one cluster — who you are
+   and what is waiting for you — so the bar's --space-24 gap belongs between
+   the search field and this group, not between its members. */
+.actions {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
 .search {
   display: flex;
   gap: var(--space-8);

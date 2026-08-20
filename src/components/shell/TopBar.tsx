@@ -90,50 +90,55 @@ export function TopBar({
         />
       </div>
 
-      <Tooltip content={`Alerts — ${alertCount} unread`}>
-        <button
-          type="button"
-          className={styles.iconButton}
-          aria-label={`Alerts — ${alertCount} unread`}
-        >
-          <Icon name={shellIcons.alerts} size={20} />
-          {alertCount > 0 ? (
-            <span className={styles.count} aria-hidden="true">
-              {alertCount}
-            </span>
-          ) : null}
-        </button>
-      </Tooltip>
+      {/* Alerts, apps and user read as one cluster of account-and-context
+          controls, so they sit tight together and the bar's wider gap falls
+          between the search field and the group. */}
+      <div className={styles.actions}>
+        <Tooltip content={`Alerts — ${alertCount} unread`}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label={`Alerts — ${alertCount} unread`}
+          >
+            <Icon name={shellIcons.alerts} size={20} />
+            {alertCount > 0 ? (
+              <span className={styles.count} aria-hidden="true">
+                {alertCount}
+              </span>
+            ) : null}
+          </button>
+        </Tooltip>
 
-      <AppSwitcher />
+        <AppSwitcher />
 
-      <DropdownMenu>
-        <DropdownMenuTrigger className={styles.user}>
-          <Icon name={shellIcons.user} size={20} />
-          {userName}
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>{userRoleLabel}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {/* Read-only is one of the seven states every screen is reviewed
+        <DropdownMenu>
+          <DropdownMenuTrigger className={styles.user}>
+            <Icon name={shellIcons.user} size={20} />
+            {userName}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>{userRoleLabel}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {/* Read-only is one of the seven states every screen is reviewed
               against (PRD §6). This makes it reachable without a build flag —
               an auditor sees every record and can change none of them. */}
-          <DropdownMenuLabel>View as</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={() => onAccessModeChange('read_write')}>
-            {accessMode === 'read_write' ? '✓ ' : ''}Registered Manager
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => onAccessModeChange('read_only')}>
-            {accessMode === 'read_only' ? '✓ ' : ''}Read-only — Auditor
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem disabled>
-            Profile — coming in a later phase
-          </DropdownMenuItem>
-          <DropdownMenuItem disabled>
-            Sign out — coming in a later phase
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <DropdownMenuLabel>View as</DropdownMenuLabel>
+            <DropdownMenuItem onSelect={() => onAccessModeChange('read_write')}>
+              {accessMode === 'read_write' ? '✓ ' : ''}Registered Manager
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onAccessModeChange('read_only')}>
+              {accessMode === 'read_only' ? '✓ ' : ''}Read-only — Auditor
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled>
+              Profile — coming in a later phase
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled>
+              Sign out — coming in a later phase
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
   )
 }

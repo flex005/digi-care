@@ -1461,3 +1461,45 @@ says so in reachable text. 217 tests green.
 switcher, search, alerts bell, user menu — and no app switcher.** Third
 outstanding correction to that section, after the wordmark moving to the
 sidebar and the bar turning white.
+
+---
+
+## App switcher — icon corrected, controls grouped — 20/08/2026
+
+### Correcting the entry above
+
+The previous entry says **"The set has no 3×3 dot grid."** That is false, and
+the way it got written is worth recording, because it is the failure mode this
+morning's sweep was about — a confident claim, in a log, that the next reader
+would believe and stop checking.
+
+I built a comparison sheet and read it back rather than trusting filenames,
+which was the right instinct. But I chose what went **on** the sheet by
+guessing from names: I included `more-horizontal` and `more-vertical` from the
+`MORE MENU` family and never rendered `more-01`, `more-02`, `more-03` sitting
+directly beside them. All three are 3×3 grids. `more-02` is 3×3 circles — the
+launcher glyph, exactly what was asked for.
+
+**Looking at the evidence does not help if you pre-filter the evidence by the
+thing you were trying to avoid relying on.** The sheet made the conclusion feel
+verified while the sampling was still a guess.
+
+Frank spotted it: *"use the more-02 icon instead"*.
+
+`shellIcons.appSwitcher` is now `more-menu/more-02`. It remains deliberately
+not `dashboard/dashboard-square-01`, which the Dashboard nav item wears.
+
+### Closing the gap
+
+The top bar was one flex row with `gap: var(--space-24)` between every child,
+so alerts, apps and user sat as far apart from each other as they did from the
+search field — three unrelated controls rather than one cluster.
+
+They are one cluster: who you are, and what is waiting for you. They now sit in
+an `.actions` group at `--space-4`, and the bar's wider gap falls between the
+search field and the group, which is where the actual boundary is.
+
+Grouping is layout only. Nothing moved in the DOM order, so tab order is
+unchanged: bell → apps → user.
+
+217 tests green.
