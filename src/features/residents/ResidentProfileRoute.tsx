@@ -7,7 +7,7 @@ import { useResource } from '@/data/access/use-resource'
 import { Button, Tooltip } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
-import { ProfileHeader } from './ProfileHeader'
+import { ProfileGlance, ProfileHeader } from './ProfileHeader'
 import styles from './profile.module.css'
 
 /**
@@ -73,48 +73,62 @@ export function ResidentProfileRoute() {
         // Every record on this page renders in the RESIDENT's site timezone,
         // not the viewer's and not the currently-selected site's. PRD §3.6.
         <SiteTimeZone timeZone={resource.data.site.timeZone}>
-          <ProfileHeader profile={resource.data} />
+          {/*
+            Two columns: who this is, beside what is being done about it.
 
-          <nav className={styles.tabs} aria-label="Profile sections">
-            {TABS.map((tab) =>
-              tab.built ? (
-                <NavLink
-                  key={tab.label}
-                  to={tab.path}
-                  end={tab.end}
-                  className={({ isActive }) =>
-                    [styles.tab, styles.tabBuilt, isActive ? styles.tabActive : '']
-                      .filter(Boolean)
-                      .join(' ')
-                  }
-                >
-                  {tab.label}
-                </NavLink>
-              ) : (
-                <Tooltip
-                  key={tab.label}
-                  content={`${tab.label} — coming in a later phase`}
-                >
-                  <span
-                    className={styles.tab}
-                    role="link"
-                    aria-disabled="true"
-                    aria-label={`${tab.label} — coming in a later phase`}
-                    tabIndex={0}
-                  >
-                    {tab.label}
-                    <span className={styles.tabPhase}>S{tab.screen}</span>
-                  </span>
-                </Tooltip>
-              ),
-            )}
-          </nav>
+            The subject rail is sticky and outside the Outlet, so it holds
+            across every tab and stays in view to the bottom of the longest one
+            — which is what §2.4 asks of it. The right column carries the state
+            of play, then the tabs, then the tab's own content.
+          */}
+          <div className={styles.layout}>
+            <ProfileHeader profile={resource.data} />
 
-          {/* The header above stays mounted across every tab — that is what
-              makes it safe to write against a subject (§2.4), and it only
-              holds because the tabs are children of this layout rather than
-              separate pages that each rebuild it. */}
-          <Outlet context={resource.data} />
+            <div className={styles.content}>
+              <ProfileGlance profile={resource.data} />
+
+              <nav className={styles.tabs} aria-label="Profile sections">
+                {TABS.map((tab) =>
+                  tab.built ? (
+                    <NavLink
+                      key={tab.label}
+                      to={tab.path}
+                      end={tab.end}
+                      className={({ isActive }) =>
+                        [styles.tab, styles.tabBuilt, isActive ? styles.tabActive : '']
+                          .filter(Boolean)
+                          .join(' ')
+                      }
+                    >
+                      {tab.label}
+                    </NavLink>
+                  ) : (
+                    <Tooltip
+                      key={tab.label}
+                      content={`${tab.label} — coming in a later phase`}
+                    >
+                      <span
+                        className={styles.tab}
+                        role="link"
+                        aria-disabled="true"
+                        aria-label={`${tab.label} — coming in a later phase`}
+                        tabIndex={0}
+                      >
+                        {tab.label}
+                        <span className={styles.tabPhase}>S{tab.screen}</span>
+                      </span>
+                    </Tooltip>
+                  ),
+                )}
+              </nav>
+
+              {/* The rail beside this stays mounted across every tab — that is
+                  what makes it safe to write against a subject (§2.4), and it
+                  only holds because the tabs are children of this layout
+                  rather than separate pages that each rebuild it. */}
+              <Outlet context={resource.data} />
+            </div>
+          </div>
         </SiteTimeZone>
       )}
     </div>

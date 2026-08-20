@@ -10,12 +10,20 @@ import { BadgeStrip } from './BadgeStrip'
 import styles from './profile.module.css'
 
 /**
- * The persistent subject header. PRD §2.4, §6.2, §16.3.
+ * The persistent subject header, as a rail down the left of the profile.
+ * PRD §2.4, §6.2, §16.3.
  *
  * Sticky, not collapsible, does not scroll away — because it is the structural
  * mitigation against the second-worst failure available: a record written
  * against the wrong resident. Whoever is writing must be able to see who they
  * are writing about without scrolling, at any point on any tab.
+ *
+ * A column rather than a band across the top, which is a change of shape and
+ * not only of taste: a header deep enough to hold a photograph, five badges
+ * and two phone numbers costs a third of the viewport on every tab, so it
+ * either gets shortened until it stops carrying what §2.4 asks for, or it
+ * pushes the work off screen. Beside the content it does neither, and it stays
+ * in view to the bottom of the longest tab rather than only to the fold.
  *
  * It carries the site for the same reason. §2.4 requires the active site to be
  * permanently visible; the app top bar scrolls away on a long profile, and
@@ -96,7 +104,7 @@ function DueMedications({ due }: { due: DueMedication[] }) {
 }
 
 export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
-  const { resident, site, latestNote, dueSoon } = profile
+  const { resident, site } = profile
   const gp = resident.gp
   const nextOfKin = resident.importantPeople.nextOfKin
 
@@ -117,68 +125,77 @@ export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
             <span data-numeric>
               {formatDate(resident.dateOfBirth)} ({ageFrom(resident.dateOfBirth)})
             </span>
-            <span aria-hidden="true">·</span>
-            {/* The site travels with the subject, so it stays visible when the
-                app top bar has scrolled away. §2.4. */}
-            <span className={styles.site}>{site.name}</span>
           </p>
+          {/* Its own line rather than a third item on the meta row. The row
+              wrapped in the rail and left a separator dangling at the end of
+              it, and the site is not a third identity fact anyway — it is
+              where all of this is true. It travels with the subject so it
+              stays visible when the app top bar is out of view. §2.4. */}
+          <p className={styles.site}>{site.name}</p>
         </div>
       </div>
 
       <BadgeStrip resident={resident} />
 
-      <div className={styles.panels}>
-        <section
-          className={styles.panel}
-          aria-label="Medication due in the next 2 hours"
-        >
-          <h2 className={styles.panelTitle}>Medication due in the next 2 hours</h2>
-          <DueMedications due={dueSoon} />
-        </section>
-
-        <section className={styles.panel} aria-label="Last care note">
-          <h2 className={styles.panelTitle}>Last care note</h2>
-          <LastNoteSummary note={latestNote} />
-        </section>
-
-        <section className={styles.panel} aria-label="Care plan review">
-          <h2 className={styles.panelTitle}>Care plan review</h2>
-          <ReviewBadge state={resident.carePlanReview} />
-        </section>
-
-        <section className={styles.panel} aria-label="Contacts">
-          <h2 className={styles.panelTitle}>Contacts</h2>
-          <div className={styles.contacts}>
-            {gp.kind === 'recorded' ? (
-              <a className={styles.contact} href={`tel:${gp.value.contact.phone}`}>
-                <Icon name="communications/call" size={16} />
-                <span>
-                  <span className={styles.contactRole}>GP</span>
-                  {gp.value.name} · {gp.value.contact.phone}
+      <section className={styles.railContacts} aria-label="Contacts">
+        <h2 className={styles.panelTitle}>Contacts</h2>
+        <div className={styles.contacts}>
+          {gp.kind === 'recorded' ? (
+            <a className={styles.contact} href={`tel:${gp.value.contact.phone}`}>
+              <Icon name="communications/call" size={16} />
+              <span>
+                <span className={styles.contactRole}>GP</span>
+                {gp.value.name} · {gp.value.contact.phone}
+              </span>
+            </a>
+          ) : (
+            <Unrecorded label="GP not recorded" />
+          )}
+          {nextOfKin.kind === 'recorded' ? (
+            <a className={styles.contact} href={`tel:${nextOfKin.value.contact.phone}`}>
+              <Icon name="communications/call" size={16} />
+              <span>
+                <span className={styles.contactRole}>
+                  Next of kin · {nextOfKin.value.relationship}
                 </span>
-              </a>
-            ) : (
-              <Unrecorded label="GP not recorded" />
-            )}
-            {nextOfKin.kind === 'recorded' ? (
-              <a
-                className={styles.contact}
-                href={`tel:${nextOfKin.value.contact.phone}`}
-              >
-                <Icon name="communications/call" size={16} />
-                <span>
-                  <span className={styles.contactRole}>
-                    Next of kin · {nextOfKin.value.relationship}
-                  </span>
-                  {nextOfKin.value.name} · {nextOfKin.value.contact.phone}
-                </span>
-              </a>
-            ) : (
-              <Unrecorded label="Next of kin not recorded" />
-            )}
-          </div>
-        </section>
-      </div>
+                {nextOfKin.value.name} · {nextOfKin.value.contact.phone}
+              </span>
+            </a>
+          ) : (
+            <Unrecorded label="Next of kin not recorded" />
+          )}
+        </div>
+      </section>
     </header>
+  )
+}
+
+/**
+ * What is happening right now, above the tabs.
+ *
+ * Separated from the rail because these are not identity — they are state, and
+ * state changes while the subject does not. Outside the `Outlet`, so they hold
+ * across every tab rather than belonging to one.
+ */
+export function ProfileGlance({ profile }: { profile: ResidentProfile }) {
+  const { resident, latestNote, dueSoon } = profile
+
+  return (
+    <div className={styles.panels}>
+      <section className={styles.panel} aria-label="Medication due in the next 2 hours">
+        <h2 className={styles.panelTitle}>Medication due in the next 2 hours</h2>
+        <DueMedications due={dueSoon} />
+      </section>
+
+      <section className={styles.panel} aria-label="Last care note">
+        <h2 className={styles.panelTitle}>Last care note</h2>
+        <LastNoteSummary note={latestNote} />
+      </section>
+
+      <section className={styles.panel} aria-label="Care plan review">
+        <h2 className={styles.panelTitle}>Care plan review</h2>
+        <ReviewBadge state={resident.carePlanReview} />
+      </section>
+    </div>
   )
 }

@@ -2172,3 +2172,70 @@ exactly the size it is in the neutral tone and the two cannot drift apart.
 
 263 tests, and the resident avatars are untouched — `tone` defaults to
 `neutral`, so nothing that did not ask for the change got it.
+
+---
+
+## Resident profile — restructured into a subject rail and a content column — 21/08/2026
+
+Frank supplied three reference screenshots and asked for a restructure of
+placement, explicitly not of content. Nothing on this page changed what it
+says; what changed is where it stands.
+
+### What the references share, and what was worth taking
+
+All three put **identity in a column beside the work**, not in a band above it:
+a photograph, a name, a subtitle, status badges, and the contact details, held
+in a card of their own while tabs and content occupy the rest. Two of the three
+lead the content column with tabs; one leads it with small state cards.
+
+Taken: the left rail, the stacked identity, the badges in the rail, contacts in
+the rail, state cards at the head of the content column, tabs beneath them.
+
+Not taken: any of the content. No ratings, no verification chips, no wallet
+balances, no vitals — this is a care record, and a figure on it has to come
+from a record.
+
+### Why it is a better shape here, not only a different one
+
+PRD §2.4 asks for a subject header that is persistent and non-collapsing,
+because a record written against the wrong resident is the second-worst failure
+available. A band across the top deep enough to hold a photograph, five badges
+and two phone numbers costs roughly a third of the viewport **on every tab** —
+so it gets shortened until it stops carrying what §2.4 asked for, or it pushes
+the work off screen.
+
+Beside the content it does neither. Verified rather than asserted: the profile
+was scrolled 900px in an iframe and the screenshot read back — photograph,
+preferred name, legal name, room, date of birth, site, all five badges, GP and
+next of kin, still entirely in view. The old band would have had its badges
+gone by then.
+
+The rail carries its own `max-height` and scroll. A resident with five badges,
+a long legal name and two contacts can outgrow a short viewport, and a sticky
+rail taller than the window puts the bottom of the subject permanently out of
+reach.
+
+### What moved where, and why that split
+
+- **Rail** — photograph, preferred name, legal name, room · DOB · age, site,
+  the five badges, GP and next of kin. Everything a care worker checks *before*
+  acting, in one place that never leaves.
+- **Content column** — medication due, last care note, care plan review, then
+  the tabs, then the tab's content.
+
+The split is identity against state: the three panels describe what is
+happening, which changes while the subject does not. They sit outside the
+`Outlet`, so they hold across every tab rather than belonging to one.
+
+### Two things the rail width exposed
+
+The identity meta row ran "Room 14 · 07/07/1948 (78) · Rosewood Court" as one
+wrapping line, which in a 320px rail left a separator dangling at the end of a
+line with nothing after it. The site is now its own line — and it should have
+been anyway: it is not a third identity fact, it is where all of them are true.
+
+Badges stack rather than flow. `BadgeStrip` needed no change; the declaration
+and its structural guard are untouched, and the test still asserts all five
+render for all 32 residents.
+
+263 tests, axe included.
