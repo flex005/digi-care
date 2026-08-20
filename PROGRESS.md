@@ -1856,3 +1856,62 @@ Insufficient Evidence has no movement to report, so its bottom line carries the
 coverage instead — the figure it could not compute, and out of what.
 
 263 tests.
+
+---
+
+## Rule 4 relaxed on the analytics card face — 20/08/2026
+
+**A deliberate departure, on Frank's explicit instruction.** Recorded here
+because it is a departure from the rule this product is built around, and the
+one thing that must never happen to such a departure is that it becomes
+invisible.
+
+### What changed
+
+"of 28 residents" is off the card face. Each card now shows a label, a figure,
+and the movement over the period.
+
+### The rule it departs from
+
+CLAUDE.md §1 and PRD §2.2, Rule 4: *"Every aggregate carries its denominator.
+No bare counts, no bare percentages, anywhere."* Frank set the same rule for
+these cards himself when he specified them: *"Every tile carries its
+denominator — Aggregate type, no bare counts. PRD Rule 4."*
+
+I flagged it when the layout change first implied it, kept the denominator
+inline, and said it was the one rule I wanted overruled explicitly rather than
+inferred from a layout note. He overruled it explicitly. That is his call to
+make, and it is made.
+
+### What still holds the claim together
+
+The denominator has left the card face, not the screen:
+
+- The section is headed **"Figures for Rosewood Court"**.
+- Each card's `VisuallyHidden` claim still states figure, denominator and site
+  in one sentence — *"Critical gaps — 16 of 28 residents at Rosewood Court.
+  −5 this month."* A screen reader gets the whole thing.
+- The table's caption directly below reads **"16 of 28 residents at Rosewood
+  Court, sorted by name, ascending"** — the same denominator, a few hundred
+  pixels down.
+- `Aggregate` is unchanged. The type still cannot hold a figure without a
+  `Coverage`; only the rendering omits it, so nothing downstream can lose it.
+
+The test that guarded this is kept and rewritten rather than deleted: it now
+asserts the **claim** carries the denominator, and fails if a future card
+states a number nobody can size. Deleting it would have been the quiet version
+of this decision.
+
+### What to watch
+
+A card is the easiest surface on the product to put a bare number on — a big
+figure looks finished without a denominator, which is exactly why it looked
+better with it gone. The risk is not this screen; it is the precedent when
+Phase 12's dashboard arrives, where the same pressure applies to every tile
+and the figures are compliance judgements rather than counts of a roster.
+
+`Aggregate` and `AggregateFigure` are untouched, so the dashboard still starts
+from a component that cannot render a figure without its denominator. This
+relaxation is one screen's rendering, not a change to the shape of the data.
+
+263 tests.

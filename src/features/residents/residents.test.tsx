@@ -366,18 +366,22 @@ describe('analytics figures', () => {
     expect(within(figures).queryAllByRole('link')).toHaveLength(0)
   })
 
-  it('never states a figure without its denominator', async () => {
+  it('keeps the denominator in the claim, though the card face no longer shows it', async () => {
     renderList()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
     const figures = screen.getByRole('region', { name: /^Figures for/ })
     const said = figures.textContent ?? ''
-    // Rule 4. Every card either counts residents out of a stated population,
-    // or says it has insufficient evidence to count at all.
+
     for (const source of ANALYTICS_TILE_SOURCES) {
       expect(said, `${source.label} is missing from the figures`).toContain(
         source.label,
       )
     }
+
+    // Rule 4 relaxed on the card FACE by Frank on 20/08/2026, explicitly and
+    // on the record. It is not relaxed in the claim: the accessible sentence
+    // still carries figure, denominator and site together, and this fails if a
+    // future card states a number nobody can size.
     expect(said).toMatch(/of \d+ residents|residents at |Insufficient evidence/)
   })
 

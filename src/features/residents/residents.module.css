@@ -144,20 +144,6 @@
   white-space: nowrap;
 }
 
-/**
- * The denominator, inline with the figure and sharing its baseline.
- *
- * Never optional, and deliberately attached rather than on a line of its own:
- * "16" and "of 28 residents" are one statement, and a layout that can separate
- * them is a layout that can drop one. Rule 4.
- */
-.tileOf {
-  color: var(--ink-500);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-  font-weight: var(--weight-medium);
-}
-
 .tileFooter {
   display: flex;
   flex-direction: column;

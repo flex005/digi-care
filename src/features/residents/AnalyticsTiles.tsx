@@ -29,15 +29,21 @@ import styles from './residents.module.css'
  * less than it cost. It stays in each card's accessible name, so a reader who
  * cannot see the header still gets the whole claim.
  *
- * **The denominator sits inline with the figure**, small, immediately after it:
- * "16" then "of 28". It is not a separate line and it is not optional. A count
- * on its own is the bug Rule 4 exists to prevent, and this is the one place on
- * the screen where a bare number would be easiest to reach for — a big figure
- * on a card looks finished without one.
+ * **The denominator is not on the card face.** That is a deliberate departure
+ * from Rule 4 — "no bare counts, anywhere" — made by Frank explicitly on
+ * 20/08/2026 after being asked to confirm it, and recorded in PROGRESS.md
+ * rather than absorbed quietly.
  *
- * The census card is the exception, and only because its figure IS the
- * population: "28 residents" has nothing to be out of. Its scope is the
- * section heading, which names the site.
+ * What holds the claim together instead: the section is headed "Figures for
+ * <site>", each card's `VisuallyHidden` claim states the figure, its
+ * denominator and its site in one sentence, and the table's own caption below
+ * reads "16 of 28 residents at Rosewood Court". The denominator is on the
+ * screen; it is no longer beside the number.
+ *
+ * This is the one place on the screen where a bare number is easiest to reach
+ * for — a big figure on a card looks finished without one — so if a future
+ * card is added here, the denominator belongs in its accessible claim whatever
+ * the face shows.
  */
 
 export interface AnalyticsTilesProps {
@@ -61,8 +67,6 @@ export function AnalyticsTiles({ atSite, siteLabel, period }: AnalyticsTilesProp
     <section className={styles.tiles} aria-label={`Figures for ${siteLabel}`}>
       {tiles.map(({ source, aggregate, excludedReason, change }) => {
         let figure: React.ReactNode
-        /** Inline with the figure. Empty only for the census, which is one. */
-        let denominator: string
         /** The bottom line: the movement, or the coverage when there is none. */
         let footer: string
         let spoken: string
@@ -70,14 +74,14 @@ export function AnalyticsTiles({ atSite, siteLabel, period }: AnalyticsTilesProp
         switch (aggregate.kind) {
           case 'measured':
             figure = <span className={styles.tileValue}>{aggregate.value}</span>
-            denominator =
-              source.kind === 'census'
-                ? ''
-                : `of ${aggregate.coverage.covered} ${source.denominatorNoun}`
             footer = change === null ? '' : changeLabel(change, period.phrase)
+            // Spoken, not shown: the denominator lives here now. See above.
             spoken =
-              `${source.label} — ${aggregate.value} ${denominator || 'residents'} at ${siteLabel}.` +
-              (footer ? ` ${footer}.` : '')
+              `${source.label} — ${aggregate.value} ${
+                source.kind === 'census'
+                  ? 'residents'
+                  : `of ${aggregate.coverage.covered} ${source.denominatorNoun}`
+              } at ${siteLabel}.` + (footer ? ` ${footer}.` : '')
             break
 
           case 'insufficient_evidence':
@@ -90,7 +94,6 @@ export function AnalyticsTiles({ atSite, siteLabel, period }: AnalyticsTilesProp
                 detail={aggregate.missingDescription}
               />
             )
-            denominator = ''
             footer = `${aggregate.coverage.covered} of ${aggregate.coverage.total} ${source.denominatorNoun}`
             spoken = `${source.label} — insufficient evidence. ${aggregate.missingDescription} ${footer} at ${siteLabel}.`
             break
@@ -108,12 +111,7 @@ export function AnalyticsTiles({ atSite, siteLabel, period }: AnalyticsTilesProp
               </span>
             </span>
 
-            <span className={styles.tileFigure}>
-              {figure}
-              {denominator ? (
-                <span className={styles.tileOf}>{denominator}</span>
-              ) : null}
-            </span>
+            <span className={styles.tileFigure}>{figure}</span>
 
             <span className={styles.tileFooter}>
               {footer ? <span className={styles.tileChange}>{footer}</span> : null}
