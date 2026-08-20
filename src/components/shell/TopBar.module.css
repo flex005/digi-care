@@ -8,14 +8,6 @@
   color: var(--bg-surface);
 }
 
-.wordmark {
-  font-size: var(--text-h3-size);
-  line-height: var(--text-h3-line);
-  font-weight: var(--weight-extrabold);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-}
-
 /**
  * The active site, always visible — including for single-site users, who do
  * not get a switcher but do get the label. PRD §2.4. A record saved into the

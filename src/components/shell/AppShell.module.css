@@ -2,8 +2,13 @@
   display: grid;
   grid-template-rows: var(--layout-topbar-height) 1fr;
   grid-template-columns: auto 1fr;
+
+  /* The sidebar is its own full-height column with the product mark at its
+     top, so the mark sits at the very top-left rather than below a second
+     header band. The top bar spans only the content column, and carries what
+     is about the current context: site, search, alerts, user. */
   grid-template-areas:
-    'topbar topbar'
+    'sidebar topbar'
     'sidebar main';
   min-height: 100vh;
 }
@@ -14,6 +19,12 @@
 
 .sidebar {
   grid-area: sidebar;
+
+  /* Sticky so seventeen nav items stay reachable on a long page without
+     scrolling the whole shell back to the top. */
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
 .main {

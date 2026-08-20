@@ -22,7 +22,32 @@ export interface NavItem {
   phase: number
   /** False until that phase lands. Disabled items stay visible. */
   enabled: boolean
+  /** Which section heading this item sits under. */
+  section: NavSectionId
 }
+
+/**
+ * Section headings. §4.7 gives the sidebar's order and this preserves it
+ * exactly — the headings are inserted at boundaries that already fall in that
+ * sequence, so nothing is reordered. They exist because seventeen unbroken
+ * rows is a wall: a manager looking for Consent should not have to read
+ * sixteen labels to find out it is there.
+ */
+export type NavSectionId = 'overview' | 'delivery' | 'planning' | 'governance' | 'admin'
+
+export interface NavSection {
+  id: NavSectionId
+  /** Empty for the first group, which needs no heading above one item. */
+  label: string
+}
+
+export const navSections: NavSection[] = [
+  { id: 'overview', label: '' },
+  { id: 'delivery', label: 'Care delivery' },
+  { id: 'planning', label: 'Planning and risk' },
+  { id: 'governance', label: 'Governance' },
+  { id: 'admin', label: 'Administration' },
+]
 
 export const navItems: NavItem[] = [
   {
@@ -31,6 +56,7 @@ export const navItems: NavItem[] = [
     icon: 'dashboard/dashboard-square-01',
     phase: 12,
     enabled: false,
+    section: 'overview',
   },
   {
     label: 'Residents',
@@ -38,6 +64,7 @@ export const navItems: NavItem[] = [
     icon: 'users/user-multiple',
     phase: 1,
     enabled: true,
+    section: 'delivery',
   },
   {
     label: 'Care Notes',
@@ -45,6 +72,7 @@ export const navItems: NavItem[] = [
     icon: 'note-task/note-01',
     phase: 2,
     enabled: false,
+    section: 'delivery',
   },
   {
     label: 'Handover',
@@ -52,6 +80,7 @@ export const navItems: NavItem[] = [
     icon: 'users/user-switch',
     phase: 2,
     enabled: false,
+    section: 'delivery',
   },
   {
     label: 'Medications',
@@ -59,6 +88,7 @@ export const navItems: NavItem[] = [
     icon: 'medical/medicine-01',
     phase: 3,
     enabled: false,
+    section: 'delivery',
   },
   {
     label: 'Incidents',
@@ -66,6 +96,7 @@ export const navItems: NavItem[] = [
     icon: 'alert-notification/alert-02',
     phase: 4,
     enabled: false,
+    section: 'planning',
   },
   {
     label: 'Risk Assessments',
@@ -73,6 +104,7 @@ export const navItems: NavItem[] = [
     icon: 'alert-notification/alert-diamond',
     phase: 5,
     enabled: false,
+    section: 'planning',
   },
   {
     label: 'Care Plans',
@@ -80,6 +112,7 @@ export const navItems: NavItem[] = [
     icon: 'education/clipboard',
     phase: 6,
     enabled: false,
+    section: 'planning',
   },
   {
     label: 'Reviews',
@@ -87,6 +120,7 @@ export const navItems: NavItem[] = [
     icon: 'date-and-time/calendar-01',
     phase: 7,
     enabled: false,
+    section: 'planning',
   },
   {
     label: 'Goals',
@@ -94,6 +128,7 @@ export const navItems: NavItem[] = [
     icon: 'business-and-finance/target-01',
     phase: 8,
     enabled: false,
+    section: 'planning',
   },
   {
     label: 'Activities',
@@ -101,6 +136,7 @@ export const navItems: NavItem[] = [
     icon: 'game-sports/puzzle',
     phase: 9,
     enabled: false,
+    section: 'planning',
   },
   {
     label: 'Consent',
@@ -108,6 +144,7 @@ export const navItems: NavItem[] = [
     icon: 'legal/agreement-02',
     phase: 10,
     enabled: false,
+    section: 'governance',
   },
   {
     label: 'Documents',
@@ -115,6 +152,7 @@ export const navItems: NavItem[] = [
     icon: 'legal/legal-document-01',
     phase: 11,
     enabled: false,
+    section: 'governance',
   },
   {
     label: 'Compliance',
@@ -122,6 +160,7 @@ export const navItems: NavItem[] = [
     icon: 'check-validation/checkmark-badge-01',
     phase: 12,
     enabled: false,
+    section: 'governance',
   },
   {
     label: 'Reports',
@@ -129,6 +168,7 @@ export const navItems: NavItem[] = [
     icon: 'business-and-finance/analytics-01',
     phase: 13,
     enabled: false,
+    section: 'governance',
   },
   {
     label: 'Team',
@@ -136,6 +176,7 @@ export const navItems: NavItem[] = [
     icon: 'users/user-group',
     phase: 14,
     enabled: false,
+    section: 'admin',
   },
   {
     label: 'Settings',
@@ -143,11 +184,14 @@ export const navItems: NavItem[] = [
     icon: 'settings/setting-02',
     phase: 15,
     enabled: false,
+    section: 'admin',
   },
 ]
 
 /** Icons the shell itself uses, outside the nav list. */
 export const shellIcons = {
+  /** The logo mark, in its own block at the top of the sidebar. */
+  logo: 'medical/healtcare',
   search: 'search/search',
   alerts: 'alert-notification/notification-02',
   user: 'users/user-circle',

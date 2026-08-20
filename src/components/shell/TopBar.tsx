@@ -20,6 +20,10 @@ import styles from './TopBar.module.css'
  * (PRD §2.4). This is a structural mitigation against the second-worst
  * failure in the product — a record saved into the wrong site — and it is not
  * re-decided per screen.
+ *
+ * The product mark now sits in the sidebar's own block rather than here, so
+ * the top bar carries only what is about the current context: which site, what
+ * you are searching, what needs attention, and who you are.
  */
 
 export interface TopBarProps {
@@ -47,8 +51,6 @@ export function TopBar({
 
   return (
     <header className={styles.topbar}>
-      <span className={styles.wordmark}>diGi-Care</span>
-
       {isMultiSite ? (
         <DropdownMenu>
           <DropdownMenuTrigger className={styles.site}>

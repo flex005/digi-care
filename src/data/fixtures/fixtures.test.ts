@@ -3,7 +3,12 @@ import { CONSENT_TYPES, CARE_PLAN_DOMAINS, RISK_ASSESSMENT_TEMPLATES } from '../
 import { recordCompleteness, staleRecords } from '../completeness'
 import { residents } from './residents'
 import { careNotes } from './care-notes'
-import { hasStockDiscrepancy, marRecordsAll, stockCounts } from './medications'
+import {
+  hasStockDiscrepancy,
+  marRecordsAll,
+  recordedAfter,
+  stockCounts,
+} from './medications'
 import { sites, staff } from './organisation'
 import type { RecordedList, Resident } from '../types'
 
@@ -199,6 +204,25 @@ describe('determinism', () => {
 })
 
 describe('records cannot be in the future', () => {
+  /**
+   * The sweep below only catches an overshooting offset when the wall clock
+   * happens to sit inside the overshoot window — a few minutes after a round
+   * time, which is most of the day not true. This bug class has now appeared
+   * twice (care notes, then administration records), so the clamp itself is
+   * tested directly rather than left to the luck of the clock.
+   */
+  it('clamps a record written after a round that has only just fallen due', () => {
+    const now = Date.now()
+    const justDue = new Date(now - 4 * 60_000)
+    // Twenty-five minutes of slack, four minutes of elapsed time.
+    expect(recordedAfter(justDue, 25).getTime()).toBeLessThanOrEqual(now)
+  })
+
+  it('leaves a record alone when the whole offset has already elapsed', () => {
+    const longDue = new Date(Date.now() - 6 * 3_600_000)
+    expect(recordedAfter(longDue, 25).getTime()).toBe(longDue.getTime() + 25 * 60_000)
+  })
+
   /**
    * A care note timestamped after now is not messy data, it is impossible
    * data — and it renders as "in 12 hours", which reads as a plan rather than

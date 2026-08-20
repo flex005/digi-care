@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { TooltipProvider, ToastProvider, ToastViewport } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
+import { residents } from '@/data/fixtures/residents'
+import type { NavCount } from './NavBadge'
 import { TopBar } from './TopBar'
 import { Sidebar } from './Sidebar'
 import { ViewportGuard } from './ViewportGuard'
@@ -22,6 +24,34 @@ export function AppShell() {
   const { sites, activeSite, setActiveSite, currentUser, accessMode, setAccessMode } =
     useSession()
   const [collapsed, setCollapsed] = useState(false)
+
+  /**
+   * Nav counts. PRD §4.7 puts a badge on the items the source PRD names —
+   * overdue reviews and open incidents.
+   *
+   * Reviews is wired because the data exists: overdue care plan reviews are
+   * real, and they are real whether or not the Reviews module has been built.
+   * The badge sits on a disabled item deliberately — the work exists, and it
+   * is reachable today from the residents list and the profile, so hiding the
+   * figure until Phase 7 would be hiding a fact about the home, not tidying a
+   * screen.
+   *
+   * Incidents carries no badge, because there are no incident fixtures yet.
+   * **Absent is not zero** — a badge reading "0 open incidents" would be a
+   * claim nobody has the evidence to make.
+   */
+  const navCounts: Partial<Record<string, NavCount>> = useMemo(() => {
+    const overdue = residents.filter(
+      (resident) => resident.carePlanReview.kind === 'overdue',
+    ).length
+    if (overdue === 0) return {}
+    return {
+      '/reviews': {
+        value: overdue,
+        description: `${overdue} care plan reviews overdue, of ${residents.length} residents. The Reviews module arrives in a later phase; these are visible now on each resident's profile.`,
+      },
+    }
+  }, [])
 
   return (
     <ViewportGuard>
@@ -47,6 +77,7 @@ export function AppShell() {
               <Sidebar
                 collapsed={collapsed}
                 onToggleCollapsed={() => setCollapsed((value) => !value)}
+                counts={navCounts}
               />
             </div>
             <main id="main" className={styles.main}>

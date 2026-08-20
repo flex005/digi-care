@@ -901,3 +901,106 @@ domains is present and non-empty. Screenshots read back for Grace Adeyemi
 
 Still to check by eye at review: keyboard pass over the tab strip and the
 disabled domain links, and 200% zoom on the four-column domain rows.
+
+---
+
+## Navigation bar restyle — 20/08/2026
+
+Not a phase. Frank supplied a reference design (a "Kretya Studio" sidebar) and
+asked to adopt that style of navigation bar, then made three calls: give our
+nav its own section with our logo as the reference does; ignore the reference's
+dark-mode toggle; and on count badges, show the number with the denominator in
+the accessible name.
+
+### What changed
+
+The product mark moved out of the top bar and into a block at the top of the
+sidebar, and the shell grid changed so the sidebar is its own full-height
+column:
+
+```
+grid-template-areas:
+  'sidebar topbar'
+  'sidebar main';
+```
+
+The first attempt kept the top bar spanning the full width, which stacked two
+header bands and put the mark below the bar rather than at the top-left. That
+is not what the reference does and it wasted a band of vertical space.
+
+The seventeen nav items gained a `section` field and are grouped under four
+headings — Care delivery · Planning and risk · Governance · Administration —
+with the first group (Dashboard) unlabelled, as the reference has it.
+**§4.7's order is preserved exactly**; the headings were inserted at boundaries
+that already existed, so nothing moved. `navSections` is declared alongside
+`navItems` and a test asserts every item belongs to a declared section, so an
+item cannot end up in a section that does not render.
+
+### The count badge, and why it is not a bare number
+
+§4.7 wants a figure at a glance. CLAUDE.md §1 forbids a bare count. Frank's
+call — number visible, denominator in the name — resolves this rather than
+splitting the difference: the badge is a **glyph pointing at a claim**, and the
+claim is carried in full by the item's accessible name. The figure itself is
+`aria-hidden`, so a screen reader never receives the bare number; it receives
+"Reviews — 2 care plan reviews overdue, of 32 residents."
+
+Collapsed, the figure becomes a dot. A truncated number is worse than no
+number, and the accessible name does not change between states.
+
+**Reviews is badged from real data** — 2 of 32 residents have an overdue care
+plan review — and the badge sits on a *disabled* item deliberately. The overdue
+reviews exist whether or not the Reviews module has been built, and they are
+already reachable from the residents list and the profile. Hiding the figure
+until Phase 7 would be hiding a fact about the home, not tidying a screen.
+
+**Incidents carries no badge**, because there are no incident fixtures yet.
+A badge reading "0 open incidents" would be a claim nobody has the evidence to
+make. Absent is not zero — the same rule as a blank cell, applied to a count.
+
+### Collapsing must not strip a name
+
+PRD §7 allows an icon-only control only with an adjacent visible label, or an
+`aria-label` plus a tooltip. Collapsed, the visible labels are gone, so without
+care the rail becomes seventeen unlabelled buttons. `Sidebar.test.tsx` now
+iterates `navItems` and asserts **each of the seventeen** still has an
+accessible name in the collapsed rail, and that the collapse control itself is
+named in both states. Tooltips now render on collapsed items as well as
+disabled ones.
+
+Screenshots read back in both states. Expanded: mark at top-left, section
+headings, active pill on Residents, red 2 on Reviews, phase tags on the
+disabled fourteen. Collapsed: mark only, icon-only items, section rules
+retained as separators, badge as a dot.
+
+### Needs Frank's decision
+
+**PRD §4.7 still says the top bar carries the "diGi-Care wordmark".** It does
+not any more — the wordmark is in the sidebar. Editing `FRONTEND_PRD.md` is a
+stop-and-ask under CLAUDE.md §8, so that line is left as-is and flagged rather
+than quietly corrected.
+
+### Unrelated bug found by the clock rolling over
+
+`fixtures.test.ts` began failing mid-session with an administration record
+timestamped ~2 minutes in the future. The guard in `medications.ts` checked
+that `dueAt` was in the past, then added a random 1–25 minute offset on top,
+which can overshoot now. Same defect as the care-notes-in-the-future bug from
+Step 0, in a second place.
+
+Care notes could skip an impossible note. **A MAR cell cannot** — dropping it
+leaves a hole in the grid, and a missing cell is the exact ambiguity this
+product exists to prevent. So the offset is clamped to now instead
+(`recordedAfter`), and every past round stays accounted for. The random draw
+still happens on both branches, so the RNG stream and every downstream fixture
+are unchanged.
+
+The sweep test only catches this when the wall clock sits inside the overshoot
+window — a few minutes after a round time, which is most of the day not true.
+That is why it survived until today. The clamp is now tested directly, and the
+test was confirmed to fail with the clamp removed.
+
+**Third recurrence of the same class**: a timestamp derived from a valid one by
+arithmetic is not itself validated. Care notes, then administration, then
+refusal records in the same function. Worth a look wherever a fixture computes
+one time from another.

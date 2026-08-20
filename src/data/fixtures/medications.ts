@@ -177,6 +177,21 @@ export interface MarRecord {
   state: MarCellState
 }
 
+/**
+ * A record is written after the event it describes, but never after now.
+ *
+ * A round that fell due four minutes ago has only four minutes of slack, so
+ * the offset is clamped rather than the cell dropped: dropping it would leave
+ * a hole in the MAR grid, and a missing cell is precisely the ambiguity this
+ * product exists to prevent. Clamping keeps every past round accounted for.
+ *
+ * The random draw still happens either way, so the RNG stream — and therefore
+ * every other fixture downstream — is unaffected by which branch is taken.
+ */
+export function recordedAfter(dueAt: Date, minutes: number): Date {
+  return new Date(Math.min(dueAt.getTime() + minutes * 60_000, NOW.getTime()))
+}
+
 const marRecords: MarRecord[] = []
 
 for (const [index, medication] of medications.entries()) {
@@ -217,7 +232,7 @@ for (const [index, medication] of medications.entries()) {
       // the escalation distinction — the thing the union exists for —
       // impossible to see.
       if (roll <= 92) {
-        const givenAt = new Date(dueAt.getTime() + rng.int(1, 25) * 60_000)
+        const givenAt = recordedAfter(dueAt, rng.int(1, 25))
         state = {
           kind: 'given',
           givenAt: toIsoDateTime(givenAt),
@@ -241,9 +256,7 @@ for (const [index, medication] of medications.entries()) {
             'other',
           ] as const),
           note: '',
-          recordedAt: toIsoDateTime(
-            new Date(dueAt.getTime() + rng.int(2, 30) * 60_000),
-          ),
+          recordedAt: toIsoDateTime(recordedAfter(dueAt, rng.int(2, 30))),
           recordedBy: rng.pick(carersAndSeniors),
         }
       }
