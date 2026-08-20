@@ -38,15 +38,6 @@
   font-weight: var(--weight-semibold);
 }
 
-.siteLabel {
-  color: var(--ink-500);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-  font-weight: var(--weight-medium);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
 .spacer {
   flex: 1;
 }

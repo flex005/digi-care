@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Tooltip,
+  VisuallyHidden,
 } from '@/components/primitives'
 import { shellIcons } from '@/app/nav-items.icons'
 import { AppSwitcher } from './AppSwitcher'
@@ -55,8 +56,16 @@ export function TopBar({
     <header className={styles.topbar}>
       {isMultiSite ? (
         <DropdownMenu>
-          <DropdownMenuTrigger className={styles.site}>
-            <span className={styles.siteLabel}>Site</span>
+          {/* The word "Site" is off the pill but not out of the control. A
+              button whose entire accessible name is "Rosewood Court" says
+              nothing about what it does, and this is the control that decides
+              which home a record lands in. The visible text is contained in
+              the accessible name, so voice control still reaches it by what is
+              written on it — WCAG 2.5.3. */}
+          <DropdownMenuTrigger
+            className={styles.site}
+            aria-label={`Site: ${activeSite.name}. Change site.`}
+          >
             {activeSite.name}
             <Icon name={shellIcons.siteSwitcher} size={16} />
           </DropdownMenuTrigger>
@@ -71,9 +80,11 @@ export function TopBar({
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        // No switcher, but still the label. PRD §2.4.
+        // No switcher, but still the site — permanently visible for
+        // single-site users too. PRD §2.4. A bare place name has no context
+        // read aloud, so the word survives where it still does work.
         <span className={styles.site}>
-          <span className={styles.siteLabel}>Site</span>
+          <VisuallyHidden>Site: </VisuallyHidden>
           {activeSite.name}
         </span>
       )}

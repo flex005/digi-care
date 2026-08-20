@@ -2076,3 +2076,28 @@ it fails, and it fails on the backwards case, which is the one that was never
 being checked.
 
 263 tests.
+
+---
+
+## Top bar — the "SITE" label comes off the pill — 21/08/2026
+
+Removed from the face. The pill now reads "Rosewood Court" with its chevron.
+
+**Not removed from the control.** A button whose entire accessible name is
+"Rosewood Court" says nothing about what it does, and this is the control that
+decides which home a record lands in — the second-worst failure in the product
+(PRD §2.4). It carries `aria-label="Site: Rosewood Court. Change site."`
+
+The visible text is contained in the accessible name, so voice control still
+reaches it by what is written on it — WCAG 2.5.3, Label in Name, which is
+exactly the criterion an aria-label like this usually breaks.
+
+Single-site users get no switcher but still get the site (§2.4). A bare place
+name in a `<span>` has no accessible name to put the word in, so it keeps a
+`VisuallyHidden` "Site: " — the word survives where it still does work.
+
+§2.4's actual requirement is unaffected: the site name is permanently visible,
+and it is now the only thing scoping the residents list, so it is doing more
+work than when it had a label.
+
+263 tests.
