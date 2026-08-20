@@ -424,7 +424,7 @@ No user-facing screens. Deliverables: token stylesheet, icon pipeline and regist
 **Residents list** (`/residents`)
 Table: photo, preferred name, full name, room, site, risk flags, review status, last care note. Filters by site, risk level, review status, "records incomplete". Sort by name, room, most recent note, oldest note.
 - Empty: "No residents at this site yet" with an Add Resident action.
-- Partial: residents with incomplete records carry a hatched "Records incomplete" chip listing what is missing.
+- Partial: residents with **critical** gaps carry a hatched "Critical records missing" chip naming them. Gaps are severity-classified — critical is allergies, resuscitation decision, falls risk, GP, next of kin, and care-and-support consent; everything else is non-critical. The chip fires on critical only, because a chip that fires on every resident discriminates nothing and the point of this column is finding neglected records. Non-critical gaps are not hidden: the profile lists every gap, and the list filter offers both "critical gaps only" (default) and "any incomplete record".
 - The "oldest care note" sort exists specifically so a manager can find neglected records; it is not decoration.
 
 **Profile header** (persistent across all resident tabs)
