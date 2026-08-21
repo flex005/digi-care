@@ -2239,3 +2239,65 @@ and its structural guard are untouched, and the test still asserts all five
 render for all 32 residents.
 
 263 tests, axe included.
+
+---
+
+## Resident profile — two-column sections, and the redundancy audit — 21/08/2026
+
+### Applied
+
+**The five field sections sit side by side** rather than stacked full width.
+They are independent of one another, so they do not need to be read in order —
+which is what a full-width stack implies — and stacked they made a page of
+half-empty rows to be scrolled past rather than read. `.fieldList` already used
+`auto-fill` with a 320px minimum, so it falls to one column inside a
+half-width card without being told.
+
+**The allergies panel rendered the same thing twice.** A badge carrying
+substance, reaction and severity, and then a bullet list repeating substance,
+reaction and severity six inches below it. `AllergyBadge` already carries all
+three per allergen, in the treatment §6.2 requires. The list is gone.
+
+Its subtitle said "Shown here, in the profile header, and on every medication
+and care screen" — "the profile header" is now the rail, so it says so.
+
+### The redundancy I did NOT remove, and why it is Frank's call
+
+Six facts still appear twice on this page: **preferred name, full legal name,
+date of birth and age, photograph, room, and site** — once in the rail and
+again in the Identity and Placement sections. GP and next of kin make eight,
+once in the rail's Contacts and again under Care team.
+
+**Both appearances are mandated, by different rules.**
+
+- CLAUDE.md §2 / PRD §2.4: the subject header carries "resident photo, name,
+  preferred name, room, DOB". Not optional, and the reason the rail exists.
+- PRD §6.2: the General Information tab carries "all fields from source PRD
+  §16.2" — which includes every one of them.
+
+So the overlap is designed, not accidental, and removing either side breaks a
+document. Cutting them from the tab would also trip
+`general-information.test.tsx`, which asserts every declared field renders for
+all 32 residents — a guard built precisely to stop fields quietly disappearing.
+
+**What makes it defensible where it is defensible:** most tab fields carry
+attribution the rail does not — "Funding source · Local authority · Recorded by
+M. Halloran, 01/09/2022". A glance and a record with its provenance are not the
+same object.
+
+**Where that defence does not hold:** the Identity fields carry no attribution
+at all. Full legal name, preferred name and date of birth are rendered
+identically in both places. That is genuine duplication, and the honest fix is
+a decision about the documents rather than the code:
+
+1. Leave it. The tab is the record; the rail is the header; §16.2 stays whole.
+2. Drop the four identity fields from §16.2's tab list on the grounds that the
+   rail is where identity is confirmed, and amend PRD §6.2 to say so.
+3. Give the identity fields their attribution, so the tab genuinely says
+   something the rail does not.
+
+I would take 3 — it removes the duplication by making the second appearance
+carry more, rather than by making the record smaller — but it needs fixture
+fields that do not exist, so it is a type change and Frank's.
+
+263 tests.

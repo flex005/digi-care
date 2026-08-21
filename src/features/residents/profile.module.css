@@ -318,6 +318,16 @@
  * A read-only field list. Two columns so the label and its value sit on one
  * line and the eye can run down the labels.
  */
+
+/* The five field sections, side by side. Independent of one another, so they
+   do not need to be read in order — which is what a full-width stack implies. */
+.sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: var(--space-20);
+  align-items: start;
+}
+
 .fieldList {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
