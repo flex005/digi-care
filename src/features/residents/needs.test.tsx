@@ -138,7 +138,7 @@ describe('the tab within the profile', () => {
   it('keeps the subject header mounted alongside it', async () => {
     renderNeeds('res-hutchinson')
     expect(await screen.findByRole('heading', { name: 'Beryl' })).toBeVisible()
-    expect(screen.getByRole('list', { name: 'Risk badges' })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Risk flags' })).toBeInTheDocument()
   })
 
   it('has no detectable accessibility violations', async () => {

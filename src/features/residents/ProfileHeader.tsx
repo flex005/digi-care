@@ -1,8 +1,8 @@
 import type { DueMedication, ResidentProfile } from '@/data/access/client'
 import type { CareNote } from '@/data/types'
-import { CARE_NOTE_CATEGORIES } from '@/data/types'
+import { CARE_NOTE_CATEGORIES, MOOD_LABELS } from '@/data/types'
 import { Avatar } from '@/components/primitives'
-import { MoodBadge, ReviewBadge, StatusPill, Unrecorded } from '@/components/status'
+import { ReviewBadge, StatusPill, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSiteFormat } from '@/app/session/use-session'
 import { formatDate, ageFrom } from '@/lib/format'
@@ -56,8 +56,22 @@ function LastNoteSummary({ note }: { note: CareNote | 'none' }) {
             ? note.recordedBy.displayName
             : `${note.recordedBy.displayName} (deactivated)`}
         </span>
+        {/* Mood as a word in the meta line rather than a green pill. It is a
+            recorded observation, not a finding to act on, and a filled pill
+            made it the loudest thing in the band. MoodBadge still exists for
+            Phase 2's care note surfaces, where the mood IS the subject.
+
+            An unrecorded mood keeps the hatch. A care worker who did not
+            record how someone seemed has not recorded that they seemed fine,
+            and that does not become truer for being in a smaller slot. */}
+        {note.mood.kind === 'recorded' ? (
+          <span className={styles.mood} data-tone={MOOD_TONE(note.mood.score)}>
+            mood {MOOD_LABELS[note.mood.score].toLowerCase()}
+          </span>
+        ) : (
+          <Unrecorded label="Mood not recorded" />
+        )}
       </div>
-      <MoodBadge mood={note.mood} />
     </div>
   )
 }
@@ -66,33 +80,45 @@ function DueMedications({ due }: { due: DueMedication[] }) {
   const format = useSiteFormat()
 
   if (due.length === 0) {
-    // A real answer, stated. An empty panel here would be indistinguishable
-    // from a panel that failed to load.
+    // A real answer, stated — an empty space here would be indistinguishable
+    // from a panel that failed to load. But stated QUIETLY: this was a
+    // full-width green bar, the loudest thing in the header, announcing that
+    // there was nothing to do. Same correction as the residents list.
     return (
-      <StatusPill
-        tone="positive"
-        label="Nothing due in the next 2 hours"
-        detail="checked against this resident's current rounds"
-      />
+      <>
+        <p className={styles.factAnswer}>Nothing due</p>
+        <p className={styles.factQuiet}>
+          Checked against this resident's current rounds
+        </p>
+      </>
     )
   }
 
+  // Colour returns when there is something to act on.
   return (
-    <ul className={styles.dueList}>
-      {due.map(({ medication, record }) => (
-        <li key={`${medication.id}-${record.roundTime}`}>
-          <StatusPill
-            tone="info"
-            label={`${medication.name} ${medication.dose}`}
-            detail={
-              record.state.kind === 'due'
-                ? `${format.time(record.state.windowOpensAt)}–${format.time(record.state.windowClosesAt)} · ${medication.route}${medication.isControlledDrug ? ' · controlled drug' : ''}`
-                : medication.route
-            }
-          />
-        </li>
-      ))}
-    </ul>
+    <>
+      <p className={styles.factAnswer}>
+        {due.length} due{' '}
+        {due[0] && due[0].record.state.kind === 'due'
+          ? `at ${format.time(due[0].record.state.windowOpensAt)}`
+          : ''}
+      </p>
+      <ul className={styles.dueList}>
+        {due.map(({ medication, record }) => (
+          <li key={`${medication.id}-${record.roundTime}`}>
+            <StatusPill
+              tone="info"
+              label={`${medication.name} ${medication.dose}`}
+              detail={
+                record.state.kind === 'due'
+                  ? `${format.time(record.state.windowOpensAt)}–${format.time(record.state.windowClosesAt)} · ${medication.route}${medication.isControlledDrug ? ' · controlled drug' : ''}`
+                  : medication.route
+              }
+            />
+          </li>
+        ))}
+      </ul>
+    </>
   )
 }
 
@@ -103,84 +129,63 @@ export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
 
   return (
     <header className={styles.header}>
-      {/* Three columns: who this is · what to know before the room · what is
-          happening. They read left to right in the order somebody approaching
-          this resident needs them, and each is a self-contained block rather
-          than a band that has to be scanned across. */}
-      <div className={styles.identity}>
-        <Avatar photo={resident.photo} name={resident.fullLegalName} size="xlarge" />
-        <div className={styles.names}>
-          <h1 className={styles.preferredName}>{resident.preferredName}</h1>
-          <p className={styles.legalName}>{resident.fullLegalName}</p>
-        </div>
-        {/* Room, date of birth and site as labelled rows rather than a
-            middot-separated line. They are the facts §2.4 asks a care worker to
-            check against the person in front of them, and a run-on line is
-            read once; a labelled row is read in a glance. */}
-        <dl className={styles.identityFacts}>
-          <div className={styles.identityFact}>
-            <dt>Room</dt>
-            <dd>
-              {resident.room.kind === 'recorded' ? (
-                resident.room.value
-              ) : (
-                <Unrecorded label="Room not recorded" />
-              )}
-            </dd>
+      {/*
+        One surface, three bands — not three floating cards.
+
+        The cards were visually equal and unrelated, so the eye had nowhere to
+        start. Bands are ordered by when somebody needs them: who this is and
+        who to call, then what to know before entering the room, then the
+        routine facts. Hairlines between, no borders around.
+      */}
+      <div className={styles.band}>
+        <div className={styles.identity}>
+          <Avatar photo={resident.photo} name={resident.fullLegalName} size="large" />
+          <div className={styles.who}>
+            <h1 className={styles.preferredName}>{resident.preferredName}</h1>
+            {/* Kept here, unlike the list: this is where identity is
+                confirmed before somebody writes against the record. §2.4. */}
+            <p className={styles.legalName}>{resident.fullLegalName}</p>
+            <dl className={styles.identityFacts}>
+              <div className={styles.identityFact}>
+                <dt>Room</dt>
+                <dd>
+                  {resident.room.kind === 'recorded' ? (
+                    resident.room.value
+                  ) : (
+                    <Unrecorded label="Room not recorded" />
+                  )}
+                </dd>
+              </div>
+              <div className={styles.identityFact}>
+                <dt>Born</dt>
+                <dd data-numeric>
+                  {formatDate(resident.dateOfBirth)} ({ageFrom(resident.dateOfBirth)})
+                </dd>
+              </div>
+              <div className={styles.identityFact}>
+                <dt>Site</dt>
+                {/* Travels with the subject, so it stays visible when the app
+                    top bar has scrolled away. §2.4. */}
+                <dd>{site.name}</dd>
+              </div>
+            </dl>
           </div>
-          <div className={styles.identityFact}>
-            <dt>Date of birth</dt>
-            <dd data-numeric>
-              {formatDate(resident.dateOfBirth)} ({ageFrom(resident.dateOfBirth)})
-            </dd>
-          </div>
-          <div className={styles.identityFact}>
-            <dt>Site</dt>
-            {/* The site travels with the subject, so it stays visible when the
-                app top bar has scrolled away. §2.4. */}
-            <dd className={styles.site}>{site.name}</dd>
-          </div>
-        </dl>
-      </div>
 
-      <section className={styles.risks} aria-label="Risk flags">
-        <h2 className={styles.panelTitle}>Risk flags</h2>
-        <BadgeStrip resident={resident} />
-      </section>
-
-      <div className={styles.panels}>
-        <section
-          className={styles.panel}
-          aria-label="Medication due in the next 2 hours"
-        >
-          <h2 className={styles.panelTitle}>Medication due in the next 2 hours</h2>
-          <DueMedications due={dueSoon} />
-        </section>
-
-        <section className={styles.panel} aria-label="Last care note">
-          <h2 className={styles.panelTitle}>Last care note</h2>
-          <LastNoteSummary note={latestNote} />
-        </section>
-
-        <section className={styles.panel} aria-label="Care plan review">
-          <h2 className={styles.panelTitle}>Care plan review</h2>
-          <ReviewBadge state={resident.carePlanReview} />
-        </section>
-
-        <section className={styles.panel} aria-label="Contacts">
-          <h2 className={styles.panelTitle}>Contacts</h2>
           <div className={styles.contacts}>
             {gp.kind === 'recorded' ? (
               <a className={styles.contact} href={telHref(gp.value.contact.phone)}>
-                <Icon name="communications/call" size={16} />
-                <span>
-                  {/* The space is load-bearing. `.contactRole` is display:
-                      block, which separates these on screen but leaves no text
-                      node between them — so the link's accessible name read
-                      "GPDr O. Balogun". A block boundary is not a word
-                      boundary. */}
-                  <span className={styles.contactRole}>GP</span> {gp.value.name} ·{' '}
-                  {gp.value.contact.phone}
+                <span className={styles.contactIcon} aria-hidden="true">
+                  <Icon name="communications/call" size={16} />
+                </span>
+                <span className={styles.contactText}>
+                  {/* The space is load-bearing: .contactRole is display block,
+                      which separates these on screen but leaves no text node
+                      between them, so the accessible name read "GPDr O.
+                      Balogun". A block boundary is not a word boundary. */}
+                  <span className={styles.contactRole}>GP</span>{' '}
+                  <span className={styles.contactValue}>
+                    {gp.value.name} <small>· {gp.value.contact.phone}</small>
+                  </span>
                 </span>
               </a>
             ) : (
@@ -191,20 +196,62 @@ export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
                 className={styles.contact}
                 href={telHref(nextOfKin.value.contact.phone)}
               >
-                <Icon name="communications/call" size={16} />
-                <span>
+                <span className={styles.contactIcon} aria-hidden="true">
+                  <Icon name="communications/call" size={16} />
+                </span>
+                <span className={styles.contactText}>
                   <span className={styles.contactRole}>
                     Next of kin · {nextOfKin.value.relationship}
                   </span>{' '}
-                  {nextOfKin.value.name} · {nextOfKin.value.contact.phone}
+                  <span className={styles.contactValue}>
+                    {nextOfKin.value.name}{' '}
+                    <small>· {nextOfKin.value.contact.phone}</small>
+                  </span>
                 </span>
               </a>
             ) : (
               <Unrecorded label="Next of kin not recorded" />
             )}
           </div>
+        </div>
+      </div>
+
+      <div className={styles.band}>
+        <p className={styles.eyebrow}>
+          Risk flags <span>— all five statuses, always shown</span>
+        </p>
+        <BadgeStrip resident={resident} />
+      </div>
+
+      <div className={[styles.band, styles.routine].join(' ')}>
+        <section
+          className={styles.panel}
+          aria-label="Medication due in the next 2 hours"
+        >
+          <h2 className={styles.panelTitle}>Medication due · next 2 hours</h2>
+          <DueMedications due={dueSoon} />
+        </section>
+
+        <section className={styles.panel} aria-label="Last care note">
+          <h2 className={styles.panelTitle}>Last care note</h2>
+          <LastNoteSummary note={latestNote} />
+        </section>
+
+        <section className={styles.panel} aria-label="Care plan review">
+          <h2 className={styles.panelTitle}>Care plan review</h2>
+          {/* compact: completed-and-in-date and scheduled-not-yet-due render
+              as plain text; due, overdue and never-scheduled keep their
+              treatments. The same emphasis the residents list uses, for the
+              same reason — a green "Completed" bar was the loudest thing on a
+              header whose job is surfacing what needs doing. */}
+          <ReviewBadge state={resident.carePlanReview} emphasis="compact" />
         </section>
       </div>
     </header>
   )
+}
+
+/** Same thresholds MoodBadge uses, so the two cannot disagree about a score. */
+function MOOD_TONE(score: 1 | 2 | 3 | 4 | 5): 'caution' | 'info' | 'positive' {
+  return score <= 2 ? 'caution' : score === 3 ? 'info' : 'positive'
 }

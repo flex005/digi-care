@@ -8,98 +8,310 @@
  */
 
 /**
- * Three columns: who this is · what to know before the room · what is
- * happening. Sticky and non-collapsing — §2.4, the structural mitigation
- * against a record written against the wrong resident.
+ * One surface, three bands. PRD §2.4 — sticky, non-collapsing, the structural
+ * mitigation against a record written against the wrong resident.
  *
- * `auto` on the first two columns lets identity and the badges take what they
- * need and gives the rest to the state panels, which have the most to say.
- */
-
-/**
- * The row itself is not a surface — the three blocks inside it are. It stays
- * sticky, so it carries the page background: the gaps between the cards are
- * transparent, and without it the content beneath would scroll up through them
- * while the header held still.
- *
- * The three stretch to a common height — grid's default, so there is no
- * `align-items` here. The state panels are always the tallest, so identity and
- * risk flags gain the difference as space at the foot of their cards.
+ * Bands rather than cards: three equal cards were three equal invitations, so
+ * the eye had nowhere to start. Ordered by when somebody needs them — who this
+ * is and who to call, what to know before the room, then the routine facts —
+ * and separated by a hairline, which says "next" where a border says
+ * "elsewhere".
  */
 .header {
   position: sticky;
   top: 0;
   z-index: 20;
-  display: grid;
-  grid-template-columns: 260px 300px minmax(0, 1fr);
-  gap: var(--space-16);
-  padding-bottom: var(--space-8);
-  background-color: var(--bg-page);
-}
-
-/* One surface, three users. */
-.headerPanel {
-  padding: var(--space-20);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   background-color: var(--bg-surface);
   box-shadow: var(--shadow-card);
+  overflow: hidden;
 }
 
-/* Two blocks — the portrait and name, then the facts — pushed to the top and
-   bottom of whatever height the row settles on, so the extra space lands
-   between them rather than pooling under the last row. */
+.band {
+  padding: var(--space-20) var(--space-24);
+}
+
+.band + .band {
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ---- band one: identity and contacts ---- */
+
 .identity {
-  composes: headerPanel;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-12);
+  gap: var(--space-20);
   align-items: center;
-  justify-content: space-between;
-  text-align: center;
 }
 
-/* Labelled rows with a hairline between: read in a glance rather than parsed
-   out of a run-on line. */
+.who {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Room, born, site — separated by rules rather than middots, so each is a
+   discrete fact to check rather than a phrase to read through. */
 .identityFacts {
   display: flex;
-  flex-direction: column;
-  width: 100%;
-  margin: 0;
-  text-align: left;
+  flex-wrap: wrap;
+  margin: var(--space-8) 0 0;
 }
 
 .identityFact {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--space-12);
+  display: flex;
+  gap: var(--space-4);
   align-items: baseline;
-  padding: var(--space-8) 0;
-  border-top: 1px solid var(--border-subtle);
+  margin-right: var(--space-12);
+  padding-right: var(--space-12);
+  border-right: 1px solid var(--border-strong);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.identityFact:last-child {
+  margin-right: 0;
+  padding-right: 0;
+  border-right: none;
 }
 
 .identityFact dt {
   color: var(--ink-500);
-  font-size: var(--text-caption-size);
-  line-height: var(--text-caption-line);
 }
 
 .identityFact dd {
   margin: 0;
-  color: var(--ink-900);
+  font-weight: var(--weight-semibold);
+}
+
+/* Contacts sit in band one with identity: who this is, and who to call about
+   them. A tel: link is the one thing on this header somebody uses in a hurry. */
+.contacts {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.contact {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-8) var(--space-12) var(--space-8) var(--space-8);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  color: inherit;
+}
+
+.contact:hover {
+  border-color: var(--purple-400);
+  background-color: var(--purple-50);
+}
+
+.contactRole {
+  display: block;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.contactIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-32);
+  height: var(--space-32);
+  border-radius: var(--radius-pill);
+  background-color: var(--purple-50);
+  color: var(--purple-600);
+}
+
+.contactText {
+  min-width: 0;
+}
+
+.contactValue {
+  display: block;
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
-  text-align: right;
+  white-space: nowrap;
 }
 
-/* Column two. Its own block, so the badges are a thing to look at rather than
-   a strip trailing off the end of the identity row. */
-.risks {
-  composes: headerPanel;
+.contactValue small {
+  color: var(--ink-500);
+  font-size: inherit;
+  font-weight: var(--weight-regular);
+}
+
+/* ---- band two: risk flags ---- */
+
+.eyebrow {
+  display: flex;
+  gap: var(--space-8);
+  align-items: baseline;
+  margin-bottom: var(--space-8);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.eyebrow span {
+  color: var(--ink-400);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-medium);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/**
+ * Five equal columns, equal minimum height, so the strip reads level and no
+ * flag looks more important than another for having a longer answer.
+ */
+.flags {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flagItem {
+  display: flex;
+  min-height: calc(var(--space-64) + var(--space-32));
+}
+
+/**
+ * Colour as a left edge and a tint, not an outline. An outline draws a box
+ * first and its contents second; the bar leaves the answer as the loudest
+ * thing on the card, which is the whole point of the card.
+ */
+.flag {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-12) var(--space-12) var(--space-12) var(--space-16);
+  border: 1px solid transparent;
+  border-left: 3px solid var(--ink-400);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface-sunken);
+}
+
+.flagField {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The answer. Largest line, and the only one carrying the status colour. */
+.flagAnswer {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.flagAttribution {
+  margin-top: auto;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.flagPositive {
+  border-left-color: var(--status-positive);
+  background-color: var(--status-positive-tint);
+}
+
+.flagPositive .flagAnswer {
+  color: var(--status-positive-ink);
+}
+
+.flagCaution {
+  border-left-color: var(--status-caution);
+  background-color: var(--status-caution-tint);
+}
+
+.flagCaution .flagAnswer {
+  color: var(--status-caution-ink);
+}
+
+.flagCritical {
+  border-left-color: var(--status-critical);
+  background-color: var(--status-critical-tint);
+}
+
+.flagCritical .flagAnswer {
+  color: var(--status-critical-ink);
+}
+
+.flagInfo {
+  border-left-color: var(--status-info);
+  background-color: var(--status-info-tint);
+}
+
+.flagInfo .flagAnswer {
+  color: var(--status-info-ink);
+}
+
+.flagBrand {
+  border-left-color: var(--purple-600);
+  background-color: var(--purple-50);
+}
+
+.flagBrand .flagAnswer {
+  color: var(--purple-600);
+}
+
+/* ---- band three: the routine facts ---- */
+
+/* One of the three routine facts in band three. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.routine {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr 1fr;
+  gap: var(--space-24);
+  align-items: start;
+}
+
+.routine .panel + .panel {
+  padding-left: var(--space-24);
+  border-left: 1px solid var(--border-subtle);
+}
+
+/* Recorded and unremarkable, stated plainly. These were full-width green bars
+   announcing that there was nothing to do. */
+.factAnswer {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.factQuiet {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
 }
 
 .names {
@@ -120,62 +332,6 @@
   font-size: var(--text-body-size);
   line-height: var(--text-body-line);
   font-weight: var(--weight-medium);
-}
-
-.identityMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-  align-items: center;
-  color: var(--ink-500);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-}
-
-.site {
-  color: var(--purple-900);
-  font-weight: var(--weight-semibold);
-}
-
-/* Five badges, always all five. */
-.badgeStrip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.badge {
-  display: flex;
-  gap: var(--space-4);
-  align-items: center;
-}
-
-/* Column three. Labelled rows, hairline-separated, matching the identity
-   facts — four different shapes of content read as one list rather than four
-   competing panels. */
-.panels {
-  composes: headerPanel;
-  display: flex;
-  flex-direction: column;
-}
-
-.panel {
-  display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
-  gap: var(--space-8) var(--space-16);
-  align-items: baseline;
-  padding: var(--space-12) 0;
-}
-
-.panel + .panel {
-  border-top: 1px solid var(--border-subtle);
-}
-
-.panel:first-child {
-  padding-top: 0;
 }
 
 .panelTitle {
@@ -209,43 +365,27 @@
   line-height: var(--text-body-sm-line);
 }
 
+/* The mood word. Coloured, but text — not a filled pill. */
+.mood {
+  font-weight: var(--weight-semibold);
+}
+
+.mood[data-tone='positive'] {
+  color: var(--status-positive-ink);
+}
+
+.mood[data-tone='info'] {
+  color: var(--status-info-ink);
+}
+
+.mood[data-tone='caution'] {
+  color: var(--status-caution-ink);
+}
+
 .noteMeta {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-8);
-  color: var(--ink-500);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-}
-
-.contacts {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-  align-items: flex-start;
-}
-
-/* One tap. PRD §16.3 — a real tel: link, so it works on a phone and is
-   reachable by keyboard. */
-.contact {
-  display: flex;
-  gap: var(--space-8);
-  align-items: center;
-  min-height: var(--space-40);
-  padding: var(--space-4) var(--space-12);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  color: var(--purple-900);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-}
-
-.contact:hover {
-  background-color: var(--purple-50);
-}
-
-.contactRole {
-  display: block;
   color: var(--ink-500);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);

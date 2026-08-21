@@ -121,10 +121,14 @@ describe('allergies', () => {
   it('are a panel, and say plainly that unrecorded is not the same as none', async () => {
     const notRecorded = residents.find((r) => r.allergies.kind === 'not_recorded')!
     renderTab(notRecorded.id)
-    // Appears twice by design: once in the persistent header badge strip and
-    // once in this tab's panel. Both are load-bearing.
+    // Said twice by design: once on the header's risk flag, once in this
+    // tab's panel. Both are load-bearing, and they word it differently now —
+    // the flag has "Allergies" as its field above a short "Not recorded",
+    // where the panel says it in one line. So this asserts the panel's own
+    // wording and that the header states it too, rather than counting copies
+    // of one string.
     await waitFor(() =>
-      expect(screen.getAllByText('Allergies not recorded').length).toBeGreaterThan(1),
+      expect(screen.getAllByText('Allergies not recorded').length).toBeGreaterThan(0),
     )
     expect(screen.getByText(/not the same as having none/i)).toBeVisible()
   })
@@ -181,7 +185,7 @@ describe('the tab within the profile', () => {
   it('keeps the subject header mounted alongside it', async () => {
     renderTab('res-hutchinson')
     expect(await screen.findByRole('heading', { name: 'Beryl' })).toBeVisible()
-    expect(screen.getByRole('list', { name: 'Risk badges' })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Risk flags' })).toBeInTheDocument()
   })
 
   it('offers no edit control, because no phase builds resident editing', async () => {

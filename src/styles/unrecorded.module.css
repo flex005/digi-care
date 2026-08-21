@@ -107,6 +107,20 @@
   line-height: var(--text-caption-line);
 }
 
+/* Flag form — a card in the profile's risk strip, three lines: the field, the
+   answer, and what is missing. The left edge is thicker so an unrecorded flag
+   carries the same bar as its recorded neighbours and the strip reads level. */
+.unrecordedFlag {
+  composes: unrecorded;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+  padding: var(--space-12) var(--space-12) var(--space-12) var(--space-16);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+}
+
 /* Block form — a full-width row inside a list, e.g. a risk assessment
    template that has never been completed. Absence from a list is the same
    bug as a blank cell, so these are rendered, never omitted. */

@@ -30,7 +30,7 @@ import styles from './Unrecorded.module.css'
  * <StatusPill tone="caution">. An omission looks unfinished. Rule 3.
  */
 
-export type UnrecordedVariant = 'badge' | 'cell' | 'chip' | 'panel' | 'row'
+export type UnrecordedVariant = 'badge' | 'cell' | 'chip' | 'flag' | 'panel' | 'row'
 
 export interface UnrecordedProps {
   /**
@@ -45,6 +45,12 @@ export interface UnrecordedProps {
    * falls risk assessment". Rule 4.
    */
   detail?: string
+  /**
+   * The field being answered, above the label — "End of life care" over "Not
+   * recorded". Only the `flag` variant reads it, and together with `label` it
+   * is what makes that variant's shorter answer a complete statement.
+   */
+  caption?: string
   variant?: UnrecordedVariant
 }
 
@@ -53,13 +59,20 @@ const VARIANT_CLASS: Record<UnrecordedVariant, string> = {
   cell: styles.cell,
   // Compact and stacked, for a table cell whose detail is a list of names.
   chip: styles.chip,
+  flag: styles.flag,
   panel: styles.panel,
   row: styles.row,
 }
 
-export function Unrecorded({ label, detail, variant = 'badge' }: UnrecordedProps) {
+export function Unrecorded({
+  label,
+  detail,
+  caption,
+  variant = 'badge',
+}: UnrecordedProps) {
   return (
     <span className={VARIANT_CLASS[variant]} data-state="unrecorded">
+      {caption ? <span className={styles.caption}>{caption}</span> : null}
       <span className={styles.label}>{label}</span>
       {detail ? <span className={styles.detail}>{detail}</span> : null}
     </span>

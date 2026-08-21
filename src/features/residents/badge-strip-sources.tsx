@@ -1,40 +1,86 @@
-import type { ReactNode } from 'react'
 import type { Resident } from '@/data/types'
-import {
-  AllergyBadge,
-  EolcBadge,
-  IsolationBadge,
-  ResuscitationBadge,
-  RiskBadge,
-} from '@/components/status'
+import type { StatusTone } from '@/components/status'
+import { assertNever } from '@/lib/assert-never'
+import { formatDate, formatInstantDate } from '@/lib/format'
+import type { TimeZone } from '@/lib/format'
 
 /**
- * The five badges of the profile strip, declared rather than hardcoded into
- * a render function. PRD §16.3.
+ * The five risk flags of the profile strip, declared rather than hardcoded
+ * into a render function. PRD §16.3.
  *
- * Each badge component is exhaustive over its own union — every one ends in
+ * Each source is exhaustive over its own union — every one ends in
  * `assertNever`, so a state cannot go unhandled. What a declared list adds is
- * the guarantee one level up: a *badge* cannot quietly go missing from the
+ * the guarantee one level up: a *flag* cannot quietly go missing from the
  * strip. The strip is the header's entire safety argument, and §2.1 calls the
- * DNAR ambiguity "catastrophic in both directions"; a badge that stopped
+ * DNAR ambiguity "catastrophic in both directions"; a flag that stopped
  * rendering would restore exactly that, silently.
  *
- * Unlike the residents list, nothing here narrows. Every state of every badge
+ * Unlike the residents list, nothing here narrows. Every state of every flag
  * is drawn, including the settled ones — this is the point-of-care surface,
  * and inference has no place on it.
+ *
+ * **These return data, not elements.** The strip renders three lines per flag —
+ * the field, the answer, the attribution — and the answer has to be the one
+ * thing carrying the status colour, at the largest size on the card. A
+ * component returning a finished pill cannot be laid out that way from
+ * outside. The badge components still exist and are still used where a pill is
+ * the right shape: the General Information tab, and /dev/states.
  */
+
+/** What the flag says, and how loudly. */
+export type FlagState =
+  | {
+      kind: 'recorded'
+      tone: StatusTone
+      /** The answer. Largest line on the card, and the only coloured one. */
+      answer: string
+      /** Who recorded it and when, or what the answer consists of. */
+      attribution: string
+    }
+  | {
+      kind: 'unrecorded'
+      /** Short, because the field name sits above it. "Not assessed". */
+      answer: string
+      /** Says what is missing, in words — never the hatch alone. */
+      attribution: string
+    }
+
 export interface BadgeStripSource {
   id: string
-  /** Named in tests when a badge goes missing. */
+  /** The field. Shown as the card's first line, and named in test failures. */
   name: string
-  render: (resident: Resident) => ReactNode
+  state: (resident: Resident, timeZone: TimeZone) => FlagState
 }
 
 export const BADGE_STRIP_SOURCES: BadgeStripSource[] = [
   {
     id: 'falls',
     name: 'Falls risk',
-    render: (resident) => <RiskBadge name="Falls risk" status={resident.risks.falls} />,
+    state: (resident, timeZone) => {
+      const falls = resident.risks.falls
+      switch (falls.kind) {
+        case 'not_assessed':
+          return {
+            kind: 'unrecorded',
+            answer: 'Not assessed',
+            attribution: 'Nobody has assessed falls risk',
+          }
+        case 'assessed':
+          return {
+            kind: 'recorded',
+            tone:
+              falls.level === 'high'
+                ? 'critical'
+                : falls.level === 'moderate'
+                  ? 'caution'
+                  : 'positive',
+            answer: LEVEL_LABEL[falls.level],
+            attribution: `Score ${falls.score} · ${falls.assessedBy.displayName}, ${formatInstantDate(falls.assessedAt, timeZone)}`,
+          }
+        default:
+          return assertNever(falls)
+      }
+    },
   },
   {
     id: 'allergies',
@@ -42,23 +88,142 @@ export const BADGE_STRIP_SOURCES: BadgeStripSource[] = [
     // Three states, three treatments — including NO KNOWN ALLERGIES, a
     // recorded negative, which §6.2 is explicit must look different again
     // from both a finding and a gap.
-    render: (resident) => <AllergyBadge status={resident.allergies} />,
+    state: (resident, timeZone) => {
+      const allergies = resident.allergies
+      switch (allergies.kind) {
+        case 'not_recorded':
+          return {
+            kind: 'unrecorded',
+            answer: 'Not recorded',
+            attribution: 'Nobody has recorded whether there are any',
+          }
+        case 'none_known':
+          return {
+            kind: 'recorded',
+            tone: 'positive',
+            answer: 'None known',
+            attribution: `${allergies.recordedBy.displayName}, ${formatInstantDate(allergies.recordedAt, timeZone)}`,
+          }
+        case 'allergies':
+          return {
+            kind: 'recorded',
+            tone: 'critical',
+            // Every substance, never a count and never "+2 more": this is the
+            // line somebody reads before giving a drug.
+            answer: allergies.items.map((allergy) => allergy.substance).join(', '),
+            attribution: allergies.items
+              .map(
+                (allergy) => `${allergy.severity} · ${allergy.reaction.toLowerCase()}`,
+              )
+              .join(' — '),
+          }
+        default:
+          return assertNever(allergies)
+      }
+    },
   },
   {
     id: 'resuscitation',
-    name: 'Resuscitation decision',
+    name: 'Resuscitation',
     // FOR RESUSCITATION is drawn here, though it folds into a claim on the
     // list. This is where somebody acts on it.
-    render: (resident) => <ResuscitationBadge status={resident.resuscitation} />,
+    state: (resident, timeZone) => {
+      const resus = resident.resuscitation
+      switch (resus.kind) {
+        case 'no_decision_recorded':
+          return {
+            kind: 'unrecorded',
+            answer: 'No decision',
+            attribution: 'Nobody has recorded a decision',
+          }
+        case 'dnar_in_place':
+          return {
+            kind: 'recorded',
+            tone: 'brand',
+            answer: 'DNAR in place',
+            attribution: `${resus.signedBy} · ${formatDate(resus.signedOn)}`,
+          }
+        case 'for_resuscitation':
+          return {
+            kind: 'recorded',
+            tone: 'positive',
+            answer: 'For resuscitation',
+            attribution: `${resus.recordedBy.displayName}, ${formatInstantDate(resus.recordedAt, timeZone)}`,
+          }
+        default:
+          return assertNever(resus)
+      }
+    },
   },
   {
     id: 'eolc',
     name: 'End of life care',
-    render: (resident) => <EolcBadge status={resident.eolc} />,
+    state: (resident, timeZone) => {
+      const eolc = resident.eolc
+      switch (eolc.kind) {
+        case 'not_recorded':
+          return {
+            kind: 'unrecorded',
+            answer: 'Not recorded',
+            attribution: 'Nobody has recorded a decision',
+          }
+        case 'not_applicable':
+          return {
+            kind: 'recorded',
+            tone: 'positive',
+            answer: 'Not applicable',
+            attribution: `${eolc.recordedBy.displayName}, ${formatInstantDate(eolc.recordedAt, timeZone)}`,
+          }
+        case 'in_place':
+          // --status-info, departing from source PRD §16.3's grey: grey is
+          // reserved for unrecorded, and a recorded EOLC decision rendered
+          // grey would read as "nobody has looked". PROGRESS.md, Screen 2.
+          return {
+            kind: 'recorded',
+            tone: 'info',
+            answer: 'In place',
+            attribution: `Since ${formatDate(eolc.startedOn)} · ${eolc.recordedBy.displayName}`,
+          }
+        default:
+          return assertNever(eolc)
+      }
+    },
   },
   {
     id: 'isolation',
     name: 'Isolation',
-    render: (resident) => <IsolationBadge status={resident.isolation} />,
+    state: (resident, timeZone) => {
+      const isolation = resident.isolation
+      switch (isolation.kind) {
+        case 'not_recorded':
+          return {
+            kind: 'unrecorded',
+            answer: 'Not recorded',
+            attribution: 'Nobody has recorded a status',
+          }
+        case 'not_isolating':
+          return {
+            kind: 'recorded',
+            tone: 'positive',
+            answer: 'Not isolating',
+            attribution: `${isolation.recordedBy.displayName}, ${formatInstantDate(isolation.recordedAt, timeZone)}`,
+          }
+        case 'isolating':
+          return {
+            kind: 'recorded',
+            tone: 'caution',
+            answer: `Isolating — ${isolation.reason}`,
+            attribution: `Since ${formatDate(isolation.since)} · ${isolation.recordedBy.displayName}`,
+          }
+        default:
+          return assertNever(isolation)
+      }
+    },
   },
 ]
+
+const LEVEL_LABEL: Record<'low' | 'moderate' | 'high', string> = {
+  low: 'Low',
+  moderate: 'Moderate',
+  high: 'High',
+}

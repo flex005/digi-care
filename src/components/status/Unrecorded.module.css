@@ -24,6 +24,20 @@
   composes: unrecordedChip from '../../styles/unrecorded.module.css';
 }
 
+.flag {
+  composes: unrecordedFlag from '../../styles/unrecorded.module.css';
+}
+
+/* The field this answers — "End of life care" above "Not recorded". */
+.caption {
+  color: var(--status-unrecorded-ink);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 /* The label is the carrier of meaning; the pattern is reinforcement. */
 .label {
   font-weight: var(--weight-semibold);
@@ -44,4 +58,16 @@
 .row .label,
 .cell .label {
   font-weight: var(--weight-semibold);
+}
+
+/* The flag variant's three lines: the answer is the largest, the note sits on
+   the card's foot so five cards of different lengths still read level. */
+.flag .label {
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.flag .detail {
+  margin-top: auto;
 }

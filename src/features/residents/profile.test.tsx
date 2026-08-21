@@ -49,10 +49,10 @@ describe('the badge strip draws every state, for every resident', () => {
   it('renders all five badges for all 32 residents, whatever their states', () => {
     for (const resident of residents) {
       const { container, unmount } = render(atSite(<BadgeStrip resident={resident} />))
-      const strip = within(container).getByRole('list', { name: 'Risk badges' })
+      const strip = within(container).getByRole('list', { name: 'Risk flags' })
       expect(
         within(strip).getAllByRole('listitem'),
-        `${resident.fullLegalName} is missing a badge`,
+        `${resident.fullLegalName} is missing a flag`,
       ).toHaveLength(BADGE_STRIP_SOURCES.length)
 
       // Every badge says something. None of them is an empty slot.
@@ -64,26 +64,38 @@ describe('the badge strip draws every state, for every resident', () => {
   })
 
   it('shows a recorded negative differently from a gap and from a finding', () => {
-    // PRD §6.2's three-way allergy distinction, on real residents.
+    // PRD §6.2's three-way allergy distinction, on real residents. The three
+    // now read as a field, an answer and an attribution rather than a pill, so
+    // these assert the card's whole text — the distinction is what matters,
+    // not the phrasing of any one line.
     const noneKnown = residents.find((r) => r.allergies.kind === 'none_known')!
     const notRecorded = residents.find((r) => r.allergies.kind === 'not_recorded')!
     const hasAllergies = residents.find((r) => r.allergies.kind === 'allergies')!
 
     const settled = render(atSite(<BadgeStrip resident={noneKnown} />))
-    expect(screen.getByText('No known allergies')).toBeVisible()
-    // A recorded negative is settled, not hatched.
-    expect(
-      settled.container.querySelector('[data-state="recorded"]'),
-    ).toBeInTheDocument()
+    const settledCard = settled.container.querySelector('[data-state="recorded"]')
+    // A recorded negative is settled, not hatched — and it still says a person
+    // recorded it, which is what makes it a record rather than an absence.
+    expect(settledCard?.textContent).toContain('Allergies')
+    expect(settledCard?.textContent).toContain('None known')
     settled.unmount()
 
     const gap = render(atSite(<BadgeStrip resident={notRecorded} />))
-    expect(screen.getByText('Allergies not recorded')).toBeVisible()
-    expect(gap.container.querySelector('[data-state="unrecorded"]')).toBeInTheDocument()
+    const gapCard = gap.container.querySelector('[data-state="unrecorded"]')
+    expect(gapCard).toBeInTheDocument()
+    expect(gapCard?.textContent).toContain('Allergies')
+    expect(gapCard?.textContent).toContain('Not recorded')
+    // The words, not the hatch, carry it — the card says what is missing.
+    expect(gapCard?.textContent).toMatch(/nobody has recorded/i)
     gap.unmount()
 
     render(atSite(<BadgeStrip resident={hasAllergies} />))
-    expect(screen.getByText(/^Allergy: /)).toBeVisible()
+    const substance =
+      hasAllergies.allergies.kind === 'allergies'
+        ? hasAllergies.allergies.items[0].substance
+        : ''
+    // Every substance named, never a count.
+    expect(screen.getByText(new RegExp(substance))).toBeVisible()
   })
 
   it('draws "for resuscitation" here, unlike the list', () => {
@@ -122,7 +134,7 @@ describe('the subject header', () => {
     expect(await screen.findByText(/could not be loaded/i)).toBeVisible()
     // No name, no badges — acting on the wrong subject is the failure this
     // header exists to prevent, so it shows nothing rather than something.
-    expect(screen.queryByRole('list', { name: 'Risk badges' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Risk flags' })).not.toBeInTheDocument()
   })
 })
 
@@ -130,7 +142,7 @@ describe('accessibility', () => {
   it('has no detectable violations', async () => {
     const { container } = renderProfile('res-okafor')
     await waitFor(() =>
-      expect(screen.getByRole('list', { name: 'Risk badges' })).toBeInTheDocument(),
+      expect(screen.getByRole('list', { name: 'Risk flags' })).toBeInTheDocument(),
     )
     const results = await axe(container)
     expect(results).toHaveNoViolations()

@@ -2570,3 +2570,94 @@ filesystem and `src/` is a browser project with no node types — the same reaso
 `check-hatch.mjs` lives there.
 
 269 tests.
+
+---
+
+## Profile header rebuilt against docs/profile-header.html — 21/08/2026
+
+Structure and hierarchy from the approved mockup; none of its CSS. Its literals
+are replaced by tokens throughout, and every colour reaches a component as
+`var(--token)`.
+
+### 1. One surface, three bands
+
+The three floating cards became one card with hairline-separated bands, in the
+order somebody approaching a resident needs them: who this is and who to call ·
+what to know before the room · the routine facts. Three equal cards were three
+equal invitations, which is why the eye had nowhere to start. A hairline says
+"next"; a border says "elsewhere".
+
+### 2. Risk flags as three-line cards
+
+`BADGE_STRIP_SOURCES` now returns **data, not elements** — field, answer,
+attribution, tone — because the answer has to be the largest line and the only
+coloured one, and a component that hands back a finished pill cannot be laid
+out that way from outside. Each source is still exhaustive over its own union
+with `assertNever`, and the structural guard still asserts all five render for
+all 32 residents.
+
+The badge components are untouched and still used where a pill is the right
+shape — the General Information tab, `/dev/states`.
+
+Colour is a left edge bar plus a tint rather than a full outline. An outline
+draws a box first and its contents second.
+
+**The unrecorded state keeps the hatch exactly.** Not a lighter version of it:
+the same treatment, through the same component, with the left bar in the
+unrecorded colour so the strip still reads level. `Unrecorded` gained a `flag`
+variant composed from the one definition in `unrecorded.module.css`, and a
+`caption` prop so the field can sit above a short answer — "End of life care"
+over "Not recorded" — while `label` stays required. `check-hatch` still passes:
+one definition.
+
+### 3. Settled facts go quiet
+
+"Nothing due in the next 2 hours" was a full-width green bar announcing that
+there was nothing to do — the loudest thing in the header. It is plain text
+now, and the review uses `ReviewBadge emphasis="compact"`, the same emphasis
+the residents list uses: completed-and-in-date and scheduled-not-yet-due render
+as text, while due, overdue and never-scheduled keep their treatments. Verified
+on two residents — Ada reads "Reviewed 02/08/2026", Emmanuel keeps the red
+"Overdue · 75 days overdue".
+
+Mood moved from a green pill to a coloured word in the meta line. **An
+unrecorded mood still hatches** — a care worker who did not record how somebody
+seemed has not recorded that they seemed fine, and that does not become truer
+for being in a smaller slot.
+
+### A bug I introduced and had to chase
+
+Removing the old layout's stale CSS rules with a script chopped the tail off a
+comment, leaving `/*` unterminated. **Everything from there to the next `*/`
+was silently swallowed** — `.panelTitle`, `.dueList`, `.noteSummary`,
+`.noteBody`, `.noteMeta` all vanished from the module's exports.
+
+Nothing failed. Stylelint passed, the build passed, the tests passed.
+`styles.noteMeta` was simply `undefined`, `className={undefined}` renders
+nothing, and the note meta lost its flex and its gaps — which is how it reached
+a screenshot reading "Mobility21/08/2026 15:52 BSTK. Osei".
+
+Found by reading the screenshot, not by any check. Worth knowing: **a CSS
+Modules class that does not exist is not an error, it is `undefined`** — and
+TypeScript cannot see it, because the module's type is an index signature. A
+typed-CSS-modules step would turn it into a compile error; noted, not built.
+
+### Already done, before this brief
+
+The three "also fix" items were fixed in the preceding commits and are
+unchanged here: the allergy reaction duplication (the fixture had filled the
+reaction in with the severity word — 9 of 32 residents), the GP label running
+into the name (a block boundary is not a word boundary, so the accessible name
+was "GPDr O. Balogun"), and all five `tel:` hrefs, now built by `telHref()` and
+guarded by `scripts/check-tel-links.mjs` in `npm run lint`.
+
+### Checks
+
+269 tests, axe included. Greyscale: the unrecorded card is unmistakable against
+the four recorded ones, and each answer is carried by its words — the left bars
+add nothing without colour, which is the correct dependency. At 1280, the
+minimum supported width, the identity facts wrap onto two lines and the five
+cards stay level; nothing truncated, nothing hidden.
+
+Full legal name stays under the preferred name, as asked — this is where
+identity is confirmed.
