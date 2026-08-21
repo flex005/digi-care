@@ -22,8 +22,9 @@
  * transparent, and without it the content beneath would scroll up through them
  * while the header held still.
  *
- * `align-items: start` lets each card end where its content ends, rather than
- * stretching two of them to match the tallest and leaving voids.
+ * The three stretch to a common height — grid's default, so there is no
+ * `align-items` here. The state panels are always the tallest, so identity and
+ * risk flags gain the difference as space at the foot of their cards.
  */
 .header {
   position: sticky;
@@ -32,7 +33,6 @@
   display: grid;
   grid-template-columns: 260px 300px minmax(0, 1fr);
   gap: var(--space-16);
-  align-items: start;
   padding-bottom: var(--space-8);
   background-color: var(--bg-page);
 }
@@ -46,12 +46,16 @@
   box-shadow: var(--shadow-card);
 }
 
+/* Two blocks — the portrait and name, then the facts — pushed to the top and
+   bottom of whatever height the row settles on, so the extra space lands
+   between them rather than pooling under the last row. */
 .identity {
   composes: headerPanel;
   display: flex;
   flex-direction: column;
   gap: var(--space-12);
   align-items: center;
+  justify-content: space-between;
   text-align: center;
 }
 

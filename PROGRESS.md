@@ -2478,3 +2478,27 @@ that control harder to read, not easier — no resident in these fixtures has a
 photograph on file, so the monogram is what every one of them shows.
 
 264 tests.
+
+---
+
+## Profile header — the three cards share a height — 21/08/2026
+
+Frank's call, reversing the `align-items: start` I put in two entries ago. The
+row now stretches, which is grid's default, so there is no `align-items` on
+`.header` at all.
+
+The state panels are always the tallest of the three, so identity and risk
+flags gain the difference.
+
+**Where that space lands mattered more than the change itself.** Left alone it
+pools under the last row of each short card, which reads as a card that ran out
+of things to say. The identity card has two natural blocks — the portrait with
+the name, and the three labelled facts — so it uses `space-between`: the extra
+height goes between them and the facts sit on the card's foot, which reads as
+composed rather than padded.
+
+Risk flags keeps its badges top-aligned. A list that starts halfway down a card
+is harder to scan than one that starts at the top, and this is the block a care
+worker reads before entering a room.
+
+264 tests.
