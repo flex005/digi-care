@@ -2715,3 +2715,30 @@ So one broken case, not a family of them — and the reason it was the only one
 is that it is the only hatched variant placed as a flex item.
 
 269 tests.
+
+---
+
+## Flag card stretch moved onto the container — 21/08/2026
+
+Frank reported the hatched cards still short. They were, in what he was
+looking at; they were not in a fresh build. The `width: 100%` from the previous
+commit is present in the source and in `dist`, and a clean
+`rm -rf dist && npm run build` renders Arthur Pemberton's strip — the mixed
+case, hatched cards between coloured ones — with all five the same width.
+
+**A CSS-module `composes:` change across files is the case Vite's HMR handles
+worst.** His screenshot had the new three-band header, so the JSX had reloaded;
+the composed class had not. A dev-server restart picks it up.
+
+### Fixed properly anyway
+
+Relying on each card to ask for `width: 100%` was the fragile part, and it is
+what let the two variants disagree in the first place. `.flagItem` is a **grid**
+now rather than a flex row: a grid item stretches to fill its area on both axes
+by default, where a flex item does not grow unless told to.
+
+The stretch belongs to the container. A sixth flag variant added later cannot
+reintroduce this by forgetting a line, which is the same reasoning as putting
+`renderUnrecorded` in the source declaration rather than trusting each caller.
+
+269 tests.

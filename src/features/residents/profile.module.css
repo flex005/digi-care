@@ -185,8 +185,17 @@
   list-style: none;
 }
 
+/**
+ * Grid, not flex, for one reason: a grid item stretches to fill its area on
+ * both axes by default, where a flex item does not grow unless told to.
+ *
+ * The card inside used to have to ask — `width: 100%` — and the hatched
+ * variant did not, so it sized to its text and left gaps beside it while its
+ * coloured neighbours filled. Putting the stretch on the container means a
+ * variant added later cannot reintroduce that by forgetting a line.
+ */
 .flagItem {
-  display: flex;
+  display: grid;
   min-height: calc(var(--space-64) + var(--space-32));
 }
 
