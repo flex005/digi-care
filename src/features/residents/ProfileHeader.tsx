@@ -6,6 +6,7 @@ import { MoodBadge, ReviewBadge, StatusPill, Unrecorded } from '@/components/sta
 import { Icon } from '@/components/icon/Icon'
 import { useSiteFormat } from '@/app/session/use-session'
 import { formatDate, ageFrom } from '@/lib/format'
+import { telHref } from '@/lib/phone'
 import { BadgeStrip } from './BadgeStrip'
 import styles from './profile.module.css'
 
@@ -170,11 +171,16 @@ export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
           <h2 className={styles.panelTitle}>Contacts</h2>
           <div className={styles.contacts}>
             {gp.kind === 'recorded' ? (
-              <a className={styles.contact} href={`tel:${gp.value.contact.phone}`}>
+              <a className={styles.contact} href={telHref(gp.value.contact.phone)}>
                 <Icon name="communications/call" size={16} />
                 <span>
-                  <span className={styles.contactRole}>GP</span>
-                  {gp.value.name} · {gp.value.contact.phone}
+                  {/* The space is load-bearing. `.contactRole` is display:
+                      block, which separates these on screen but leaves no text
+                      node between them — so the link's accessible name read
+                      "GPDr O. Balogun". A block boundary is not a word
+                      boundary. */}
+                  <span className={styles.contactRole}>GP</span> {gp.value.name} ·{' '}
+                  {gp.value.contact.phone}
                 </span>
               </a>
             ) : (
@@ -183,13 +189,13 @@ export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
             {nextOfKin.kind === 'recorded' ? (
               <a
                 className={styles.contact}
-                href={`tel:${nextOfKin.value.contact.phone}`}
+                href={telHref(nextOfKin.value.contact.phone)}
               >
                 <Icon name="communications/call" size={16} />
                 <span>
                   <span className={styles.contactRole}>
                     Next of kin · {nextOfKin.value.relationship}
-                  </span>
+                  </span>{' '}
                   {nextOfKin.value.name} · {nextOfKin.value.contact.phone}
                 </span>
               </a>

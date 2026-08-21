@@ -2502,3 +2502,71 @@ is harder to scan than one that starts at the top, and this is the block a care
 worker reads before entering a room.
 
 264 tests.
+
+---
+
+## Contact links — a missing word boundary and five undialable hrefs — 21/08/2026
+
+Frank reported "GPDr P. Ramanathan" and `tel:0161 982 7875` on the profile
+header.
+
+### 1. A block boundary is not a word boundary
+
+`.contactRole` is `display: block`, so the label and the name are on separate
+lines **on screen** — which is why this looked like a styling question and is
+not one. There is no text node between them, so the link's accessible name is
+`"GPDr O. Balogun · 0161 999 6789"`. A screen reader announces the run-together
+string; so does anything else that reads the content rather than the layout.
+
+Fixed with an explicit `{' '}` between the two, which collapses to nothing
+visually and gives the text a boundary. Not with an `aria-label`, which would
+have replaced the visible text with a different string and put WCAG 2.5.3
+(Label in Name) at risk on a link somebody dials in an emergency.
+
+Same fix on next of kin, which had it too.
+
+### 2. The display number and the dialable number are different strings
+
+All five `tel:` hrefs interpolated the display string:
+
+```
+href={`tel:${contact.phone}`}   →   tel:0161 999 6789
+```
+
+Spaces a URI is not supposed to carry, and no country code. Some dialers cope.
+Some strip the spaces and dial a **national** number from a roaming handset,
+which fails silently at the moment somebody is trying to reach a GP.
+
+`telHref()` in `src/lib/phone.ts` now builds them: `tel:+441619996789`, with
+the readable form left exactly as it was in the link text.
+
+**The +44 is an assumption and a narrow one.** `Site` carries no country, and
+both homes are Europe/London, so it is applied only to a number with one
+leading zero. A number already in international form is passed through; one in
+neither shape gets its digits and **no invented country code** — guessing which
+country a phone number belongs to is exactly the sort of fabrication this build
+avoids, and it would be fabricated onto a contact dialled in an emergency. The
+day a site exists outside the UK, the code belongs on `Site`.
+
+### Where they were
+
+All five, as asked: GP and next of kin in the profile header; GP, consultants
+and pharmacy on the Care team section. **Social workers, advocates, LPA holders
+and family with visiting rights have no call sites yet** — they arrive with
+Screen 5, which is why the guard below matters more than the five fixes.
+
+### The guard
+
+`scripts/check-tel-links.mjs`, wired into `npm run lint`. It fails on any
+`tel:` scheme written in source outside `phone.ts`.
+
+On the pattern, not the five, because it was never five mistakes — it was one
+habit, repeated wherever a phone number appeared, and Screen 5 is about to add
+four more places to repeat it. Confirmed by restoring one by hand: it fails and
+names the file and line.
+
+It lives in `scripts/` rather than as a vitest file because it reads the
+filesystem and `src/` is a browser project with no node types — the same reason
+`check-hatch.mjs` lives there.
+
+269 tests.

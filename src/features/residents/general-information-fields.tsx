@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { Resident } from '@/data/types'
 import { FUNDING_SOURCES } from '@/data/types'
 import { Avatar } from '@/components/primitives'
+import { telHref } from '@/lib/phone'
 import { formatDate, ageFrom } from '@/lib/format'
 import { PlainValue, RecordedListField, RecordedValueField } from './FieldList'
 import styles from './profile.module.css'
@@ -279,7 +280,7 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
                   {gp.name} · {gp.practice}
                 </span>
                 <br />
-                <a className={styles.contactLink} href={`tel:${gp.contact.phone}`}>
+                <a className={styles.contactLink} href={telHref(gp.contact.phone)}>
                   {gp.contact.phone}
                 </a>
               </>
@@ -312,7 +313,7 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
                     <br />
                     <a
                       className={styles.contactLink}
-                      href={`tel:${contact.contact.phone}`}
+                      href={telHref(contact.contact.phone)}
                     >
                       {contact.contact.phone}
                     </a>
@@ -339,7 +340,7 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
                 <br />
                 <a
                   className={styles.contactLink}
-                  href={`tel:${pharmacy.contact.phone}`}
+                  href={telHref(pharmacy.contact.phone)}
                 >
                   {pharmacy.contact.phone}
                 </a>

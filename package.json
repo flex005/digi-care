@@ -12,7 +12,7 @@
     "icons": "node scripts/icons/build-icons.mjs",
     "icons:check": "node scripts/icons/build-icons.mjs --check",
     "typecheck": "tsc -b",
-    "lint": "npm run lint:es && npm run lint:css && npm run lint:hatch",
+    "lint": "npm run lint:es && npm run lint:css && npm run lint:hatch && npm run lint:tel",
     "lint:es": "eslint .",
     "lint:css": "stylelint \"src/**/*.css\"",
     "lint:hatch": "node scripts/check-hatch.mjs",
@@ -21,7 +21,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "verify": "npm run icons:check && npm run typecheck && npm run lint && npm run format:check && npm run test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint:tel": "node scripts/check-tel-links.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --fix",
