@@ -2301,3 +2301,29 @@ carry more, rather than by making the record smaller — but it needs fixture
 fields that do not exist, so it is a type change and Frank's.
 
 263 tests.
+
+---
+
+## Resident profile — reverted to its original form — 21/08/2026
+
+Frank: take this page back to its original form. Done — both redesign commits
+undone in the source.
+
+`ProfileHeader.tsx`, `ResidentProfileRoute.tsx`, `GeneralInformationTab.tsx`
+and `profile.module.css` are restored to their state before `cd64444`. The
+full-width subject band is back, with the badge strip in a row and Contacts as
+the fourth panel; the tabs sit beneath it; the five sections stack full width;
+and the allergies panel has its detail list again.
+
+**The two entries above are left standing.** This log is append-only
+(CLAUDE.md §9), and a redesign that was tried and taken out is worth more on
+the record than absent — the next person to reach for a left rail should be
+able to see it was built, what it argued, and that it was reverted. Nothing in
+those entries is now true of the code, and this entry is what says so.
+
+The one finding in them that outlived the layout is the redundancy audit: eight
+facts appear twice on this page, six of them mandated by §2.4 and §6.2
+together, and the Identity fields duplicate the header exactly because they
+carry no attribution. That is unchanged by the revert and still open.
+
+263 tests.

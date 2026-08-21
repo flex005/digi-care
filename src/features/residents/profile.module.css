@@ -6,35 +6,6 @@
  * the site as well as the person, because the app top bar scrolls away on a
  * long profile and §2.4 requires the site to stay visible.
  */
-
-/**
- * Two columns: who this is, beside what is being done about it.
- *
- * `align-items: start` so the rail can be sticky — a stretched grid item fills
- * the row and has nothing left to slide within.
- */
-.layout {
-  display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: var(--space-24);
-  align-items: start;
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-20);
-  min-width: 0;
-}
-
-/**
- * The subject rail. PRD §2.4 — sticky, not collapsible, never scrolls away.
- *
- * `max-height` and its own scroll are the safety net: a resident with five
- * badges, a long legal name and two contacts can outgrow a short viewport, and
- * a rail taller than the window would put the bottom of the subject out of
- * reach with no way to get at it.
- */
 .header {
   position: sticky;
   top: 0;
@@ -42,31 +13,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-16);
-  max-height: calc(100vh - var(--space-48));
-  padding: var(--space-20);
+  padding: var(--space-20) var(--space-24);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   background-color: var(--bg-surface);
   box-shadow: var(--shadow-card);
-  overflow-y: auto;
 }
 
-/* Stacked in a 300px rail, where a photograph and a name side by side would
-   leave neither room enough. */
 .identity {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-12);
+  gap: var(--space-16);
   align-items: center;
-  text-align: center;
-}
-
-.railContacts {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-  padding-top: var(--space-16);
-  border-top: 1px solid var(--border-subtle);
 }
 
 .names {
@@ -94,7 +51,6 @@
   flex-wrap: wrap;
   gap: var(--space-8);
   align-items: center;
-  justify-content: center;
   color: var(--ink-500);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
@@ -121,26 +77,19 @@
   align-items: center;
 }
 
-/* State of play, at the head of the content column. Not identity — these
-   change while the subject does not. */
 .panels {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--space-16);
-  align-items: start;
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--border-subtle);
 }
 
-/* Their own surfaces now they have left the header card. */
 .panel {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
   align-items: flex-start;
-  height: 100%;
-  padding: var(--space-16);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background-color: var(--bg-surface);
 }
 
 .panelTitle {
@@ -318,16 +267,6 @@
  * A read-only field list. Two columns so the label and its value sit on one
  * line and the eye can run down the labels.
  */
-
-/* The five field sections, side by side. Independent of one another, so they
-   do not need to be read in order — which is what a full-width stack implies. */
-.sections {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: var(--space-20);
-  align-items: start;
-}
-
 .fieldList {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));

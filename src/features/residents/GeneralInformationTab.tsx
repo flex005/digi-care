@@ -37,15 +37,20 @@ export function GeneralInformationTab() {
       <Card>
         <CardHeader
           title="Allergies and adverse reactions"
-          subtitle="Also on the subject rail, and on every medication and care screen."
+          subtitle="Shown here, in the profile header, and on every medication and care screen."
         />
         <div className={styles.allergyPanel}>
-          {/* One rendering, not two. This panel used to show the badge and
-              then repeat every substance, reaction and severity beneath it as
-              a bullet list — the same three facts twice, six inches apart.
-              AllergyBadge already carries all of them, per allergen, in the
-              treatment §6.2 requires. */}
           <AllergyBadge status={resident.allergies} />
+          {resident.allergies.kind === 'allergies' ? (
+            <ul className={styles.allergyDetail}>
+              {resident.allergies.items.map((allergy) => (
+                <li key={allergy.substance}>
+                  <strong>{allergy.substance}</strong> — {allergy.reaction} (
+                  {allergy.severity})
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {resident.allergies.kind === 'not_recorded' ? (
             <p className={styles.allergyNote}>
               Nobody has recorded whether this person has allergies. That is not the
@@ -69,11 +74,7 @@ export function GeneralInformationTab() {
  */
 export function ProfileSections({ resident }: { resident: Resident }) {
   return (
-    // Two columns. The sections are short and independent of each other, and
-    // stacked full-width they made a page of half-empty rows that had to be
-    // scrolled past rather than read. `align-items: start` in the CSS, so a
-    // long section does not stretch the short one beside it.
-    <div className={styles.sections}>
+    <>
       {GENERAL_INFORMATION_SECTIONS.map((section) => (
         <Card key={section.id}>
           <CardHeader title={section.title} subtitle={section.description} />
@@ -92,6 +93,6 @@ export function ProfileSections({ resident }: { resident: Resident }) {
           </div>
         </Card>
       ))}
-    </div>
+    </>
   )
 }
