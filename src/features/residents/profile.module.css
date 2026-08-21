@@ -15,15 +15,31 @@
  * `auto` on the first two columns lets identity and the badges take what they
  * need and gives the rest to the state panels, which have the most to say.
  */
+
+/**
+ * The row itself is not a surface — the three blocks inside it are. It stays
+ * sticky, so it carries the page background: the gaps between the cards are
+ * transparent, and without it the content beneath would scroll up through them
+ * while the header held still.
+ *
+ * `align-items: start` lets each card end where its content ends, rather than
+ * stretching two of them to match the tallest and leaving voids.
+ */
 .header {
   position: sticky;
   top: 0;
   z-index: 20;
   display: grid;
   grid-template-columns: 260px 300px minmax(0, 1fr);
-  gap: var(--space-24);
+  gap: var(--space-16);
   align-items: start;
-  padding: var(--space-20) var(--space-24);
+  padding-bottom: var(--space-8);
+  background-color: var(--bg-page);
+}
+
+/* One surface, three users. */
+.headerPanel {
+  padding: var(--space-20);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   background-color: var(--bg-surface);
@@ -31,6 +47,7 @@
 }
 
 .identity {
+  composes: headerPanel;
   display: flex;
   flex-direction: column;
   gap: var(--space-12);
@@ -75,6 +92,7 @@
 /* Column two. Its own block, so the badges are a thing to look at rather than
    a strip trailing off the end of the identity row. */
 .risks {
+  composes: headerPanel;
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
@@ -135,6 +153,7 @@
    facts — four different shapes of content read as one list rather than four
    competing panels. */
 .panels {
+  composes: headerPanel;
   display: flex;
   flex-direction: column;
 }

@@ -2426,3 +2426,33 @@ asserts all five badges render for all 32 residents, and the header still
 carries everything §2.4 lists. This was placement only.
 
 264 tests.
+
+---
+
+## Profile header — three cards, not three columns of one — 21/08/2026
+
+Frank: the three sections should have their own containers. They do now —
+identity, risk flags and the state panels are three surfaces with the row
+itself carrying no border or fill.
+
+### The part that was not just moving a border
+
+Splitting one sticky card into three leaves **transparent gaps between them**,
+and the header is sticky. Content scrolling beneath rose up through those gaps
+while the header held still.
+
+So the row keeps a background — `--bg-page`, the same colour the scroll
+container shows, so it is invisible as a band but opaque as a barrier — plus a
+little padding below it, so nothing peeks at the bottom edge either. Verified
+by scrolling 420px and reading the screenshot back: the gaps stay clean and the
+content passes underneath.
+
+`align-items: start` now earns its place. Inside one card it produced voids —
+two short columns stretched to the height of the tallest. As three cards each
+ends where its content ends, which is what the reference does and why it looks
+settled rather than padded.
+
+The surface is one `.headerPanel` rule the three compose from, rather than the
+same six declarations written out three times and drifting apart later.
+
+264 tests.
