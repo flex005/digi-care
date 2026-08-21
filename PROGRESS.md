@@ -2456,3 +2456,25 @@ The surface is one `.headerPanel` rule the three compose from, rather than the
 same six declarations written out three times and drifting apart later.
 
 264 tests.
+
+---
+
+## Identity card — the photograph at 128px — 21/08/2026
+
+`Avatar`'s `xlarge` goes from 96px to 128px, composed as
+`calc(var(--space-64) * 2)`. Still on the 4px scale, still no token added.
+
+It fits the 260px card with room to spare — 220px of content once the padding
+is off — so the photograph leads without the column having to grow around it.
+
+**The initials stepped up with it**, from a heading size to `--text-display`.
+That is not tidying: a monogram set small inside a 128px circle reads as a mark
+adrift in an empty ring, and the monogram is doing the photograph's job here.
+PRD §2.4 makes the photograph a check against writing to the wrong record, and
+`Avatar`'s own doc is explicit that initials exist rather than a silhouette
+because "a control that cannot distinguish two people is not a control". Making
+the container bigger while leaving the only thing in it small would have made
+that control harder to read, not easier — no resident in these fixtures has a
+photograph on file, so the monogram is what every one of them shows.
+
+264 tests.

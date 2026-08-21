@@ -54,16 +54,25 @@
 }
 
 /**
- * The subject's photograph where it leads a page, at 96px.
+ * The subject's photograph where it leads a page, at 128px.
  *
- * Composed from --space-64 and --space-32 rather than introducing a token for
- * it: the scale tops out at 64 and one avatar is not a reason to extend it.
- * The arithmetic keeps the result on the 4px scale, which is the rule the
- * token was protecting.
+ * Composed from --space-64 rather than introducing a token for it: the scale
+ * tops out at 64 and one avatar is not a reason to extend it. The arithmetic
+ * keeps the result on the 4px scale, which is the rule the token was
+ * protecting.
+ *
+ * It fits the 260px identity card with room to spare — 220px of content width
+ * once the card's padding is off — so the photograph can lead without the
+ * column having to grow around it.
+ *
+ * The initials step up with it. A monogram set at a heading size inside a
+ * 128px circle reads as a small mark in a large empty ring, and the monogram
+ * is doing the photograph's job here: PRD §2.4 makes it a check against
+ * writing to the wrong record, so it has to be legible at a glance.
  */
 .xlarge {
-  width: calc(var(--space-64) + var(--space-32));
-  height: calc(var(--space-64) + var(--space-32));
-  font-size: var(--text-h1-size);
-  line-height: var(--text-h1-line);
+  width: calc(var(--space-64) * 2);
+  height: calc(var(--space-64) * 2);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
 }
