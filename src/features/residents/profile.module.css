@@ -6,13 +6,23 @@
  * the site as well as the person, because the app top bar scrolls away on a
  * long profile and §2.4 requires the site to stay visible.
  */
+
+/**
+ * Three columns: who this is · what to know before the room · what is
+ * happening. Sticky and non-collapsing — §2.4, the structural mitigation
+ * against a record written against the wrong resident.
+ *
+ * `auto` on the first two columns lets identity and the badges take what they
+ * need and gives the rest to the state panels, which have the most to say.
+ */
 .header {
   position: sticky;
   top: 0;
   z-index: 20;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-16);
+  display: grid;
+  grid-template-columns: 260px 300px minmax(0, 1fr);
+  gap: var(--space-24);
+  align-items: start;
   padding: var(--space-20) var(--space-24);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -22,8 +32,52 @@
 
 .identity {
   display: flex;
-  gap: var(--space-16);
+  flex-direction: column;
+  gap: var(--space-12);
   align-items: center;
+  text-align: center;
+}
+
+/* Labelled rows with a hairline between: read in a glance rather than parsed
+   out of a run-on line. */
+.identityFacts {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0;
+  text-align: left;
+}
+
+.identityFact {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-12);
+  align-items: baseline;
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.identityFact dt {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.identityFact dd {
+  margin: 0;
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  text-align: right;
+}
+
+/* Column two. Its own block, so the badges are a thing to look at rather than
+   a strip trailing off the end of the identity row. */
+.risks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
 }
 
 .names {
@@ -77,19 +131,28 @@
   align-items: center;
 }
 
+/* Column three. Labelled rows, hairline-separated, matching the identity
+   facts — four different shapes of content read as one list rather than four
+   competing panels. */
 .panels {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--space-16);
-  padding-top: var(--space-16);
-  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
 }
 
 .panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: var(--space-8) var(--space-16);
+  align-items: baseline;
+  padding: var(--space-12) 0;
+}
+
+.panel + .panel {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.panel:first-child {
+  padding-top: 0;
 }
 
 .panelTitle {

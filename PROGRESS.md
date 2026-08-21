@@ -2386,3 +2386,43 @@ place a display label would go if severities ever need one, so it stays, but it
 does nothing today.
 
 264 tests.
+
+---
+
+## Profile header — three columns — 21/08/2026
+
+Frank supplied a reference (a patient card with a large photograph beside
+labelled-row panels) and specified the split: identity, then risk flags, then
+the state panels.
+
+**Column one** — photograph at 96px, preferred name, full legal name, then
+room, date of birth and site as **labelled rows** rather than a
+middot-separated line. Those are the facts §2.4 asks a care worker to check
+against the person in front of them, and a run-on line is read once where a
+labelled row is read at a glance. It also removes the wrapping problem that
+line had in any narrow column.
+
+**Column two** — the risk badges as their own titled block, stacked. They were
+a strip trailing off the end of the identity row; they are now a thing to look
+at before entering the room, which is what they are for.
+
+**Column three** — medication due, last care note, care plan review and
+contacts, as hairline-separated labelled rows on the same pattern as column
+one. Four quite different shapes of content — a pill, a paragraph, a badge, two
+links — read as one list rather than four competing panels.
+
+### The avatar size
+
+`Avatar` gained `xlarge` at 96px, composed as
+`calc(var(--space-64) + var(--space-32))`. The space scale tops out at 64 and
+one avatar is not a reason to extend it; the arithmetic keeps the result on the
+4px scale, which is the rule the token was protecting. No token added, so no
+stop-and-ask needed.
+
+### Unchanged
+
+`BadgeStrip` and its declaration are untouched — the structural guard still
+asserts all five badges render for all 32 residents, and the header still
+carries everything §2.4 lists. This was placement only.
+
+264 tests.

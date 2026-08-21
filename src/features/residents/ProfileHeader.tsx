@@ -102,30 +102,50 @@ export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
 
   return (
     <header className={styles.header}>
+      {/* Three columns: who this is · what to know before the room · what is
+          happening. They read left to right in the order somebody approaching
+          this resident needs them, and each is a self-contained block rather
+          than a band that has to be scanned across. */}
       <div className={styles.identity}>
-        <Avatar photo={resident.photo} name={resident.fullLegalName} size="large" />
+        <Avatar photo={resident.photo} name={resident.fullLegalName} size="xlarge" />
         <div className={styles.names}>
           <h1 className={styles.preferredName}>{resident.preferredName}</h1>
           <p className={styles.legalName}>{resident.fullLegalName}</p>
-          <p className={styles.identityMeta}>
-            {resident.room.kind === 'recorded' ? (
-              <span>Room {resident.room.value}</span>
-            ) : (
-              <Unrecorded label="Room not recorded" />
-            )}
-            <span aria-hidden="true">·</span>
-            <span data-numeric>
+        </div>
+        {/* Room, date of birth and site as labelled rows rather than a
+            middot-separated line. They are the facts §2.4 asks a care worker to
+            check against the person in front of them, and a run-on line is
+            read once; a labelled row is read in a glance. */}
+        <dl className={styles.identityFacts}>
+          <div className={styles.identityFact}>
+            <dt>Room</dt>
+            <dd>
+              {resident.room.kind === 'recorded' ? (
+                resident.room.value
+              ) : (
+                <Unrecorded label="Room not recorded" />
+              )}
+            </dd>
+          </div>
+          <div className={styles.identityFact}>
+            <dt>Date of birth</dt>
+            <dd data-numeric>
               {formatDate(resident.dateOfBirth)} ({ageFrom(resident.dateOfBirth)})
-            </span>
-            <span aria-hidden="true">·</span>
+            </dd>
+          </div>
+          <div className={styles.identityFact}>
+            <dt>Site</dt>
             {/* The site travels with the subject, so it stays visible when the
                 app top bar has scrolled away. §2.4. */}
-            <span className={styles.site}>{site.name}</span>
-          </p>
-        </div>
+            <dd className={styles.site}>{site.name}</dd>
+          </div>
+        </dl>
       </div>
 
-      <BadgeStrip resident={resident} />
+      <section className={styles.risks} aria-label="Risk flags">
+        <h2 className={styles.panelTitle}>Risk flags</h2>
+        <BadgeStrip resident={resident} />
+      </section>
 
       <div className={styles.panels}>
         <section

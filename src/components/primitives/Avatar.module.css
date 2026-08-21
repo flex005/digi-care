@@ -52,3 +52,18 @@
   font-size: var(--text-h3-size);
   line-height: var(--text-h3-line);
 }
+
+/**
+ * The subject's photograph where it leads a page, at 96px.
+ *
+ * Composed from --space-64 and --space-32 rather than introducing a token for
+ * it: the scale tops out at 64 and one avatar is not a reason to extend it.
+ * The arithmetic keeps the result on the 4px scale, which is the rule the
+ * token was protecting.
+ */
+.xlarge {
+  width: calc(var(--space-64) + var(--space-32));
+  height: calc(var(--space-64) + var(--space-32));
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+}

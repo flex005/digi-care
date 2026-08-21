@@ -16,7 +16,7 @@ import styles from './Avatar.module.css'
  * non-clinical gaps would blunt the one signal that matters.
  */
 
-export type AvatarSize = 'small' | 'medium' | 'large'
+export type AvatarSize = 'small' | 'medium' | 'large' | 'xlarge'
 
 /**
  * `neutral` is the record surface — a resident in a list or a profile header.
@@ -37,6 +37,7 @@ const SIZE_CLASS: Record<AvatarSize, string> = {
   small: styles.small,
   medium: styles.medium,
   large: styles.large,
+  xlarge: styles.xlarge,
 }
 
 function initialsOf(name: string): string {
