@@ -2661,3 +2661,24 @@ cards stay level; nothing truncated, nothing hidden.
 
 Full legal name stays under the preferred name, as asked — this is where
 identity is confirmed.
+
+---
+
+## Risk flag cards — the internal spacing distributes — 21/08/2026
+
+The three lines were packed to the top with the attribution pinned to the foot
+by `margin-top: auto`, so all the slack pooled in one gap — and that gap was a
+different size on every card, because it was whatever was left after answers of
+different lengths. Five cards, five different rhythms, in a row that is
+supposed to be read across.
+
+`justify-content: space-between` on both the recorded card and the hatched one,
+and the gap is now `--space-4` rather than a hand-typed 2px. The field pins to
+the top, the attribution to the foot, and the answer takes the middle — so the
+row reads level whatever the answers say.
+
+Checked on the awkward case as well as the easy one: a resident whose isolation
+answer wraps to two lines and whose allergy attribution wraps to two still
+lines up with the three single-line cards beside it.
+
+269 tests.

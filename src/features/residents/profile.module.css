@@ -195,10 +195,16 @@
  * first and its contents second; the bar leaves the answer as the loudest
  * thing on the card, which is the whole point of the card.
  */
+
+/* The three lines distribute the card's height between them rather than
+   packing at the top and dumping the slack above the attribution. Five cards
+   whose answers are different lengths then read as one row instead of five
+   separately-spaced boxes. */
 .flag {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-4);
+  justify-content: space-between;
   width: 100%;
   padding: var(--space-12) var(--space-12) var(--space-12) var(--space-16);
   border: 1px solid transparent;
@@ -225,7 +231,6 @@
 }
 
 .flagAttribution {
-  margin-top: auto;
   color: var(--ink-500);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
