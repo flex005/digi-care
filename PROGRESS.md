@@ -2327,3 +2327,62 @@ together, and the Identity fields duplicate the header exactly because they
 carry no attribution. That is unchanged by the revert and still open.
 
 263 tests.
+
+---
+
+## Allergy reaction rendered twice — the fixture, not the component — 21/08/2026
+
+Frank spotted "Anaphylaxis · anaphylaxis" on Emmanuel Okafor's header and asked
+which side it came from.
+
+### Which
+
+**The fixture.** `ALLERGY_OPTIONS` had
+
+```ts
+{ substance: 'Penicillin', reaction: 'Anaphylaxis', severity: 'anaphylaxis' }
+```
+
+The component is innocent: `AllergyBadge` renders `reaction · severity`, two
+different fields, which happened to hold the same word. Every other allergen in
+the list already had a descriptive reaction distinct from its grade — "Nausea
+and confusion / moderate", "Contact dermatitis / mild", "Gastric bleeding /
+severe". Penicillin was the only one filled in with the severity's own word.
+
+Reaction now reads **"Throat swelling and collapse"** — what happens, which is
+what that field is for. The severity still grades it.
+
+### Where it showed
+
+Three places render allergies. Two showed it:
+
+- `AllergyBadge` — the profile badge strip, and the General Information
+  allergies panel: *"ALLERGY: PENICILLIN Anaphylaxis · anaphylaxis"*.
+- `GeneralInformationTab`'s detail list: *"Penicillin — Anaphylaxis
+  (anaphylaxis)"*, the same collision in different punctuation.
+
+One did not: the residents list column renders substance only.
+
+**Reach: 9 of 32 residents carry Penicillin**, of the 18 with any recorded
+allergy — so this was on half the profiles that have an allergy at all, and on
+the single most common allergen in the fixtures.
+
+### The guard
+
+`fixtures.test.ts` now fails if any allergy's reaction is a severity word.
+
+Asserted against the whole vocabulary — mild, moderate, severe, anaphylaxis —
+rather than just equality with its own grade, because "Severe" written into the
+reaction of a `moderate` allergy is the same defect and worse: it contradicts
+the grade printed beside it instead of merely repeating it.
+
+Confirmed by restoring the old value: it fails, and names Emmanuel Okafor.
+
+### Noted, not changed
+
+`AllergyBadge` carries a `SEVERITY` map from each severity to itself — an
+identity map that reads like it is translating something. It is the natural
+place a display label would go if severities ever need one, so it stays, but it
+does nothing today.
+
+264 tests.

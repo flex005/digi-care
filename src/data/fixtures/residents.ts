@@ -208,7 +208,15 @@ const SECONDARY_DIAGNOSES = [
 ]
 
 const ALLERGY_POOL: Allergy[] = [
-  { substance: 'Penicillin', reaction: 'Anaphylaxis', severity: 'anaphylaxis' },
+  // The reaction describes what happens; the severity grades it. This one read
+  // "Anaphylaxis · anaphylaxis" on every profile carrying it — the most common
+  // allergy in these fixtures — because the reaction had been filled in with
+  // the severity's own word.
+  {
+    substance: 'Penicillin',
+    reaction: 'Throat swelling and collapse',
+    severity: 'anaphylaxis',
+  },
   { substance: 'Codeine', reaction: 'Nausea and confusion', severity: 'moderate' },
   { substance: 'Latex', reaction: 'Contact dermatitis', severity: 'mild' },
   { substance: 'Shellfish', reaction: 'Facial swelling', severity: 'severe' },

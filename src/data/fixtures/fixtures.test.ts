@@ -383,3 +383,30 @@ describe('the reassuring case exists too', () => {
     ).toBeGreaterThan(0)
   })
 })
+
+/**
+ * An allergy's reaction and its severity are different facts: one says what
+ * happens, the other grades it. Filling the reaction in with the severity's own
+ * word makes both render sites read "Anaphylaxis · anaphylaxis", which looks
+ * like a component repeating itself and is really a record saying one thing
+ * twice.
+ *
+ * Asserted against the whole severity vocabulary rather than just equality,
+ * because "Severe" written into the reaction of a `moderate` allergy is the
+ * same defect and worse — it contradicts the grade beside it.
+ */
+describe('an allergy reaction is not its severity', () => {
+  const SEVERITY_WORDS = new Set(['mild', 'moderate', 'severe', 'anaphylaxis'])
+
+  it('never fills the reaction in with a severity word', () => {
+    for (const resident of residents) {
+      if (resident.allergies.kind !== 'allergies') continue
+      for (const allergy of resident.allergies.items) {
+        expect(
+          SEVERITY_WORDS.has(allergy.reaction.trim().toLowerCase()),
+          `${resident.fullLegalName}: ${allergy.substance} has reaction "${allergy.reaction}" and severity "${allergy.severity}" — the reaction must describe what happens, not repeat the grade`,
+        ).toBe(false)
+      }
+    }
+  })
+})
