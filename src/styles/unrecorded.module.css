@@ -116,6 +116,14 @@
   flex-direction: column;
   gap: var(--space-4);
   justify-content: space-between;
+
+  /* Both axes. The height alone was enough while this was the only rule that
+     mattered, but the card sits inside a flex row — where a flex item does not
+     grow unless told to — so it sized to its text and left a gap between
+     itself and the cards either side. The recorded card has always had this;
+     the hatched one has to match, or a gap in the record shows up as a gap in
+     the layout. */
+  width: 100%;
   height: 100%;
   padding: var(--space-12) var(--space-12) var(--space-12) var(--space-16);
   border-left-width: 3px;

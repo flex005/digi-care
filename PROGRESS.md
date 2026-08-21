@@ -2682,3 +2682,36 @@ answer wraps to two lines and whose allergy attribution wraps to two still
 lines up with the three single-line cards beside it.
 
 269 tests.
+
+---
+
+## Hatched risk flag cards now fill their cell — 21/08/2026
+
+`.unrecordedFlag` set `height: 100%` but not `width`, so a hatched flag sized
+to its text and left a gap between itself and the cards either side. The
+recorded `.flag` has always had `width: 100%`; the hatched one had not.
+
+The cause is worth naming because it is not obvious from the rule: every other
+hatched variant is a **block-level** flex container and fills its parent
+without being asked. This one is a **flex item** — `.flagItem` is a flex row —
+and a flex item does not grow unless told to. The same declaration behaves
+differently depending on what contains it.
+
+**A gap in the record showing up as a gap in the layout is the wrong kind of
+accident**, on the one strip whose job is making gaps conspicuous rather than
+decorative.
+
+### Checked the others rather than assumed
+
+- **Records column, residents list** — `unrecordedChip`, fills already; every
+  row's chip shares a right edge.
+- **Analytics cards, Insufficient Evidence** — fills its card.
+- **Needs tab domain rows** — `unrecordedRow`, block-level, fills.
+- **Badges** (`unrecordedBadge`) — inline-flex and content-sized **on purpose**.
+  A pill that stretched to its container would stop reading as a pill, and
+  these sit inline among sentences and other badges.
+
+So one broken case, not a family of them — and the reason it was the only one
+is that it is the only hatched variant placed as a flex item.
+
+269 tests.
