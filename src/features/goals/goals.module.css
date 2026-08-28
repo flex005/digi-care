@@ -1,0 +1,709 @@
+/**
+ * Goals. Built to docs/goals.html.
+ *
+ * The reference's 22px, 16.5px, 16px, 13px and 11.5px type steps each take the
+ * nearest step on the closed scale, and its 18px, 20px and 14px spacings the
+ * nearest on the 4px one (CLAUDE.md §4).
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.loading {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.errorTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.errorBody {
+  margin: var(--space-4) 0 var(--space-12);
+  max-width: 62ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+/* ---- The lead ---- */
+
+.lead {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-16);
+  align-items: flex-start;
+  padding: var(--space-16) var(--space-20);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.leadFigure {
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: -0.02em;
+}
+
+.leadBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.leadTitle {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.leadDetail {
+  max-width: 62ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/*
+ * Nobody has set a goal with this person.
+ *
+ * **The lead is the screen.** There is no list beneath it because there is
+ * nothing to list, and a table header over an empty body would say the
+ * opposite of what this screen is for.
+ */
+.leadNone {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  align-items: flex-start;
+  padding: var(--space-24) var(--space-24);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.leadNoneTitle {
+  max-width: 62ch;
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-extrabold);
+}
+
+.leadNoneBody {
+  max-width: 68ch;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.leadNoneAction {
+  margin-top: var(--space-8);
+}
+
+/* ---- A goal card ---- */
+
+.goalList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.goalCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem 10rem;
+  gap: var(--space-20);
+  align-items: start;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.goalList > li:first-child .goalCard {
+  border-top: 0;
+}
+
+/*
+ * The largest thing on the card, and it is the resident speaking.
+ *
+ * Every other record in this build is somebody's account of a resident. This
+ * is the resident's account of what they want, and it reads like it — never a
+ * clinical paraphrase, and never smaller than the machinery around it.
+ */
+.statement {
+  max-width: 62ch;
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.why {
+  max-width: 62ch;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-style: italic;
+}
+
+.goalMeta {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--space-8);
+}
+
+.tag {
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-sm);
+  background-color: var(--purple-50);
+  color: var(--purple-600);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+}
+
+.date {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.datePast {
+  color: var(--status-caution-ink);
+  font-weight: var(--weight-semibold);
+}
+
+/* ---- State chips ---- */
+
+.state {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 15rem;
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+}
+
+.state small {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-regular);
+}
+
+/* Quiet — open, in time, and somebody is writing about it. */
+.stateMoving {
+  padding-left: 0;
+  color: var(--ink-700);
+  font-weight: var(--weight-medium);
+}
+
+.stateMoving small {
+  color: var(--ink-500);
+}
+
+.stateAchieved {
+  border: 1px solid var(--status-positive);
+  background-color: var(--status-positive-tint);
+  color: var(--status-positive-ink);
+}
+
+/*
+ * **Not a failure treatment.**
+ *
+ * Critical and caution are for things somebody must act on. A goal that was
+ * not reached is a thing that happened to a person, and giving it a warning
+ * colour turns the record into a judgement about them.
+ */
+.stateNotAchieved {
+  border: 1px solid var(--border-strong);
+  background-color: var(--bg-surface-sunken);
+  color: var(--ink-700);
+}
+
+.stateWithdrawn {
+  border: 1px solid var(--status-info);
+  background-color: var(--status-info-tint);
+  color: var(--status-info-ink);
+}
+
+.stateStopped {
+  border: 1px solid var(--border-strong);
+  background-color: var(--bg-surface-sunken);
+  color: var(--ink-700);
+}
+
+.stateWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+/* ---- What the resident said ---- */
+
+.said {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+}
+
+.saidAgreed {
+  color: var(--status-positive-ink);
+}
+
+.saidDisagreed {
+  color: var(--status-critical-ink);
+}
+
+/* ---- Actions ---- */
+
+.action,
+.actionPrimary {
+  /*
+   * Fills the column it sits in rather than hugging its label. The track was
+   * `auto`, which sized the control to the word "Open" and left the rest of a
+   * wide row empty between the last column and the edge.
+   */
+  width: 100%;
+  justify-content: center;
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-self: start;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.actionPrimary {
+  border-color: var(--purple-600);
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+}
+
+.action:hover,
+.actionPrimary:hover {
+  text-decoration: underline;
+}
+
+.backLink {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  align-self: flex-start;
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+/* ---- The detail ---- */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-24) var(--space-24) var(--space-20);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.heroStatement {
+  max-width: 62ch;
+  color: var(--ink-900);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-bold);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-16) var(--space-24);
+  padding: var(--space-20) var(--space-24);
+}
+
+.fieldFull {
+  grid-column: 1 / -1;
+}
+
+.fieldLabel {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fieldValue {
+  margin-top: var(--space-4);
+  max-width: 72ch;
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.sectionHead {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sectionTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.sectionActions {
+  display: flex;
+  gap: var(--space-8);
+}
+
+/* ---- The timeline ---- */
+
+.timeline {
+  padding: var(--space-8) var(--space-24) var(--space-20);
+}
+
+.timelineRow {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: var(--space-16);
+  align-items: baseline;
+  padding: var(--space-12) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.timelineRow:last-child {
+  border-bottom: 0;
+}
+
+.timelineWhen {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.timelineBody {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.timelineWho {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/*
+ * A gap in goal progress, and it is honest.
+ *
+ * The timeline is its own record rather than filtered care notes, so a gap
+ * here is a gap in goal progress and makes no claim about the care record.
+ * That is why Rule 3c does not apply to it — the claim is not an artefact of a
+ * filter, because nothing was filtered.
+ */
+.timelineGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: var(--space-12) 0;
+  padding: var(--space-12) var(--space-16);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.timelineGap small {
+  max-width: 68ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-regular);
+}
+
+/* The timeline has a beginning. An empty one is a goal that was set and then
+   nothing, not a goal with no history. */
+.timelineSet {
+  padding: var(--space-12) 0;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* ---- The queue ---- */
+
+.filters {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  align-items: center;
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.filterPill {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-surface);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.filterPillActive {
+  border-color: var(--purple-900);
+  background-color: var(--purple-900);
+  color: var(--bg-surface);
+}
+
+.sortLine {
+  max-width: 82ch;
+  padding: var(--space-12) var(--space-24);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.settledNote {
+  padding: var(--space-20) var(--space-24);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.queueRow {
+  display: grid;
+
+  /*
+   * Flexible content tracks, so the row spans the card.
+   *
+   * Every track was a fixed rem width, which made the row as wide as its
+   * columns and no wider: on a 1,990px card the content stopped at about 800px
+   * and the last third was dead. An earlier pass fixed the *action* by giving
+   * it a named width, which was the wrong end of the problem, and the comment
+   * that used to sit here described a middle 1fr absorbing all the slack and
+   * stranding the chip. Both readings were about where the slack went; there
+   * should not be that much slack. Each column now has a floor and a share of
+   * the width, and the action sits at the right edge of a row that reaches it.
+   */
+  grid-template-columns:
+    minmax(11rem, 1fr) minmax(16rem, 2fr) minmax(12rem, 1.2fr)
+    10rem;
+  gap: var(--space-20);
+  align-items: center;
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.goalList > li:first-child .queueRow {
+  border-top: 0;
+}
+
+.rowWho {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.rowName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.rowMeta {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* The statement is the content column, in their words, never truncated to a
+   clinical summary. */
+.rowStatement {
+  /* Block, or the meta line below runs on from the sentence: a span ignores
+     margin-top, so the two read as one run of text. */
+  display: block;
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.rowGoalMeta {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* ---- The form. The care plan editor's shape, in this module's words. ---- */
+
+.voiceNote {
+  max-width: 88ch;
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--purple-200);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--purple-50);
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.voiceNote b {
+  color: var(--purple-600);
+  font-weight: var(--weight-bold);
+}
+
+.field {
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.fieldName {
+  display: block;
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.fieldGuidance {
+  max-width: 70ch;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/**
+ * A single-line field beside the domain select.
+ *
+ * The target date wore `.textarea`, whose 96px minimum is there so a paragraph
+ * of somebody's own words has room to be written. On a date it made a field
+ * three times the height of the select next to it, in a two-column row where
+ * the two are read as a pair. The height matches the select's trigger, because
+ * that is the field it sits beside.
+ */
+.dateField {
+  width: 100%;
+  min-height: var(--space-40);
+  margin-top: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 96px;
+  margin-top: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  resize: vertical;
+}
+
+.textarea::placeholder {
+  color: var(--ink-400);
+  font-style: italic;
+}
+
+.fieldEmpty {
+  display: inline-block;
+  margin-top: var(--space-8);
+}
+
+.twoUp {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-16);
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.foot {
+  display: flex;
+  gap: var(--space-20);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.footState {
+  max-width: 68ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.footState strong {
+  font-weight: var(--weight-bold);
+}

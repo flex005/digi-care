@@ -42,3 +42,31 @@
   width: var(--space-16);
   color: var(--purple-600);
 }
+
+/**
+ * The field wrapper, for a select that carries a visible label.
+ *
+ * Same shape as a text field's, so a select and an input sitting side by side
+ * in a two-up grid line their labels up and therefore line their controls up.
+ */
+.field {
+  display: flex;
+  flex-direction: column;
+
+  /*
+   * The same gap a text field uses, or a select and an input side by side sit
+   * four pixels out — labels level, controls not, which is the misalignment
+   * you see rather than the one you can find in the grid.
+   */
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.label {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

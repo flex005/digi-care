@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Care planning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:16px}
+.sec{padding:20px 24px;border-bottom:1px solid var(--border-subtle)}
+.sec:last-child{border-bottom:0}
+.sec > h2{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:12px}
+
+.viewNav{display:flex;gap:4px;margin-bottom:6px}
+.viewNav button{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.viewNav button[aria-pressed="true"]{background:var(--purple-900);border-color:var(--purple-900);color:#fff}
+
+.subj{display:flex;gap:14px;align-items:center;padding:14px 22px}
+.av{width:42px;height:42px;flex:0 0 42px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:700;font-size:13px}
+.subj .nm{font-size:17px;font-weight:700}
+.subj .meta{font-size:12px;color:var(--ink-500);margin-top:2px}
+.owed{margin-left:auto;padding:8px 13px;border-radius:var(--r-sm);border:1px solid var(--critical);
+  border-left-width:4px;background:var(--critical-tint);color:var(--critical-ink);font-size:12px;
+  font-weight:700;max-width:36ch;line-height:1.4}
+
+/* lead */
+.lead{margin-top:20px;padding:18px 22px;border-radius:var(--r-lg);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);display:flex;gap:16px;align-items:flex-start;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.lead .n{font-size:32px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.lead .t{font-size:14px;font-weight:700}
+.lead .d{font-size:12.5px;margin-top:3px;line-height:1.45;max-width:58ch}
+
+/* domain rows */
+.drow{display:grid;grid-template-columns:minmax(0,1fr) 14rem 9rem auto;gap:20px;align-items:center;
+  padding:14px 24px;border-top:1px solid var(--border-subtle)}
+.drow:first-of-type{border-top:0}
+.drow .t{font-size:14.5px;font-weight:600}
+.drow .q{font-size:12px;color:var(--ink-500);margin-top:3px;font-style:italic;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:52ch}
+.state{display:inline-flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700;max-width:190px}
+.state small{font-size:11px;font-weight:400;line-height:1.35}
+.state.never{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.state.over{border:1px solid var(--critical);background:var(--critical-tint);color:var(--critical-ink)}
+.state.draft{border:1px solid var(--info);background:var(--info-tint);color:var(--info-ink)}
+.state.soon{color:var(--ink-700);font-weight:500;padding-left:0}
+.state.soon small{color:var(--caution-ink);font-weight:600}
+.state.ok{color:var(--ink-700);font-weight:500;padding-left:0}
+.state.ok small{color:var(--ink-500)}
+.ver{font-size:12px;color:var(--ink-500)}
+.ver b{color:var(--ink-900);font-weight:700}
+.btn{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* editor */
+.voice{margin-top:16px;padding:13px 18px;border-radius:var(--r-md);border:1px solid var(--purple-200);
+  border-left-width:4px;background:var(--purple-50);font-size:12.5px;color:var(--ink-700);
+  line-height:1.55;max-width:88ch}
+.voice b{color:var(--purple-600)}
+.fld{padding:18px 24px;border-top:1px solid var(--border-subtle)}
+.fld .k{font-size:14px;font-weight:700}
+.fld .g{font-size:12.5px;color:var(--ink-500);margin-top:3px;max-width:70ch;line-height:1.5}
+textarea{width:100%;margin-top:10px;padding:12px 14px;border:1px solid var(--border-strong);
+  border-radius:var(--r-md);font:inherit;font-size:14.5px;line-height:1.6;background:var(--bg-surface);
+  color:var(--ink-900);min-height:104px;resize:vertical}
+textarea::placeholder{font-style:italic;color:var(--ink-400)}
+.prev{margin-top:10px;padding:12px 15px;border-radius:var(--r-sm);background:var(--bg-sunken);
+  border:1px solid var(--border-subtle);font-size:13px;color:var(--ink-500);line-height:1.55}
+.prev b{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  margin-bottom:5px;color:var(--ink-500)}
+.emptyFld{margin-top:10px;padding:10px 13px;border-radius:var(--r-sm);font-size:12px;font-weight:600;
+  border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);display:inline-block;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.foot{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:18px 24px}
+.foot .st{font-size:13px;color:var(--ink-700);max-width:62ch}
+.foot .st b{font-weight:700}
+.acts{display:flex;gap:10px}
+
+/* history */
+.vrow{display:grid;grid-template-columns:5rem minmax(0,1fr) 13rem auto;gap:20px;align-items:start;
+  padding:16px 24px;border-top:1px solid var(--border-subtle)}
+.vrow:first-of-type{border-top:0}
+.vnum{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.vnum small{display:block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-top:3px}
+.vcur{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:var(--r-pill);
+  background:var(--purple-50);color:var(--purple-600);font-size:10px;font-weight:700}
+.vsum{font-size:13.5px;color:var(--ink-700);line-height:1.55}
+.vsum .ch{display:block;font-size:12px;color:var(--ink-500);margin-top:5px}
+.vsig{font-size:11.5px;color:var(--ink-500);line-height:1.5}
+.vsig b{color:var(--ink-700);font-weight:600}
+.first{margin:0 24px 20px;padding:13px 17px;border-radius:var(--r-md);border:1.5px dashed var(--unrecorded);
+  border-left-width:4px;color:var(--unrecorded-ink);font-size:12.5px;font-weight:600;line-height:1.5;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+
+/* diff */
+.diff{padding:0 24px 22px}
+.dfield{margin-top:20px}
+.dfield > .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:9px}
+.dcols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dbox{padding:14px 16px;border-radius:var(--r-md);font-size:13.5px;line-height:1.6}
+.dbox .h{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px}
+.dbox.was{background:var(--bg-sunken);border:1px solid var(--border-subtle);color:var(--ink-500)}
+.dbox.now{background:var(--positive-tint);border:1px solid var(--positive);color:var(--ink-900)}
+.dbox.now .h{color:var(--positive-ink)}
+.unchanged{padding:12px 16px;border-radius:var(--r-md);background:var(--bg-sunken);
+  border:1px solid var(--border-subtle);font-size:13px;color:var(--ink-500);line-height:1.55}
+.unchanged b{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  margin-bottom:5px}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="viewNav">
+  <button aria-pressed="true" onclick="go('list',this)">1 · Domain list</button>
+  <button aria-pressed="false" onclick="go('edit',this)">2 · Domain editor</button>
+  <button aria-pressed="false" onclick="go('hist',this)">3 · Version history and diff</button>
+</div>
+
+<div id="view"></div>
+
+<!-- ============ measurements ============ -->
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>1 · Domain list</h3>
+  Eighth profile tab. Lead card hatched, <code>18px 22px</code>, <code>5px</code> left border,
+  figure <code>32px/800</code> — "3 of 10 parts of this person's care have never been written down".
+  Row <code>minmax(0,1fr) 14rem 9rem auto</code>, gap <code>20px</code>, padding <code>14px 24px</code>.
+  Domain name <code>14.5px/600</code>. Beneath it, the first line of the resident's own words at
+  <code>12px</code> ink-500, italic, truncated to one line — **their voice on the list, not a clinical
+  summary of it**. Where nothing is written the line is absent rather than replaced by a placeholder.
+  State chip <code>7px 11px</code>, <code>12px/700</code> over <code>11px/400</code>, max <code>190px</code>:
+  never started takes the hatch, review overdue takes critical, a draft takes info.
+  <b>Due soon and in date are both plain text with no chip</b> — due soon carries its date in
+  caution ink on the second line only. It is a recorded plan approaching a date, the least urgent of the
+  three and the one most likely to crowd the two that matter.
+  Version column <code>12px</code> ink-500 with the number at <code>700</code>; blank where never started.
+  Action: "Write this domain" beside the hatch, in its own column after it — separation, not proximity,
+  as the risk list settled.
+  <b>All ten rows always render</b>, iterated from the domain constant, never from the resident's record.
+
+  <h3>2 · Domain editor</h3>
+  Voice note at the top, <code>13px 18px</code>, 1px purple-200 with <code>4px</code> left,
+  purple-50, max <code>88ch</code>. It states the constraint rather than implying it.
+  Each field <code>18px 24px</code>, 1px top border. Label <code>14px/700</code>, guidance
+  <code>12.5px</code> ink-500 max <code>70ch</code>.
+  Textarea <code>104px</code> minimum, <code>14.5px</code> at line-height <code>1.6</code>,
+  padding <code>12px 14px</code>. Placeholders are in the voice the field is written in and italic —
+  first person for current needs and preferences, second person about staff for agreed actions.
+  Where a previous version exists its text renders beneath the field in bg-surface-sunken at
+  <code>13px</code> ink-500 — visible while writing, never pre-filled into the box. **The editor never
+  pre-fills from an assessment**: a score cannot be turned into "I need help to walk" without putting
+  words in somebody's mouth.
+  An empty field on a draft shows the hatched chip. A draft saves anything; finalising requires all three.
+  Footer: two actions — Save draft, and Finalise and sign. The state line names exactly what is
+  outstanding, and where finalising would close a post-incident review it says which one, by name.
+
+  <h3>3 · Version history and diff</h3>
+  Row <code>5rem minmax(0,1fr) 13rem auto</code>, gap <code>20px</code>, padding <code>16px 24px</code>.
+  Version number <code>22px/800</code> with "version" beneath at <code>10.5px/700</code> uppercase.
+  Current version carries a purple pill; it is the only one the Needs tab renders.
+  Summary <code>13.5px</code> ink-700 naming which fields changed, signature block <code>11.5px</code>
+  ink-500 with names at <code>600</code>.
+  **A first finalise is not a diff against nothing** — version 1 renders the hatched note saying there
+  was no previous version, never an empty comparison.
+  Diff: two columns <code>1fr 1fr</code>, gap <code>16px</code>. Was on the left in bg-surface-sunken
+  at ink-500; now on the right in positive tint with a positive border. Field label above both at
+  <code>12px/700</code> uppercase.
+  An unchanged field renders once, full width, in bg-surface-sunken with "unchanged" as its label —
+  not twice in two columns, which would read as a change that happens to match.
+  <b>Drafts never appear here.</b> A history of intentions is not a history of instructions, and the
+  point of this screen is what staff were told to follow.
+</div>
+
+</div>
+
+<script>
+const SUBJ = `<div class="card"><div class="subj">
+  <span class="av">GA</span>
+  <div><div class="nm">Grace</div>
+    <div class="meta">Grace Adeyemi · Room 302 · Born 14/02/1939 (87) · Rosewood Court</div></div>
+  <div class="owed">Mobility care plan owes a post-incident review — unwitnessed fall, 21/08. Already
+    past its 48 hours.</div>
+</div></div>`;
+
+const DOMAINS = [
+  { n:'Personal care and hygiene', st:'ok', v:3, on:'02/06/2026', next:'02/12/2026',
+    q:'“I like to wash at the sink myself and only need help with my back.”' },
+  { n:'Nutrition and hydration', st:'soon', v:2, on:'28/02/2026', next:'28/08/2026', days:5,
+    q:'“I don’t eat much at breakfast but I like a proper dinner.”' },
+  { n:'Mobility and moving and handling', st:'over', v:2, on:'14/06/2025', months:14,
+    q:'“I can get about with my frame but I get tired quickly.”' },
+  { n:'Continence', st:'ok', v:1, on:'11/05/2026', next:'11/11/2026',
+    q:'“I’d rather manage on my own and ask if I need to.”' },
+  { n:'Communication', st:'draft', v:1, on:'03/01/2026', by:'A. Okonkwo', at:'yesterday',
+    q:'“Speak to my right side, my left ear isn’t good.”' },
+  { n:'Cognitive and mental health', st:'ok', v:2, on:'19/04/2026', next:'19/10/2026',
+    q:'“I get muddled in the afternoons but I know where I am.”' },
+  { n:'Social and emotional wellbeing', st:'never' },
+  { n:'End of life', st:'never' },
+  { n:'Physical health', st:'ok', v:4, on:'30/06/2026', next:'30/12/2026',
+    q:'“My hip aches in the cold and I want to know before anything changes.”' },
+  { n:'Medication', st:'never' },
+];
+
+function listView(){
+  const never = DOMAINS.filter(d => d.st === 'never').length;
+  return `<h1>Care plan</h1>${SUBJ}
+  <div class="lead"><div class="n">${never}</div>
+    <div><div class="t">of ${DOMAINS.length} parts of this person's care have never been written down</div>
+      <div class="d">Never written down is not "no needs here". Every domain is listed whether or not
+        anybody has written it, because a list of only the written ones would read as a complete plan.</div></div>
+  </div>
+  <div class="card">
+    ${DOMAINS.map(d => `<div class="drow">
+      <div><div class="t">${d.n}</div>${d.q ? `<div class="q">${d.q}</div>` : ''}</div>
+      <div>${
+        d.st === 'never' ? `<span class="state never">Never written<small>nobody has written what this person needs here</small></span>`
+        : d.st === 'over' ? `<span class="state over">Review overdue<small>${d.months} months late · last signed ${d.on}</small></span>`
+        : d.st === 'draft' ? `<span class="state draft">Draft in progress<small>${d.by}, ${d.at} · not signed</small></span>`
+        : d.st === 'soon' ? `<span class="state soon">Signed ${d.on}<small>review due in ${d.days} days</small></span>`
+        : `<span class="state ok">Signed ${d.on}<small>next review ${d.next}</small></span>`}</div>
+      <div class="ver">${d.v ? `Version <b>${d.v}</b>` : ''}</div>
+      <div><button class="btn ${d.st === 'never' ? 'primary' : ''}">${
+        d.st === 'never' ? 'Write this domain' : 'Open domain'}</button></div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function editView(){
+  return `<h1>Mobility and moving and handling</h1>${SUBJ}
+  <div class="voice">
+    <b>Written in Grace's own words.</b> Current needs and preferences are recorded as she says them —
+    "I like to…", not "resident prefers…". Agreed actions are what staff will do about them, so those
+    are written to staff. Nothing here is filled in from an assessment: a score cannot be turned into
+    "I need help to walk" without putting words in somebody's mouth.
+  </div>
+
+  <div class="card">
+    <div class="fld">
+      <div class="k">What I need help with</div>
+      <div class="g">In Grace's words. What she can do, what she finds hard, what she wants help with.</div>
+      <textarea placeholder="“I can get about with my frame but…”">“I can get about with my frame but I get tired quickly, and since I fell I don’t trust my legs in the evening.”</textarea>
+      <div class="prev"><b>Version 2 · signed 14/06/2025</b>
+        “I can get about with my frame but I get tired quickly.”</div>
+    </div>
+
+    <div class="fld">
+      <div class="k">How I like it done</div>
+      <div class="g">Her preferences — timing, who, how, what she would rather avoid.</div>
+      <textarea placeholder="“I’d rather you…”">“I’d rather walk than be pushed, even if it takes a while. Don’t take my arm without asking first.”</textarea>
+      <div class="prev"><b>Version 2 · signed 14/06/2025</b>
+        “I’d rather walk than be pushed, even if it takes a while.”</div>
+    </div>
+
+    <div class="fld">
+      <div class="k">What staff will do</div>
+      <div class="g">Written to whoever reads this on shift. What you will actually do, specifically enough
+        to follow.</div>
+      <textarea placeholder="Walk with her to…"></textarea>
+      <span class="emptyFld">Not written — a plan that says nothing about what will be done cannot be signed</span>
+      <div class="prev"><b>Version 2 · signed 14/06/2025</b>
+        Offer an arm on the corridor. Frame within reach at all times.</div>
+    </div>
+
+    <div class="foot">
+      <p class="st"><b>Waiting on:</b> what staff will do.<br>
+        Finalising this closes the post-incident review flagged on mobility by the unwitnessed fall of
+        21/08 — already past its 48 hours, and it will still read as closed late.</p>
+      <div class="acts">
+        <button class="btn">Save draft</button>
+        <button class="btn primary" disabled>Finalise and sign</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function histView(){
+  return `<h1>Mobility — version history</h1>${SUBJ}
+  <div class="card">
+    <div class="vrow">
+      <div><div class="vnum">2<small>version</small></div><span class="vcur">Current</span></div>
+      <div class="vsum">Rewritten after a change in how far she could walk unaided.
+        <span class="ch">Changed: what I need help with · what staff will do. Unchanged: how I like it done.</span></div>
+      <div class="vsig">Signed by <b>M. Halloran</b><br>14/06/2025 11:20 BST</div>
+      <div><button class="btn">View diff</button></div>
+    </div>
+    <div class="vrow">
+      <div><div class="vnum">1<small>version</small></div></div>
+      <div class="vsum">First plan written after admission.
+        <span class="ch">No previous version to compare against.</span></div>
+      <div class="vsig">Signed by <b>A. Okonkwo</b><br>03/03/2025 15:40 BST</div>
+      <div><button class="btn">View</button></div>
+    </div>
+  </div>
+
+  <div class="first">
+    Version 1 has no diff. It is the first plan written for this domain, not a change to one — a first
+    finalise is not a comparison against nothing.
+  </div>
+
+  <div class="card">
+    <div class="sec"><h2>Version 1 → version 2 · signed 14/06/2025 by M. Halloran</h2></div>
+    <div class="diff">
+      <div class="dfield">
+        <div class="k">What I need help with</div>
+        <div class="dcols">
+          <div class="dbox was"><div class="h">Version 1</div>
+            “I walk to the dining room on my own and I don’t want a frame.”</div>
+          <div class="dbox now"><div class="h">Version 2</div>
+            “I can get about with my frame but I get tired quickly.”</div>
+        </div>
+      </div>
+
+      <div class="dfield">
+        <div class="k">How I like it done</div>
+        <div class="unchanged"><b>Unchanged</b>
+          “I’d rather walk than be pushed, even if it takes a while.”</div>
+      </div>
+
+      <div class="dfield">
+        <div class="k">What staff will do</div>
+        <div class="dcols">
+          <div class="dbox was"><div class="h">Version 1</div>
+            Walk with her to meals. No aid required.</div>
+          <div class="dbox now"><div class="h">Version 2</div>
+            Offer an arm on the corridor. Frame within reach at all times.</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+let view = 'list';
+function go(v, btn){
+  view = v;
+  document.querySelectorAll('.viewNav button').forEach(b => b.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true');
+  render(); window.scrollTo(0,0);
+}
+function render(){
+  document.getElementById('view').innerHTML =
+    view === 'list' ? listView() : view === 'edit' ? editView() : histView();
+}
+render();
+</script>
+</body>
+</html>

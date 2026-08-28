@@ -43,20 +43,48 @@ export interface ResidentFilters {
   risk: RiskFilter
   review: ReviewFilter
   records: RecordsFilter
+  /** Name or room. Empty means no narrowing, which is not the same as no match. */
+  query: string
 }
 
 export const DEFAULT_FILTERS: Omit<ResidentFilters, 'site'> = {
   risk: 'all',
   review: 'all',
-  // Critical only. The chip and this default agree deliberately: what the
-  // column shouts about is what the filter narrows to.
-  records: 'critical',
+  /*
+   * Everybody, and the list says how many it is showing.
+   *
+   * It opened on critical gaps, which put a narrowed list under a heading that
+   * looked like the whole home: a reader who did not notice the tab was
+   * reading eighteen residents as twenty-eight. A screen that opens filtered
+   * is a claim over a subset made by default, and Rule 3c says a claim over a
+   * filtered set carries the filter or it is false.
+   */
+  records: 'all',
+  query: '',
 }
 
 /** Milliseconds, or -Infinity for a resident who has never been written up. */
 function noteTime(summary: ResidentSummary): number {
   if (summary.latestNote === 'none') return Number.NEGATIVE_INFINITY
   return new Date(summary.latestNote.recordedAt).getTime()
+}
+
+/**
+ * Name or room, matched loosely on purpose.
+ *
+ * A carer looking for somebody types part of a name or a room number, and both
+ * are on the row. Nothing clinical is searched: a query that reached into
+ * diagnoses would make a private field findable by guessing at it.
+ */
+function matchesQuery(summary: ResidentSummary, query: string): boolean {
+  const needle = query.trim().toLowerCase()
+  if (needle === '') return true
+  const resident = summary.resident
+  const room = resident.room.kind === 'recorded' ? resident.room.value : ''
+  return [resident.fullLegalName, resident.preferredName, room]
+    .join(' ')
+    .toLowerCase()
+    .includes(needle)
 }
 
 function matchesRisk(summary: ResidentSummary, filter: RiskFilter): boolean {
@@ -106,10 +134,11 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
   const [risk, setRisk] = useState<RiskFilter>(DEFAULT_FILTERS.risk)
   const [review, setReview] = useState<ReviewFilter>(DEFAULT_FILTERS.review)
   const [records, setRecords] = useState<RecordsFilter>(DEFAULT_FILTERS.records)
+  const [query, setQuery] = useState(DEFAULT_FILTERS.query)
   const [sortKey, setSortKey] = useState<SortKey>('name')
   const [descending, setDescending] = useState(false)
 
-  const filters: ResidentFilters = { site, risk, review, records }
+  const filters: ResidentFilters = { site, risk, review, records, query }
 
   /**
    * Filters other than site. Kept separate because "no residents at this site
@@ -125,6 +154,7 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
   const visible = useMemo(() => {
     const matched = atSite.filter(
       (summary) =>
+        matchesQuery(summary, query) &&
         matchesRisk(summary, risk) &&
         matchesReview(summary, review) &&
         matchesRecords(summary, records),
@@ -190,9 +220,13 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
     setRisk(DEFAULT_FILTERS.risk)
     setReview(DEFAULT_FILTERS.review)
     setRecords(DEFAULT_FILTERS.records)
+    // The search narrows the list as much as any of them, so clearing has to
+    // clear it too or the count stays wrong after "show everybody".
+    setQuery(DEFAULT_FILTERS.query)
   }
 
-  const hasNarrowingFilters = risk !== 'all' || review !== 'all' || records !== 'all'
+  const hasNarrowingFilters =
+    risk !== 'all' || review !== 'all' || records !== 'all' || query.trim() !== ''
 
   /**
    * "Most recent first" IS descending by date; "oldest first" IS ascending.
@@ -213,6 +247,7 @@ export function useResidentFilters(summaries: ResidentSummary[], activeSiteId: S
     setRisk,
     setReview,
     setRecords,
+    setQuery,
     sortKey,
     sortDirection,
     toggleSort,

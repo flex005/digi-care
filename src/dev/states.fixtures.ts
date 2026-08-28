@@ -2,7 +2,10 @@ import type {
   Aggregate,
   AllergyStatus,
   CarePlanDomainStatus,
-  ConsentStatus,
+  AnyConsent,
+  CapacityAssessment,
+  CapacityAssessmentId,
+  ResidentId,
   EolcStatus,
   IsolationStatus,
   MarCellState,
@@ -49,7 +52,7 @@ export const recordedStates: ByKind<Recorded<string>> = {
   recorded: [
     {
       kind: 'recorded',
-      value: 'Penicillin — anaphylaxis',
+      value: 'Penicillin · anaphylaxis',
       recordedBy: staffOkonkwo,
       recordedAt: '2026-03-12T09:20:00Z',
     },
@@ -73,7 +76,7 @@ export const riskStates: ByKind<RiskStatus> = {
     {
       kind: 'assessed',
       level: 'low',
-      score: 15,
+      score: { kind: 'scored', value: 15 },
       assessedAt: '2026-07-02T10:15:00+01:00',
       assessedBy: staffNwosu,
       reviewState: { kind: 'scheduled', dueOn: '2026-10-02' },
@@ -81,7 +84,7 @@ export const riskStates: ByKind<RiskStatus> = {
     {
       kind: 'assessed',
       level: 'moderate',
-      score: 45,
+      score: { kind: 'scored', value: 45 },
       assessedAt: '2026-06-18T14:40:00+01:00',
       assessedBy: staffHalloran,
       reviewState: { kind: 'due', dueOn: '2026-08-18' },
@@ -89,10 +92,22 @@ export const riskStates: ByKind<RiskStatus> = {
     {
       kind: 'assessed',
       level: 'high',
-      score: 70,
+      score: { kind: 'scored', value: 70 },
       assessedAt: '2026-05-30T08:05:00+01:00',
       assessedBy: staffOkonkwo,
       reviewState: { kind: 'overdue', dueOn: '2026-07-30', daysOverdue: 20 },
+    },
+    {
+      // Assessed without a number. Choking, behaviour, environmental risk and
+      // COSHH record findings and reach a level without arithmetic — a state
+      // the badge and the profile have to render, so it needs a fixture here
+      // as much as any other (§8).
+      kind: 'assessed',
+      level: 'high',
+      score: { kind: 'unscored' },
+      assessedAt: '2026-05-20T09:30:00+01:00',
+      assessedBy: staffHalloran,
+      reviewState: { kind: 'scheduled', dueOn: '2026-11-20' },
     },
   ],
 }
@@ -231,6 +246,26 @@ export const reviewStates: ByKind<ReviewState> = {
       kind: 'completed',
       completedOn: '2026-07-31',
       completedBy: staffHalloran,
+      against: { kind: 'due_on', dueOn: '2026-08-04' },
+      nextDueOn: '2026-10-31',
+    },
+    // The same record done late. Lateness is derived from `completedOn >
+    // dueOn`, so it survives the completion rather than being erased by it —
+    // and both cases need a fixture, or the screen is reviewed against one.
+    {
+      kind: 'completed',
+      completedOn: '2026-07-31',
+      completedBy: staffHalloran,
+      against: { kind: 'due_on', dueOn: '2026-07-08' },
+      nextDueOn: '2026-10-31',
+    },
+    // Done, and it had never been scheduled. There was no date to be late
+    // against, and inventing one would produce a lateness nobody can check.
+    {
+      kind: 'completed',
+      completedOn: '2026-07-31',
+      completedBy: staffHalloran,
+      against: { kind: 'never_scheduled' },
       nextDueOn: '2026-10-31',
     },
   ],
@@ -240,44 +275,99 @@ export const reviewStates: ByKind<ReviewState> = {
 // ConsentStatus — six outcomes, every one with an author
 // ---------------------------------------------------------------------------
 
-export const consentStates: ByKind<ConsentStatus> = {
+/**
+ * The two capacity findings, for the states below.
+ *
+ * `covers: {}` is the widest form — an assessment assignable wherever any
+ * consent type is expected. Recording goes through `ConsentStatus<K>`, which
+ * is where the scope rule bites; these exist to be *read*.
+ */
+const HAS_CAPACITY: CapacityAssessment<never> = {
+  id: 'cap-states-0001' as CapacityAssessmentId,
+  residentId: 'res-adeyemi' as ResidentId,
+  finding: { kind: 'has_capacity' },
+  covers: {},
+  assessedOn: '2026-03-15',
+  assessedBy: staffOkonkwo,
+  note: 'Explained it, asked her to tell me back what it meant, and she did.',
+}
+
+const LACKS_CAPACITY: CapacityAssessment<never> = {
+  id: 'cap-states-0002' as CapacityAssessmentId,
+  residentId: 'res-adeyemi' as ResidentId,
+  finding: {
+    kind: 'lacks_capacity',
+    diagnosticTest: 'Moderate vascular dementia, diagnosed 2023.',
+    functionalTest:
+      'Could repeat the options back but could not hold them together long enough to compare.',
+  },
+  covers: {},
+  assessedOn: '2026-04-09',
+  assessedBy: staffOkonkwo,
+  note: 'Went through it twice with a break. Daughter present for the second conversation.',
+}
+
+export const consentStates: ByKind<AnyConsent> = {
   not_sought: [{ kind: 'not_sought' }],
-  pending: [{ kind: 'pending', requestedOn: '2026-08-11', requestedBy: staffHalloran }],
-  consented: [
-    { kind: 'consented', method: 'written', on: '2026-01-19', by: staffOkonkwo },
-    { kind: 'consented', method: 'verbal', on: '2026-02-02', by: staffNwosu },
+  pending: [{ kind: 'pending', requestedOn: '2026-08-14', requestedBy: staffOkonkwo }],
+  given: [
     {
-      kind: 'consented',
+      kind: 'given',
       method: 'digital_signature',
       on: '2026-03-15',
-      by: staffOkonkwo,
+      recordedBy: staffOkonkwo,
+      by: { kind: 'the_resident', assessment: HAS_CAPACITY },
     },
   ],
   refused: [
+    // The resident's own refusal — a record of a choice, not a finding.
     {
       kind: 'refused',
       on: '2026-05-06',
-      note: 'Declined photography for the newsletter.',
+      note: 'Said no, and said why: she does not want her picture anywhere.',
       recordedBy: staffNwosu,
+      by: { kind: 'the_resident', assessment: HAS_CAPACITY },
+    },
+    /*
+     * A best-interests decision that concluded **no**.
+     *
+     * The state the old six-member union could not express: `best_interest`
+     * implied a positive by omission, so a process that decided *against*
+     * something had nowhere to go.
+     */
+    {
+      kind: 'refused',
+      on: '2026-04-09',
+      note: 'Decided against on his behalf after consulting the family and the GP.',
+      recordedBy: staffOkonkwo,
+      by: {
+        kind: 'best_interests',
+        assessment: LACKS_CAPACITY,
+        consulted: ['Dr S. Achebe', 'Daughter, Grace Adeyemi', 'Social worker'],
+        rationale: 'Weighed up and agreed it would not be in his best interests.',
+      },
     },
   ],
   withdrawn: [
     {
       kind: 'withdrawn',
       on: '2026-07-21',
-      note: 'Family requested removal; existing photos still on file.',
-      previouslyConsentedOn: '2026-01-19',
+      note: 'Asked for her photographs to stop being taken.',
+      previouslyGivenOn: '2026-01-19',
       recordedBy: staffOkonkwo,
-    },
-  ],
-  best_interest: [
-    {
-      kind: 'best_interest',
-      decidedOn: '2026-04-09',
-      consulted: ['Dr S. Achebe', 'Daughter — Grace Adeyemi', 'Social worker'],
-      rationale:
-        'Lacks capacity for this decision; photography supports family contact.',
-      decidedBy: staffOkonkwo,
+      by: { kind: 'the_resident', assessment: HAS_CAPACITY },
+      remains: [
+        {
+          name: 'Photographs on file',
+          explanation: 'Taken while consent stood, and still in the record.',
+          count: { kind: 'counted', value: 14 },
+        },
+        {
+          name: "Photographs on the home's noticeboards",
+          explanation: 'Physical prints in the corridors.',
+          count: { kind: 'not_counted' },
+        },
+      ],
     },
   ],
 }
@@ -291,7 +381,7 @@ export const aggregateStates: ByKind<Aggregate> = {
     {
       kind: 'insufficient_evidence',
       coverage: { covered: 4, total: 32 },
-      missingDescription: 'Falls risk assessments are largely incomplete —',
+      missingDescription: 'Falls risk assessments are largely incomplete:',
     },
   ],
   measured: [

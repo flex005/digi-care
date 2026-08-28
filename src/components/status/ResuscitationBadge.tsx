@@ -4,6 +4,7 @@ import { formatDate } from '@/lib/format'
 import { useSiteFormat } from '@/app/session/use-session'
 import { StatusPill } from './StatusPill'
 import { Unrecorded } from './Unrecorded'
+import { staffLabel } from '@/data/access/team-store'
 
 /**
  * Resuscitation status. PRD §5.1, §6.2.
@@ -38,11 +39,7 @@ export function ResuscitationBadge({ status }: { status: ResuscitationStatus }) 
         <StatusPill
           tone="positive"
           label="For resuscitation"
-          detail={format.attribution(
-            status.recordedBy.displayName,
-            status.recordedAt,
-            status.recordedBy.isActive,
-          )}
+          detail={format.attribution(staffLabel(status.recordedBy), status.recordedAt)}
         />
       )
 

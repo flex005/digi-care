@@ -38,9 +38,27 @@
   text-transform: uppercase;
 }
 
-/* The label is the carrier of meaning; the pattern is reinforcement. */
+/**
+ * The label is the carrier of meaning; the pattern is reinforcement, and so is
+ * the optional mark beside it. Inline-flex so a glyph sits on the text's
+ * baseline rather than pushing the line.
+ */
 .label {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
   font-weight: var(--weight-semibold);
+}
+
+/**
+ * In the stacked form the label has to lead, or the two lines read as one
+ * grey block and the reader has to parse a sentence to find the answer.
+ * A step up and a weight up, both on the closed scale.
+ */
+.chip .label {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
 }
 
 /* What is missing, and how much of it. Never a bare figure. */

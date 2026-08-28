@@ -118,7 +118,7 @@ export function TokenSheet() {
         <p className={styles.sectionNote}>
           Values live only in <code>src/styles/tokens.css</code>. Every swatch here
           reads <code>var(--token)</code>, which is also the only way colour reaches any
-          component in the project — stylelint rejects a hex, an <code>rgb()</code> or a
+          component in the project: stylelint rejects a hex, an <code>rgb()</code> or a
           named colour anywhere else.
         </p>
 
@@ -158,7 +158,7 @@ export function TokenSheet() {
                 token={token}
                 meta={
                   token === '--border-unrecorded'
-                    ? '2.20:1 on its tint — below the 3:1 in PRD §7'
+                    ? '2.20:1 on its tint, below the 3:1 in PRD §7'
                     : undefined
                 }
               />
@@ -168,7 +168,7 @@ export function TokenSheet() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Status palette — fill, ink, tint</h2>
+        <h2 className={styles.sectionTitle}>Status palette: fill, ink, tint</h2>
         <p className={styles.sectionNote}>
           Each status carries three tokens because one value cannot do both jobs.{' '}
           <code>--status-X</code> is for fills, dots, bars, borders and icons.{' '}
@@ -183,7 +183,7 @@ export function TokenSheet() {
               <Swatch token={row.fill} meta="fills · dots · borders · icons" />
               <Swatch
                 token={row.ink}
-                meta={`text — ${row.inkOnTint}:1 on tint · ${row.inkOnWhite}:1 on white`}
+                meta={`text · ${row.inkOnTint}:1 on tint · ${row.inkOnWhite}:1 on white`}
               />
               <Swatch token={row.tint} meta="tint background" />
             </div>
@@ -192,12 +192,12 @@ export function TokenSheet() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Type scale — nine steps, five weights</h2>
+        <h2 className={styles.sectionTitle}>Type scale: nine steps, five weights</h2>
         <p className={styles.sectionNote}>
           The scale is closed. Stylelint rejects any <code>font-size</code>,{' '}
           <code>line-height</code> or <code>font-weight</code> that is not a{' '}
-          <code>var(--token)</code>, so a tenth step cannot be introduced locally — it
-          is a change to tokens.css and a conversation.
+          <code>var(--token)</code>, so a tenth step cannot be introduced locally; it is
+          a change to tokens.css and a conversation.
         </p>
         {TYPE_STEPS.map((step) => (
           <div key={step} className={styles.typeRow}>
@@ -211,7 +211,7 @@ export function TokenSheet() {
             >
               {step === 'mono-num'
                 ? '08:04 · 1,024mg · 46 of 50'
-                : 'Emmanuel Okafor — Room 14'}
+                : 'Emmanuel Okafor · Room 14'}
             </span>
           </div>
         ))}

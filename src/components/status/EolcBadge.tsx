@@ -4,6 +4,7 @@ import { formatDate } from '@/lib/format'
 import { useSiteFormat } from '@/app/session/use-session'
 import { StatusPill } from './StatusPill'
 import { Unrecorded } from './Unrecorded'
+import { staffLabel } from '@/data/access/team-store'
 
 /**
  * End of life care.
@@ -36,11 +37,7 @@ export function EolcBadge({ status }: { status: EolcStatus }) {
         <StatusPill
           tone="positive"
           label="EOLC not applicable"
-          detail={format.attribution(
-            status.recordedBy.displayName,
-            status.recordedAt,
-            status.recordedBy.isActive,
-          )}
+          detail={format.attribution(staffLabel(status.recordedBy), status.recordedAt)}
         />
       )
 

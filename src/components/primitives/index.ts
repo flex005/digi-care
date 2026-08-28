@@ -17,6 +17,9 @@ export type { ButtonProps, ButtonSize, ButtonVariant } from './Button'
 export { Card, CardHeader } from './Card'
 export type { CardProps, CardHeaderProps } from './Card'
 
+export { Section } from './Section'
+export type { SectionProps } from './Section'
+
 export { EmptyState } from './EmptyState'
 export type { EmptyStateProps } from './EmptyState'
 
@@ -27,7 +30,7 @@ export { Dialog, DialogTrigger, DialogClose } from './Dialog'
 export type { DialogProps } from './Dialog'
 
 export { AlertDialog, AlertDialogTrigger } from './AlertDialog'
-export type { AlertDialogProps } from './AlertDialog'
+export type { AlertDialogProps, ConfirmationSubject } from './AlertDialog'
 
 export {
   DropdownMenu,
@@ -64,3 +67,5 @@ export { Toast, ToastProvider, ToastViewport } from './Toast'
 export type { ToastProps, ToastTone } from './Toast'
 
 export { VisuallyHidden } from './VisuallyHidden'
+export { SelectedMark } from './SelectedMark'
+export { PasswordField } from './PasswordField'

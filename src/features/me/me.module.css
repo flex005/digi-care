@@ -1,0 +1,492 @@
+/**
+ * One person's own screens. PRD §6.7.
+ *
+ * No figure on the dashboard is a count of this person's work, and nothing
+ * here styles one: there is no rate, no comparison and no bar somebody could
+ * be measured against.
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.pageSubtitle {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.backLink {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  align-self: flex-start;
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.top {
+  display: flex;
+  gap: var(--space-24);
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.me {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+.avatar {
+  display: grid;
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background: var(--purple-50);
+  color: var(--purple-600);
+  font-size: var(--text-h3-size);
+  font-weight: var(--weight-extrabold);
+  place-items: center;
+}
+
+.name {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-extrabold);
+}
+
+.role {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+}
+
+.topActions {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.shiftPill {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--radius-pill);
+  background: var(--purple-50);
+  color: var(--purple-600);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-bold);
+}
+
+.plainButton {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------------------
+ * The three tiles
+ * ----------------------------------------------------------------------- */
+
+.tiles {
+  display: grid;
+  gap: var(--space-16);
+  grid-template-columns: 1.4fr 1fr 1fr;
+}
+
+/*
+ * Shape only. The border and background are set per tile below, and the
+ * hatched one is deliberately not in this list: it composes the unrecorded
+ * treatment, and a shared `background: var(--bg-surface)` here painted over
+ * it — the tile carried the class and the attribute, passed both assertions,
+ * and rendered as a plain white card.
+ */
+.tile,
+.tileNow,
+.tileWarn,
+.tileGap {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-20);
+  border-radius: var(--radius-xl);
+}
+
+.tile {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.tileNow {
+  background: var(--purple-900);
+  color: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.tileWarn {
+  border: 1px solid var(--status-caution);
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+/* The only tile counting an absence. One definition of the hatch, composed. */
+.tileGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-radius: var(--radius-xl);
+}
+
+.tileKey {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tileNow .tileKey {
+  color: var(--purple-200);
+}
+
+.tileWarn .tileKey {
+  color: var(--status-caution-ink);
+}
+
+.tileGap .tileKey {
+  color: var(--status-unrecorded-ink);
+}
+
+.tileValue {
+  margin-top: var(--space-8);
+  color: var(--ink-900);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-size);
+  font-weight: var(--weight-extrabold);
+}
+
+.tileNow .tileValue {
+  color: var(--bg-surface);
+}
+
+.tileWarn .tileValue {
+  color: var(--status-caution-ink);
+}
+
+.tileGap .tileValue {
+  color: var(--status-unrecorded-ink);
+}
+
+.tileDetail {
+  margin-top: var(--space-8);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.tileNow .tileDetail {
+  color: var(--purple-200);
+}
+
+.tileWarn .tileDetail {
+  color: var(--status-caution-ink);
+}
+
+.tileGap .tileDetail {
+  color: var(--status-unrecorded-ink);
+}
+
+.tileAction {
+  margin-top: auto;
+  padding-top: var(--space-16);
+}
+
+.tileButton {
+  display: inline-flex;
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------------------
+ * The two panels
+ * ----------------------------------------------------------------------- */
+
+.two {
+  display: grid;
+  gap: var(--space-16);
+  align-items: start;
+  grid-template-columns: 1.3fr 1fr;
+}
+
+.panelHead {
+  padding: var(--space-16) var(--space-20);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.panelTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.panelBody {
+  margin-top: var(--space-4);
+  padding: 0 var(--space-20);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.panelHead .panelBody {
+  padding: 0;
+}
+
+.acts {
+  list-style: none;
+}
+
+.act {
+  display: grid;
+  gap: var(--space-16);
+  align-items: baseline;
+  padding: var(--space-12) var(--space-20);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: 6rem minmax(0, 1fr) auto;
+}
+
+.actWhen {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+}
+
+.actDay {
+  display: block;
+  margin-top: 1px;
+  color: var(--ink-400);
+  font-weight: var(--weight-regular);
+}
+
+.actWhat {
+  display: block;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.actKind {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+}
+
+.actGo {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  color: var(--purple-600);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-bold);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.empty {
+  padding: var(--space-20);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.details {
+  padding: var(--space-16) var(--space-20);
+}
+
+.detail {
+  display: grid;
+  gap: var(--space-12);
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  grid-template-columns: 7rem minmax(0, 1fr);
+}
+
+.detail:last-child {
+  border-bottom: 0;
+}
+
+.detailKey {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+}
+
+.detailValue {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.panelActions {
+  display: flex;
+  gap: var(--space-12);
+  flex-wrap: wrap;
+  padding: 0 var(--space-20) var(--space-12);
+}
+
+/*
+ * Not held here. Inert on purpose: a solid, quiet block, because this is not
+ * a gap in a care record, it is a fact about what this product holds.
+ */
+.notHeld {
+  margin: var(--space-16) var(--space-20) var(--space-20);
+  padding: var(--space-16) var(--space-20);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.notHeld b {
+  color: var(--ink-700);
+  font-weight: var(--weight-bold);
+}
+
+/* --------------------------------------------------------------------------
+ * What I can do
+ * ----------------------------------------------------------------------- */
+
+.perms {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.notEnforced {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  padding: var(--space-16) var(--space-20);
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.notEnforced b {
+  font-weight: var(--weight-extrabold);
+}
+
+.permHead {
+  padding: var(--space-16) var(--space-20);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.permTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.legend {
+  display: flex;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+  margin-top: var(--space-12);
+}
+
+.legendItem {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+.legendMeans {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+}
+
+.permList {
+  list-style: none;
+}
+
+.permRow {
+  display: grid;
+  gap: var(--space-16);
+  align-items: center;
+  padding: var(--space-12) var(--space-20);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: minmax(0, 1fr) 9rem;
+}
+
+.permModule {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-semibold);
+}
+
+.lvNone,
+.lvRead,
+.lvRecord,
+.lvApprove {
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-bold);
+  text-align: center;
+}
+
+.lvNone {
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-500);
+}
+
+.lvRead {
+  border: 1px solid var(--status-info);
+  background: var(--status-info-tint);
+  color: var(--status-info-ink);
+}
+
+.lvRecord {
+  border: 1px solid var(--purple-400);
+  background: var(--purple-50);
+  color: var(--purple-600);
+}
+
+.lvApprove {
+  border: 1px solid var(--status-positive);
+  background: var(--status-positive-tint);
+  color: var(--status-positive-ink);
+}

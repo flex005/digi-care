@@ -8,6 +8,8 @@ import { residents } from '@/data/fixtures/residents'
 import { ResidentProfileRoute } from './ResidentProfileRoute'
 import { BadgeStrip } from './BadgeStrip'
 import { BADGE_STRIP_SOURCES } from './badge-strip-sources'
+import { pluralise } from '@/lib/format'
+import { MEDICATION_LOOKAHEAD_HOURS } from '@/lib/shift'
 
 /**
  * The profile header. PRD §2.4, §6.2, §16.3.
@@ -72,8 +74,19 @@ describe('the badge strip draws every state, for every resident', () => {
     const notRecorded = residents.find((r) => r.allergies.kind === 'not_recorded')!
     const hasAllergies = residents.find((r) => r.allergies.kind === 'allergies')!
 
+    /*
+     * Anchored to the allergies badge, not to the first recorded one.
+     *
+     * This took `[data-state="recorded"]` and assumed it was allergies — a
+     * proxy for the thing it meant. A change to the fixture stream put a
+     * recorded falls risk in front of it and the test failed on a screen that
+     * was working, which is the same defect as an unscoped absence assertion
+     * wearing a positive.
+     */
     const settled = render(atSite(<BadgeStrip resident={noneKnown} />))
-    const settledCard = settled.container.querySelector('[data-state="recorded"]')
+    const settledCard = settled.container.querySelector(
+      '[data-badge="allergies"] [data-state="recorded"]',
+    )
     // A recorded negative is settled, not hatched — and it still says a person
     // recorded it, which is what makes it a record rather than an absence.
     expect(settledCard?.textContent).toContain('Allergies')
@@ -125,7 +138,11 @@ describe('the subject header', () => {
 
   it('states that nothing is due rather than showing an empty panel', async () => {
     renderProfile('res-hutchinson')
-    const panel = await screen.findByLabelText('Medication due in the next 2 hours')
+    // Derived from the constant, not retyped: an assertion that has to be
+    // edited when a figure moves is measuring the figure, not the rule.
+    const panel = await screen.findByLabelText(
+      `Medication due in the next ${pluralise(MEDICATION_LOOKAHEAD_HOURS, 'hour')}`,
+    )
     expect(panel.textContent?.trim()).not.toBe('')
   })
 
@@ -144,6 +161,10 @@ describe('accessibility', () => {
     await waitFor(() =>
       expect(screen.getByRole('list', { name: 'Risk flags' })).toBeInTheDocument(),
     )
+    // The whole rendered page, deliberately: this is the test that is about
+    // the shell — subject header, tab strip, back link. Every other screen
+    // scopes axe to its own region, so nothing is covered twice and nothing
+    // is covered nowhere.
     const results = await axe(container)
     expect(results).toHaveNoViolations()
   }, 30000)

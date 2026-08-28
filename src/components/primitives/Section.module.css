@@ -1,0 +1,39 @@
+/**
+ * A titled part of a screen. See Section.tsx for why this exists rather than
+ * another card: the gap between sections is what says these are different
+ * kinds of thing, and a stack of equal cards says the opposite.
+ */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.head {
+  display: flex;
+  gap: var(--space-16);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.headText {
+  min-width: 0;
+}
+
+.title {
+  color: var(--ink-900);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-bold);
+}
+
+/* What the section is measured over, or why it is here. Carries denominators,
+   so it is body text rather than a caption. */
+.note {
+  max-width: 88ch;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}

@@ -22,10 +22,10 @@ function renderAtSite(ui: React.ReactNode) {
  * numbered rule in PRD §2.2.
  */
 
-describe('Rule 2 — unrecorded always carries visible text', () => {
+describe('Rule 2: unrecorded always carries visible text', () => {
   it('renders the label, not just the pattern', () => {
-    render(<Unrecorded label="Falls risk — not assessed" />)
-    expect(screen.getByText('Falls risk — not assessed')).toBeVisible()
+    render(<Unrecorded label="Falls risk not assessed" />)
+    expect(screen.getByText('Falls risk not assessed')).toBeVisible()
   })
 
   it('marks itself as unrecorded for tests and tooling to assert on', () => {
@@ -45,18 +45,18 @@ describe('Rule 2 — unrecorded always carries visible text', () => {
   })
 })
 
-describe('Rule 1 — a status is never absent from the page', () => {
+describe('Rule 1: a status is never absent from the page', () => {
   it('renders a badge for an unassessed risk rather than nothing', () => {
     const { container } = renderAtSite(
       <RiskBadge name="Falls risk" status={{ kind: 'not_assessed' }} />,
     )
     expect(container).not.toBeEmptyDOMElement()
-    expect(screen.getByText('Falls risk — not assessed')).toBeVisible()
+    expect(screen.getByText('Falls risk not assessed')).toBeVisible()
     expect(container.querySelector('[data-state="unrecorded"]')).toBeInTheDocument()
   })
 })
 
-describe('Rule 3 — a recorded negative is not an unrecorded value', () => {
+describe('Rule 3: a recorded negative is not an unrecorded value', () => {
   const notGiven: MarCellState = {
     kind: 'not_given',
     reason: 'resident_refused',
@@ -88,7 +88,7 @@ describe('Rule 3 — a recorded negative is not an unrecorded value', () => {
   })
 })
 
-describe('PRD §6.4 — every MAR cell has a full-sentence accessible name', () => {
+describe('PRD §6.4: every MAR cell has a full-sentence accessible name', () => {
   const cases: Array<[string, MarCellState, RegExp]> = [
     ['not_due', { kind: 'not_due' }, /not due/i],
     [

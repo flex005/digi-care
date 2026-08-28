@@ -25,16 +25,29 @@ import { CARE_PLAN_DOMAINS, NEED_GROUPS } from '@/data/types'
 export interface NeedsSection {
   id: string
   name: string
+  /**
+   * The one-line, plain-English answer to "what is this section for", shown
+   * under the title and above the divider — the same treatment General
+   * Information uses.
+   *
+   * This is where a bare count used to be ("4 care plan domains"). A count of
+   * the rows directly beneath it told the reader nothing they could not see,
+   * and it was a denominator-less figure on a screen about missing evidence,
+   * which is the one thing CLAUDE.md §1 forbids anywhere in the product.
+   */
+  /**
+   * Only where a reader would misread the section without it. Most headings
+   * do not need one: a description that restates its own heading is a line
+   * between the reader and the record.
+   */
+  description?: string
   domainIds: CarePlanDomainId[]
-  /** Shown under the heading. Explains a section that is not one of the five. */
-  note: string
 }
 
 const GROUPED: NeedsSection[] = NEED_GROUPS.map((group) => ({
   id: group.id,
   name: group.name,
   domainIds: [...group.domains],
-  note: '',
 }))
 
 const claimed = new Set<CarePlanDomainId>(
@@ -53,8 +66,9 @@ export const NEEDS_SECTIONS: NeedsSection[] =
         {
           id: 'other',
           name: 'Other care plan domains',
+          description:
+            'Part of the care plan, but outside the five need groups. End of life wishes are recorded on the Future Plans tab; the domain is listed here so no part of the care plan is invisible from this screen.',
           domainIds: UNCLAIMED,
-          note: 'These domains are part of the care plan but sit outside the five need groups in the profile specification. End of life wishes are recorded on the Future Plans tab; the domain is listed here so no part of the care plan is invisible from this screen.',
         },
       ]
 

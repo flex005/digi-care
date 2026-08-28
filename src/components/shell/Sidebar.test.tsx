@@ -42,10 +42,17 @@ function renderSidebar(collapsed = false, at = '/residents') {
 }
 
 describe('every module stays listed', () => {
-  it('renders all seventeen, built or not', () => {
+  it('renders every one, built or not', () => {
     renderSidebar()
     const nav = screen.getByRole('navigation', { name: 'Main navigation' })
-    expect(navItems).toHaveLength(17)
+    /*
+     * The count comes from the declaration, never retyped. "All seventeen" was
+     * a number that measured the work rather than the rule, and it had to be
+     * edited in two files every time a module landed — the §8 defect exactly.
+     * What is asserted instead is that the sidebar renders as many items as
+     * are declared, which no subset can satisfy.
+     */
+    expect(navItems.length).toBeGreaterThan(0)
     for (const item of navItems) {
       expect(
         within(nav).getByText(item.label, { selector: 'span' }),
@@ -184,5 +191,23 @@ describe('collapsing never removes an accessible name', () => {
     expect(screen.getByRole('link', { name: /Reviews/ })).toHaveAccessibleName(
       /of 32 residents/,
     )
+  })
+})
+
+describe('the product mark', () => {
+  it('drops the wordmark when the rail is collapsed, and keeps the mark', () => {
+    const wide = renderSidebar(false)
+    expect(wide.container.querySelector('[data-logo]')!.getAttribute('data-logo')).toBe(
+      'lockup',
+    )
+
+    const narrow = renderSidebar(true)
+    /*
+     * The wordmark does not fit in 72px, and scaling the lockup down to make
+     * it fit would leave a word nobody can read still taking the width.
+     */
+    expect(
+      narrow.container.querySelector('[data-logo]')!.getAttribute('data-logo'),
+    ).toBe('mark')
   })
 })

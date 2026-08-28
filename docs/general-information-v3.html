@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — General Information tab, proposed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);
+  color:var(--ink-900);padding:32px;font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto}
+.note{font-size:13px;color:var(--ink-500);margin-bottom:20px;max-width:74ch}
+.note b{color:var(--ink-900);font-weight:600}
+.rule{margin:48px 0 20px;border-top:1px solid var(--border-strong)}
+
+/* tabs */
+.tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:1px solid var(--border-strong)}
+.tab{padding:10px 16px;font-size:14px;font-weight:600;color:var(--ink-500);
+  border-bottom:2px solid transparent;background:none;border-top:0;border-left:0;border-right:0;
+  font-family:inherit;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--purple-600);border-bottom-color:var(--purple-600)}
+.tab[disabled]{color:var(--ink-400);cursor:not-allowed}
+.tab[disabled] .ph{font-size:10px;font-weight:700;background:var(--purple-50);
+  color:var(--purple-600);border-radius:var(--r-pill);padding:1px 6px;margin-left:6px}
+
+/* sections */
+.section{background:var(--bg-surface);border:1px solid var(--border-subtle);
+  border-radius:var(--r-lg);margin-bottom:16px;
+  box-shadow:0 1px 2px rgba(30,0,89,.04)}
+.section > header{padding:22px 28px 18px;border-bottom:1px solid var(--border-subtle)}
+.section > header h2{font-size:20px;font-weight:700;letter-spacing:-.01em;line-height:1.25;
+  color:var(--ink-900)}
+.section > header p{font-size:13px;color:var(--ink-500);margin-top:4px}
+.rows{padding:14px 28px 22px}
+.row{display:grid;grid-template-columns:220px 1fr;gap:24px;
+  padding:11px 0;border-top:1px solid var(--border-subtle);align-items:baseline}
+.row:first-child{border-top:0}
+.row > dt{font-size:13px;color:var(--ink-500);font-weight:500}
+.row > dd{font-size:15px;color:var(--ink-900)}
+.row dd .sub{display:block;font-size:12px;color:var(--ink-500);margin-top:3px}
+.row dd .attr{display:block;font-size:11px;color:var(--ink-400);margin-top:4px}
+.row dd .long{color:var(--ink-700);line-height:1.5;max-width:78ch}
+
+/* the unrecorded treatment */
+.unrec{display:inline-block;font-size:13px;font-weight:600;
+  color:var(--unrecorded-ink);
+  border:1.5px dashed var(--unrecorded);border-radius:var(--r-sm);
+  padding:3px 10px;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.none{display:inline-block;font-size:13px;font-weight:600;color:var(--info-ink);
+  background:var(--info-tint);border:1px solid var(--info);
+  border-radius:var(--r-sm);padding:3px 10px}
+
+/* allergies panel */
+.allergy-panel{margin:20px 28px 4px;border-radius:var(--r-md);
+  background:var(--critical-tint);border:1px solid var(--critical);
+  border-left-width:4px;padding:14px 18px}
+.allergy-panel .k{font-size:11px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--critical-ink)}
+.allergy-panel .v{font-size:20px;font-weight:700;color:var(--critical-ink);margin-top:2px}
+.allergy-panel .m{font-size:13px;color:var(--critical-ink);margin-top:4px}
+.allergy-panel .attr{font-size:11px;color:var(--ink-500);margin-top:6px}
+.allergy-panel.is-unrecorded{background:repeating-linear-gradient(45deg,
+  var(--unrecorded-tint) 0 6px,transparent 6px 12px);
+  border:1.5px dashed var(--unrecorded);border-left-width:4px}
+.allergy-panel.is-unrecorded .k,.allergy-panel.is-unrecorded .v,
+.allergy-panel.is-unrecorded .m{color:var(--unrecorded-ink)}
+.allergy-panel.is-none{background:var(--positive-tint);border:1px solid var(--positive);
+  border-left-width:4px}
+.allergy-panel.is-none .k,.allergy-panel.is-none .v{color:var(--positive-ink)}
+
+.contactline{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.contactline a{color:var(--purple-600);text-decoration:none;font-weight:600}
+.contactline a:hover{text-decoration:underline}
+.tagrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.tag{font-size:12px;font-weight:600;background:var(--purple-50);color:var(--purple-600);
+  border-radius:var(--r-pill);padding:2px 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="note">
+  <b>General Information tab — v3.</b> Same layout as before, with the large section titles you asked for. All sixteen §16.2 fields, grouped into five sections —
+  grouping is presentation only, no field added, dropped or reworded. Allergies get a
+  full-width panel at the top of Clinical rather than being row twelve of sixteen.
+  Attribution appears on clinical, compliance and dietary fields; not on person-centred ones.
+</p>
+
+<div class="tabs" role="tablist">
+  <button class="tab" role="tab" aria-selected="true">General information</button>
+  <button class="tab" role="tab" disabled>Needs</button>
+  <button class="tab" role="tab" disabled>Important people</button>
+  <button class="tab" role="tab" disabled>Future plans</button>
+</div>
+
+<!-- ============ POPULATED ============ -->
+
+<div class="section">
+  <header><h2>Identity</h2><p>Who this person is, and how they wish to be addressed.</p></header>
+  <dl class="rows">
+    <div class="row"><dt>Legal name</dt><dd>Adaeze Nwachukwu</dd></div>
+    <div class="row"><dt>Preferred name</dt><dd>Ada</dd></div>
+    <div class="row"><dt>Pronouns</dt><dd>she / her</dd></div>
+    <div class="row"><dt>Date of birth</dt><dd>04/09/1933 <span class="sub">92 years old</span></dd></div>
+    <div class="row"><dt>Photograph</dt><dd><span class="unrec">No photograph on file</span></dd></div>
+    <div class="row"><dt>NHS number</dt>
+      <dd>485 777 3456<span class="attr">A. Okonkwo · 12/03/2026</span></dd></div>
+  </dl>
+</div>
+
+<div class="section">
+  <header><h2>Placement</h2><p>Where this person lives in the service, and who funds it.</p></header>
+  <dl class="rows">
+    <div class="row"><dt>Admitted</dt><dd>12/03/2026 <span class="sub">5 months ago</span></dd></div>
+    <div class="row"><dt>Anticipated length of stay</dt><dd>Permanent</dd></div>
+    <div class="row"><dt>Funding source</dt>
+      <dd>Local authority — Manchester City Council<span class="attr">A. Okonkwo · 12/03/2026</span></dd></div>
+    <div class="row"><dt>Room</dt><dd>109</dd></div>
+  </dl>
+</div>
+
+<div class="section">
+  <header><h2>Clinical</h2><p>What staff must know before giving care. Allergies appear here and on every medication screen.</p></header>
+
+  <div class="allergy-panel">
+    <div class="k">Known allergies and adverse reactions</div>
+    <div class="v">Penicillin</div>
+    <div class="m">Anaphylaxis — throat swelling and collapse</div>
+    <div class="attr">Recorded by A. Okonkwo · 12/03/2026</div>
+  </div>
+
+  <dl class="rows">
+    <div class="row"><dt>Primary diagnosis</dt>
+      <dd>Alzheimer's disease, moderate stage
+        <span class="attr">Dr P. Ramanathan via A. Okonkwo · 12/03/2026</span></dd></div>
+    <div class="row"><dt>Secondary diagnoses</dt>
+      <dd><div class="tagrow"><span class="tag">Hypertension</span><span class="tag">Osteoarthritis</span><span class="tag">Type 2 diabetes</span></div>
+        <span class="attr">A. Okonkwo · 12/03/2026</span></dd></div>
+    <div class="row"><dt>Medical history</dt>
+      <dd><span class="long">Left hip replacement 2019, uncomplicated recovery. Two falls at home in
+        the six months before admission, neither resulting in fracture. Long-standing
+        hypertension, well controlled. Diagnosed with Alzheimer's disease in 2023 following
+        eighteen months of memory decline noted by family.</span>
+        <span class="attr">A. Okonkwo · 12/03/2026</span></dd></div>
+  </dl>
+</div>
+
+<div class="section">
+  <header><h2>Care team</h2><p>Who to contact outside the home about this person's health.</p></header>
+  <dl class="rows">
+    <div class="row"><dt>GP</dt>
+      <dd><div class="contactline">Dr P. Ramanathan · Brookfield Medical Practice ·
+        <a href="tel:+441619827875">0161 982 7875</a></div>
+        <span class="attr">A. Okonkwo · 12/03/2026</span></dd></div>
+    <div class="row"><dt>Consultants and specialists</dt>
+      <dd><div class="contactline">Dr H. Whitfield · Old Age Psychiatry, Manchester Royal ·
+        <a href="tel:+441612761234">0161 276 1234</a></div>
+        <span class="attr">A. Okonkwo · 04/04/2026</span></dd></div>
+    <div class="row"><dt>Pharmacy</dt>
+      <dd><div class="contactline">Ashworth Pharmacy, Didsbury ·
+        <a href="tel:+441614456712">0161 445 6712</a></div>
+        <span class="attr">A. Okonkwo · 12/03/2026</span></dd></div>
+  </dl>
+</div>
+
+<div class="section">
+  <header><h2>Person</h2><p>How this person communicates, what matters to them, and how they eat.</p></header>
+  <dl class="rows">
+    <div class="row"><dt>Primary language</dt><dd>English <span class="sub">Igbo spoken at home</span></dd></div>
+    <div class="row"><dt>Communication preferences</dt>
+      <dd><span class="long">Hard of hearing on the left side. Speak from the right, face her,
+        short sentences. Prefers to be called Ada, never Mrs Nwachukwu.</span></dd></div>
+    <div class="row"><dt>Religion and cultural background</dt>
+      <dd>Catholic · Nigerian, Igbo <span class="sub">Communion brought monthly by St Mary's</span></dd></div>
+    <div class="row"><dt>Dietary requirements</dt>
+      <dd>Diabetic diet · IDDSI Level 6 — soft and bite-sized
+        <span class="sub">Dislikes fish. Prefers a cooked breakfast.</span>
+        <span class="attr">SALT assessment via A. Okonkwo · 18/06/2026</span></dd></div>
+  </dl>
+</div>
+
+
+<!-- ============ PARTIAL ============ -->
+<div class="rule"></div>
+<p class="note">
+  <b>The same tab for Ismail Sowande, admitted yesterday.</b> This is the state that matters —
+  not one blank row, not one em dash. Every gap says what is missing. Note the three different
+  kinds of answer: a recorded value, a recorded <em>negative</em> (“no consultants involved”,
+  blue — a positive claim someone made), and an unrecorded gap (hatched).
+</p>
+
+<div class="section">
+  <header><h2>Identity</h2><p>Who this person is, and how they wish to be addressed.</p></header>
+  <dl class="rows">
+    <div class="row"><dt>Legal name</dt><dd>Ismail Sowande</dd></div>
+    <div class="row"><dt>Preferred name</dt><dd><span class="unrec">Preferred name not recorded</span></dd></div>
+    <div class="row"><dt>Pronouns</dt><dd><span class="unrec">Pronouns not recorded</span></dd></div>
+    <div class="row"><dt>Date of birth</dt><dd>19/11/1946 <span class="sub">79 years old</span></dd></div>
+    <div class="row"><dt>Photograph</dt><dd><span class="unrec">No photograph on file</span></dd></div>
+    <div class="row"><dt>NHS number</dt><dd><span class="unrec">NHS number not recorded</span></dd></div>
+  </dl>
+</div>
+
+<div class="section">
+  <header><h2>Placement</h2><p>Where this person lives in the service, and who funds it.</p></header>
+  <dl class="rows">
+    <div class="row"><dt>Admitted</dt><dd>20/08/2026 <span class="sub">Yesterday</span></dd></div>
+    <div class="row"><dt>Anticipated length of stay</dt>
+      <dd><span class="unrec">Not recorded</span></dd></div>
+    <div class="row"><dt>Funding source</dt><dd><span class="unrec">Funding source not recorded</span></dd></div>
+    <div class="row"><dt>Room</dt><dd>4</dd></div>
+  </dl>
+</div>
+
+<div class="section">
+  <header><h2>Clinical</h2><p>What staff must know before giving care. Allergies appear here and on every medication screen.</p></header>
+
+  <div class="allergy-panel is-unrecorded">
+    <div class="k">Known allergies and adverse reactions</div>
+    <div class="v">Not recorded</div>
+    <div class="m">Nobody has recorded whether this resident has allergies</div>
+  </div>
+
+  <dl class="rows">
+    <div class="row"><dt>Primary diagnosis</dt>
+      <dd><span class="unrec">Primary diagnosis not recorded</span></dd></div>
+    <div class="row"><dt>Secondary diagnoses</dt>
+      <dd><span class="unrec">Not recorded</span></dd></div>
+    <div class="row"><dt>Medical history</dt>
+      <dd><span class="unrec">Medical history not recorded</span></dd></div>
+  </dl>
+</div>
+
+<div class="section">
+  <header><h2>Care team</h2><p>Who to contact outside the home about this person's health.</p></header>
+  <dl class="rows">
+    <div class="row"><dt>GP</dt>
+      <dd><div class="contactline">Dr S. Achebe · Ashgrove Surgery ·
+        <a href="tel:+441619001122">0161 900 1122</a></div>
+        <span class="attr">T. Akinyemi · 20/08/2026</span></dd></div>
+    <div class="row"><dt>Consultants and specialists</dt>
+      <dd><span class="none">No consultants involved</span>
+        <span class="attr">Recorded by T. Akinyemi · 20/08/2026</span></dd></div>
+    <div class="row"><dt>Pharmacy</dt>
+      <dd><span class="unrec">Pharmacy not recorded</span></dd></div>
+  </dl>
+</div>
+
+<div class="section">
+  <header><h2>Person</h2><p>How this person communicates, what matters to them, and how they eat.</p></header>
+  <dl class="rows">
+    <div class="row"><dt>Primary language</dt><dd>Yoruba <span class="sub">English understood, limited</span></dd></div>
+    <div class="row"><dt>Communication preferences</dt>
+      <dd><span class="unrec">Communication preferences not recorded</span></dd></div>
+    <div class="row"><dt>Religion and cultural background</dt>
+      <dd><span class="unrec">Not recorded</span></dd></div>
+    <div class="row"><dt>Dietary requirements</dt>
+      <dd><span class="unrec">Dietary requirements not recorded</span></dd></div>
+  </dl>
+</div>
+
+</div>
+</body>
+</html>

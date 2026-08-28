@@ -51,12 +51,12 @@ export function PrimitiveGallery() {
       <h2 className={styles.sectionTitle}>Primitives</h2>
       <p className={styles.sectionNote}>
         Hand-authored wrappers over Radix, styled to our tokens from the first line. The
-        shadcn CLI is not used in this project — it installs an icon library and
+        shadcn CLI is not used in this project: it installs an icon library and
         overwrites the stylesheet, and both break hard rules here.
       </p>
 
       <div className={styles.group}>
-        <span className={styles.groupTitle}>Button — variants and sizes</span>
+        <span className={styles.groupTitle}>Button: variants and sizes</span>
         <div className={styles.row}>
           <Button variant="primary">Primary</Button>
           <Button variant="secondary">Secondary</Button>
@@ -97,7 +97,7 @@ export function PrimitiveGallery() {
               <DropdownMenuSeparator />
               <DropdownMenuItem>Add care note</DropdownMenuItem>
               <DropdownMenuItem>Record medication</DropdownMenuItem>
-              <DropdownMenuItem disabled>Export — later phase</DropdownMenuItem>
+              <DropdownMenuItem disabled>Export (later phase)</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -121,7 +121,7 @@ export function PrimitiveGallery() {
 
       <div className={styles.group}>
         <span className={styles.groupTitle}>
-          Form controls — note that nothing starts pre-answered
+          Form controls: nothing starts pre-answered
         </span>
         <div className={styles.row}>
           <Checkbox
@@ -221,7 +221,8 @@ export function PrimitiveGallery() {
       <AlertDialog
         open={alertOpen}
         onOpenChange={setAlertOpen}
-        title="Record 08:00 medications for Emmanuel Okafor?"
+        subject={{ kind: 'resident', name: 'Emmanuel Okafor', room: '14' }}
+        action="Record 08:00 medications"
         description="Amlodipine 5mg and Atorvastatin 20mg will be recorded as given at 08:04 by A. Okonkwo. This cannot be edited afterwards; a correction creates a new linked record."
         confirmLabel="Record medications"
         onConfirm={() => setAlertOpen(false)}

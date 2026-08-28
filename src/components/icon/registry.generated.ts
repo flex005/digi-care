@@ -11,12 +11,16 @@ import type { ComponentType, SVGProps } from 'react'
 import type { IconName } from './registry.names.generated'
 
 import IconAddRemoveDelete_Add01 from '@/assets/icons-generated/add-remove-delete/add-01.svg?react'
+import IconAddRemoveDelete_Remove01 from '@/assets/icons-generated/add-remove-delete/remove-01.svg?react'
+import IconAlertNotification_Alert01 from '@/assets/icons-generated/alert-notification/alert-01.svg?react'
 import IconAlertNotification_Alert02 from '@/assets/icons-generated/alert-notification/alert-02.svg?react'
 import IconAlertNotification_AlertDiamond from '@/assets/icons-generated/alert-notification/alert-diamond.svg?react'
 import IconAlertNotification_InformationCircle from '@/assets/icons-generated/alert-notification/information-circle.svg?react'
+import IconAlertNotification_Notification01 from '@/assets/icons-generated/alert-notification/notification-01.svg?react'
 import IconAlertNotification_Notification02 from '@/assets/icons-generated/alert-notification/notification-02.svg?react'
-import IconArrowsRound_ArrowLeft02Round from '@/assets/icons-generated/arrows-round/arrow-left-02-round.svg?react'
 import IconArrowsSharp_ArrowDown01Sharp from '@/assets/icons-generated/arrows-sharp/arrow-down-01-sharp.svg?react'
+import IconArrowsSharp_ArrowLeft01Sharp from '@/assets/icons-generated/arrows-sharp/arrow-left-01-sharp.svg?react'
+import IconArrowsSharp_ArrowRight01Sharp from '@/assets/icons-generated/arrows-sharp/arrow-right-01-sharp.svg?react'
 import IconArrowsSharp_ArrowUp01Sharp from '@/assets/icons-generated/arrows-sharp/arrow-up-01-sharp.svg?react'
 import IconBusinessAndFinance_Analytics01 from '@/assets/icons-generated/business-and-finance/analytics-01.svg?react'
 import IconBusinessAndFinance_Target01 from '@/assets/icons-generated/business-and-finance/target-01.svg?react'
@@ -28,24 +32,33 @@ import IconDashboard_DashboardSquare01 from '@/assets/icons-generated/dashboard/
 import IconDashboard_SidebarLeft from '@/assets/icons-generated/dashboard/sidebar-left.svg?react'
 import IconDateAndTime_Calendar01 from '@/assets/icons-generated/date-and-time/calendar-01.svg?react'
 import IconDateAndTime_CalendarBlock01 from '@/assets/icons-generated/date-and-time/calendar-block-01.svg?react'
+import IconDateAndTime_Clock01 from '@/assets/icons-generated/date-and-time/clock-01.svg?react'
+import IconDownloadUpload_Download01 from '@/assets/icons-generated/download-upload/download-01.svg?react'
+import IconDownloadUpload_Upload01 from '@/assets/icons-generated/download-upload/upload-01.svg?react'
+import IconEditFormatting_View from '@/assets/icons-generated/edit-formatting/view.svg?react'
+import IconEditFormatting_ViewOff from '@/assets/icons-generated/edit-formatting/view-off.svg?react'
 import IconEducation_Clipboard from '@/assets/icons-generated/education/clipboard.svg?react'
 import IconGameSports_Puzzle from '@/assets/icons-generated/game-sports/puzzle.svg?react'
+import IconGeometricSharps_Circle from '@/assets/icons-generated/geometric-sharps/circle.svg?react'
 import IconLegal_Agreement02 from '@/assets/icons-generated/legal/agreement-02.svg?react'
 import IconLegal_LegalDocument01 from '@/assets/icons-generated/legal/legal-document-01.svg?react'
-import IconMedical_Healtcare from '@/assets/icons-generated/medical/healtcare.svg?react'
+import IconLoginLogout_Logout01 from '@/assets/icons-generated/login-logout/logout-01.svg?react'
 import IconMedical_Medicine01 from '@/assets/icons-generated/medical/medicine-01.svg?react'
 import IconMedical_Stethoscope from '@/assets/icons-generated/medical/stethoscope.svg?react'
 import IconMoreMenu_More02 from '@/assets/icons-generated/more-menu/more-02.svg?react'
 import IconNoteTask_Note01 from '@/assets/icons-generated/note-task/note-01.svg?react'
+import IconNoteTask_Note03 from '@/assets/icons-generated/note-task/note-03.svg?react'
 import IconNoteTask_NoteRemove from '@/assets/icons-generated/note-task/note-remove.svg?react'
 import IconSearch_Search from '@/assets/icons-generated/search/search.svg?react'
+import IconSearch_Search02 from '@/assets/icons-generated/search/search-02.svg?react'
 import IconSettings_Setting02 from '@/assets/icons-generated/settings/setting-02.svg?react'
-import IconUsers_UserGroup from '@/assets/icons-generated/users/user-group.svg?react'
+import IconUsers_UserCircle from '@/assets/icons-generated/users/user-circle.svg?react'
 import IconUsers_UserMultiple from '@/assets/icons-generated/users/user-multiple.svg?react'
+import IconUsers_UserShield01 from '@/assets/icons-generated/users/user-shield-01.svg?react'
 import IconUsers_UserSwitch from '@/assets/icons-generated/users/user-switch.svg?react'
 
 /**
- * Only the 33 icons actually used in source. Importing all of them
+ * Only the 46 icons actually used in source. Importing all of them
  * would compile every icon in the set into the bundle.
  *
  * Partial because it is keyed by the full IconName union. A missing entry
@@ -56,12 +69,16 @@ export const iconRegistry: Partial<
   Record<IconName, ComponentType<SVGProps<SVGSVGElement>>>
 > = {
   'add-remove-delete/add-01': IconAddRemoveDelete_Add01,
+  'add-remove-delete/remove-01': IconAddRemoveDelete_Remove01,
+  'alert-notification/alert-01': IconAlertNotification_Alert01,
   'alert-notification/alert-02': IconAlertNotification_Alert02,
   'alert-notification/alert-diamond': IconAlertNotification_AlertDiamond,
   'alert-notification/information-circle': IconAlertNotification_InformationCircle,
+  'alert-notification/notification-01': IconAlertNotification_Notification01,
   'alert-notification/notification-02': IconAlertNotification_Notification02,
-  'arrows-round/arrow-left-02-round': IconArrowsRound_ArrowLeft02Round,
   'arrows-sharp/arrow-down-01-sharp': IconArrowsSharp_ArrowDown01Sharp,
+  'arrows-sharp/arrow-left-01-sharp': IconArrowsSharp_ArrowLeft01Sharp,
+  'arrows-sharp/arrow-right-01-sharp': IconArrowsSharp_ArrowRight01Sharp,
   'arrows-sharp/arrow-up-01-sharp': IconArrowsSharp_ArrowUp01Sharp,
   'business-and-finance/analytics-01': IconBusinessAndFinance_Analytics01,
   'business-and-finance/target-01': IconBusinessAndFinance_Target01,
@@ -73,19 +90,28 @@ export const iconRegistry: Partial<
   'dashboard/sidebar-left': IconDashboard_SidebarLeft,
   'date-and-time/calendar-01': IconDateAndTime_Calendar01,
   'date-and-time/calendar-block-01': IconDateAndTime_CalendarBlock01,
+  'date-and-time/clock-01': IconDateAndTime_Clock01,
+  'download-upload/download-01': IconDownloadUpload_Download01,
+  'download-upload/upload-01': IconDownloadUpload_Upload01,
+  'edit-formatting/view': IconEditFormatting_View,
+  'edit-formatting/view-off': IconEditFormatting_ViewOff,
   'education/clipboard': IconEducation_Clipboard,
   'game-sports/puzzle': IconGameSports_Puzzle,
+  'geometric-sharps/circle': IconGeometricSharps_Circle,
   'legal/agreement-02': IconLegal_Agreement02,
   'legal/legal-document-01': IconLegal_LegalDocument01,
-  'medical/healtcare': IconMedical_Healtcare,
+  'login-logout/logout-01': IconLoginLogout_Logout01,
   'medical/medicine-01': IconMedical_Medicine01,
   'medical/stethoscope': IconMedical_Stethoscope,
   'more-menu/more-02': IconMoreMenu_More02,
   'note-task/note-01': IconNoteTask_Note01,
+  'note-task/note-03': IconNoteTask_Note03,
   'note-task/note-remove': IconNoteTask_NoteRemove,
   'search/search': IconSearch_Search,
+  'search/search-02': IconSearch_Search02,
   'settings/setting-02': IconSettings_Setting02,
-  'users/user-group': IconUsers_UserGroup,
+  'users/user-circle': IconUsers_UserCircle,
   'users/user-multiple': IconUsers_UserMultiple,
+  'users/user-shield-01': IconUsers_UserShield01,
   'users/user-switch': IconUsers_UserSwitch,
 }

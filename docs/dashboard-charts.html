@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:24px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1440px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;
+  margin-bottom:18px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.sub{margin-top:4px;font-size:13px;color:var(--ink-500)}
+.controls{display:flex;gap:8px;align-items:center}
+select{padding:9px 13px;border:1px solid var(--border-strong);border-radius:var(--r-md);font:inherit;
+  font-size:13px;background:var(--bg-surface);color:var(--ink-900)}
+.btn{padding:9px 16px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+
+.panel{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-xl);
+  box-shadow:var(--shadow-card);overflow:hidden}
+.pHead{padding:18px 20px 0}
+.pHead h2{font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+.pHead p{font-size:12px;color:var(--ink-500);margin-top:3px;line-height:1.5;max-width:56ch}
+
+/* ---------- row 1 : stat cards with sparklines ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.stat{padding:18px 20px 12px;position:relative}
+.stat .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.stat .row{display:flex;align-items:baseline;gap:10px;margin-top:8px}
+.stat .v{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.stat .of{font-size:12px;color:var(--ink-500);font-weight:600}
+.stat .d{font-size:11.5px;color:var(--ink-500);margin-top:5px;line-height:1.45}
+.spark{margin-top:10px;width:100%;height:34px;display:block}
+.stat.crit{background:var(--critical-tint);border-color:var(--critical)}
+.stat.crit .v,.stat.crit .k{color:var(--critical-ink)}
+.stat.crit .d,.stat.crit .of{color:var(--critical-ink);opacity:.8}
+.stat.warn{background:var(--caution-tint);border-color:var(--caution)}
+.stat.warn .v,.stat.warn .k{color:var(--caution-ink)}
+.stat.warn .d,.stat.warn .of{color:var(--caution-ink);opacity:.8}
+.stat.gapS{border:1.5px dashed var(--unrecorded);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.stat.gapS .v,.stat.gapS .k,.stat.gapS .d,.stat.gapS .of{color:var(--unrecorded-ink)}
+
+/* ---------- row 2 : area chart + donut ---------- */
+.row2{display:grid;grid-template-columns:1.85fr 1fr;gap:16px;margin-bottom:16px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:12px 20px 0}
+.lg{display:flex;gap:7px;align-items:center;font-size:11.5px;color:var(--ink-500);font-weight:600}
+.sw{width:11px;height:11px;border-radius:3px}
+.sw.a{background:var(--purple-600)} .sw.b{background:var(--unrecorded)}
+.sw.c{background:var(--critical)}
+.areaWrap{padding:6px 12px 16px}
+.donutWrap{display:flex;flex-direction:column;align-items:center;padding:14px 20px 20px}
+.donutCentre{position:relative;width:190px;height:190px}
+.donutCentre .mid{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.donutCentre .mid .n{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.donutCentre .mid .l{font-size:11px;color:var(--ink-500);font-weight:600;margin-top:4px;line-height:1.3}
+.donutKey{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:16px}
+.dk{display:flex;align-items:center;gap:9px;font-size:12.5px}
+.dk .n{margin-left:auto;font-weight:800;font-size:13px}
+.dk .sub2{font-size:11px;color:var(--ink-500);font-weight:500}
+
+/* ---------- row 3 : horizontal bars + ring list ---------- */
+.row3{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.hbars{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.hb .t{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:6px}
+.hb .t .nm{font-weight:600}
+.hb .t .fig{font-weight:800;font-size:13px}
+.hb .t .fig small{font-weight:500;color:var(--ink-500);font-size:11px}
+.hb .track{height:10px;border-radius:var(--r-pill);background:var(--border-subtle);overflow:hidden;
+  display:flex}
+.hb .track i{display:block;height:100%}
+.hb .track .rec{background:var(--purple-600)}
+.hb .track .gap{background:repeating-linear-gradient(45deg,var(--unrecorded) 0 4px,#b9b3c8 4px 8px)}
+.hb .track .crit{background:var(--critical)}
+
+.miniRows{padding:8px 0 6px}
+.mrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;
+  padding:11px 20px;border-top:1px solid var(--border-subtle)}
+.mrow:first-child{border-top:0}
+.ring{width:44px;height:44px;flex:0 0 44px}
+.mrow .nm{font-size:13.5px;font-weight:600}
+.mrow .sub3{font-size:11.5px;color:var(--ink-500);margin-top:2px}
+.mrow .fig{font-size:15px;font-weight:800;white-space:nowrap}
+.mrow .fig small{display:block;font-size:10.5px;font-weight:500;color:var(--ink-500);text-align:right;
+  margin-top:1px}
+
+/* ---------- table ---------- */
+.tHead{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:18px 20px;
+  flex-wrap:wrap}
+.tHead h2{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.tHead p{font-size:12px;color:var(--ink-500);margin-top:2px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px}
+thead th{text-align:left;padding:10px 20px;font-size:11px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-500);background:var(--bg-sunken);
+  border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);white-space:nowrap}
+tbody td{padding:12px 20px;border-bottom:1px solid var(--border-subtle);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--bg-sunken)}
+.when{font-size:13px;font-weight:700;white-space:nowrap}
+.when small{display:block;font-size:11px;font-weight:400;color:var(--ink-500);margin-top:1px}
+.what{font-size:13.5px;font-weight:600}
+.who{font-size:11.5px;color:var(--ink-500);margin-top:2px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px}
+.dot.r{background:var(--critical)}
+.st{font-size:12.5px;font-weight:700;white-space:nowrap;color:var(--critical-ink)}
+.stGap{display:inline-flex;flex-direction:column;gap:1px;padding:6px 10px;border-radius:var(--r-sm);
+  font-size:11.5px;font-weight:700;border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.stGap small{font-size:10.5px;font-weight:400}
+.go{color:var(--purple-600);font-weight:700;font-size:12.5px;white-space:nowrap}
+
+.note{margin-top:16px;padding:15px 19px;border-radius:var(--r-lg);background:var(--bg-sunken);
+  border:1px solid var(--border-strong);color:var(--ink-500);font-size:12.5px;line-height:1.6;max-width:94ch}
+.note b{color:var(--ink-700);font-weight:700}
+
+.meas{margin-top:30px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- shared SVG defs: the hatch, as a pattern, so charts carry it too -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <pattern id="hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <rect width="8" height="8" fill="#F2F1F6"/>
+    <line x1="0" y="0" x2="0" y2="8" stroke="#8E86A8" stroke-width="4"/>
+  </pattern>
+  <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#6935CF" stop-opacity=".28"/>
+    <stop offset="100%" stop-color="#6935CF" stop-opacity="0"/>
+  </linearGradient>
+</defs></svg>
+
+<div class="top">
+  <div><h1>Rosewood Court</h1>
+    <p class="sub">Sunday 24 August 2026, 16:42 BST · late shift · 28 residents · 12 staff on the rota</p></div>
+  <div class="controls">
+    <select><option selected>Rosewood Court</option><option>Ashgrove Lodge</option></select>
+    <select><option selected>Today</option><option>This week</option></select>
+    <button class="btn primary">Start the 18:00 round</button>
+  </div>
+</div>
+
+<!-- ROW 1 — four stats, each with seven days behind it -->
+<div class="stats">
+  <div class="panel stat crit">
+    <div class="k">Already late</div>
+    <div class="row"><span class="v">6</span><span class="of">things</span></div>
+    <div class="d">3 doses · 2 reviews · 1 handover</div>
+    <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none">
+      <polyline points="0,26 20,22 40,28 60,18 80,20 100,12 120,6" fill="none"
+        stroke="#B3272B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="120" cy="6" r="3.5" fill="#B3272B"/>
+    </svg>
+  </div>
+
+  <div class="panel stat warn">
+    <div class="k">Due before 22:00</div>
+    <div class="row"><span class="v">14</span><span class="of">of 28 residents</span></div>
+    <div class="d">the 18:00 round · 9 residents</div>
+    <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none">
+      <polyline points="0,14 20,18 40,12 60,16 80,10 100,15 120,13" fill="none"
+        stroke="#A65200" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="120" cy="13" r="3.5" fill="#A65200"/>
+    </svg>
+  </div>
+
+  <div class="panel stat gapS">
+    <div class="k">Not written up today</div>
+    <div class="row"><span class="v">7</span><span class="of">of 28 residents</span></div>
+    <div class="d">nobody has recorded a care note</div>
+    <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none">
+      <polyline points="0,20 20,16 40,22 60,14 80,18 100,10 120,8" fill="none"
+        stroke="#5C5470" stroke-width="2.5" stroke-dasharray="5 3" stroke-linecap="round"/>
+      <circle cx="120" cy="8" r="3.5" fill="#5C5470"/>
+    </svg>
+  </div>
+
+  <div class="panel stat">
+    <div class="k">Unacknowledged incidents</div>
+    <div class="row"><span class="v">2</span><span class="of">of 40 in 90 days</span></div>
+    <div class="d">oldest waiting 5 days</div>
+    <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none">
+      <polyline points="0,10 20,14 40,11 60,18 80,16 100,20 120,22" fill="none"
+        stroke="#6935CF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="120" cy="22" r="3.5" fill="#6935CF"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ROW 2 — area chart + donut -->
+<div class="row2">
+  <div class="panel">
+    <div class="pHead">
+      <h2>Doses recorded against doses due, by round, last seven days</h2>
+      <p>The line is what was recorded. The shaded band beneath is the gap between it and what was due —
+        widest at 08:00 every day this week, which is a staffing shape rather than a trend.</p>
+    </div>
+    <div class="legend">
+      <span class="lg"><span class="sw a"></span>Recorded</span>
+      <span class="lg"><span class="sw b"></span>Due and not recorded</span>
+      <span class="lg"><span class="sw c"></span>Today</span>
+    </div>
+    <div class="areaWrap">
+      <svg viewBox="0 0 700 240" style="width:100%;height:auto;display:block" role="img"
+        aria-label="Doses recorded against due, by round, over seven days">
+        <!-- gridlines -->
+        <g stroke="#EFEAFE" stroke-width="1">
+          <line x1="40" y1="30" x2="690" y2="30"/><line x1="40" y1="75" x2="690" y2="75"/>
+          <line x1="40" y1="120" x2="690" y2="120"/><line x1="40" y1="165" x2="690" y2="165"/>
+          <line x1="40" y1="200" x2="690" y2="200"/>
+        </g>
+        <g font-size="10" fill="#9A93B0" font-weight="600">
+          <text x="8" y="34">60</text><text x="8" y="79">45</text><text x="8" y="124">30</text>
+          <text x="8" y="169">15</text><text x="8" y="204">0</text>
+        </g>
+        <!-- due band (the gap) -->
+        <path d="M40,86 L133,58 L226,96 L319,64 L412,90 L505,52 L598,74 L690,68
+                 L690,200 L40,200 Z" fill="url(#hatch)" opacity=".55"/>
+        <!-- recorded area -->
+        <path d="M40,104 L133,88 L226,110 L319,84 L412,106 L505,78 L598,96 L690,112
+                 L690,200 L40,200 Z" fill="url(#areaFill)"/>
+        <polyline points="40,104 133,88 226,110 319,84 412,106 505,78 598,96 690,112"
+          fill="none" stroke="#6935CF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- today marker -->
+        <line x1="690" y1="30" x2="690" y2="200" stroke="#DD4347" stroke-width="2" stroke-dasharray="4 4"/>
+        <circle cx="690" cy="112" r="5" fill="#DD4347"/>
+        <g font-size="10.5" fill="#6E6688" font-weight="700">
+          <text x="26" y="222">Mon</text><text x="119" y="222">Tue</text><text x="212" y="222">Wed</text>
+          <text x="305" y="222">Thu</text><text x="398" y="222">Fri</text><text x="491" y="222">Sat</text>
+          <text x="584" y="222">Sun</text><text x="662" y="222" fill="#B3272B">now</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="pHead"><h2>Today's rounds</h2>
+      <p>Four of six rounds done. The gap is doses nobody recorded, not doses refused.</p></div>
+    <div class="donutWrap">
+      <div class="donutCentre">
+        <svg viewBox="0 0 42 42" style="width:190px;height:190px;transform:rotate(-90deg)" role="img"
+          aria-label="Today's rounds: 105 recorded, 8 with no record, 45 not due yet">
+          <circle cx="21" cy="21" r="15.9" fill="none" stroke="#EFEAFE" stroke-width="5.5"/>
+          <circle cx="21" cy="21" r="15.9" fill="none" stroke="#6935CF" stroke-width="5.5"
+            stroke-dasharray="66 34" stroke-dashoffset="0" stroke-linecap="round"/>
+          <circle cx="21" cy="21" r="15.9" fill="none" stroke="url(#hatch)" stroke-width="5.5"
+            stroke-dasharray="5 95" stroke-dashoffset="-66"/>
+          <circle cx="21" cy="21" r="15.9" fill="none" stroke="#DD4347" stroke-width="5.5"
+            stroke-dasharray="4 96" stroke-dashoffset="-72" stroke-linecap="round"/>
+        </svg>
+        <div class="mid"><div><div class="n">105</div><div class="l">of 158 doses<br>recorded today</div></div></div>
+      </div>
+      <div class="donutKey">
+        <div class="dk"><span class="sw a"></span>Recorded<span class="n">105</span></div>
+        <div class="dk"><span class="sw b"></span>No record <span class="sub2">· window closed</span>
+          <span class="n">8</span></div>
+        <div class="dk"><span class="sw c"></span>Due now <span class="sub2">· the 18:00 round</span>
+          <span class="n">14</span></div>
+        <div class="dk"><span class="sw" style="background:var(--border-subtle)"></span>Not due yet
+          <span class="n">31</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROW 3 — horizontal bars + ring rows -->
+<div class="row3">
+  <div class="panel">
+    <div class="pHead"><h2>What the record holds, by module</h2>
+      <p>Solid is recorded. Hatched is expected and missing — a count of records nobody has written,
+        not a shortfall against a target.</p></div>
+    <div class="hbars">
+      <div class="hb"><div class="t"><span class="nm">Care notes, today</span>
+        <span class="fig">21<small> of 28 residents</small></span></div>
+        <div class="track"><i class="rec" style="width:75%"></i><i class="gap" style="width:25%"></i></div></div>
+      <div class="hb"><div class="t"><span class="nm">Medication, today</span>
+        <span class="fig">105<small> of 113 due so far</small></span></div>
+        <div class="track"><i class="rec" style="width:93%"></i><i class="gap" style="width:7%"></i></div></div>
+      <div class="hb"><div class="t"><span class="nm">Risk assessments</span>
+        <span class="fig">171<small> of 252 expected</small></span></div>
+        <div class="track"><i class="rec" style="width:68%"></i><i class="gap" style="width:32%"></i></div></div>
+      <div class="hb"><div class="t"><span class="nm">Care plan domains</span>
+        <span class="fig">233<small> of 320 expected</small></span></div>
+        <div class="track"><i class="rec" style="width:73%"></i><i class="gap" style="width:27%"></i></div></div>
+      <div class="hb"><div class="t"><span class="nm">Consents</span>
+        <span class="fig">168<small> of 224 expected</small></span></div>
+        <div class="track"><i class="rec" style="width:75%"></i><i class="gap" style="width:25%"></i></div></div>
+      <div class="hb"><div class="t"><span class="nm">Incidents acknowledged</span>
+        <span class="fig">38<small> of 40 in 90 days</small></span></div>
+        <div class="track"><i class="rec" style="width:95%"></i><i class="crit" style="width:5%"></i></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="pHead"><h2>Rounds today</h2>
+      <p>Each ring is one round. The 08:00 round is where the week's gap sits.</p></div>
+    <div class="miniRows">
+      <div class="mrow">
+        <svg class="ring" viewBox="0 0 42 42" style="transform:rotate(-90deg)"><circle cx="21" cy="21" r="17"
+          fill="none" stroke="#EFEAFE" stroke-width="6"/><circle cx="21" cy="21" r="17" fill="none"
+          stroke="#6935CF" stroke-width="6" stroke-dasharray="100 0" stroke-linecap="round"/></svg>
+        <div><div class="nm">06:00</div><div class="sub3">complete · C. Nwosu</div></div>
+        <div class="fig">22<small>of 22</small></div></div>
+
+      <div class="mrow">
+        <svg class="ring" viewBox="0 0 42 42" style="transform:rotate(-90deg)"><circle cx="21" cy="21" r="17"
+          fill="none" stroke="url(#hatch)" stroke-width="6"/><circle cx="21" cy="21" r="17" fill="none"
+          stroke="#6935CF" stroke-width="6" stroke-dasharray="75 25" stroke-linecap="round"/></svg>
+        <div><div class="nm">08:00</div><div class="sub3">14 doses with no record · K. Osei</div></div>
+        <div class="fig">41<small>of 55</small></div></div>
+
+      <div class="mrow">
+        <svg class="ring" viewBox="0 0 42 42" style="transform:rotate(-90deg)"><circle cx="21" cy="21" r="17"
+          fill="none" stroke="url(#hatch)" stroke-width="6"/><circle cx="21" cy="21" r="17" fill="none"
+          stroke="#6935CF" stroke-width="6" stroke-dasharray="87 13" stroke-linecap="round"/></svg>
+        <div><div class="nm">12:00</div><div class="sub3">4 doses with no record · N. Eze</div></div>
+        <div class="fig">27<small>of 31</small></div></div>
+
+      <div class="mrow">
+        <svg class="ring" viewBox="0 0 42 42" style="transform:rotate(-90deg)"><circle cx="21" cy="21" r="17"
+          fill="none" stroke="#EFEAFE" stroke-width="6"/><circle cx="21" cy="21" r="17" fill="none"
+          stroke="#6935CF" stroke-width="6" stroke-dasharray="95 5" stroke-linecap="round"/></svg>
+        <div><div class="nm">14:00</div><div class="sub3">1 not given, recorded · N. Eze</div></div>
+        <div class="fig">18<small>of 19</small></div></div>
+
+      <div class="mrow">
+        <svg class="ring" viewBox="0 0 42 42" style="transform:rotate(-90deg)"><circle cx="21" cy="21" r="17"
+          fill="none" stroke="#FCE7E5" stroke-width="6"/><circle cx="21" cy="21" r="17" fill="none"
+          stroke="#DD4347" stroke-width="6" stroke-dasharray="0 100" stroke-linecap="round"/></svg>
+        <div><div class="nm">18:00</div><div class="sub3">due now · nobody has started it</div></div>
+        <div class="fig">0<small>of 14</small></div></div>
+
+      <div class="mrow">
+        <svg class="ring" viewBox="0 0 42 42" style="transform:rotate(-90deg)"><circle cx="21" cy="21" r="17"
+          fill="none" stroke="#EFEAFE" stroke-width="6"/></svg>
+        <div><div class="nm">22:00</div><div class="sub3">not due yet</div></div>
+        <div class="fig" style="color:var(--ink-400)">—<small>of 17</small></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div class="panel">
+  <div class="tHead">
+    <div><h2>Already late</h2><p>Longest first. Every row names who or what it is about.</p></div>
+    <div class="controls"><select><option>Everything late</option><option>Medication only</option>
+      <option>Reviews only</option></select></div>
+  </div>
+  <table>
+    <thead><tr><th>When</th><th>What</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <tr><td class="when">12:00<small>4h 42m ago</small></td>
+        <td><div class="what">Furosemide 20mg — midday round</div>
+          <div class="who">Grace Adeyemi · Room 302</div></td>
+        <td><span class="st"><span class="dot r"></span>No record · escalated 13:06</span></td>
+        <td><span class="go">Open MAR &rarr;</span></td></tr>
+      <tr><td class="when">22/08<small>2 days ago</small></td>
+        <td><div class="what">Falls risk re-score — post-incident review</div>
+          <div class="who">Beryl Hutchinson · Room 214 · flagged by the unwitnessed fall of 21/08</div></td>
+        <td><span class="st"><span class="dot r"></span>2 days late</span></td>
+        <td><span class="go">Re-score &rarr;</span></td></tr>
+      <tr><td class="when">14:00<small>2h 42m ago</small></td>
+        <td><div class="what">Early &rarr; late handover</div>
+          <div class="who">Rosewood Court · signed by F. Adebayo, never countersigned</div></td>
+        <td><span class="st"><span class="dot r"></span>Half complete</span></td>
+        <td><span class="go">Open handover &rarr;</span></td></tr>
+      <tr><td class="when">&mdash;<small>never</small></td>
+        <td><div class="what">No care note has ever been recorded</div>
+          <div class="who">Ismail Sowande · Room 4 · admitted 22/08</div></td>
+        <td><span class="stGap">Never written up<small>not once, since admission</small></span></td>
+        <td><span class="go">Write a note &rarr;</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note">
+  <b>Nothing on this screen is green, and there is no overall percentage.</b> Every chart shows what is
+  recorded against what was expected, so the hatched part is a count of records nobody has written rather
+  than a shortfall against a target. A single "92% compliant" figure would be most reassuring exactly when
+  the record is thinnest — and a home that has written almost nothing has very few problems on record.
+</div>
+
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>Four rows, four chart types</h3>
+  Row 1: four stat cards, <code>repeat(4,1fr)</code>, gap <code>16px</code> — figure
+  <code>34px/800</code> with its denominator beside it at <code>12px/600</code>, and a
+  <b>seven-day sparkline</b> at <code>34px</code> tall beneath. The sparkline is the last seven days of
+  that same figure; the dot marks today.
+  Row 2: <code>1.85fr 1fr</code> — an area chart of doses recorded against due over seven days, and a
+  donut of today's rounds.
+  Row 3: <code>1fr 1fr</code> — horizontal bars of what the record holds by module, and one ring per
+  round today.
+  Row 4: the dense table, full width.
+  Outer radius <code>20px</code> throughout, gap <code>16px</code>.
+
+  <h3>The hatch is an SVG pattern, so charts carry it</h3>
+  <code>&lt;pattern id="hatch"&gt;</code> at 45°, used as a fill on the area band, as a stroke on the
+  donut's no-record arc, and as the track behind each incomplete ring. <b>Missing evidence is never a
+  lighter shade of the recorded colour</b> — it is the same hatch as every screen in the build, which is
+  what keeps the charts readable in greyscale and to a colour-blind reader.
+
+  <h3>Every chart shows recorded against expected</h3>
+  Not a percentage against a target. The area chart's shaded band is the gap between what was recorded
+  and what was due; the donut's segments are recorded, no-record, due-now and not-due-yet; the bars are
+  recorded and expected-and-missing. <b>A chart of a percentage would hide its own denominator</b>, which
+  is Rule 4 applied to a shape rather than a figure.
+
+  <h3>Sparklines carry direction, never a bare arrow</h3>
+  Seven points, today marked with a dot. No "↑5%" — a trend arrow with no denominator is the shape this
+  build spent fifteen phases removing, and the line itself carries the direction honestly.
+
+  <h3>Refused</h3>
+  No green anywhere, including a shift with nothing outstanding. No overall compliance percentage — that
+  lives on Compliance, and here it would be most reassuring exactly when the record is thinnest.
+  Not-due-yet renders in border-subtle, never in a success colour: it has not happened, so nobody has
+  succeeded at it.
+</div>
+
+</div>
+</body>
+</html>

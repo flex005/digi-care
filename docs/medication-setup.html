@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Prescriptions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1400px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:16px}
+
+/* subject */
+.subj{display:flex;gap:14px;align-items:center;padding:14px 22px}
+.av{width:42px;height:42px;flex:0 0 42px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:700;font-size:13px}
+.subj .nm{font-size:17px;font-weight:700;line-height:1.2}
+.subj .meta{font-size:12px;color:var(--ink-500);margin-top:2px}
+.allergy{margin-left:auto;display:flex;gap:8px;align-items:center;padding:7px 13px;border-radius:var(--r-sm);
+  border:1px solid var(--critical);border-left-width:4px;background:var(--critical-tint);
+  color:var(--critical-ink);font-size:12px;font-weight:700}
+.allergy small{font-weight:400}
+
+/* sub tabs */
+.subtabs{display:flex;gap:4px;margin-top:16px}
+.st{padding:8px 16px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.st[aria-current="page"]{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+
+/* count line + add */
+.top{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:20px}
+.top p{font-size:13px;color:var(--ink-500)}
+.top p b{color:var(--ink-900);font-weight:700}
+.btn{padding:9px 16px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600)}
+.btn:disabled{color:var(--ink-400);cursor:not-allowed}
+
+/* medication card */
+.med{margin-top:16px}
+.medHead{display:flex;gap:16px;align-items:flex-start;padding:18px 22px;
+  border-bottom:1px solid var(--border-subtle)}
+.medHead .n{font-size:19px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.medHead .f{font-size:13px;color:var(--ink-500);margin-top:3px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.tag{padding:2px 9px;border-radius:var(--r-pill);font-size:11px;font-weight:700}
+.tag.cd{background:var(--purple-50);color:var(--purple-600)}
+.tag.prn{background:var(--info-tint);color:var(--info-ink)}
+.tag.route{background:var(--bg-sunken);color:var(--ink-500);border:1px solid var(--border-subtle)}
+.medHead .sched{margin-left:auto;text-align:right}
+.medHead .sched .v{font-size:15px;font-weight:700}
+.medHead .sched .u{font-size:11.5px;color:var(--ink-500);margin-top:2px}
+
+/* fields */
+.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 26px;padding:18px 22px}
+.f .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin-bottom:4px}
+.f .v{font-size:14px;color:var(--ink-900)}
+.f .v small{display:block;font-size:12px;color:var(--ink-500);margin-top:2px}
+.f.wide{grid-column:span 2}
+.f.full{grid-column:span 3}
+.unrec{display:inline-block;font-size:12.5px;font-weight:600;color:var(--unrecorded-ink);
+  border:1.5px dashed var(--unrecorded);border-radius:var(--r-sm);padding:4px 10px;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.unrec + .why{display:block;font-size:11.5px;color:var(--ink-500);margin-top:5px;max-width:46ch}
+
+/* what it requires of you */
+.req{margin:0 22px 18px;padding:14px 18px;border-radius:var(--r-md);border:1px solid var(--purple-200);
+  border-left-width:4px;background:var(--purple-50)}
+.req .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple-600);
+  margin-bottom:8px}
+.req ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.req li{font-size:13px;color:var(--ink-700);padding-left:16px;position:relative;line-height:1.45}
+.req li::before{content:'';position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:50%;
+  background:var(--purple-400)}
+.req.gap{border-color:var(--critical);background:var(--critical-tint)}
+.req.gap .k{color:var(--critical-ink)}
+.req.gap li{color:var(--critical-ink);font-weight:600}
+.req.gap li::before{background:var(--critical)}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Emmanuel Okafor</h1>
+
+<div class="card">
+  <div class="subj">
+    <span class="av">EO</span>
+    <div><div class="nm">Emmanuel</div>
+      <div class="meta">Emmanuel Okafor · Room 14 · Born 07/07/1948 (78) · Rosewood Court</div></div>
+    <div class="allergy">ALLERGY: PENICILLIN <small>anaphylaxis</small></div>
+  </div>
+</div>
+
+<div class="subtabs">
+  <button class="st">Chart</button>
+  <button class="st" aria-current="page">Prescriptions</button>
+</div>
+
+<div class="top">
+  <p><b>4 medications</b> prescribed · 1 controlled drug · 1 as required</p>
+  <button class="btn" disabled title="Coming in Phase 16">+ Add medication</button>
+</div>
+
+<!-- 1. controlled drug, complete -->
+<div class="card med">
+  <div class="medHead">
+    <div>
+      <div class="n">Morphine sulfate oral solution</div>
+      <div class="f">10mg/5ml · oral solution · counted in ml</div>
+      <div class="tags"><span class="tag route">Oral</span><span class="tag cd">CONTROLLED DRUG</span></div>
+    </div>
+    <div class="sched"><div class="v">08:00 and 20:00</div><div class="u">every day</div></div>
+  </div>
+  <div class="fields">
+    <div class="f"><div class="k">Dose</div><div class="v">2.5mg <small>1.25ml measured</small></div></div>
+    <div class="f"><div class="k">Prescriber</div><div class="v">Dr P. Ramanathan <small>Brookfield Medical Practice</small></div></div>
+    <div class="f"><div class="k">Started</div><div class="v">18/08/2026 <small>4 days ago</small></div></div>
+    <div class="f wide"><div class="k">Storage</div>
+      <div class="v">Controlled drug cabinet, ground floor clinic room. Keep upright.</div></div>
+    <div class="f"><div class="k">Prescription document</div>
+      <div class="v">Scanned 18/08/2026 <small>A. Okonkwo</small></div></div>
+  </div>
+  <div class="req">
+    <div class="k">What this requires of you</div>
+    <ul>
+      <li>Two signatures at every administration — the person giving it and a witness who saw it given.</li>
+      <li>The cabinet counted before and after, in ml, and the count recorded in the register.</li>
+      <li>A count that does not reconcile blocks the record and raises a discrepancy.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 2. PRN with a gap that matters -->
+<div class="card med">
+  <div class="medHead">
+    <div>
+      <div class="n">Paracetamol</div>
+      <div class="f">500mg · tablets · counted in tablets</div>
+      <div class="tags"><span class="tag route">Oral</span><span class="tag prn">AS REQUIRED</span></div>
+    </div>
+    <div class="sched"><div class="v">Not scheduled</div><div class="u">available when needed</div></div>
+  </div>
+  <div class="fields">
+    <div class="f"><div class="k">Dose</div><div class="v">1g <small>two tablets</small></div></div>
+    <div class="f"><div class="k">Maximum in 24 hours</div>
+      <div class="v"><span class="unrec">Not recorded</span>
+        <span class="why">Nobody has recorded a 24-hour maximum. Without one there is nothing to check
+          a dose against.</span></div></div>
+    <div class="f"><div class="k">Prescriber</div><div class="v">Dr P. Ramanathan</div></div>
+    <div class="f wide"><div class="k">Storage</div>
+      <div class="v">Medication trolley, upper drawer.</div></div>
+    <div class="f"><div class="k">Prescription document</div>
+      <div class="v"><span class="unrec">Not on file</span></div></div>
+  </div>
+  <div class="req gap">
+    <div class="k">What this requires of you — and what is missing</div>
+    <ul>
+      <li>A reason and a symptom before it is given, and an outcome recorded afterwards.</li>
+      <li>No 24-hour maximum is recorded, so the system cannot tell anybody when a further dose would
+        exceed it. Somebody has to know this from the prescription itself.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 3. ordinary, complete -->
+<div class="card med">
+  <div class="medHead">
+    <div>
+      <div class="n">Amlodipine</div>
+      <div class="f">5mg · tablets · counted in tablets</div>
+      <div class="tags"><span class="tag route">Oral</span></div>
+    </div>
+    <div class="sched"><div class="v">08:00</div><div class="u">every day</div></div>
+  </div>
+  <div class="fields">
+    <div class="f"><div class="k">Dose</div><div class="v">5mg <small>one tablet</small></div></div>
+    <div class="f"><div class="k">Prescriber</div><div class="v">Dr P. Ramanathan</div></div>
+    <div class="f"><div class="k">Started</div><div class="v">12/03/2026 <small>5 months ago</small></div></div>
+    <div class="f wide"><div class="k">Storage</div>
+      <div class="v">Medication trolley, upper drawer.</div></div>
+    <div class="f"><div class="k">Prescription document</div>
+      <div class="v">Scanned 12/03/2026 <small>A. Okonkwo</small></div></div>
+  </div>
+  <div class="req">
+    <div class="k">What this requires of you</div>
+    <ul><li>Take with or without food. Blood pressure checked weekly.</li></ul>
+  </div>
+</div>
+
+<!-- 4. every-third-day patch -->
+<div class="card med">
+  <div class="medHead">
+    <div>
+      <div class="n">Fentanyl transdermal patch</div>
+      <div class="f">25 micrograms/hour · patch · counted in patches</div>
+      <div class="tags"><span class="tag route">Transdermal</span><span class="tag cd">CONTROLLED DRUG</span></div>
+    </div>
+    <div class="sched"><div class="v">08:00</div><div class="u">every 3 days</div></div>
+  </div>
+  <div class="fields">
+    <div class="f"><div class="k">Dose</div><div class="v">1 patch</div></div>
+    <div class="f"><div class="k">Prescriber</div><div class="v">Dr H. Whitfield <small>Manchester Royal</small></div></div>
+    <div class="f"><div class="k">Started</div><div class="v">12/08/2026 <small>10 days ago</small></div></div>
+    <div class="f wide"><div class="k">Storage</div>
+      <div class="v">Controlled drug cabinet, ground floor clinic room.</div></div>
+    <div class="f"><div class="k">Prescription document</div>
+      <div class="v">Scanned 12/08/2026 <small>A. Okonkwo</small></div></div>
+  </div>
+  <div class="req">
+    <div class="k">What this requires of you</div>
+    <ul>
+      <li>Two signatures at every change, and the used patch accounted for on disposal.</li>
+      <li>Changed every third day. On the two days between, the chart shows not due — that is the
+        schedule, not a missed dose.</li>
+      <li>Rotate the site and record where it was applied.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>Placement</h3>
+  A sub-tab on the resident's Medications tab: <code>Chart</code> and <code>Prescriptions</code>.
+  The chart is what was recorded; this is what was prescribed. Sub-tabs <code>8px 16px</code>,
+  pill radius, <code>4px</code> gap, active is purple-600 fill with white text.
+
+  <h3>Count line and Add</h3>
+  One row, space-between, <code>20px</code> below the sub-tabs. Left: <code>13px</code> ink-500 with the
+  figure at <code>700</code> in ink-900 — "4 medications prescribed · 1 controlled drug · 1 as required".
+  Right: Add medication, present but disabled with its phase tooltip, exactly as Add Resident.
+
+  <h3>Medication card</h3>
+  <code>16px</code> between cards. Header padding <code>18px 22px</code>, 1px bottom border.
+  Drug name <code>19px/700</code>. Form line <code>13px</code> ink-500, <code>3px</code> beneath, carrying
+  strength, form and the unit it is counted in.
+  Tags <code>11px/700</code>, <code>2px 9px</code>, pill radius, <code>6px</code> gap, <code>9px</code> above.
+  Schedule right-aligned: times <code>15px/700</code>, interval <code>11.5px</code> ink-500 beneath.
+  A drug that is not scheduled says "Not scheduled / available when needed" — never a blank.
+
+  <h3>Field grid</h3>
+  Three equal columns, gap <code>18px 26px</code>, padding <code>18px 22px</code>.
+  Label <code>11px/600</code> uppercase letter-spacing <code>.06em</code> ink-500, <code>4px</code> beneath.
+  Value <code>14px</code>, with its qualifier <code>12px</code> ink-500 on its own line.
+  Storage spans two columns. Any field that would run long spans two or three rather than wrapping in one.
+  A missing field takes the hatch with a line beneath saying what its absence means — never blank,
+  never a dash.
+
+  <h3>What this requires of you</h3>
+  Below the fields, <code>0 22px 18px</code>, padding <code>14px 18px</code>, radius <code>12px</code>,
+  1px purple-200 border with <code>4px</code> left, purple-50 background.
+  Label <code>11px/700</code> uppercase purple-600. Items <code>13px</code> ink-700 with a <code>6px</code>
+  purple-400 dot, <code>6px</code> apart.
+  Where a requirement cannot be met because something is unrecorded, the whole block takes the critical
+  border and tint and its items go to <code>600</code> weight — a PRN with no 24-hour maximum is the case
+  to check. That is a requirement the system cannot enforce, and saying so is the point of the block.
+</div>
+
+</div>
+</body>
+</html>

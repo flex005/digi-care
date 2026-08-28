@@ -1,0 +1,376 @@
+/**
+ * Shift handover. PRD §6.3.
+ *
+ * The screen is read at 14:00 by somebody with ten minutes and twenty-eight
+ * residents, so it is ordered by what needs doing rather than by name, and the
+ * hatched rows have to be findable without reading a word.
+ */
+
+/**
+ * Four titled sections with air between them, not a stack of equal cards.
+ *
+ * The gap is doing work: it is what says the coverage figures, an unsigned
+ * handover from yesterday, the residents and the signature are four different
+ * kinds of thing. Equal cards say they are four of the same thing, and on
+ * this screen that is false.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-40);
+}
+
+.pageHead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.pageFacts {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/**
+ * The coverage cards. The lead is wider as well as larger, because position
+ * and size are the only things ranking it: a measured count never wears the
+ * unrecorded tint, whatever it is counting (PRD §4.5).
+ *
+ * `align-items: stretch` on the grid rather than a height on each card, so
+ * four cards with different amounts of text still read level.
+ */
+.glance {
+  display: grid;
+  grid-template-columns: 1.6fr repeat(3, minmax(0, 1fr));
+  gap: var(--space-16);
+  align-items: stretch;
+}
+
+/* ---- earlier handovers ---- */
+
+.unsignedList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.unsignedRow {
+  display: flex;
+}
+
+/* ---- the four groups ---- */
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+/* ---- group headings ---- */
+
+/**
+ * The shape of the shift, readable without reading a row.
+ *
+ * The count carries its denominator, and the denominators differ between
+ * groups on purpose: "not reviewed" is out of everybody living here, the other
+ * three are out of the residents somebody actually looked at.
+ */
+.groupHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-12);
+  align-items: baseline;
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.groupTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.groupCount {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* Zero is a real answer, stated. Dropping an empty group would make "nobody is
+   urgent" and "nobody checked whether anybody is urgent" the same absence. */
+.groupEmpty {
+  max-width: 74ch;
+  padding: var(--space-16) var(--space-24);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* ---- the resident rows ---- */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) auto;
+  gap: var(--space-16) var(--space-24);
+  align-items: start;
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.rowWho {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  min-width: 0;
+}
+
+.rowName {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.rowName:hover {
+  color: var(--purple-600);
+  text-decoration: underline;
+}
+
+.rowFacts {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.rowStatus {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/* How long the silence has run on a row nobody reviewed. Plain text, because
+   the last note is a complete record and only its age is the finding. */
+.rowSilence {
+  max-width: 78ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.rowSilenceFigure {
+  color: var(--ink-900);
+  font-weight: var(--weight-semibold);
+}
+
+/* What the incoming shift has to do about it. The status is the flag; this is
+   the instruction, and it is the part that gets acted on. */
+.rowNote {
+  max-width: 78ch;
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.rowAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---- signatures ---- */
+
+.signatures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-24);
+  padding: var(--space-20) var(--space-24);
+}
+
+.signature {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  align-items: flex-start;
+  padding: var(--space-16) var(--space-20);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface-sunken);
+}
+
+.signatureRole {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* What the signature actually covered. Never a bare "signed". */
+.signatureCounts {
+  max-width: 60ch;
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* ---- the status form ---- */
+
+.statusForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  margin-top: var(--space-16);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.fieldLabel {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.fieldHint {
+  max-width: 70ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.textarea {
+  width: 100%;
+  padding: var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
+  font-family: var(--font-family);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  resize: vertical;
+}
+
+.textarea:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.formError {
+  color: var(--status-critical-ink);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-medium);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-12);
+  justify-content: flex-end;
+}
+
+.errorTitle {
+  color: var(--status-critical-ink);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-semibold);
+}
+
+.errorBody {
+  max-width: 70ch;
+  margin: var(--space-8) 0 var(--space-16);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.loading {
+  padding: var(--space-32);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  text-align: center;
+}
+
+/* The rail ends with the list, not with a rule hanging under it. */
+.rows > .row:last-child {
+  border-bottom: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * Status tabs
+ *
+ * Pills, because a pill means a filter and an underline strip means navigation
+ * (CLAUDE.md §6). These choose which group of residents to work through on the
+ * screen you are already on.
+ *
+ * Every status stays in the strip at zero. Absence from the list is the same
+ * bug as a blank cell: a shift with nobody urgent has to say so.
+ * ------------------------------------------------------------------------ */
+
+.statusTabs {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-12);
+}
+
+.statusTab {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-surface);
+  color: var(--ink-500);
+  font-family: var(--font-family);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.statusTabActive {
+  border-color: var(--purple-600);
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+}
+
+.statusTabCount {
+  color: var(--ink-400);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.statusTabActive .statusTabCount {
+  color: var(--bg-surface);
+  opacity: 0.85;
+}

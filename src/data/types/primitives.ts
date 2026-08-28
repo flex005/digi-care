@@ -23,6 +23,11 @@ export type SiteId = `site-${string}`
 export type ResidentId = `res-${string}`
 export type StaffId = `staff-${string}`
 export type DocumentId = `doc-${string}`
+export type IncidentId = `inc-${string}`
+export type ActivityId = `act-${string}`
+export type CapacityAssessmentId = `cap-${string}`
+export type GoalId = `goal-${string}`
+export type GoalProgressNoteId = `gpn-${string}`
 
 /** The seven roles in the model. PRD §1. */
 export type StaffRole =
@@ -33,6 +38,25 @@ export type StaffRole =
   | 'care_worker'
   | 'activities_coordinator'
   | 'auditor'
+
+/**
+ * How each role reads on a screen.
+ *
+ * **One owner, because the first screen to render a role got it wrong.** The
+ * staff report mapped five of the seven by hand and printed
+ * "activities_coordinator" for another — a machine identifier in a column
+ * about a person. A `Record` keyed by the union cannot miss a member: adding a
+ * role without naming it is a compile error.
+ */
+export const STAFF_ROLE_NAMES: Record<StaffRole, string> = {
+  organisation_admin: 'Organisation admin',
+  registered_manager: 'Registered manager',
+  deputy_manager: 'Deputy manager',
+  senior_carer: 'Senior carer',
+  care_worker: 'Care worker',
+  activities_coordinator: 'Activities coordinator',
+  auditor: 'Auditor',
+}
 
 /**
  * How a staff member appears on a record.

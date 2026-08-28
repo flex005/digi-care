@@ -1,3 +1,5 @@
+import { Icon } from '@/components/icon/Icon'
+import type { IconName } from '@/components/icon/registry.names.generated'
 import styles from './Unrecorded.module.css'
 
 /**
@@ -47,11 +49,28 @@ export interface UnrecordedProps {
   detail?: string
   /**
    * The field being answered, above the label — "End of life care" over "Not
-   * recorded". Only the `flag` variant reads it, and together with `label` it
-   * is what makes that variant's shorter answer a complete statement.
+   * recorded", "Allergies and adverse reactions" over "Not recorded".
+   *
+   * Used by the `flag` and `panel` variants, both of which stand alone rather
+   * than sitting beside a label of their own: together with `label` it is what
+   * makes a short answer a complete statement.
    */
   caption?: string
   variant?: UnrecordedVariant
+  /**
+   * A qualifier on the gap — escalated, overdue, blocking — carried as a mark
+   * beside the label.
+   *
+   * **Decorative and additive, never the carrier.** It is `aria-hidden` and it
+   * adds nothing a reader could only get from the picture: the label still
+   * says the word. Its job is that a gap already marked somewhere else in the
+   * product — an escalated MAR cell — keeps the same mark when it appears in a
+   * list, so a reader moving between the two screens meets one mechanism
+   * rather than two.
+   *
+   * No default. Every hatch already in the product renders exactly as it did.
+   */
+  icon?: IconName
 }
 
 const VARIANT_CLASS: Record<UnrecordedVariant, string> = {
@@ -69,12 +88,27 @@ export function Unrecorded({
   detail,
   caption,
   variant = 'badge',
+  icon,
 }: UnrecordedProps) {
   return (
     <span className={VARIANT_CLASS[variant]} data-state="unrecorded">
       {caption ? <span className={styles.caption}>{caption}</span> : null}
-      <span className={styles.label}>{label}</span>
-      {detail ? <span className={styles.detail}>{detail}</span> : null}
+      <span className={styles.label}>
+        {icon ? (
+          // Beside the words, never instead of them. Colour never the sole
+          // carrier of meaning, and neither is a glyph (PRD §7).
+          <Icon name={icon} size={12} aria-hidden />
+        ) : null}
+        {label}
+      </span>
+      {detail ? (
+        // Hooked for the guards: a gap that names what it costs is structurally
+        // different from one that only names the field, and several screens
+        // require the first. Asserting on the words would pin the copy.
+        <span className={styles.detail} data-unrecorded-detail>
+          {detail}
+        </span>
+      ) : null}
     </span>
   )
 }

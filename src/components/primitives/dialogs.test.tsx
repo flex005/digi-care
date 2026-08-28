@@ -66,13 +66,16 @@ describe('AlertDialog', () => {
       <AlertDialog
         open
         onOpenChange={() => {}}
-        title="Record 08:00 medications for Emmanuel Okafor?"
+        subject={{ kind: 'resident', name: 'Emmanuel Okafor', room: '14' }}
+        action="Record 08:00 medications"
         description="Amlodipine 5mg will be recorded as given at 08:04 by A. Okonkwo."
         confirmLabel="Record medications"
         onConfirm={onConfirm}
       />,
     )
 
+    // Composed by the component from a subject and an action — the title is
+    // not a string a caller can supply, so "Are you sure?" cannot be shipped.
     const dialog = screen.getByRole('alertdialog', {
       name: /Record 08:00 medications for Emmanuel Okafor\?/,
     })
@@ -84,5 +87,62 @@ describe('AlertDialog', () => {
 
     await user.click(confirm)
     expect(onConfirm).toHaveBeenCalledOnce()
+  })
+})
+
+describe('a confirmation cannot be shipped without naming its subject', () => {
+  /**
+   * The rule §2.4 states and the type could not previously check.
+   * `title="Are you sure?"` compiled; the rule was carried by review, and the
+   * first genuinely clinical confirmations are being built now.
+   */
+  it('names the subject in the question and again beneath it', () => {
+    render(
+      <AlertDialog
+        open
+        onOpenChange={() => {}}
+        subject={{ kind: 'resident', name: 'Emmanuel Okafor', room: '14' }}
+        action="Record 08:00 medications"
+        description="Two medications will be recorded."
+        confirmLabel="Record medications"
+        onConfirm={() => {}}
+      />,
+    )
+
+    expect(
+      screen.getByRole('alertdialog', {
+        name: /Record 08:00 medications for Emmanuel Okafor\?/,
+      }),
+    ).toBeInTheDocument()
+
+    // A title is read once; a subject line is still there while the reader
+    // decides.
+    const subject = document.querySelector('[data-confirm-subject]')
+    expect(subject?.textContent).toBe('Emmanuel Okafor · Room 14')
+  })
+
+  it('names a handover by shift, site and date', () => {
+    render(
+      <AlertDialog
+        open
+        onOpenChange={() => {}}
+        subject={{
+          kind: 'handover',
+          shift: 'late',
+          site: 'Rosewood Court',
+          date: '22/08/2026',
+        }}
+        action="Sign as handing over"
+        description="Six residents have not been looked at."
+        confirmLabel="Sign"
+        onConfirm={() => {}}
+      />,
+    )
+
+    expect(
+      screen.getByRole('alertdialog', {
+        name: /Sign as handing over for the late shift handover at Rosewood Court on 22\/08\/2026\?/,
+      }),
+    ).toBeInTheDocument()
   })
 })

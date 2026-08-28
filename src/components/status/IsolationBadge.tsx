@@ -4,6 +4,7 @@ import { formatDate } from '@/lib/format'
 import { useSiteFormat } from '@/app/session/use-session'
 import { StatusPill } from './StatusPill'
 import { Unrecorded } from './Unrecorded'
+import { staffLabel } from '@/data/access/team-store'
 
 /**
  * Infection control isolation. Source PRD §16.3 — amber.
@@ -24,11 +25,7 @@ export function IsolationBadge({ status }: { status: IsolationStatus }) {
         <StatusPill
           tone="positive"
           label="Not isolating"
-          detail={format.attribution(
-            status.recordedBy.displayName,
-            status.recordedAt,
-            status.recordedBy.isActive,
-          )}
+          detail={format.attribution(staffLabel(status.recordedBy), status.recordedAt)}
         />
       )
 
@@ -36,7 +33,7 @@ export function IsolationBadge({ status }: { status: IsolationStatus }) {
       return (
         <StatusPill
           tone="caution"
-          label={`Isolating — ${status.reason}`}
+          label={`Isolating · ${status.reason}`}
           detail={`since ${formatDate(status.since)} · ${status.recordedBy.displayName}`}
         />
       )

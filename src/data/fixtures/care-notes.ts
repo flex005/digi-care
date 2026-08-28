@@ -34,37 +34,62 @@ import {
   staffNwosu,
 } from './organisation'
 import { residents } from './residents'
+import { pronounise, pronounsOf } from './pronouns'
 
+/**
+ * The prose a care note is drawn from, in tokens rather than pronouns.
+ *
+ * `{they}` / `{them}` / `{their}` and the verb tokens `{were}` / `{have}` are
+ * substituted for the resident at generation — see `pronouns.ts`. Written
+ * with pronouns baked in, this pool put "Preferred to stay in his room today"
+ * on a woman's record 1,988 times.
+ *
+ * Sentences that need no pronoun keep none. A pool where every line reaches
+ * for one reads like a template; real care notes often do not mention the
+ * resident at all.
+ *
+ * **A verb token is only correct where the pronoun governs the verb.** This is
+ * the trap, and it is sharper than a wrong pronoun because a naive guard
+ * passes it: the token resolves, the sentence is grammatical for he and she,
+ * and it is wrong only for they.
+ *
+ *     "{They} {were} unsettled"        ✓  the pronoun is the subject
+ *     "said {their} hip {were} aching" ✗  the subject is "hip", so it is
+ *                                         "was" for everybody, they included
+ *
+ * When in doubt, ask what the verb agrees with. If the answer is a noun rather
+ * than the pronoun, write the verb out.
+ */
 const NOTE_BODIES: Record<CareNoteCategoryId, string[]> = {
   personal_care: [
-    'Supported with a full wash at the sink this morning. Chose his own shirt and managed the buttons himself.',
-    'Declined a shower today, said she would rather have one tomorrow. Offered a wash instead, which she accepted.',
+    'Supported with a full wash at the sink this morning. Chose {their} own shirt and managed the buttons {themself}.',
+    'Declined a shower today, said {they} would rather have one tomorrow. Offered a wash instead, which {they} accepted.',
     'Assisted with oral care. Denture soaking solution replaced. No soreness observed.',
-    'Nails cut and filed after a soak. Skin on hands dry — emollient applied as prescribed.',
+    'Nails cut and filed after a soak. Skin on hands dry; emollient applied as prescribed.',
   ],
   nutrition: [
     'Ate a full breakfast unprompted. Two cups of tea. Fluid chart updated.',
     'Left most of lunch. Offered a fortified milkshake at 15:00, took about half.',
-    'Needed prompting between mouthfuls at supper. Sat with her for the whole meal.',
+    'Needed prompting between mouthfuls at supper. Sat with {them} for the whole meal.',
     'Good appetite today. Asked for a second helping of potatoes and finished it.',
   ],
   mobility: [
-    'Walked to the dining room with his frame and one staff member alongside. Steady throughout.',
+    'Walked to the dining room with {their} frame and one staff member alongside. Steady throughout.',
     'Two-staff transfer from bed to chair using the standing hoist. No discomfort reported.',
-    'Reluctant to mobilise this morning, said her hip was aching. Encouraged a short walk after lunch, which she managed.',
+    'Reluctant to mobilise this morning, said {their} hip was aching. Encouraged a short walk after lunch, which {they} managed.',
     'Used the wheelchair for the trip to the garden. Transferred with supervision only.',
   ],
   medication: [
-    'Morning medication administered as prescribed. Took tablets with yoghurt as she prefers.',
-    'Refused evening medication at first. Explained what each tablet was for and he then took them all.',
+    'Morning medication administered as prescribed. Took tablets with yoghurt, which is {their} preference.',
+    'Refused evening medication at first. Explained what each tablet was for and {they} then took them all.',
     'PRN paracetamol given for knee pain at 14:20. Reported relief by 15:00.',
     'GP contacted about the new dose. Awaiting confirmation before the next round.',
   ],
   social_emotional: [
     'Joined the singing group and knew all the words. Very animated afterwards.',
-    'Tearful this afternoon, talking about her late husband. Sat with her and she settled after about twenty minutes.',
+    'Tearful this afternoon, talking about {their} late husband. Sat with {them} and {they} settled after about twenty minutes.',
     'Family visited for an hour. Noticeably brighter for the rest of the day.',
-    'Preferred to stay in his room today. Checked on him hourly; he said he just wanted quiet.',
+    'Preferred to stay in {their} room today. Checked on {them} hourly; {they} said {they} just wanted quiet.',
   ],
   health_observation: [
     'Observations within normal range. Temperature 36.7, pulse 72, BP 128/76.',
@@ -73,21 +98,47 @@ const NOTE_BODIES: Record<CareNoteCategoryId, string[]> = {
     'Reported feeling dizzy on standing. Sat back down and it passed within a minute. GP informed.',
   ],
   behaviour: [
-    'Became agitated in the late afternoon looking for her handbag. Found it in the wardrobe and she settled immediately.',
+    'Became agitated in the late afternoon looking for {their} handbag. Found it in the wardrobe and {they} settled immediately.',
     'Called out repeatedly during the night. Reorientated and offered a warm drink; slept from about 03:00.',
-    'Resisted personal care this morning. Left him for twenty minutes and tried again, which worked.',
+    'Resisted personal care this morning. Left {them} for twenty minutes and tried again, which worked.',
     'No episodes of distress today. Calm and engaged throughout.',
   ],
   general: [
     'Settled day. No concerns raised by the resident or the team.',
-    'Slept well overnight. Up at 07:30 of his own accord.',
+    'Slept well overnight. Up at 07:30 of {their} own accord.',
     'Spent the afternoon in the lounge with the newspaper. Content.',
     'Hairdresser visited. Very pleased with the result and showed everyone.',
   ],
 }
 
 const CATEGORIES = Object.keys(NOTE_BODIES) as CareNoteCategoryId[]
-const SHIFTS = ['early', 'late', 'night'] as const
+
+/**
+ * A resident's pronouns, or they/them when nobody has recorded any.
+ *
+ * They/them rather than a guess. Pronouns are a `Recorded<string>` and an
+ * unrecorded one means nobody asked — inferring from a name is exactly the
+ * assumption this whole change exists to remove.
+ */
+/**
+ * Hours a note actually gets written at, by shift.
+ *
+ * **Corrected 22/08/2026.** These fixtures previously gave a resident one to
+ * three notes a day, picked from eight daytime hours. That was wrong about the
+ * work, not merely sparse: a care home writes a note per shift as a minimum
+ * and more when something happens, so four to six a day is the floor for a
+ * resident with nothing unusual going on. See PROGRESS.md — this is a
+ * correction to a wrong baseline, not a tidy-up of a screen.
+ *
+ * Night hours are real night hours. A 02:00 check that got written up is a
+ * night note, and having some of them is what makes the timeline's overnight
+ * marker appear at all.
+ */
+const SHIFT_HOURS = {
+  early: [7, 8, 9, 11, 13],
+  late: [15, 16, 18, 19, 20],
+  night: [22, 23, 2, 5],
+} as const
 
 function makeMood(rng: ReturnType<typeof makeRandom>, at: Date): MoodRecord {
   // Roughly one note in six has no mood recorded — a real omission, and the
@@ -104,7 +155,28 @@ function makeMood(rng: ReturnType<typeof makeRandom>, at: Date): MoodRecord {
 
 const notes: CareNote[] = []
 
+/**
+ * Nobody has written Ismail Sowande up. Not once.
+ *
+ * Pinned rather than left to probability, and checked before pinning: with the
+ * previous one-to-three-notes-a-day generator no resident had zero notes
+ * either, so `latestNote: 'none'` — a branch the residents list, the profile
+ * header and the note timeline all render — has never had a fixture behind it.
+ * It was reachable only by reading the code.
+ *
+ * He is the resident admitted yesterday (PRD §5.3), so this is the honest
+ * version of that gap rather than an invented one: somebody arrived and no
+ * care worker has recorded a thing about them. It also gives "sort by oldest
+ * care note" a resident who genuinely belongs at the top, which is the whole
+ * reason that sort exists.
+ *
+ * Same reasoning as `broadbent` carrying the settled risk picture: a state
+ * that exists only in a unit test is a state nobody reviews.
+ */
+const NEVER_WRITTEN_UP: ResidentId[] = ['res-sowande' as ResidentId]
+
 for (const [residentIndex, resident] of residents.entries()) {
+  if (NEVER_WRITTEN_UP.includes(resident.id)) continue
   const rng = makeRandom(0xca4e0007 + residentIndex * 104729)
   // Ashgrove is thin on purpose, and a resident admitted yesterday has almost
   // no history at all.
@@ -113,14 +185,39 @@ for (const [residentIndex, resident] of residents.entries()) {
     Math.round((NOW.getTime() - new Date(resident.admittedOn).getTime()) / 86_400_000),
   )
   const historyDays = Math.min(90, admittedDaysAgo)
-  const notesPerDay = resident.siteId === 'site-ashgrove-lodge' ? 2 : 3
+  // Ashgrove is thinner than Rosewood on purpose, but not below the floor:
+  // "thin" means fewer extras and more days that slip, never fewer than the
+  // one-per-shift a real home writes.
+  const extras = resident.siteId === 'site-ashgrove-lodge' ? 1 : 3
 
   for (let day = historyDays; day >= 0; day -= 1) {
-    // Some days genuinely have no note. Phase 2 renders those as gaps.
+    // Some days genuinely have no note at all. Phase 2 renders those as gaps,
+    // and they are the point: this is the ambient messiness CLAUDE.md §6 says
+    // not to tidy, and it survives the volume correction untouched.
     if (rng.chance(0.12)) continue
-    const count = rng.int(1, notesPerDay)
-    for (let n = 0; n < count; n += 1) {
-      const hour = rng.pick([7, 9, 11, 13, 15, 17, 19, 22])
+
+    // One per shift, then events on top. Sampled without replacement so six
+    // notes are six moments rather than the same hour picked twice.
+    const hours: number[] = [
+      rng.pick(SHIFT_HOURS.early),
+      rng.pick(SHIFT_HOURS.late),
+      rng.pick(SHIFT_HOURS.night),
+    ]
+    const pool = [
+      ...SHIFT_HOURS.early,
+      ...SHIFT_HOURS.late,
+      ...SHIFT_HOURS.night,
+    ].filter((hour) => !hours.includes(hour))
+    for (let extra = rng.int(1, extras); extra > 0 && pool.length > 0; extra -= 1) {
+      hours.push(pool.splice(rng.int(0, pool.length - 1), 1)[0]!)
+    }
+
+    // Categories without replacement too. At one to three notes a day a
+    // repeat was invisible; at four to six the same sentence appeared twice in
+    // an afternoon, which reads as a bug rather than as a record. A day's
+    // notes are about different things, which is what a day is like.
+    const dayCategories = [...CATEGORIES]
+    for (const [n, hour] of hours.entries()) {
       const at = atTime(daysAgo(day), hour, rng.int(0, 59))
       // Today's later rounds have not happened yet. A care note timestamped
       // in the future is not a messy record, it is an impossible one — and it
@@ -128,20 +225,64 @@ for (const [residentIndex, resident] of residents.entries()) {
       // observation. The gaps in these fixtures are deliberate; this would
       // just be wrong.
       if (at.getTime() > NOW.getTime()) continue
-      const category = rng.pick(CATEGORIES)
+      const category =
+        dayCategories.length > 0
+          ? dayCategories.splice(rng.int(0, dayCategories.length - 1), 1)[0]!
+          : rng.pick(CATEGORIES)
       const bodies = NOTE_BODIES[category]
+      // Drawn here, in the order the object literal used to draw them, so the
+      // RNG stream is bit-for-bit what it was and no other fixture moves.
+      // `author` is hoisted only because the review branch below needs it: a
+      // flag is raised by whoever wrote the note.
+      // Substituted after the draw, so the RNG stream is untouched and the
+      // pronouns are the resident's rather than whichever sentence came up.
+      const body = pronounise(rng.pick(bodies), pronounsOf(resident))
+      const mood = makeMood(rng, at)
+      const author = rng.pick(carersAndSeniors)
       notes.push({
         id: `note-${resident.id}-${day}-${n}` as CareNoteId,
         residentId: resident.id,
         category,
-        body: rng.pick(bodies),
-        mood: makeMood(rng, at),
-        recordedBy: rng.pick(carersAndSeniors),
+        body,
+        mood,
+        recordedBy: author,
         recordedAt: toIsoDateTime(at),
-        shift: hour < 14 ? SHIFTS[0] : hour < 21 ? SHIFTS[1] : SHIFTS[2],
-        review: rng.chance(0.06)
-          ? {
-              kind: 'reviewed',
+        // Auto, from the clock. Every fixture note is auto: an override is
+        // something a person does at the composer, and nobody has.
+        shift: {
+          kind: 'auto',
+          value:
+            hour >= 7 && hour < 14
+              ? 'early'
+              : hour >= 14 && hour < 21
+                ? 'late'
+                : 'night',
+        },
+        /**
+         * **Corrected 22/08/2026.** This drew one chance and produced only
+         * `reviewed` or `not_flagged`, so across twelve thousand notes exactly
+         * one was ever awaiting a senior: the §5.3 pinned one. That is not a
+         * patchy home, it is a home where nobody ever asks for help and every
+         * request that was made has been answered.
+         *
+         * The supervisory queue at `/care-notes` is built on this state, and a
+         * queue of one cannot show that it is sorted by how long each has
+         * waited, which is the only ordering that matters there.
+         *
+         * One draw, three outcomes, so the RNG stream is exactly as long as it
+         * was and no other fixture moves. A flag is raised by whoever wrote the
+         * note, as they write it, which is also how the composer records one.
+         */
+        review: (() => {
+          const roll = rng.int(0, 99)
+          if (roll < 6) {
+            return {
+              kind: 'reviewed' as const,
+              // The flag is carried forward, not replaced. Somebody asked for
+              // this second opinion and the record has to keep saying who and
+              // when — the gap between the two is the supervision.
+              flaggedBy: author,
+              flaggedAt: toIsoDateTime(at),
               reviewedBy: staffHalloran,
               // Nine the next morning, but never before the note it reviews
               // and never after now. Both bounds are real: a note written at
@@ -152,7 +293,46 @@ for (const [residentIndex, resident] of residents.entries()) {
                 recordedBetween(at, atTime(daysAgo(Math.max(day - 1, 0)), 9, 0)),
               ),
             }
-          : { kind: 'not_flagged' },
+          }
+          // A flag is a request for a second opinion, so it attaches to notes
+          // somebody would actually escalate. Flagging "denture soaking
+          // solution replaced" fills the supervisory queue with things nobody
+          // needs to read, and a queue of noise is one a senior stops opening.
+          // Gated on a category already chosen, so no extra draw and the RNG
+          // stream is unchanged.
+          const escalable =
+            category === 'behaviour' ||
+            category === 'health_observation' ||
+            category === 'medication' ||
+            category === 'social_emotional'
+
+          if (roll < 10 && escalable) {
+            // Flagged. A senior clears the queue within a day or two, so only
+            // recent flags are still waiting; older ones were dealt with.
+            //
+            // Without that bound, 8% of twelve thousand notes left 208 notes
+            // awaiting review across 28 residents, which is not a queue, it is
+            // a wall. Standing check: volume that drowns a distinction is the
+            // same failure as a blank cell.
+            if (day <= 1) {
+              return {
+                kind: 'flagged_not_reviewed' as const,
+                flaggedBy: author,
+                flaggedAt: toIsoDateTime(at),
+              }
+            }
+            return {
+              kind: 'reviewed' as const,
+              flaggedBy: author,
+              flaggedAt: toIsoDateTime(at),
+              reviewedBy: staffHalloran,
+              reviewedAt: toIsoDateTime(
+                recordedBetween(at, atTime(daysAgo(Math.max(day - 1, 0)), 9, 0)),
+              ),
+            }
+          }
+          return { kind: 'not_flagged' as const }
+        })(),
         supersededBy: 'none',
         corrects: 'none',
       })
@@ -188,7 +368,7 @@ notes.push({
   },
   recordedBy: staffNwosu,
   recordedAt: toIsoDateTime(atTime(daysAgo(6), 11, 20)),
-  shift: 'early',
+  shift: { kind: 'auto', value: 'early' },
   review: { kind: 'not_flagged' },
   supersededBy: okaforCorrectionId,
   corrects: 'none',
@@ -202,7 +382,7 @@ notes.push({
   mood: { kind: 'not_recorded' },
   recordedBy: staffNwosu,
   recordedAt: toIsoDateTime(atTime(daysAgo(6), 14, 5)),
-  shift: 'late',
+  shift: { kind: 'auto', value: 'late' },
   review: { kind: 'not_flagged' },
   supersededBy: 'none',
   corrects: okaforOriginalId,
@@ -212,7 +392,15 @@ notes.push({
   id: okaforFlaggedId,
   residentId: okaforId,
   category: 'behaviour',
-  body: 'Refused all support with personal care and became verbally distressed when I persisted. Left him and returned an hour later, which worked. Flagging for the senior to review whether the approach in his care plan still fits.',
+  // Tokenised like the pool. A pinned note is prose about a named person and
+  // follows the same rule: nothing in this file states a pronoun the record
+  // does not. Emmanuel's pronouns are unrecorded — one of the deliberate gaps
+  // — so this reads "them", which is the honest answer rather than the one a
+  // forename suggests.
+  body: pronounise(
+    'Refused all support with personal care and became verbally distressed when I persisted. Left {them} and returned an hour later, which worked. Flagging for the senior to review whether the approach in {their} care plan still fits.',
+    pronounsOf(residents.find((entry) => entry.id === 'res-okafor')!),
+  ),
   mood: {
     kind: 'recorded',
     score: 2,
@@ -221,7 +409,7 @@ notes.push({
   },
   recordedBy: staffNwosu,
   recordedAt: toIsoDateTime(atTime(daysAgo(3), 8, 40)),
-  shift: 'early',
+  shift: { kind: 'auto', value: 'early' },
   // Flagged, and nobody has reviewed it. Distinct from "not flagged" and from
   // "flagged and reviewed" — three states, not a boolean.
   review: {
@@ -248,7 +436,7 @@ notes.push({
   },
   recordedBy: staffDeactivated,
   recordedAt: toIsoDateTime(atTime(daysAgo(47), 21, 45)),
-  shift: 'night',
+  shift: { kind: 'auto', value: 'night' },
   review: { kind: 'not_flagged' },
   supersededBy: 'none',
   corrects: 'none',

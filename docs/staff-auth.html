@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Staff onboarding and authentication</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+  --shadow-overlay:0 8px 32px rgba(30,0,89,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.sub{margin-top:4px;font-size:13px;color:var(--ink-500);max-width:86ch;line-height:1.55}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-xl);
+  box-shadow:var(--shadow-card);margin-top:16px;overflow:hidden}
+.viewNav{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+.viewNav button{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.viewNav button[aria-pressed="true"]{background:var(--purple-900);border-color:var(--purple-900);color:#fff}
+.btn{padding:11px 20px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:14px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.btn.sm{padding:8px 14px;font-size:13px}
+.btn.danger{border-color:var(--critical);color:var(--critical-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* prototype banner — on every auth screen */
+.proto{padding:14px 18px;border-radius:var(--r-md);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);font-size:12.5px;font-weight:600;line-height:1.55;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.proto b{font-weight:800}
+
+/* ---------- sign in ---------- */
+.authWrap{display:grid;grid-template-columns:1fr 1fr;min-height:620px}
+.authSide{background:var(--purple-900);color:#fff;padding:40px 44px;display:flex;flex-direction:column}
+.brand{display:flex;gap:11px;align-items:center;font-weight:800;font-size:20px}
+.mark{width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,.14);display:grid;
+  place-items:center;font-size:16px}
+.authSide .big{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-top:auto;
+  max-width:22ch}
+.authSide .small{font-size:13.5px;opacity:.78;margin-top:14px;line-height:1.6;max-width:40ch}
+.authSide .foot{margin-top:auto;padding-top:28px;font-size:11.5px;opacity:.6;line-height:1.6}
+.authMain{padding:40px 44px;display:flex;flex-direction:column;justify-content:center}
+.authMain h2{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.authMain .lede{font-size:13.5px;color:var(--ink-500);margin-top:6px;line-height:1.55;max-width:44ch}
+.form{margin-top:26px;max-width:400px}
+label.k{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:6px}
+input[type=text],input[type=email],input[type=password],select{width:100%;padding:12px 14px;
+  border:1px solid var(--border-strong);border-radius:var(--r-md);font:inherit;font-size:14.5px;
+  background:var(--bg-surface);color:var(--ink-900)}
+.fld + .fld{margin-top:16px}
+.hint{margin-top:7px;font-size:12px;color:var(--ink-500);line-height:1.5}
+.rowBetween{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:18px}
+.link{color:var(--purple-600);font-weight:700;font-size:13px;background:none;border:0;padding:0}
+.siteChoice{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.sc{display:flex;gap:11px;align-items:center;padding:12px 14px;border:1.5px solid var(--border-strong);
+  border-radius:var(--r-md);cursor:pointer;font-size:14px}
+.sc.sel{border-color:var(--purple-600);background:var(--purple-50)}
+.sc b{font-weight:600}
+.sc small{display:block;font-size:12px;color:var(--ink-500);margin-top:2px}
+
+/* ---------- invitation ---------- */
+.inv{max-width:560px;margin:0 auto}
+.invHead{padding:26px 28px 20px;border-bottom:1px solid var(--border-subtle);text-align:center}
+.invHead .who{width:64px;height:64px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:800;font-size:19px;margin:0 auto 14px}
+.invHead h2{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.invHead p{font-size:13.5px;color:var(--ink-500);margin-top:6px;line-height:1.55}
+.invSec{padding:22px 28px;border-bottom:1px solid var(--border-subtle)}
+.invSec:last-child{border-bottom:0}
+.invSec h3{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:12px}
+.detail{display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:9px 0;
+  border-bottom:1px solid var(--border-subtle)}
+.detail:last-child{border-bottom:0}
+.detail .l{font-size:12px;color:var(--ink-500);font-weight:600}
+.detail .v{font-size:14px;font-weight:600}
+.pwRules{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.pr{display:flex;gap:9px;align-items:center;font-size:12.5px;color:var(--ink-500)}
+.pr .tick{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border-strong);
+  display:grid;place-items:center;font-size:10px;color:var(--ink-400);flex:0 0 16px}
+.pr.ok{color:var(--positive-ink)}
+.pr.ok .tick{border-color:var(--positive);background:var(--positive-tint);color:var(--positive-ink)}
+
+/* ---------- staff dashboard ---------- */
+.sTop{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.me{display:flex;gap:16px;align-items:center}
+.av{width:56px;height:56px;flex:0 0 56px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:800;font-size:17px}
+.me .n{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.me .r{font-size:13px;color:var(--ink-500);margin-top:3px}
+.shiftPill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-pill);
+  background:var(--purple-50);color:var(--purple-600);font-size:12.5px;font-weight:700}
+
+.mine{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;margin-top:18px}
+.tile{padding:20px 22px;border-radius:var(--r-xl);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);box-shadow:var(--shadow-card)}
+.tile .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.tile .v{font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1;margin-top:8px}
+.tile .d{font-size:12px;color:var(--ink-500);margin-top:6px;line-height:1.45}
+.tile.now{background:var(--purple-900);border:0;color:#fff}
+.tile.now .k{opacity:.75;color:#fff} .tile.now .d{opacity:.85;color:#fff}
+.tile.now .v{font-size:44px}
+.tile.warnT{background:var(--caution-tint);border-color:var(--caution)}
+.tile.warnT .v,.tile.warnT .k{color:var(--caution-ink)} .tile.warnT .d{color:var(--caution-ink);opacity:.85}
+.tile.gapT{border:1.5px dashed var(--unrecorded);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.tile.gapT .v,.tile.gapT .k,.tile.gapT .d{color:var(--unrecorded-ink)}
+.tile .act{margin-top:14px}
+
+.two{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px;align-items:start}
+.pHead{padding:18px 22px;border-bottom:1px solid var(--border-subtle)}
+.pHead h2{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.pHead p{font-size:12.5px;color:var(--ink-500);margin-top:3px;line-height:1.5}
+.arow{display:grid;grid-template-columns:7rem minmax(0,1fr) auto;gap:16px;align-items:baseline;
+  padding:12px 22px;border-top:1px solid var(--border-subtle)}
+.arow .w{font-size:12px;color:var(--ink-500);font-weight:600}
+.arow .w small{display:block;font-weight:400;color:var(--ink-400);margin-top:1px}
+.arow .t{font-size:13.5px;color:var(--ink-700);line-height:1.5}
+.arow .t b{color:var(--ink-900);font-weight:600}
+.arow .kind{font-size:11px;color:var(--ink-500);margin-top:2px}
+.arow .go{color:var(--purple-600);font-weight:700;font-size:12.5px;white-space:nowrap}
+
+/* permissions */
+.permRow{display:grid;grid-template-columns:minmax(0,1fr) 9rem;gap:16px;align-items:center;
+  padding:11px 22px;border-top:1px solid var(--border-subtle)}
+.permRow .m{font-size:13.5px;font-weight:600}
+.permRow .lv{font-size:12px;font-weight:700;padding:5px 11px;border-radius:var(--r-sm);text-align:center}
+.lv.none{background:var(--bg-sunken);border:1px solid var(--border-strong);color:var(--ink-500)}
+.lv.read{background:var(--info-tint);border:1px solid var(--info);color:var(--info-ink)}
+.lv.rec{background:var(--purple-50);border:1px solid var(--purple-400);color:var(--purple-600)}
+.lv.appr{background:var(--positive-tint);border:1px solid var(--positive);color:var(--positive-ink)}
+.notHeld{margin:16px 22px;padding:15px 18px;border-radius:var(--r-md);background:var(--bg-sunken);
+  border:1px solid var(--border-strong);color:var(--ink-500);font-size:12.5px;line-height:1.6}
+.notHeld b{color:var(--ink-700);font-weight:700}
+
+/* sign out */
+.soWrap{max-width:560px;margin:0 auto}
+.soHead{padding:26px 28px 18px}
+.soHead h2{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.3}
+.soHead p{font-size:13.5px;color:var(--ink-500);margin-top:8px;line-height:1.6}
+.lossBox{margin:0 28px 22px;padding:18px 21px;border-radius:var(--r-md);border:1px solid var(--critical);
+  border-left-width:5px;background:var(--critical-tint);color:var(--critical-ink)}
+.lossBox .t{font-size:15px;font-weight:800}
+.lossBox .d{font-size:12.5px;margin-top:5px;line-height:1.55;max-width:70ch}
+.lossBox ul{list-style:none;margin-top:12px;display:flex;flex-direction:column;gap:7px}
+.lossBox li{display:flex;gap:11px;align-items:baseline;padding:10px 13px;border-radius:var(--r-sm);
+  background:#fff;border:1px solid var(--border-strong);font-size:13px;color:var(--ink-900)}
+.lossBox li .c{margin-left:auto;font-weight:800;font-size:12.5px;white-space:nowrap}
+.soFoot{padding:0 28px 26px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+
+.meas{margin-top:32px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="viewNav">
+  <button aria-pressed="true" onclick="go('in',this)">1 · Sign in</button>
+  <button aria-pressed="false" onclick="go('inv',this)">2 · Accepting an invitation</button>
+  <button aria-pressed="false" onclick="go('me',this)">3 · A staff member's own dashboard</button>
+  <button aria-pressed="false" onclick="go('perm',this)">4 · What I can do</button>
+  <button aria-pressed="false" onclick="go('out',this)">5 · Signing out</button>
+</div>
+
+<div id="view"></div>
+
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>The prototype banner is on every authentication screen, and it is not a footnote</h3>
+  <code>1.5px dashed</code> unrecorded, <code>5px</code> left border, the hatch, <code>14px 18px</code>.
+  It says plainly: <b>there is no authentication in this build. Any details sign you in, no password is
+  checked, and nothing is protected.</b>
+  This is the largest "control that does nothing" in the product and the only honest way to ship it is to
+  say so at the point of use. A sign-in form that silently accepts anything is worse than no sign-in
+  form, because it implies a check that is not happening.
+
+  <h3>1 · Sign in</h3>
+  <code>1fr 1fr</code>, minimum <code>620px</code>. Left is brand purple with the product's own claim on
+  it; right is the form, <code>400px</code> max width.
+  Email, password, and <b>which home you are signing in to</b> — the site is chosen here rather than
+  after, because it decides the timezone every record you write will carry, and choosing it later means
+  the first thing you read was in the wrong zone.
+  No "remember me": there is no session to remember.
+
+  <h3>2 · Accepting an invitation</h3>
+  <code>560px</code>, centred. The invitation states what the manager set — role, home, and the access
+  level that comes with it — <b>before the password fields</b>, because somebody accepting an invitation
+  should see what they are accepting.
+  Password rules render as a live checklist, each ticking as it is met. No rule is hidden until it fails.
+  The invitation expires, and the screen says when: an invitation with no expiry is a permanent open door.
+
+  <h3>3 · A staff member's own dashboard</h3>
+  <b>This is "what is mine", not "what is late here".</b> The site Dashboard is the home's; this is one
+  person's shift.
+  Three tiles: the round they are on now (brand purple, largest figure), what they have flagged that is
+  still waiting, and residents on their list nobody has written up. <b>The third takes the hatch</b> —
+  it is the only tile counting an absence.
+  Beneath, two panels: what they have recorded today, and what they can do.
+  <b>No counts of their own work, no rate, no comparison with anybody.</b> Phase 14's constraint applies
+  with more force here, not less — a screen showing somebody their own productivity figures is a
+  performance record whoever built it says it is not.
+
+  <h3>4 · What I can do</h3>
+  Sixteen modules, four levels, read-only. <b>The statement that nothing is enforced renders before the
+  first row</b>, as it does on the manager's matrix.
+  Beneath it, the "not held here" block in its inert treatment: supervision, appraisal, training and
+  induction are not in this product, and a member of staff looking for their own training record should
+  be told plainly rather than left to conclude it is empty.
+
+  <h3>5 · Signing out — the one screen with a real consequence</h3>
+  Everything this build writes is held in memory. <b>Signing out discards it</b>, and this is the only
+  place in the product where an action destroys work rather than failing to save it.
+  So the confirmation names what would be lost, item by item, with counts — the same shape as the consent
+  withdrawal's downstream effects, and for the same reason: a sentence saying "unsaved changes will be
+  lost" cannot be checked against what is actually there.
+  Where nothing has been written this session, the block does not render and the screen is a plain
+  confirmation.
+</div>
+
+</div>
+
+<script>
+const PROTO = `<div class="proto"><b>There is no authentication in this build.</b> Any details will sign
+  you in, no password is checked, and nothing here is protected. This is a prototype for reviewing how
+  the product works — it must not be put in front of a real home, because anyone opening it would have
+  full access to every resident's clinical record.</div>`;
+
+function signIn(){
+  return `<h1>Sign in</h1>
+  <p class="sub">What signing in would look like. Authentication needs a server, and this build has
+    none.</p>
+  ${PROTO}
+  <div class="card"><div class="authWrap">
+    <div class="authSide">
+      <div class="brand"><span class="mark">d</span> diGi-Care</div>
+      <div class="big">A care record that says what nobody has written down.</div>
+      <div class="small">Every gap renders as a gap. A blank never means the same as a no, and nothing
+        is green because it happens to be empty.</div>
+      <div class="foot">Rosewood Court &amp; Ashgrove Lodge<br>Prototype build · no data leaves this
+        browser</div>
+    </div>
+
+    <div class="authMain">
+      <h2>Sign in</h2>
+      <p class="lede">Use the email address your manager invited you with.</p>
+
+      <div class="form">
+        <div class="fld"><label class="k">Email</label>
+          <input type="email" value="k.osei@rosewoodcourt.example"></div>
+        <div class="fld"><label class="k">Password</label>
+          <input type="password" value="············"></div>
+
+        <div class="fld"><label class="k">Which home are you working at today?</label>
+          <div class="siteChoice">
+            <label class="sc sel"><input type="radio" name="site" checked>
+              <span><b>Rosewood Court</b><small>28 residents · Europe/London</small></span></label>
+            <label class="sc"><input type="radio" name="site">
+              <span><b>Ashgrove Lodge</b><small>4 residents · Europe/London</small></span></label>
+          </div>
+          <p class="hint">Chosen here rather than afterwards, because it decides the timezone every
+            record you write today will carry.</p>
+        </div>
+
+        <div class="rowBetween">
+          <button class="link">I have forgotten my password</button>
+          <button class="btn primary">Sign in</button>
+        </div>
+      </div>
+    </div>
+  </div></div>`;
+}
+
+function invitation(){
+  return `<h1>You have been invited to diGi-Care</h1>
+  <p class="sub">What accepting an invitation would look like. No account is created and no password is
+    stored.</p>
+  ${PROTO}
+  <div class="card inv">
+    <div class="invHead">
+      <div class="who">KO</div>
+      <h2>Set up your account, Kwame</h2>
+      <p>Adaeze Okonkwo invited you to Rosewood Court on 22 August 2026.<br>
+        This invitation expires on 29 August 2026.</p>
+    </div>
+
+    <div class="invSec">
+      <h3>What you have been invited as</h3>
+      <div class="detail"><div class="l">Name</div><div class="v">Kwame Osei</div></div>
+      <div class="detail"><div class="l">Role</div><div class="v">Care worker</div></div>
+      <div class="detail"><div class="l">Home</div><div class="v">Rosewood Court</div></div>
+      <div class="detail"><div class="l">Invited by</div>
+        <div class="v">Adaeze Okonkwo · Registered manager</div></div>
+      <div class="detail"><div class="l">Access</div>
+        <div class="v">Record care notes, medication and activities. Read everything else.
+          <span style="display:block;font-size:12px;color:var(--ink-500);font-weight:400;margin-top:3px">
+          You can see exactly what this means before you accept.</span></div></div>
+    </div>
+
+    <div class="invSec">
+      <h3>Choose a password</h3>
+      <div class="fld"><label class="k">Password</label>
+        <input type="password" value="·············"></div>
+      <div class="pwRules">
+        <div class="pr ok"><span class="tick">&check;</span>At least 12 characters</div>
+        <div class="pr ok"><span class="tick">&check;</span>Not a password used on another account</div>
+        <div class="pr"><span class="tick"></span>Not your name or the home's name</div>
+      </div>
+      <div class="fld" style="margin-top:16px"><label class="k">Confirm password</label>
+        <input type="password" value="·············"></div>
+      <p class="hint">Your password is never shown to your manager, and nobody at diGi-Care can read it.
+        In this build nothing is stored at all.</p>
+    </div>
+
+    <div class="invSec" style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+      <button class="btn">See what I would be able to do</button>
+      <button class="btn primary">Accept and set up my account</button>
+    </div>
+  </div>`;
+}
+
+const ACTS = [
+  { w:'16:04', d:'today', t:'Recorded the 16:00 round for <b>Emmanuel Okafor</b> — 3 doses',
+    k:'Medication · witnessed by N. Eze' },
+  { w:'15:20', d:'today', t:'Wrote a care note about <b>Doris Kavanagh</b> — behaviour', k:'Care note · flagged for review' },
+  { w:'12:06', d:'today', t:'Recorded the 12:00 round for 9 residents', k:'Medication' },
+  { w:'09:41', d:'today', t:'Recorded attendance for <b>Chair exercises</b> — 12 of 16 invited',
+    k:'Activities' },
+];
+
+function me(){
+  return `<div class="sTop">
+    <div class="me"><span class="av">KO</span>
+      <div><div class="n">Kwame</div><div class="r">Kwame Osei · Care worker · Rosewood Court</div></div></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span class="shiftPill">Late shift · 14:00 to 22:00</span>
+      <button class="btn sm">Sign out</button></div>
+  </div>
+
+  <div class="mine">
+    <div class="tile now">
+      <div class="k">Your next round</div>
+      <div class="v">18:00</div>
+      <div class="d">14 doses across 9 residents · starts in 1 hour 18 minutes</div>
+      <div class="act"><button class="btn sm" style="background:#fff;border-color:#fff">Open the
+        round</button></div>
+    </div>
+
+    <div class="tile warnT">
+      <div class="k">You flagged, still waiting</div>
+      <div class="v">2</div>
+      <div class="d">care notes waiting for a senior · oldest 3 days</div>
+    </div>
+
+    <div class="tile gapT">
+      <div class="k">On your list, not written up</div>
+      <div class="v">4</div>
+      <div class="d">of the 11 residents you have seen today</div>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="card" style="margin-top:0">
+      <div class="pHead"><h2>What you have recorded today</h2>
+        <p>Each links to the record itself. There are no totals here — see below.</p></div>
+      ${ACTS.map(a => `<div class="arow">
+        <div class="w">${a.w}<small>${a.d}</small></div>
+        <div><div class="t">${a.t}</div><div class="kind">${a.k}</div></div>
+        <div><span class="go">Open &rarr;</span></div>
+      </div>`).join('')}
+      <div class="notHeld" style="margin:16px 22px 20px">
+        <b>There are no counts of your work on this screen, and there will not be.</b> diGi-Care has no
+        rota, so a count of what you recorded has no honest denominator — and a figure about a person
+        without what it is out of is an accusation rather than a measurement. This is a list of what you
+        did, not a score for it.
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:0">
+      <div class="pHead"><h2>Yours</h2><p>Your details, your access, and where the rest lives.</p></div>
+      <div style="padding:16px 22px">
+        <div class="detail"><div class="l">Role</div><div class="v">Care worker</div></div>
+        <div class="detail"><div class="l">Home</div><div class="v">Rosewood Court</div></div>
+        <div class="detail"><div class="l">Access</div><div class="v">Has access since 12/03/2024</div></div>
+        <div class="detail"><div class="l">Email</div><div class="v">k.osei@rosewoodcourt.example</div></div>
+      </div>
+      <div style="padding:0 22px 20px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn sm">What I can do</button>
+        <button class="btn sm">Change my password</button>
+      </div>
+      <div class="notHeld">
+        <b>Your training, supervision and appraisal are not here.</b> diGi-Care does not hold them —
+        they live in whatever your home uses for staff records. Nothing on this page says anything about
+        how you are doing your job.
+      </div>
+    </div>
+  </div>`;
+}
+
+const PERMS = [
+  ['Residents','read'],['Care notes','rec'],['Handover','rec'],['Medications','rec'],
+  ['Incidents','rec'],['Risk assessments','read'],['Care plans','read'],['Reviews','read'],
+  ['Goals','read'],['Activities','rec'],['Consent','none'],['Documents','read'],
+  ['Compliance','none'],['Reports','none'],['Team','none'],['Settings','none'],
+];
+const LV = { none:['No access','none'], read:['Read','read'], rec:['Record','rec'], appr:['Approve','appr'] };
+
+function perm(){
+  return `<h1>What you can do</h1>
+  <p class="sub">Kwame Osei · Care worker · Rosewood Court</p>
+  <div class="card">
+    <div class="proto" style="margin:18px 22px 0">Nothing on this page is enforced. This build has no
+      authentication and no permission checking — every screen is reachable by anybody who opens it.
+      What follows is what a care worker's access would be.</div>
+
+    <div class="pHead" style="border-top:0;margin-top:16px"><h2>Sixteen modules, four levels</h2>
+      <p>Read means you can see it. Record means you can write into it. Approve means you can sign off
+        somebody else's work.</p></div>
+
+    ${PERMS.map(([m,l]) => `<div class="permRow">
+      <div class="m">${m}</div>
+      <div><span class="lv ${LV[l][1]}">${LV[l][0]}</span></div>
+    </div>`).join('')}
+
+    <div class="notHeld">
+      <b>Your training, supervision, appraisal and induction records are not held in diGi-Care.</b>
+      That is a gap in this product rather than anything about you, and nothing on any screen here can
+      fill it. Ask your manager where your home keeps them.
+    </div>
+  </div>`;
+}
+
+function out(){
+  return `<h1>Sign out</h1>
+  <p class="sub">The one screen in this build where an action destroys work rather than failing to save
+    it.</p>
+  <div class="card soWrap">
+    <div class="soHead">
+      <h2>Sign out, Kwame?</h2>
+      <p>Everything diGi-Care records in this build is held in your browser's memory. It is never sent
+        anywhere, and signing out discards it.</p>
+    </div>
+
+    <div class="lossBox">
+      <div class="t">What you would lose</div>
+      <div class="d">These were recorded during this session and exist nowhere else. Signing out is not
+        the same as saving and leaving — there is nothing to save to.</div>
+      <ul>
+        <li>Care notes you wrote<span class="c">4</span></li>
+        <li>Medication rounds you recorded<span class="c">2 rounds · 23 doses</span></li>
+        <li>Activity attendance<span class="c">1 session · 16 residents</span></li>
+        <li>Notes you marked reviewed<span class="c">3</span></li>
+      </ul>
+    </div>
+
+    <div class="soFoot">
+      <button class="btn">Stay signed in</button>
+      <button class="btn danger">Sign out and discard 30 records</button>
+    </div>
+  </div>`;
+}
+
+let view='in';
+function go(v,btn){
+  view=v;
+  document.querySelectorAll('.viewNav button').forEach(b=>b.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true');
+  const m={in:signIn,inv:invitation,me:me,perm:perm,out:out};
+  document.getElementById('view').innerHTML = m[v]();
+  window.scrollTo(0,0);
+}
+document.getElementById('view').innerHTML = signIn();
+</script>
+</body>
+</html>

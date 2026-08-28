@@ -115,6 +115,21 @@ export default tseslint.config(
     },
   },
   {
+    /*
+     * The Figma exporter's walker runs inside the page, not in Node.
+     *
+     * It is a `.mjs` file in `scripts/`, so the block above claims it and
+     * reports `document`, `window` and `getComputedStyle` as undefined — which
+     * is true of the file's own scope and false of where it executes. Reading
+     * computed styles in the browser is the entire method: it is what turns
+     * `var()`, `rem`, `fr` and `gap` into pixels before anything is captured.
+     */
+    files: ['scripts/export/**/*.mjs'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
+  {
     files: ['**/*.test.{ts,tsx}', 'src/test/**/*.ts'],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },

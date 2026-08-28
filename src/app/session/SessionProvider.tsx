@@ -1,8 +1,11 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import type { AccessMode } from '@/data/access/resource'
-import type { Site, SiteId } from '@/data/types'
-import { organisation, sites, staffOkonkwo } from '@/data/fixtures/organisation'
-import { SessionContext, TimeZoneContext } from './context'
+import type { IsoDateTime, Site, SiteId, StaffMember } from '@/data/types'
+import { organisation, staffOkonkwo } from '@/data/fixtures/organisation'
+import { now as appNow } from '@/data/fixtures/clock'
+import { configuredSites } from '@/data/access/settings-store'
+import { endSession } from '@/data/access/session-losses'
+import { SessionContext, TimeZoneContext, type SignInState } from './context'
 
 /**
  * Supplies the active site, the current user and the access mode.
@@ -14,24 +17,64 @@ import { SessionContext, TimeZoneContext } from './context'
  */
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [activeSiteId, setActiveSiteId] = useState<SiteId>('site-rosewood-court')
+  /*
+   * Starts signed out, and reloading signs you out again: there is no session
+   * to remember, and nothing in this build persists anywhere. A "remember me"
+   * would be the second control on the screen that does nothing.
+   */
+  const [signIn, setSignIn] = useState<SignInState>({ kind: 'signed_out' })
   const [accessMode, setAccessMode] = useState<AccessMode>('read_write')
+  /*
+   * Bumped when site settings change, because the name and the zone are read
+   * from the settings store rather than straight from the fixtures — and the
+   * zone decides what every clinical timestamp on every screen says.
+   */
+  const [configured, setConfigured] = useState(0)
 
+  const sites = useMemo(() => configuredSites(), [configured])
   const activeSite = sites.find((site) => site.id === activeSiteId) ?? sites[0]
   if (!activeSite) throw new Error('No sites configured')
+
+  const signInAs = useCallback((member: StaffMember, site: Site) => {
+    setActiveSiteId(site.id)
+    setSignIn({
+      kind: 'signed_in',
+      member,
+      at: appNow().toISOString() as IsoDateTime,
+    })
+  }, [])
+
+  /*
+   * **Destroys the work before it changes the state**, in that order and not
+   * the other, so a screen cannot re-render against a signed-out session while
+   * the stores still hold this session's writes.
+   */
+  const signOut = useCallback(() => {
+    endSession()
+    setSignIn({ kind: 'signed_out' })
+  }, [])
 
   const value = useMemo(
     () => ({
       organisation,
       sites,
+      reloadSites: () => setConfigured((count) => count + 1),
       activeSite,
       setActiveSite: (site: Site) => setActiveSiteId(site.id),
-      // Phase 14 builds real accounts. Until then the primary user of this
-      // build (PRD §1) is the registered manager.
-      currentUser: staffOkonkwo,
+      signIn,
+      signInAs,
+      signOut,
+      /*
+       * The signed-in member while there is one. Signed out this is the
+       * registered manager, which was the whole of this field before there
+       * were accounts — kept because the gate means no product screen renders
+       * while signed out, so nothing in the app reads it.
+       */
+      currentUser: signIn.kind === 'signed_in' ? signIn.member.ref : staffOkonkwo,
       accessMode,
       setAccessMode,
     }),
-    [activeSite, accessMode],
+    [activeSite, sites, accessMode, signIn, signInAs, signOut],
   )
 
   return (

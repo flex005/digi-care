@@ -1,5 +1,4 @@
 import type { Site } from '@/data/types'
-import type { AccessMode } from '@/data/access/resource'
 import { Icon } from '@/components/icon/Icon'
 import {
   Avatar,
@@ -13,6 +12,7 @@ import {
   VisuallyHidden,
 } from '@/components/primitives'
 import { shellIcons } from '@/app/nav-items.icons'
+import { accountMenuIcons } from './top-bar.icons'
 import { AppSwitcher } from './AppSwitcher'
 import styles from './TopBar.module.css'
 
@@ -37,8 +37,17 @@ export interface TopBarProps {
   alertCount: number
   userName: string
   userRoleLabel: string
-  accessMode: AccessMode
-  onAccessModeChange: (mode: AccessMode) => void
+  /** Opens this person's own screen: their shift, not the home's. */
+  onMyDashboard: () => void
+  /** One row of the permission matrix: what this person's role reaches. */
+  onMyPermissions: () => void
+  /**
+   * Signs out, which destroys everything this session wrote.
+   *
+   * It goes to the confirmation rather than doing it, because this is the one
+   * action in the build with a consequence that cannot be undone.
+   */
+  onSignOut: () => void
 }
 
 export function TopBar({
@@ -48,8 +57,9 @@ export function TopBar({
   alertCount,
   userName,
   userRoleLabel,
-  accessMode,
-  onAccessModeChange,
+  onMyDashboard,
+  onMyPermissions,
+  onSignOut,
 }: TopBarProps) {
   const isMultiSite = sites.length > 1
 
@@ -106,11 +116,11 @@ export function TopBar({
           controls, so they sit tight together and the bar's wider gap falls
           between the search field and the group. */}
       <div className={styles.actions}>
-        <Tooltip content={`Alerts — ${alertCount} unread`}>
+        <Tooltip content={`Alerts: ${alertCount} unread`}>
           <button
             type="button"
             className={styles.iconButton}
-            aria-label={`Alerts — ${alertCount} unread`}
+            aria-label={`Alerts: ${alertCount} unread`}
           >
             <Icon name={shellIcons.alerts} size={20} />
             {alertCount > 0 ? (
@@ -130,7 +140,7 @@ export function TopBar({
               still reaches it by what is written on it — WCAG 2.5.3. */}
           <DropdownMenuTrigger
             className={styles.user}
-            aria-label={`${userName} — account menu`}
+            aria-label={`Account menu for ${userName}`}
           >
             {/* A real image container, not a glyph: it shows a photograph the
                 day staff carry one, and initials until then. Decorative here —
@@ -149,22 +159,25 @@ export function TopBar({
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{userRoleLabel}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {/* Read-only is one of the seven states every screen is reviewed
-              against (PRD §6). This makes it reachable without a build flag —
-              an auditor sees every record and can change none of them. */}
-            <DropdownMenuLabel>View as</DropdownMenuLabel>
-            <DropdownMenuItem onSelect={() => onAccessModeChange('read_write')}>
-              {accessMode === 'read_write' ? '✓ ' : ''}Registered Manager
+            {/*
+             * **Sign out is here and it is real**, which it was not until
+             * accounts landed: this used to say there was nothing behind it.
+             * There is now — everything this session wrote is in memory and
+             * signing out discards it — so the item goes to a confirmation
+             * naming what would go rather than doing it on a menu click.
+             */}
+            <DropdownMenuItem onSelect={() => onMyDashboard()}>
+              <Icon name={accountMenuIcons.myDashboard} size={16} aria-hidden />
+              My dashboard
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onAccessModeChange('read_only')}>
-              {accessMode === 'read_only' ? '✓ ' : ''}Read-only — Auditor
+            <DropdownMenuItem onSelect={() => onMyPermissions()}>
+              <Icon name={accountMenuIcons.whatICanDo} size={16} aria-hidden />
+              What I can do
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>
-              Profile — coming in a later phase
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled>
-              Sign out — coming in a later phase
+            <DropdownMenuItem onSelect={() => onSignOut()}>
+              <Icon name={accountMenuIcons.signOut} size={16} aria-hidden />
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

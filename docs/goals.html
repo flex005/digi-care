@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Goals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1150px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:16px}
+.sec{padding:20px 24px;border-bottom:1px solid var(--border-subtle)}
+.sec:last-child{border-bottom:0}
+.sec > h2{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:12px}
+.viewNav{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+.viewNav button{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.viewNav button[aria-pressed="true"]{background:var(--purple-900);border-color:var(--purple-900);color:#fff}
+
+.subj{display:flex;gap:14px;align-items:center;padding:14px 22px}
+.av{width:42px;height:42px;flex:0 0 42px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:700;font-size:13px}
+.subj .nm{font-size:17px;font-weight:700}
+.subj .meta{font-size:12px;color:var(--ink-500);margin-top:2px}
+
+.lead{margin-top:20px;padding:18px 22px;border-radius:var(--r-lg);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);display:flex;gap:16px;align-items:flex-start;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.lead .n{font-size:32px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.lead .t{font-size:14px;font-weight:700}
+.lead .d{font-size:12.5px;margin-top:3px;line-height:1.5;max-width:64ch}
+.lead.none{display:block}
+.lead.none .t{font-size:16px;font-weight:800}
+
+.goal{padding:18px 24px;border-top:1px solid var(--border-subtle)}
+.goal:first-of-type{border-top:0}
+.goalTop{display:grid;grid-template-columns:minmax(0,1fr) 15rem auto;gap:20px;align-items:start}
+.stmt{font-size:16.5px;font-weight:700;line-height:1.4;letter-spacing:-.01em;max-width:62ch}
+.why{font-size:13px;color:var(--ink-500);margin-top:6px;line-height:1.55;max-width:66ch;font-style:italic}
+.gmeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.tag{padding:2px 9px;border-radius:var(--r-pill);font-size:11px;font-weight:700;
+  background:var(--purple-50);color:var(--purple-600)}
+.tag.unlinked{border:1.5px dashed var(--unrecorded);background:transparent;color:var(--unrecorded-ink)}
+.date{font-size:11.5px;color:var(--ink-500);font-weight:600}
+.state{display:inline-flex;flex-direction:column;gap:2px;padding:8px 12px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700}
+.state small{font-size:11px;font-weight:400;line-height:1.4}
+.state.stalled{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.state.moving{color:var(--ink-700);font-weight:500;padding-left:0}
+.state.moving small{color:var(--ink-500)}
+.state.ach{border:1px solid var(--positive);background:var(--positive-tint);color:var(--positive-ink)}
+.state.notach{border:1px solid var(--border-strong);background:var(--bg-sunken);color:var(--ink-700)}
+.state.withdrawn{border:1px solid var(--info);background:var(--info-tint);color:var(--info-ink)}
+.state.stopped{border:1px solid var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.said{margin-top:8px;font-size:11.5px;font-weight:700}
+.said.agreed{color:var(--positive-ink)}
+.said.disagreed{color:var(--critical-ink)}
+.said.notasked{display:inline-block;padding:5px 9px;border-radius:var(--r-sm);
+  border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);font-size:11px;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.btn{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+
+.hero{padding:22px 24px}
+.hero .stmt{font-size:22px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:18px 26px;padding:0 24px 22px}
+.f .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin-bottom:4px}
+.f .v{font-size:14px;line-height:1.55}
+.f.full{grid-column:span 2}
+
+.tl{padding:6px 24px 22px}
+.tlItem{display:grid;grid-template-columns:6.5rem minmax(0,1fr);gap:18px;padding:14px 0;
+  border-top:1px solid var(--border-subtle)}
+.tlTime{font-size:12px;color:var(--ink-500);font-weight:600}
+.tlTime small{display:block;font-weight:400;color:var(--ink-400);margin-top:2px}
+.tlBody{font-size:14px;color:var(--ink-700);line-height:1.55}
+.tlMeta{font-size:11px;color:var(--ink-500);margin-top:5px}
+.tlGap{margin:12px 0;padding:13px 17px;border-radius:var(--r-md);font-size:13px;font-weight:700;
+  border:1.5px dashed var(--unrecorded);border-left-width:4px;color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.tlGap small{display:block;font-size:12px;font-weight:400;margin-top:4px;line-height:1.5;max-width:72ch}
+.tlSet{padding:14px 0;border-top:1px solid var(--border-subtle);font-size:13px;color:var(--ink-500)}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;padding:14px 24px;border-bottom:1px solid var(--border-subtle)}
+.pill{padding:8px 16px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.pill[aria-pressed="true"]{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.sortLine{padding:12px 24px;font-size:13px;color:var(--ink-500);border-bottom:1px solid var(--border-subtle)}
+.qrow{display:grid;grid-template-columns:13rem minmax(0,1fr) 14rem auto;gap:20px;align-items:center;
+  padding:14px 24px;border-top:1px solid var(--border-subtle)}
+.qrow:first-of-type{border-top:0}
+.who .n{display:block;font-size:14px;font-weight:600}
+.who .r{display:block;font-size:12px;color:var(--ink-500);margin-top:1px}
+.qstmt{font-size:14px;font-weight:600;line-height:1.4}
+.qmeta{display:block;font-size:11px;color:var(--ink-500);margin-top:3px}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="viewNav">
+  <button aria-pressed="true" onclick="go('tab',this)">1 · Goals tab</button>
+  <button aria-pressed="false" onclick="go('none',this)">2 · Tab, nobody has set one</button>
+  <button aria-pressed="false" onclick="go('detail',this)">3 · Goal detail and timeline</button>
+  <button aria-pressed="false" onclick="go('queue',this)">4 · The queue</button>
+</div>
+
+<div id="view"></div>
+
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>The goal statement is the largest thing on every screen it appears</h3>
+  <code>16.5px/700</code> on the tab, <code>22px/700</code> on the detail, max <code>62ch</code>.
+  Every other record in this build is somebody's account of a resident; a goal is the resident's own
+  words about what they want, and it should read like it. "Why it matters" beneath at <code>13px</code>
+  ink-500, italic, also theirs. Never a clinical paraphrase of either.
+
+  <h3>Two leads, in order</h3>
+  A resident with no goals at all: the lead is the whole card at <code>16px/800</code> and there is no
+  list beneath it — nothing to list. It names how long they have been here, because "no goals set" on
+  somebody admitted yesterday is not a finding and on somebody here eight months is.
+  A resident with goals: the lead is goals past their date with nothing recorded, hatched, with its
+  denominator.
+  <b>A goal with no target date can never be late</b>, and "no date" must never render as "not yet due" —
+  it renders as the hatched tag saying no date was set.
+
+  <h3>Goal card</h3>
+  <code>minmax(0,1fr) 15rem auto</code>, gap <code>20px</code>, padding <code>18px 24px</code>.
+  Linked domain as a purple tag; unlinked as the hatched tag — a goal nobody filed under a domain is a
+  real state and must not default to one.
+  State chip: stalled takes the hatch, moving is plain text with no chip, and the four closures each
+  take their own treatment.
+  <b>Not achieved is not a failure treatment.</b> bg-surface-sunken with a plain border — a fact, not a
+  criticism. Critical and caution are for things somebody must act on; a goal that was not reached is a
+  thing that happened to a person.
+
+  <h3>What the resident said</h3>
+  Beneath the chip at <code>11.5px/700</code>. Agreed in positive ink, disagreed in critical ink,
+  <b>not asked in the hatched treatment</b> — it is a gap, and a family reading this later is entitled
+  to know which it was.
+  <b>withdrawn_by_resident carries none</b>, because the withdrawal is the resident's view. Asking what
+  they thought of their own decision is incoherent whichever value it takes.
+
+  <h3>Progress timeline</h3>
+  <code>6.5rem minmax(0,1fr)</code>, gap <code>18px</code>, padding <code>14px 0</code>.
+  Its own record, not filtered care notes — so a gap here is a gap in goal progress and makes no claim
+  about the care record. That is why Rule 3c does not apply and a gap marker is honest.
+  A goal open past its target with nothing recorded shows the hatched marker with the duration and what
+  it means: nobody has said, which is not a record that it did not happen.
+  The final row is always when it was set and by whom — the timeline has a beginning, and an empty
+  timeline is a goal that was set and then nothing, not a goal with no history.
+
+  <h3>Queue</h3>
+  Eighth in the settled shape. Lead is goals past their date with nothing recorded, with its denominator,
+  and the denominator excludes undated goals and says so.
+  Row <code>13rem minmax(0,1fr) 14rem auto</code>. The statement is the content column, in the resident's
+  words, never truncated to a clinical summary. Sorted by how long past the date.
+</div>
+
+</div>
+
+<script>
+const SUBJ = (nm, full, room, extra) => `<div class="card"><div class="subj">
+  <span class="av">${full.split(' ').map(w=>w[0]).join('')}</span>
+  <div><div class="nm">${nm}</div><div class="meta">${full} · Room ${room} · ${extra}</div></div>
+</div></div>`;
+
+function tab(){
+  return `<h1>Goals</h1>
+  ${SUBJ('Grace','Grace Adeyemi','302','Born 14/02/1939 (87) · here 2 years 4 months')}
+  <div class="lead"><div class="n">1</div>
+    <div><div class="t">goal passed its date with nothing recorded</div>
+      <div class="d">Of 4 goals set with Grace. Nobody has written anything about it since it was set,
+        and nobody has said whether it happened.</div></div></div>
+
+  <div class="card">
+    <div class="goal"><div class="goalTop">
+      <div>
+        <div class="stmt">&ldquo;I want to walk to the dining room on my own again, without the frame.&rdquo;</div>
+        <div class="why">&ldquo;I don&rsquo;t like being pushed in front of everybody. I&rsquo;d rather take my time.&rdquo;</div>
+        <div class="gmeta"><span class="tag">Mobility and moving and handling</span>
+          <span class="date">Target 01/06/2026 · 83 days past</span></div>
+      </div>
+      <div><span class="state stalled">Nothing recorded<small>no progress note since it was set,
+        4 months ago</small></span></div>
+      <div><button class="btn primary">Open</button></div>
+    </div></div>
+
+    <div class="goal"><div class="goalTop">
+      <div>
+        <div class="stmt">&ldquo;I want to see my great-granddaughter more often.&rdquo;</div>
+        <div class="why">&ldquo;She&rsquo;s at university and I only see her at Christmas.&rdquo;</div>
+        <div class="gmeta"><span class="tag">Social and emotional wellbeing</span>
+          <span class="date">Target 25/12/2026 · in 4 months</span></div>
+      </div>
+      <div><span class="state moving">In progress<small>last note 18/08 · A. Okonkwo</small></span></div>
+      <div><button class="btn">Open</button></div>
+    </div></div>
+
+    <div class="goal"><div class="goalTop">
+      <div>
+        <div class="stmt">&ldquo;I want to go back to the Thursday knitting group.&rdquo;</div>
+        <div class="why">&ldquo;I made the blanket on my bed there.&rdquo;</div>
+        <div class="gmeta"><span class="tag unlinked">No domain</span>
+          <span class="date">No target date set</span></div>
+      </div>
+      <div><span class="state ach">Achieved<small>02/07/2026 · A. Okonkwo</small></span>
+        <div class="said agreed">Grace agreed it was achieved</div></div>
+      <div><button class="btn">Open</button></div>
+    </div></div>
+
+    <div class="goal"><div class="goalTop">
+      <div>
+        <div class="stmt">&ldquo;I want to manage my own tablets again.&rdquo;</div>
+        <div class="why">&ldquo;I did it for sixty years.&rdquo;</div>
+        <div class="gmeta"><span class="tag">Medication</span>
+          <span class="date">Target 01/04/2026</span></div>
+      </div>
+      <div><span class="state stopped">Stopped by the service<small>14/03/2026 · M. Halloran ·
+        self-administration assessment not passed</small></span>
+        <div class="said notasked">Grace was not asked what she thought</div></div>
+      <div><button class="btn">Open</button></div>
+    </div></div>
+  </div>`;
+}
+
+function none(){
+  return `<h1>Goals</h1>
+  ${SUBJ('Emmanuel','Emmanuel Okafor','14','Born 07/07/1948 (78) · here 5 months')}
+  <div class="lead none">
+    <div class="t">Nobody has set a goal with Emmanuel</div>
+    <div class="d" style="margin-top:6px">He has been here 5 months. A goal is this person&rsquo;s own
+      statement of something they want &mdash; not a care plan action, and not something decided for
+      them. Setting one starts with asking.</div>
+    <div style="margin-top:14px"><button class="btn primary">Set a goal with Emmanuel</button></div>
+  </div>`;
+}
+
+function detail(){
+  return `<h1>Goal</h1>
+  ${SUBJ('Grace','Grace Adeyemi','302','Born 14/02/1939 (87)')}
+  <div class="card">
+    <div class="hero">
+      <div class="stmt">&ldquo;I want to walk to the dining room on my own again, without the frame.&rdquo;</div>
+      <div class="why">&ldquo;I don&rsquo;t like being pushed in front of everybody. I&rsquo;d rather take my time.&rdquo;</div>
+      <div class="gmeta"><span class="tag">Mobility and moving and handling</span>
+        <span class="date">Target 01/06/2026 · 83 days past</span></div>
+    </div>
+    <div class="fields">
+      <div class="f full"><div class="k">How we will know it has happened</div>
+        <div class="v">Grace walks the corridor from her room to the dining room without her frame,
+          unaided, on three consecutive days.</div></div>
+      <div class="f"><div class="k">Set</div><div class="v">14/04/2026 by A. Okonkwo, with Grace</div></div>
+      <div class="f"><div class="k">Status</div>
+        <div class="v"><span class="state stalled">Nothing recorded<small>no progress note since it was
+          set, 4 months ago</small></span></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec" style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:0">Progress</h2>
+      <div style="display:flex;gap:10px"><button class="btn">Add a progress note</button>
+        <button class="btn primary">Close this goal</button></div>
+    </div>
+    <div class="tl">
+      <div class="tlGap">No progress recorded &mdash; 4 months 9 days
+        <small>Nothing has been written about this goal since it was set, and its target date passed
+          83 days ago. This is not a record that it did not happen; it is a record that nobody said.</small></div>
+      <div class="tlSet">Set on 14/04/2026 by A. Okonkwo, with Grace.</div>
+    </div>
+  </div>`;
+}
+
+const Q = [
+  { n:'Grace', f:'Grace Adeyemi', r:'302', s:'&ldquo;I want to walk to the dining room on my own again, without the frame.&rdquo;',
+    m:'Mobility · target 01/06/2026 · set by A. Okonkwo', d:'83 days past', p:'no progress note since it was set' },
+  { n:'Harry', f:'Harold Wilkinson', r:'109', s:'&ldquo;I want to get out into the garden every day when it&rsquo;s dry.&rdquo;',
+    m:'Social and emotional wellbeing · target 01/07/2026', d:'53 days past', p:'last note 20/05, nothing since' },
+  { n:'Doris', f:'Doris Kavanagh', r:'311', s:'&ldquo;I want to phone my sister myself instead of asking someone.&rdquo;',
+    m:'Communication · target 01/08/2026', d:'22 days past', p:'last note 12/07, nothing since' },
+];
+
+function queue(){
+  return `<h1>Goals</h1>
+  <div class="lead"><div class="n">9</div>
+    <div><div class="t">goals passed their date and nobody has said what happened</div>
+      <div class="d">Of 26 goals with a target date, across 48 goals at Rosewood Court. A goal with no
+        date is not late and is not counted here.</div></div></div>
+  <div class="card">
+    <div class="filters">
+      <button class="pill" aria-pressed="true">Past date, nothing said</button>
+      <button class="pill">Open</button>
+      <button class="pill">Closed</button>
+      <button class="pill">Resident not asked</button>
+      <button class="pill">All</button>
+    </div>
+    <p class="sortLine">Longest past its date first &mdash; the wait is the finding</p>
+    ${Q.map(g => `<div class="qrow">
+      <span class="who"><span class="n">${g.n}</span><span class="r">${g.f} · Room ${g.r}</span></span>
+      <span><span class="qstmt">${g.s}</span><span class="qmeta">${g.m}</span></span>
+      <span><span class="state stalled">${g.d}<small>${g.p}</small></span></span>
+      <span><button class="btn">Open</button></span>
+    </div>`).join('')}
+  </div>`;
+}
+
+let view='tab';
+function go(v,btn){
+  view=v;
+  document.querySelectorAll('.viewNav button').forEach(b=>b.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true'); render(); window.scrollTo(0,0);
+}
+function render(){
+  document.getElementById('view').innerHTML =
+    view==='tab'?tab():view==='none'?none():view==='detail'?detail():queue();
+}
+render();
+</script>
+</body>
+</html>

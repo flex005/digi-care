@@ -1,0 +1,1064 @@
+/**
+ * The care note timeline. PRD §6.3.
+ *
+ * The organising idea: the stretches between the notes are objects on the
+ * page, so the column has to read as continuous time rather than as a stack of
+ * cards. Notes and gaps therefore share one rail and one rhythm, and a gap is
+ * never allowed to look like a divider.
+ */
+
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.filterSlot {
+  padding: var(--space-16) var(--space-24) var(--space-20);
+}
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  align-items: flex-end;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/**
+ * The rail width, declared once. The note, the gap marker and the overnight
+ * marker all indent by it, which is what makes a gap read as a stretch
+ * between two clock times rather than as one more row.
+ *
+ * In rem, not px, and that is the accessibility requirement rather than a
+ * preference. Text-only zoom to 200% (WCAG 2.2 AA, PRD §7) grows the root
+ * font size without touching the layout: a fixed 96px rail would then hold
+ * a 24px date string and either clip it or push it out of column. In rem the
+ * rail grows with the text it contains, and the gap markers indenting off the
+ * same variable stay aligned to it.
+ */
+.railedList {
+  --rail-width: 6rem;
+}
+
+/* ---- a note ---- */
+
+.note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  align-items: flex-start;
+  padding: var(--space-20) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/**
+ * A superseded note is quieter, and still completely readable.
+ *
+ * Not struck through and not hidden: PRD §6.3 keeps it visible on purpose, and
+ * a reader has to be able to see what was originally written in order to
+ * understand what the correction corrected. The pill on the card carries the
+ * meaning; this only stops it competing with the note that replaced it.
+ */
+.noteSuperseded {
+  background-color: var(--bg-surface-sunken);
+}
+
+/**
+ * The railed layout, for a resident's own timeline. See NoteCard.tsx.
+ *
+ * The subject is settled by the header above, so what the reader is scanning
+ * is *when*: the times come out of the meta line into a column of their own
+ * and everything on the timeline lines up against them.
+ */
+.noteRailed {
+  display: grid;
+  grid-template-columns: var(--rail-width) minmax(0, 1fr);
+  gap: var(--space-20);
+  align-items: start;
+  padding: var(--space-20) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+}
+
+.railTime {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.railDate {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-variant-numeric: tabular-nums;
+}
+
+.railedBody,
+.stackedBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.noteHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.noteCategory {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.noteBody {
+  max-width: 78ch;
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+}
+
+/* Author, timestamp and shift. Always visible, never hover-only — a note
+   whose author you have to hover to find is a note nobody signed. */
+.noteMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-12);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.noteAuthor {
+  color: var(--ink-700);
+  font-weight: var(--weight-semibold);
+}
+
+.noteTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.noteLink {
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.noteLink:hover {
+  text-decoration: underline;
+}
+
+/* ---- a gap ---- */
+
+.gapRow {
+  padding: var(--space-12) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Indented to the rail, so the marker starts where the notes' bodies start
+   and visibly spans the clock times above and below it. */
+.railedList .gapRow {
+  padding-left: calc(var(--space-24) + var(--rail-width) + var(--space-20));
+}
+
+/**
+ * The overnight marker. Quiet, and that word is doing exact work: it carries
+ * less visual weight than the hatch and not one fact less. Duration, window
+ * and the reason no notes were expected are all on it.
+ *
+ * A dotted left rule rather than a fill or a border box: it reads as time
+ * passing rather than as a record with something wrong in it, which is the
+ * distinction the whole marker exists to make.
+ */
+.overnight {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-12);
+  align-items: baseline;
+  padding: var(--space-8) var(--space-16);
+  border-left: 2px dotted var(--border-strong);
+}
+
+.overnightLabel {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.overnightDetail {
+  max-width: 78ch;
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* The rail ends with the record, not with a rule hanging under it. Declared
+   after both row types so the cascade reads top to bottom. */
+.timeline > .note:last-child,
+.timeline > .noteRailed:last-child,
+.timeline > .gapRow:last-child {
+  border-bottom: none;
+}
+
+/* ---- the states around the list ---- */
+
+.narrowedNote {
+  max-width: 80ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.narrowedNote strong {
+  color: var(--ink-900);
+  font-weight: var(--weight-semibold);
+}
+
+.emptyTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-semibold);
+}
+
+.emptyBody {
+  max-width: 70ch;
+  margin: var(--space-8) 0 var(--space-16);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.errorTitle {
+  color: var(--status-critical-ink);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-semibold);
+}
+
+.errorBody {
+  max-width: 70ch;
+  margin: var(--space-8) 0 var(--space-16);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.loading {
+  padding: var(--space-32);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  text-align: center;
+}
+
+/* ---- note detail ---- */
+
+.backLink {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  align-self: flex-start;
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+/**
+ * The supervision record: who asked, who answered, and how long it took.
+ *
+ * A description list, because that is what it is — three terms with values.
+ * Nothing here is hatched: a flag that was answered is a complete record, and
+ * a slow answer is a finding about the answer rather than a hole in it.
+ */
+.supervision {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-16) var(--space-24) var(--space-20);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.supervisionRow {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: var(--space-16);
+  align-items: baseline;
+}
+
+.supervisionTerm {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.supervisionValue {
+  max-width: 74ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.supervisionValue strong {
+  color: var(--ink-900);
+  font-weight: var(--weight-bold);
+}
+
+/* Both actions on this note, together. They were at opposite corners. */
+.noteActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  align-items: center;
+  padding: var(--space-16) var(--space-24) 0;
+}
+
+/* One line, above the control it explains. It was a card with two paragraphs,
+   longer than the note it described. */
+.immutabilityLine {
+  max-width: 84ch;
+  padding: var(--space-8) var(--space-24) var(--space-20);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.immutability {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  align-items: flex-start;
+  padding: var(--space-20) var(--space-24);
+}
+
+.immutabilityBody {
+  max-width: 76ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.immutabilityBody strong {
+  color: var(--ink-900);
+  font-weight: var(--weight-semibold);
+}
+
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+/* ---- write surfaces ---- */
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  max-height: 60vh;
+  margin-top: var(--space-16);
+  overflow-y: auto;
+}
+
+/**
+ * The subject header on a write surface. PRD §2.4.
+ *
+ * Sticky within the form, which is what "does not scroll away" means inside a
+ * dialog: whoever is typing can see who they are typing about without
+ * scrolling back, at any point in the form.
+ */
+.subject {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+}
+
+/* Avatar · name block · facts, on one line. */
+.subjectRow {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.subjectWho {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.subjectName {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.subjectLegal {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-regular);
+}
+
+/* Room · born · site, on one line, pushed to the right of the name block. */
+.subjectFacts {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  justify-content: flex-end;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  text-align: right;
+}
+
+.subjectAllergies {
+  display: flex;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.fieldLabel {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.textarea {
+  width: 100%;
+  padding: var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
+  font-family: var(--font-family);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  resize: vertical;
+}
+
+.textarea:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.checkboxRow {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.formError {
+  color: var(--status-critical-ink);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-medium);
+}
+
+.composerActions {
+  display: flex;
+  gap: var(--space-12);
+  justify-content: flex-end;
+  padding-top: var(--space-8);
+}
+
+/* An overridden shift. Not hatched: a shift somebody changed on purpose and
+   said why is a complete record, not a gap. It reads as a qualifier on the
+   line above it. */
+.shiftOverride {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-8);
+  align-items: baseline;
+  max-width: 78ch;
+  padding: var(--space-4) var(--space-12);
+  border-left: 2px solid var(--status-info);
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.shiftOverrideLabel {
+  color: var(--status-info-ink);
+  font-weight: var(--weight-semibold);
+}
+
+/* Suggested phrases. Openers, so they are small and quiet: pressing one should
+   feel like starting a sentence, not choosing an answer. */
+.phrases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.phrase {
+  padding: var(--space-4) var(--space-8);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-surface-sunken);
+  color: var(--ink-700);
+  font-family: var(--font-family);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  cursor: pointer;
+}
+
+.phrase:hover {
+  border-color: var(--purple-400);
+  background-color: var(--purple-50);
+  color: var(--purple-900);
+}
+
+.fieldHint {
+  max-width: 70ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.fieldHint strong {
+  color: var(--ink-700);
+  font-weight: var(--weight-semibold);
+}
+
+/* The resident a note is about. Only rendered on the cross-resident view,
+   where a note with no name on it cannot be read at all. */
+.noteSubject {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.noteSubject:hover {
+  color: var(--purple-600);
+  text-decoration: underline;
+}
+
+/* ---- the cross-resident view ---- */
+
+/* The page title. Same step and weight as "Residents" on the residents list —
+   it had no rule at all, so the h1 was falling through to the reset. */
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.homePage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.viewTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-16) var(--space-24);
+}
+
+.viewTab {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-surface);
+  color: var(--ink-500);
+  font-family: var(--font-family);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.viewTabActive {
+  border-color: var(--purple-600);
+  background-color: var(--purple-50);
+  color: var(--purple-900);
+}
+
+.question {
+  max-width: 80ch;
+  padding: 0 var(--space-24) var(--space-20);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/**
+ * Rule 3c, made visible. See FilterNotice.tsx.
+ *
+ * Informational blue, not amber: a filter is not a fault and nothing here is
+ * wrong. It is the neutral-information tone from PRD §4.4, and it must not
+ * compete with the hatch — a reader scanning for gaps should never mistake
+ * this for one.
+ *
+ * The two tones are the same treatment because they are the same kind of
+ * statement; only the sentence differs. `suppressed` means a claim has been
+ * withheld, `scoped` means one is still being made but only about this set,
+ * and both are hooked in the DOM so a test can tell them apart.
+ */
+.filterNotice {
+  display: flex;
+  gap: var(--space-12);
+  align-items: flex-start;
+  margin: var(--space-16) var(--space-24) 0;
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--status-info);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--status-info-tint);
+  color: var(--status-info-ink);
+}
+
+.filterNoticeBody {
+  max-width: 88ch;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.filterNoticeHeading {
+  font-weight: var(--weight-bold);
+}
+
+/**
+ * The count and why it is ordered as it is, on one line above the list.
+ *
+ * It was a display card with the explanation beside it, which spent the top
+ * third of a queue screen on a single number and pushed the rows somebody
+ * came to scan below the fold. The figure keeps its denominator and the
+ * sentence keeps its reasoning; only the shape changed.
+ */
+.queueHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-8);
+  align-items: baseline;
+  padding: var(--space-20) var(--space-24) var(--space-16);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Why the queue is in this order, or what the filter did to the claim.
+   Rule 3c: every claim here says what it was measured over. */
+.queueWhy {
+  max-width: 88ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.queueWhy strong {
+  color: var(--ink-900);
+  font-weight: var(--weight-semibold);
+}
+
+/* ---- the queue rows ---- */
+
+.queueList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/**
+ * Four aligned columns: resident · flag · note · action. See NoteQueueRow.tsx
+ * for why a queue is columns and a timeline is not.
+ *
+ * `align-items: start` rather than center, so a one-line note and a six-line
+ * note both hang from the top of their row and the four columns stay level
+ * as the eye runs down. The note column is never given a fixed height and
+ * never clipped: a care note cut off mid-sentence is one somebody misreads.
+ */
+.queueRow {
+  display: grid;
+  grid-template-columns: 15rem 13rem minmax(0, 1fr) auto;
+  gap: var(--space-8) var(--space-20);
+  align-items: start;
+  padding: var(--space-12) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Opening the note is the row, not a second control stacked under the button.
+   The body text is the link; this is the row saying so. */
+.queueRow:hover {
+  background-color: var(--bg-surface-sunken);
+}
+
+/* Columns in rem, not px: text-only zoom to 200% grows them with the words in
+   them rather than squeezing four columns into the same space. */
+
+.queueSubject {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.queueName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.queueName:hover {
+  color: var(--purple-600);
+  text-decoration: underline;
+}
+
+.queueFacts {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/**
+ * The flag cell. A small two-line chip and nothing more.
+ *
+ * Capped at the reference's width so it cannot grow into the note column. In
+ * rem rather than px so text-only zoom to 200% grows the chip with the words
+ * in it instead of clipping them (PRD §7).
+ */
+.queueFlag {
+  display: flex;
+  min-width: 0;
+}
+
+.queueFlag > * {
+  max-width: 12.5rem;
+}
+
+/**
+ * The note and its meta, and the row's height budget lives here.
+ *
+ * Six rows have to be visible at 1440px without scrolling, so the body drops
+ * to the small step and the meta to the caption step — the reference's
+ * proportions. Nothing is clipped to achieve it: a care note cut off
+ * mid-sentence is a care note somebody misreads, so a long note makes its own
+ * row taller and the other three columns stay aligned to the top of it.
+ */
+.queueMain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.queueMain .noteBody {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* The note body is the click target. A real link rather than a click handler
+   on the row: a row that only responds to a mouse is a row a keyboard cannot
+   open, and this is the control that gets used most on the screen. */
+
+/**
+ * The note body opens it. A button rather than a link, because it opens a
+ * dialog over this screen rather than navigating away from it — a queue is
+ * worked down, and a full page navigation costs the reader their position,
+ * their filter and their scroll on every note they read.
+ */
+.queueBodyLink {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.peek {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  margin-top: var(--space-16);
+}
+
+.peekBody {
+  max-width: 74ch;
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+}
+
+.peekActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+  align-items: center;
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.queueBodyLink:hover {
+  text-decoration: underline;
+}
+
+/**
+ * The action column: mark reviewed, then open.
+ *
+ * Stacked and right-aligned, with the action that empties the queue first —
+ * this is the screen somebody works down, and "Open" is the detour rather than
+ * the job. `align-items: flex-end` so a short link and a wider button share a
+ * right edge down the column.
+ */
+
+/* One control. "Open" lived here as a second stacked link and cost every row
+   two lines of height for something the row itself already does. */
+.queueAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.queueList > .queueRow:last-child {
+  border-bottom: none;
+}
+
+.pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  align-items: flex-end;
+  padding: 0 var(--space-24) var(--space-20);
+}
+
+.quietList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quietRow {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: var(--space-16) var(--space-24);
+  align-items: center;
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.quietWho {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  min-width: 0;
+}
+
+.quietName {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.quietName:hover {
+  color: var(--purple-600);
+  text-decoration: underline;
+}
+
+.quietFacts {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* Recorded and unremarkable, stated plainly. Rule 3b: this is the answer
+   "everybody was written up today", and it must not compete with a gap. */
+.settledNote {
+  max-width: 74ch;
+  padding: var(--space-20) var(--space-24);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.quietList > .quietRow:last-child {
+  border-bottom: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * Count cards
+ * ------------------------------------------------------------------------ */
+
+.counts {
+  display: grid;
+  gap: var(--space-12);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.count,
+.countCaution,
+.countGap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-lg);
+}
+
+.count {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--ink-700);
+}
+
+.countCaution {
+  border: 1px solid var(--status-caution);
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+.countGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-radius: var(--radius-lg);
+}
+
+.countLabel {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.countValue {
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.countOf {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.count .countLabel,
+.count .countOf {
+  color: var(--ink-500);
+}
+
+/* ---------------------------------------------------------------------------
+ * Staff tabs and paging
+ * ------------------------------------------------------------------------ */
+
+.authorTabs {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  padding: var(--space-16) var(--space-24) 0;
+}
+
+.resultLine {
+  padding: var(--space-12) var(--space-24);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.pager {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.pagerButton {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--purple-600);
+  font-family: var(--font-family);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.pagerButton:disabled {
+  color: var(--ink-400);
+  cursor: default;
+}
+
+.pagerWhere {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  font-variant-numeric: tabular-nums;
+}
+
+.todayLine {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}

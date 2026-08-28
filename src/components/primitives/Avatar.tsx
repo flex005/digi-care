@@ -67,7 +67,7 @@ export function Avatar({
         <span
           className={className}
           role="img"
-          aria-label={`${name} — no photograph on file`}
+          aria-label={`${name}, no photograph on file`}
         >
           <span aria-hidden="true">{initialsOf(name)}</span>
         </span>

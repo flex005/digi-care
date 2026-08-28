@@ -32,7 +32,7 @@ export function StatesRoute() {
         <h1 className={styles.pageTitle}>Status states</h1>
         <p className={styles.lede}>
           Every state of every status primitive in diGi-Care. A blank must never be able
-          to mean either “no” or “nobody has looked yet” — in a regulated care record
+          to mean either “no” or “nobody has looked yet”. In a regulated care record
           those are opposites. This page is where that holds or fails, and it is checked
           at the end of every phase, not just this one.
         </p>
@@ -40,7 +40,7 @@ export function StatesRoute() {
 
       <div className={styles.controls}>
         <Switch
-          label="Greyscale — proves the unrecorded state survives without hue"
+          label="Greyscale: proves the unrecorded state survives without hue"
           checked={greyscale}
           onCheckedChange={setGreyscale}
         />

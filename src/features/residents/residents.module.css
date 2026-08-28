@@ -55,32 +55,25 @@
  * green" — there is no green here to reach for. These exist to find problems,
  * not to congratulate, so a zero is a quiet zero.
  */
+
+/*
+ * The figure card has one definition, in components/metric. Residents keeps its
+ * own markup because it carries a period-change footer and a spoken claim the
+ * other three do not, but it takes its look from there: four modules that look
+ * alike because they were typed alike is the drift this composes away.
+ */
 .tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: var(--space-16);
+  composes: tiles from '@/components/metric/MetricTile.module.css';
 }
 
 /* Read-only. No hover, no pointer, no pressed state — nothing that suggests
    these do something when clicked, because they no longer do. */
 .tile {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-  align-items: stretch;
-  height: 100%;
-  padding: var(--space-16);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background-color: var(--bg-surface);
-  text-align: left;
+  composes: tile from '@/components/metric/MetricTile.module.css';
 }
 
 .tileHead {
-  display: flex;
-  gap: var(--space-8);
-  align-items: flex-start;
-  justify-content: space-between;
+  composes: tileHead from '@/components/metric/MetricTile.module.css';
 }
 
 /* Two lines' worth whether the label needs them or not, so the figures below
@@ -181,6 +174,10 @@
 }
 
 .segment {
+  /* The chosen one carries a mark beside the fill, never the fill alone. */
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
   padding: var(--space-4) var(--space-16);
   border-radius: var(--radius-pill);
   color: var(--ink-500);
@@ -311,4 +308,56 @@
   color: var(--ink-700);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
+}
+
+/* ---------------------------------------------------------------------------
+ * Controls: the three views on their own row, then search and the filters
+ * ------------------------------------------------------------------------ */
+
+.viewRow {
+  display: flex;
+  justify-content: flex-start;
+  padding: var(--space-16) var(--space-24) 0;
+}
+
+.search {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  flex: 1 1 16rem;
+  min-width: 12rem;
+  max-width: 24rem;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink-500);
+}
+
+/* The field is labelled for a screen reader; the placeholder is not a label. */
+.searchLabel {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+}
+
+.search input:focus {
+  outline: none;
+}
+
+.search:focus-within {
+  border-color: var(--purple-600);
 }

@@ -70,21 +70,21 @@ export function marCellDescription(
   const at = (value: IsoDateTime) => formatTime(value, timeZone)
   switch (state.kind) {
     case 'not_due':
-      return `${context} — not due.`
+      return `${context}: not due.`
     case 'due':
-      return `${context} — due, window open from ${at(state.windowOpensAt)} until ${at(state.windowClosesAt)}, no record yet.`
+      return `${context}: due, window open from ${at(state.windowOpensAt)} until ${at(state.windowClosesAt)}, no record yet.`
     case 'given': {
       const witness = witnessText(state.witness)
-      return `${context} — given by ${state.givenBy.displayName} at ${at(state.givenAt)}${
+      return `${context}: given by ${state.givenBy.displayName} at ${at(state.givenAt)}${
         witness.text ? `, ${witness.text}` : ''
       }.`
     }
     case 'not_given':
-      return `${context} — not given, ${NOT_GIVEN_REASON[state.reason]}, recorded by ${state.recordedBy.displayName} at ${at(state.recordedAt)}.${
+      return `${context}: not given, ${NOT_GIVEN_REASON[state.reason]}, recorded by ${state.recordedBy.displayName} at ${at(state.recordedAt)}.${
         state.note ? ` Note: ${state.note}.` : ''
       }`
     case 'omitted':
-      return `${context} — omitted. Due at ${at(state.dueAt)}, window closed with no record.${
+      return `${context}: omitted. Due at ${at(state.dueAt)}, window closed with no record.${
         state.escalation.kind === 'escalated'
           ? ` Escalated at ${at(state.escalation.at)}.`
           : ' Not yet escalated.'
@@ -117,7 +117,7 @@ function CellBody({ state }: { state: MarCellState }) {
           block
           tone="info"
           label="Due"
-          detail={`${format.time(state.windowOpensAt)}–${format.time(state.windowClosesAt)}`}
+          detail={`${format.time(state.windowOpensAt)} to ${format.time(state.windowClosesAt)}`}
         />
       )
 

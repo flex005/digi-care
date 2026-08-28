@@ -18,7 +18,7 @@ describe('as-of completeness agrees with present completeness', () => {
     (name, resident) => {
       expect(
         hadCriticalGapAt(resident, NOW.getTime()),
-        `${name}: the as-of check disagrees with recordCompleteness at the present instant — the two critical lists have drifted apart`,
+        `${name}: the as-of check disagrees with recordCompleteness at the present instant: the two critical lists have drifted apart`,
       ).toBe(recordCompleteness(resident).hasCriticalGaps)
     },
   )

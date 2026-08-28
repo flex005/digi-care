@@ -52,7 +52,7 @@ export const RISK_FLAG_SOURCES: RiskFlagSource[] = [
     // PRD §2.1: "No FALLS RISK badge reads to a care worker as 'assessed,
     // he's fine'. It may mean nobody has ever assessed him."
     isUnrecorded: (resident) => resident.risks.falls.kind === 'not_assessed',
-    renderUnrecorded: () => <Unrecorded key="falls" label="Falls — not assessed" />,
+    renderUnrecorded: () => <Unrecorded key="falls" label="Falls not assessed" />,
     renderNotable: (resident) => {
       const falls = resident.risks.falls
       if (falls.kind !== 'assessed' || falls.level === 'low') return []
@@ -60,7 +60,7 @@ export const RISK_FLAG_SOURCES: RiskFlagSource[] = [
         <StatusPill
           key="falls"
           tone={falls.level === 'high' ? 'critical' : 'caution'}
-          label={`Falls — ${falls.level === 'high' ? 'HIGH' : 'MODERATE'}`}
+          label={`Falls · ${falls.level === 'high' ? 'HIGH' : 'MODERATE'}`}
         />,
       ]
     },
@@ -70,13 +70,11 @@ export const RISK_FLAG_SOURCES: RiskFlagSource[] = [
     name: 'Choking and dysphagia risk',
     // Same-day dangerous, which is why it is critical alongside falls.
     isUnrecorded: (resident) => resident.risks.choking.kind === 'not_assessed',
-    renderUnrecorded: () => (
-      <Unrecorded key="choking" label="Dysphagia — not assessed" />
-    ),
+    renderUnrecorded: () => <Unrecorded key="choking" label="Dysphagia not assessed" />,
     renderNotable: (resident) => {
       const choking = resident.risks.choking
       if (choking.kind !== 'assessed' || choking.level !== 'high') return []
-      return [<StatusPill key="choking" tone="critical" label="Dysphagia — HIGH" />]
+      return [<StatusPill key="choking" tone="critical" label="Dysphagia · HIGH" />]
     },
   },
   {

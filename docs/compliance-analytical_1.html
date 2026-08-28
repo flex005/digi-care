@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Compliance, analytical layout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1360px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.sub{margin-top:4px;font-size:13px;color:var(--ink-500)}
+.controls{display:flex;gap:8px;align-items:center}
+select{padding:9px 13px;border:1px solid var(--border-strong);border-radius:var(--r-md);font:inherit;
+  font-size:13px;background:var(--bg-surface);color:var(--ink-900)}
+.btn{padding:9px 16px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+
+.banner{margin-top:16px;padding:13px 17px;border-radius:var(--r-md);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);font-size:12.5px;font-weight:600;line-height:1.55;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+
+/* ---------- the grid ---------- */
+.grid{display:grid;grid-template-columns:1.15fr 1fr 1.5fr;gap:18px;margin-top:18px;align-items:stretch}
+.panel{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-xl);
+  box-shadow:var(--shadow-card);overflow:hidden;display:flex;flex-direction:column}
+
+/* hero */
+.hero{background:var(--purple-900);color:#fff;border:0;padding:24px}
+.hero .k{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.72}
+.hero .v{font-size:52px;font-weight:800;letter-spacing:-.03em;line-height:1;margin-top:10px}
+.hero .d{font-size:13px;margin-top:10px;line-height:1.55;opacity:.86;max-width:34ch}
+.hero .split{margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.16);
+  display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.hero .split .n{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.hero .split .l{font-size:11.5px;opacity:.72;margin-top:2px;line-height:1.4}
+
+/* stacked pair */
+.pair{display:grid;grid-template-rows:1fr 1fr;gap:18px}
+.mini{padding:20px 22px;display:flex;flex-direction:column;justify-content:center}
+.mini .k{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.mini .v{font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1;margin-top:8px}
+.mini .d{font-size:12px;color:var(--ink-500);margin-top:6px;line-height:1.45}
+.mini.crit{background:var(--critical-tint);border-color:var(--critical)}
+.mini.crit .v,.mini.crit .k{color:var(--critical-ink)}
+.mini.crit .d{color:var(--critical-ink);opacity:.85}
+.mini.gapTile{border:1.5px dashed var(--unrecorded);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.mini.gapTile .v,.mini.gapTile .k,.mini.gapTile .d{color:var(--unrecorded-ink)}
+
+/* chart */
+.chartHead{padding:20px 22px 0}
+.chartHead h2{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.chartHead p{font-size:12.5px;color:var(--ink-500);margin-top:3px;max-width:56ch;line-height:1.5}
+.legend{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
+.lg{display:flex;gap:7px;align-items:center;font-size:11.5px;color:var(--ink-500);font-weight:600}
+.sw{width:11px;height:11px;border-radius:3px}
+.sw.rec{background:var(--purple-600)}
+.sw.gap{background:var(--unrecorded)}
+.chart{flex:1;display:flex;align-items:flex-end;gap:10px;padding:20px 22px 14px;min-height:190px}
+.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:0;height:100%}
+.bar{width:100%;border-radius:5px 5px 0 0}
+.bar.rec{background:var(--purple-600)}
+.bar.gap{background:repeating-linear-gradient(45deg,var(--unrecorded) 0 4px,#b9b3c8 4px 8px);
+  border-radius:5px 5px 0 0}
+.col .lab{font-size:11px;color:var(--ink-500);text-align:center;margin-top:8px;font-weight:600}
+.col .lab small{display:block;font-weight:400;color:var(--ink-400);font-size:10px;margin-top:1px}
+
+/* ---------- table ---------- */
+.tableCard{margin-top:18px;background:var(--bg-surface);border:1px solid var(--border-subtle);
+  border-radius:var(--r-xl);box-shadow:var(--shadow-card);overflow:hidden}
+.tHead{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:18px 22px;
+  flex-wrap:wrap}
+.tHead h2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.tHead p{font-size:12.5px;color:var(--ink-500);margin-top:2px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px}
+thead th{text-align:left;padding:11px 22px;font-size:11px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-500);background:var(--bg-sunken);
+  border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);white-space:nowrap}
+thead th.num{text-align:right}
+tbody td{padding:13px 22px;border-bottom:1px solid var(--border-subtle);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--bg-sunken)}
+tbody td.num{text-align:right;font-weight:700}
+.kqName{font-size:14.5px;font-weight:700}
+.kqAsk{font-size:11.5px;color:var(--ink-500);margin-top:2px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.dot.a{background:var(--caution)} .dot.r{background:var(--critical)} .dot.g{background:var(--positive)}
+.rate{display:inline-flex;align-items:center;font-size:13px;font-weight:700}
+.rate.a{color:var(--caution-ink)} .rate.r{color:var(--critical-ink)} .rate.g{color:var(--positive-ink)}
+.ie{display:inline-flex;flex-direction:column;gap:2px;padding:6px 10px;border-radius:var(--r-sm);
+  font-size:11.5px;font-weight:700;border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.ie small{font-size:10.5px;font-weight:400}
+.covMini{width:110px}
+.covMini .b{height:6px;border-radius:var(--r-pill);background:var(--border-subtle);overflow:hidden;display:flex}
+.covMini .b i{display:block;height:100%}
+.covMini .b .ok{background:var(--purple-600)}
+.covMini .b .no{background:var(--unrecorded)}
+.covMini .t{font-size:11px;color:var(--ink-500);margin-top:5px;font-weight:600}
+.notHeld{display:inline-block;padding:5px 10px;border-radius:var(--r-sm);background:var(--bg-sunken);
+  border:1px solid var(--border-strong);color:var(--ink-500);font-size:11.5px;font-weight:700}
+.driver{font-size:12px;color:var(--ink-700)}
+.driver small{display:block;font-size:11px;color:var(--ink-500);margin-top:2px}
+
+.foot{margin-top:18px;padding:16px 20px;border-radius:var(--r-lg);background:var(--bg-sunken);
+  border:1px solid var(--border-strong);color:var(--ink-500);font-size:12.5px;line-height:1.6;
+  max-width:96ch}
+.foot b{color:var(--ink-700);font-weight:700}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top">
+  <div><h1>Compliance</h1>
+    <p class="sub">Rosewood Court · the whole record · five CQC Key Questions</p></div>
+  <div class="controls">
+    <select><option selected>Rosewood Court</option><option>Ashgrove Lodge</option></select>
+    <select><option selected>Whole record</option><option>Last 90 days</option></select>
+    <button class="btn">Inspection pack</button>
+  </div>
+</div>
+
+<div class="banner">This mapping of evidence to Key Questions is not derived from CQC's published
+  framework, and a panel's rating is the worst of its checks. Both are placeholders — no regulatory
+  conclusion should be drawn from anything on this screen.</div>
+
+<div class="grid">
+
+  <!-- hero: the one figure that leads -->
+  <div class="panel hero">
+    <div class="k">Checks that cannot support a figure</div>
+    <div class="v">12</div>
+    <div class="d">of 39 checks across five Key Questions. Nothing on this screen can tell you about
+      these — not that they are bad, that they are unmeasurable.</div>
+    <div class="split">
+      <div><div class="n">2 of 5</div><div class="l">Key Questions unratable as a result</div></div>
+      <div><div class="n">7</div><div class="l">further checks this product does not hold at all</div></div>
+    </div>
+  </div>
+
+  <!-- two minis -->
+  <div class="pair">
+    <div class="panel mini crit">
+      <div class="k">Checks with a finding</div>
+      <div class="v">9</div>
+      <div class="d">of 27 checks that can support a figure. Worst is doses with no record — 20 of 1,219.</div>
+    </div>
+    <div class="panel mini gapTile">
+      <div class="k">Evidence never recorded</div>
+      <div class="v">344</div>
+      <div class="d">records the home is expected to hold and does not — 81 assessments, 87 care plan
+        domains, 56 consents, 120 others.</div>
+    </div>
+  </div>
+
+  <!-- chart -->
+  <div class="panel">
+    <div class="chartHead">
+      <h2>What the record holds, by Key Question</h2>
+      <p>Every bar is the evidence expected for that Key Question. The hatched part is what is expected
+        and missing — not a shortfall against a target, a count of records nobody has written.</p>
+      <div class="legend">
+        <span class="lg"><span class="sw rec"></span>Recorded</span>
+        <span class="lg"><span class="sw gap"></span>Expected and missing</span>
+      </div>
+    </div>
+    <div class="chart">
+      <div class="col"><div class="bar gap" style="height:26%"></div><div class="bar rec" style="height:52%"></div>
+        <div class="lab">Safe<small>203 of 284</small></div></div>
+      <div class="col"><div class="bar gap" style="height:38%"></div><div class="bar rec" style="height:34%"></div>
+        <div class="lab">Effective<small>112 of 224</small></div></div>
+      <div class="col"><div class="bar gap" style="height:14%"></div><div class="bar rec" style="height:58%"></div>
+        <div class="lab">Caring<small>168 of 208</small></div></div>
+      <div class="col"><div class="bar gap" style="height:44%"></div><div class="bar rec" style="height:28%"></div>
+        <div class="lab">Responsive<small>97 of 248</small></div></div>
+      <div class="col"><div class="bar gap" style="height:20%"></div><div class="bar rec" style="height:30%"></div>
+        <div class="lab">Well-led<small>74 of 122</small></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- table -->
+<div class="tableCard">
+  <div class="tHead">
+    <div><h2>The five Key Questions</h2>
+      <p>Ordered as CQC orders them. Coverage is checks that can support a figure, not evidence recorded.</p></div>
+    <div class="controls"><select><option>All Key Questions</option></select></div>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Key Question</th><th>Rating</th><th>What drives it</th>
+      <th>Usable checks</th><th class="num">Records missing</th><th>Not held here</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><div class="kqName">Safe</div><div class="kqAsk">Are people protected from avoidable harm?</div></td>
+        <td><span class="rate a"><span class="dot a"></span>Amber</span></td>
+        <td class="driver">Risks never assessed<small>81 of 252 · 32%</small></td>
+        <td><div class="covMini"><div class="b"><i class="ok" style="width:82%"></i><i class="no" style="width:18%"></i></div>
+          <div class="t">9 of 11</div></div></td>
+        <td class="num">81</td>
+        <td><span class="notHeld">1 · training</span></td>
+      </tr>
+      <tr>
+        <td><div class="kqName">Effective</div><div class="kqAsk">Does their care achieve good outcomes?</div></td>
+        <td><span class="ie">Insufficient evidence<small>4 of 8 usable, below 60%</small></span></td>
+        <td class="driver">Nothing can be concluded<small>half the checks have too little behind them</small></td>
+        <td><div class="covMini"><div class="b"><i class="ok" style="width:50%"></i><i class="no" style="width:50%"></i></div>
+          <div class="t">4 of 8</div></div></td>
+        <td class="num">112</td>
+        <td><span class="notHeld">1 · supervision</span></td>
+      </tr>
+      <tr>
+        <td><div class="kqName">Caring</div><div class="kqAsk">Do staff treat people with compassion?</div></td>
+        <td><span class="rate a"><span class="dot a"></span>Amber</span></td>
+        <td class="driver">Consents never sought<small>56 of 224 · 25%</small></td>
+        <td><div class="covMini"><div class="b"><i class="ok" style="width:86%"></i><i class="no" style="width:14%"></i></div>
+          <div class="t">6 of 7</div></div></td>
+        <td class="num">56</td>
+        <td><span class="notHeld">2 · surveys</span></td>
+      </tr>
+      <tr>
+        <td><div class="kqName">Responsive</div><div class="kqAsk">Is care organised around their needs?</div></td>
+        <td><span class="rate r"><span class="dot r"></span>Red</span></td>
+        <td class="driver">Care plan domains never written<small>87 of 320 · 27%</small></td>
+        <td><div class="covMini"><div class="b"><i class="ok" style="width:88%"></i><i class="no" style="width:12%"></i></div>
+          <div class="t">7 of 8</div></div></td>
+        <td class="num">87</td>
+        <td><span class="notHeld">1 · complaints</span></td>
+      </tr>
+      <tr>
+        <td><div class="kqName">Well-led</div><div class="kqAsk">Does leadership assure quality?</div></td>
+        <td><span class="ie">Insufficient evidence<small>3 of 7 usable, below 60%</small></span></td>
+        <td class="driver">Nothing can be concluded<small>four checks have too little behind them</small></td>
+        <td><div class="covMini"><div class="b"><i class="ok" style="width:43%"></i><i class="no" style="width:57%"></i></div>
+          <div class="t">3 of 7</div></div></td>
+        <td class="num">8</td>
+        <td><span class="notHeld">2 · audits</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="foot">
+  <b>There is no overall compliance figure on this screen, and there will not be one.</b> Two of the five
+  Key Questions cannot be rated at all, and no arithmetic turns "amber, unratable, amber, red, unratable"
+  into a percentage that means anything. A single figure would be most reassuring exactly when the record
+  is thinnest — which is now.
+</div>
+
+<div class="meas">
+  <h2>What changed, and what did not</h2>
+
+  <h3>Taken from the reference</h3>
+  <b>Varied tile sizes carrying hierarchy.</b> <code>1.15fr 1fr 1.5fr</code>, gap <code>18px</code>,
+  stretched to equal height. A dark hero at <code>52px/800</code>, two stacked minis at
+  <code>36px/800</code>, a chart panel filling the rest. The layout says what matters before any label
+  does — Rule 5 expressed in geometry rather than type size.
+  <b>A chart where a table was.</b> Stacked bars, recorded against expected-and-missing, so the shape of
+  the record is legible at a glance instead of read out of five rows.
+  <b>A dense table with status dots</b>, hover states, and a filter in the header. Six columns where the
+  old screen had five stacked panels.
+  Radius up to <code>20px</code> on the outer panels — the reference's softer shell, which suits a screen
+  that is read rather than acted on.
+
+  <h3>Refused, deliberately</h3>
+  <b>No trend arrows without denominators.</b> The reference's "↑5% than last month" is the exact shape
+  this build spent fifteen phases removing. Where a comparison exists it names both figures.
+  <b>No green hero.</b> The hero is the largest thing on the screen and it carries the count of checks
+  that cannot support a figure — the least reassuring number available, in the most prominent position.
+  <b>No overall compliance percentage.</b> Two Key Questions are unratable, and no arithmetic combines
+  them with three ratings into a figure that means anything.
+  <b>The hatch survives into the chart.</b> Missing evidence is a hatched bar segment, not a lighter
+  shade of the same colour — pattern, not hue, exactly as every other screen.
+  <b>Insufficient Evidence stays a chip, not a colour.</b> In the rating column it renders hatched with
+  its coverage, beside amber and red dots, so the three are never read as a scale.
+
+  <h3>Where this belongs</h3>
+  Compliance and reports — screens whose job is analysis. <b>Not the operational Dashboard</b>, whose job
+  is what is late right now, and where a chart of the last five months would be the wrong question
+  answered beautifully.
+</div>
+
+</div>
+</body>
+</html>

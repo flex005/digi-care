@@ -15,6 +15,7 @@
 
 import type { Resident, RiskTemplateId } from './types'
 import { CONSENT_TYPES, RISK_ASSESSMENT_TEMPLATES } from './types'
+import { formatLateness } from '@/lib/format'
 
 /** Chip-length names for the risk templates. */
 const SHORT_RISK_LABELS: Partial<Record<RiskTemplateId, string>> = {
@@ -23,7 +24,6 @@ const SHORT_RISK_LABELS: Partial<Record<RiskTemplateId, string>> = {
   pressure_ulcer: 'Pressure ulcer risk',
   nutrition: 'Nutritional risk',
   moving_handling: 'Moving and handling',
-  mental_capacity: 'Mental capacity',
   skin_integrity: 'Skin integrity',
   behaviour: 'Behaviour support',
   environmental: 'Environmental risk',
@@ -230,17 +230,23 @@ export function staleRecords(resident: Resident): string[] {
 
   for (const domain of resident.carePlan) {
     if (domain.status.kind === 'review_due') {
-      stale.push(`Care plan review ${domain.status.daysOverdue} days overdue`)
+      stale.push(
+        `Care plan review ${formatLateness(domain.status.daysOverdue)} overdue`,
+      )
     }
   }
   for (const template of RISK_ASSESSMENT_TEMPLATES) {
     const risk = resident.risks[template.id]
     if (risk.kind === 'assessed' && risk.reviewState.kind === 'overdue') {
-      stale.push(`${template.name} review ${risk.reviewState.daysOverdue} days overdue`)
+      stale.push(
+        `${template.name} review ${formatLateness(risk.reviewState.daysOverdue)} overdue`,
+      )
     }
   }
   if (resident.carePlanReview.kind === 'overdue') {
-    stale.push(`Care plan review ${resident.carePlanReview.daysOverdue} days overdue`)
+    stale.push(
+      `Care plan review ${formatLateness(resident.carePlanReview.daysOverdue)} overdue`,
+    )
   }
 
   return stale

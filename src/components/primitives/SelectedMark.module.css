@@ -1,0 +1,11 @@
+/**
+ * The chosen mark. Sized to sit on a pill's baseline without changing its
+ * height, and inheriting its colour so it reads on a filled pill and an
+ * unfilled one alike.
+ */
+.mark {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  color: currentColor;
+}

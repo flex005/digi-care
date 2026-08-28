@@ -44,7 +44,21 @@
   color: var(--status-unrecorded-ink);
 }
 
-/* Inline badge / pill form — profile header badge strip, chips, list rows. */
+/**
+ * Inline badge / pill form — profile header badge strip, chips, list rows.
+ *
+ * Sentence case, unlike <StatusPill>, which is uppercase and stays that way.
+ * That is not an inconsistency, it follows from Rule 2: a recorded status can
+ * be one word ("Complete", "Refused"), but an unrecorded one must say what is
+ * missing, which makes it a sentence — "Dietary requirements and preferences
+ * not recorded". Uppercase suits a word and defeats a sentence, and the label
+ * is the carrier of meaning here, not the pattern.
+ *
+ * Set at --text-body-sm rather than --text-micro for the same reason: at 11px
+ * without the uppercase and letterspacing there was not enough of it left to
+ * read. What tells these two apart peripherally is the dashed border and the
+ * hatch, which is unchanged and does not depend on case or size.
+ */
 .unrecordedBadge {
   composes: unrecorded;
   display: inline-flex;
@@ -52,11 +66,9 @@
   align-items: center;
   padding: var(--space-4) var(--space-12);
   border-radius: var(--radius-pill);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
 }
 
 /* Table and MAR grid cell form. Fills the cell; no rounding, so the grid

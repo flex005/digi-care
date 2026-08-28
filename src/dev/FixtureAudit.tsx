@@ -11,7 +11,9 @@ import {
 } from '@/data/fixtures/medications'
 import { sites, staff } from '@/data/fixtures/organisation'
 import { Unrecorded, StatusPill } from '@/components/status'
+import { pluralise } from '@/lib/format'
 import styles from './dev.module.css'
+import { hasAccess } from '@/data/access/team-store'
 
 /**
  * The Fixture Audit. PRD §5.3.
@@ -46,8 +48,8 @@ function buildChecks(): Check[] {
     found: noFalls.length > 0,
     detail:
       noFalls.length > 0
-        ? `${noFalls.length} residents, including ${noFalls[0]?.fullLegalName} — their header must not read as safe`
-        : 'Nobody is missing a falls assessment — the badge strip would never be tested',
+        ? `${noFalls.length} residents, including ${noFalls[0]?.fullLegalName}, whose header must not read as safe`
+        : 'Nobody is missing a falls assessment, so the badge strip would never be tested',
   })
 
   // 2 — no resuscitation decision, alongside a DNAR and a for-resuscitation.
@@ -75,7 +77,7 @@ function buildChecks(): Check[] {
     n: 3,
     gap: 'A resident admitted yesterday, with almost nothing filled in',
     found: admittedDaysAgo <= 2 && newestGaps > 15,
-    detail: `${newest?.fullLegalName} — admitted ${admittedDaysAgo} day(s) ago, ${newestGaps} named gaps in the record`,
+    detail: `${newest?.fullLegalName}, admitted ${pluralise(admittedDaysAgo, 'day')} ago, ${newestGaps} named gaps in the record`,
   })
 
   // 4 — three medication omissions, one escalated past 60 minutes and one
@@ -103,21 +105,27 @@ function buildChecks(): Check[] {
   ).length
   checks.push({
     n: 4,
-    gap: 'Three medication omissions — one escalated past 60 minutes, one inside the 30–60 minute window',
+    gap: 'Three medication omissions: one escalated past 60 minutes, one inside the 30 to 60 minute window',
     found: pastSixty > 0 && inWindow > 0 && notEscalated > 0,
-    detail: `${omissions.length} omissions overall · ${pastSixty} escalated past 60 min · ${inWindow} inside the 30–60 min window · ${notEscalated} not escalated at all`,
+    detail: `${omissions.length} omissions overall · ${pastSixty} escalated past 60 min · ${inWindow} inside the 30 to 60 min window · ${notEscalated} not escalated at all`,
   })
 
   // 5 — a controlled drug with a stock count discrepancy.
   const discrepancies = stockCounts.filter(hasStockDiscrepancy)
   const first = discrepancies[0]
+  // Only a routine count carries an expected figure; `hasStockDiscrepancy`
+  // already excludes opening counts, so this narrowing cannot fail — but it is
+  // the compiler's job to know that, not a comment's.
+  const firstExpected =
+    first && first.entry.kind === 'routine' ? first.entry.expected : 'none'
   checks.push({
     n: 5,
     gap: 'A controlled drug with a stock count discrepancy',
     found: discrepancies.length > 0,
-    detail: first
-      ? `${discrepancies.length} discrepancy — expected ${first.expected}, counted ${first.counted}, ${first.expected - first.counted} unaccounted for`
-      : 'No discrepancy present',
+    detail:
+      first && firstExpected !== 'none'
+        ? `${discrepancies.length} discrepancy: expected ${firstExpected}, counted ${first.counted}, ${firstExpected - first.counted} unaccounted for`
+        : 'No discrepancy present',
   })
 
   // 6 — withdrawn photography consent with photos still on file.
@@ -128,7 +136,7 @@ function buildChecks(): Check[] {
     found: withdrawn.length > 0,
     detail:
       withdrawn.length > 0
-        ? `${withdrawn[0]?.fullLegalName} — consent withdrawn, photographs not retroactively deleted`
+        ? `${withdrawn[0]?.fullLegalName}, consent withdrawn, photographs not retroactively deleted`
         : 'Nobody has withdrawn photography consent',
   })
 
@@ -147,7 +155,7 @@ function buildChecks(): Check[] {
     n: 7,
     gap: 'A care plan domain finalised 14 months ago and never reviewed',
     found: stalest >= 55,
-    detail: `${stalestName} — most overdue domain is ${stalest} days past its review date`,
+    detail: `${stalestName}, whose most overdue domain is ${stalest} days past its review date`,
   })
 
   // 8 — a note flagged and not reviewed, and a correction note.
@@ -173,12 +181,12 @@ function buildChecks(): Check[] {
     n: 9,
     gap: 'A site where compliance coverage is thin enough to render Insufficient Evidence',
     found: ashgrove.length > 0 && coverage < 0.6,
-    detail: `Ashgrove Lodge — ${ashgroveAssessed} of ${ashgrove.length} residents have a completed falls assessment (${Math.round(coverage * 100)}%, threshold 60%)`,
+    detail: `Ashgrove Lodge: ${ashgroveAssessed} of ${ashgrove.length} residents have a completed falls assessment (${Math.round(coverage * 100)}%, threshold 60%)`,
   })
 
   // 10 — a record authored by a now-deactivated staff member.
   const deactivated = staff
-    .filter((member) => !member.isActive)
+    .filter((member) => !hasAccess(member.id))
     .map((member) => member.id)
   const byDeactivated = careNotes.filter((note) =>
     deactivated.includes(note.recordedBy.id),
@@ -189,7 +197,7 @@ function buildChecks(): Check[] {
     found: byDeactivated.length > 0,
     detail:
       byDeactivated.length > 0
-        ? `${byDeactivated.length} note(s) by ${byDeactivated[0]?.recordedBy.displayName} — records outlive access, and stay attributed`
+        ? `${pluralise(byDeactivated.length, 'note')} by ${byDeactivated[0]?.recordedBy.displayName}. Records outlive access, and stay attributed`
         : 'No record by a deactivated author',
   })
 
@@ -234,7 +242,7 @@ export function FixtureAudit() {
       </p>
 
       <div className={styles.group}>
-        <span className={styles.groupTitle}>Volume — PRD §5.2</span>
+        <span className={styles.groupTitle}>Volume (PRD §5.2)</span>
         <div className={styles.row}>
           <StatusPill
             tone={residents.length === 32 ? 'positive' : 'critical'}
@@ -244,7 +252,7 @@ export function FixtureAudit() {
           <StatusPill
             tone={staff.length === 14 ? 'positive' : 'critical'}
             label={`${staff.length} staff`}
-            detail={`${staff.filter((s) => !s.isActive).length} deactivated · across ${new Set(staff.map((s) => s.role)).size} roles`}
+            detail={`${staff.filter((s) => !hasAccess(s.id)).length} without access · across ${new Set(staff.map((s) => s.role)).size} roles`}
           />
           <StatusPill
             tone="info"
@@ -261,7 +269,7 @@ export function FixtureAudit() {
 
       <div className={styles.group}>
         <span className={styles.groupTitle}>
-          Messiness — the gaps are the test, and must not be tidied
+          Messiness: the gaps are the test, and must not be tidied
         </span>
         <div className={styles.row}>
           <StatusPill
@@ -271,7 +279,7 @@ export function FixtureAudit() {
                 : 'critical'
             }
             label={`${criticalGaps} of ${residents.length} residents have a CRITICAL gap`}
-            detail="what the Critical records missing chip fires on — allergies · resuscitation decision · falls risk · dysphagia risk · GP · next of kin · care and support consent"
+            detail="what the Critical records missing chip fires on: allergies · resuscitation decision · falls risk · dysphagia risk · GP · next of kin · care and support consent"
           />
           <StatusPill
             tone="info"
@@ -281,7 +289,7 @@ export function FixtureAudit() {
           <StatusPill
             tone={stale > 0 ? 'positive' : 'critical'}
             label={`${stale} of ${residents.length} carry stale records`}
-            detail="past a review or expiry date — the Stale state, PRD §6"
+            detail="past a review or expiry date: the Stale state, PRD §6"
           />
           <StatusPill
             tone="info"
@@ -298,7 +306,7 @@ export function FixtureAudit() {
 
       <div className={styles.group}>
         <span className={styles.groupTitle}>
-          The ten deliberate gaps — {present} of {checks.length} present
+          The ten deliberate gaps: {present} of {checks.length} present
         </span>
         <div className={styles.stack}>
           {checks.map((check) =>
@@ -315,7 +323,7 @@ export function FixtureAudit() {
               <Unrecorded
                 key={check.n}
                 variant="row"
-                label={`${check.n}. MISSING — ${check.gap}`}
+                label={`${check.n}. MISSING: ${check.gap}`}
                 detail={check.detail}
               />
             ),

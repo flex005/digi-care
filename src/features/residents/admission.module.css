@@ -1,0 +1,268 @@
+/**
+ * Admission. Built to docs/admission.html.
+ *
+ * The reference's 15px, 14px, 13px, 12.5px and 11px steps each take the
+ * nearest on the closed type scale, and its 20px, 18px, 14px, 11px and 9px
+ * spacings the nearest on the 4px one (CLAUDE.md §4).
+ */
+
+/*
+ * Centred in the content area, not pinned to its left edge.
+ *
+ * The form has a max width because a line of admission questions is unreadable
+ * at full width, and without the auto margins that width simply sat against
+ * one side with the rest of the screen empty beside it. The margin is what
+ * turns a measure into a column.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+  width: 100%;
+  max-width: 61rem;
+  margin-inline: auto;
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.pageSubtitle {
+  margin-top: var(--space-4);
+  max-width: 84ch;
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.backLink {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-self: flex-start;
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--purple-600);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.section {
+  padding: var(--space-20) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sectionTitle {
+  margin-bottom: var(--space-12);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.two {
+  display: grid;
+  gap: var(--space-16);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-12);
+}
+
+.fieldLabel {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.field input,
+.field select {
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+}
+
+.hint {
+  max-width: 60ch;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-caption-line);
+}
+
+/* ---------------------------------------------------------------------------
+ * The one clinical question
+ * ------------------------------------------------------------------------ */
+
+.allergyBox {
+  padding: var(--space-16) var(--space-20);
+  border: 1px solid var(--status-critical);
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+  background: var(--status-critical-tint);
+}
+
+.allergyTitle {
+  color: var(--status-critical-ink);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-extrabold);
+}
+
+.allergyBody {
+  margin-top: var(--space-4);
+  max-width: 76ch;
+  color: var(--status-critical-ink);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+}
+
+.choice {
+  display: grid;
+  gap: var(--space-8);
+  align-items: start;
+  padding: var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.choice:has(input:checked) {
+  border-color: var(--purple-600);
+  background: var(--purple-50);
+}
+
+.choice b {
+  font-weight: var(--weight-semibold);
+}
+
+.choiceHint {
+  grid-column: 2;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-regular);
+}
+
+.nested {
+  margin-left: var(--space-32);
+  padding: var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.hatchNote {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+/* ---------------------------------------------------------------------------
+ * What starts unrecorded — the phase's argument
+ * ------------------------------------------------------------------------ */
+
+.gapsLead {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  padding: var(--space-12) var(--space-16);
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+}
+
+.gapsTitle {
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-extrabold);
+}
+
+.gapsBody {
+  margin-top: var(--space-4);
+  max-width: 80ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.gapList {
+  display: grid;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  list-style: none;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+
+.gapItem {
+  display: flex;
+  gap: var(--space-12);
+  align-items: baseline;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-sunken);
+  font-size: var(--text-body-sm-size);
+}
+
+.gapWhat {
+  color: var(--ink-900);
+  font-weight: var(--weight-semibold);
+}
+
+.gapWhere {
+  margin-left: auto;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.foot {
+  display: flex;
+  gap: var(--space-20);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-20) var(--space-24);
+  flex-wrap: wrap;
+}
+
+.state {
+  max-width: 66ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.state b {
+  color: var(--ink-900);
+  font-weight: var(--weight-bold);
+}

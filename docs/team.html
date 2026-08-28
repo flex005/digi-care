@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1150px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.sub{margin-top:4px;font-size:13px;color:var(--ink-500);max-width:82ch}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:16px}
+.viewNav{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+.viewNav button{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.viewNav button[aria-pressed="true"]{background:var(--purple-900);border-color:var(--purple-900);color:#fff}
+
+.sortNote{padding:12px 24px;font-size:13px;color:var(--ink-500);border-bottom:1px solid var(--border-subtle);
+  line-height:1.55}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) 13rem 12rem auto;gap:20px;align-items:center;
+  padding:14px 24px;border-top:1px solid var(--border-subtle)}
+.srow:first-of-type{border-top:0}
+.who{display:flex;gap:12px;align-items:center;min-width:0}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:700;font-size:12.5px}
+.who .n{font-size:14.5px;font-weight:600}
+.who .r{font-size:12px;color:var(--ink-500);margin-top:1px}
+.stand{display:inline-flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700}
+.stand small{font-size:11px;font-weight:400;line-height:1.35}
+.stand.active{color:var(--ink-700);font-weight:500;padding-left:0}
+.stand.active small{color:var(--ink-500)}
+.stand.left{border:1px solid var(--border-strong);background:var(--bg-sunken);color:var(--ink-700)}
+.stand.susp{border:1px solid var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.stand.never{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.site{font-size:12.5px;color:var(--ink-500)}
+.btn{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.btn.danger{border-color:var(--critical);color:var(--critical-ink)}
+
+/* detail */
+.hero{display:flex;gap:18px;align-items:center;padding:20px 24px;border-bottom:1px solid var(--border-subtle)}
+.hero .av{width:60px;height:60px;flex:0 0 60px;font-size:17px}
+.hero .n{font-size:22px;font-weight:700;letter-spacing:-.01em}
+.hero .r{font-size:13px;color:var(--ink-500);margin-top:3px}
+.hero .acts{margin-left:auto;display:flex;gap:10px}
+.sec{padding:20px 24px;border-bottom:1px solid var(--border-subtle)}
+.sec:last-child{border-bottom:0}
+.sec > h2{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:12px}
+.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 24px}
+.f .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin-bottom:4px}
+.f .v{font-size:14px;line-height:1.5}
+
+/* not held here — inert, no pattern */
+.notHeld{padding:16px 20px;border-radius:var(--r-md);background:var(--bg-sunken);
+  border:1px solid var(--border-strong);color:var(--ink-500)}
+.notHeld .t{font-size:13.5px;font-weight:700;color:var(--ink-700)}
+.notHeld .d{font-size:12.5px;margin-top:5px;line-height:1.55;max-width:80ch}
+.notHeld ul{list-style:none;margin-top:11px;display:flex;flex-wrap:wrap;gap:8px}
+.notHeld li{padding:6px 11px;border-radius:var(--r-sm);background:var(--bg-surface);
+  border:1px solid var(--border-strong);font-size:12px;font-weight:600;color:var(--ink-500)}
+
+/* activity list */
+.act{display:grid;grid-template-columns:8rem minmax(0,1fr) auto;gap:18px;align-items:baseline;
+  padding:11px 0;border-top:1px solid var(--border-subtle)}
+.act:first-of-type{border-top:0}
+.actWhen{font-size:12px;color:var(--ink-500);font-weight:600}
+.actWhen small{display:block;font-weight:400;color:var(--ink-400);margin-top:1px}
+.actWhat{font-size:13.5px;color:var(--ink-700);line-height:1.5}
+.actWhat b{color:var(--ink-900);font-weight:600}
+.actKind{font-size:11px;color:var(--ink-500);margin-top:2px}
+.more{margin-top:14px;padding:13px 17px;border-radius:var(--r-md);background:var(--purple-50);
+  border:1px solid var(--purple-200);border-left-width:4px;font-size:12.5px;color:var(--ink-700);
+  line-height:1.6;max-width:84ch}
+.more b{color:var(--purple-600)}
+.moreLink{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--purple-600)}
+
+.deact{padding:15px 19px;border-radius:var(--r-md);border:1px solid var(--border-strong);
+  background:var(--bg-sunken);font-size:12.5px;color:var(--ink-700);line-height:1.6;max-width:84ch}
+.deact b{font-weight:700;color:var(--ink-900)}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="viewNav">
+  <button aria-pressed="true" onclick="go('list',this)">1 · Staff list</button>
+  <button aria-pressed="false" onclick="go('det',this)">2 · Staff detail</button>
+  <button aria-pressed="false" onclick="go('gone',this)">3 · Staff detail — no longer has access</button>
+</div>
+
+<div id="view"></div>
+
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>The whole module carries Phase 13's constraint</h3>
+  Ordered by name, never by anything a person did. No rankings, no rates, and <b>no counts at all on the
+  staff detail</b> — there is no rota and no shift record, so a count has no honest denominator, and a
+  bare count beside another person's bare count is a ranking the reader performs themselves. Not
+  ordering the list does not prevent that; it only stops us doing it for them.
+  The figures are not wrong, they are wrong without the framing the report gives them. So the detail
+  shows recent activity as a list and links to the report where the period and denominators are stated.
+
+  <h3>Staff list</h3>
+  Row <code>minmax(0,1fr) 13rem 12rem auto</code>, gap <code>20px</code>, padding <code>14px 24px</code>.
+  Avatar <code>40px</code>, name <code>14.5px/600</code>, role <code>12px</code> ink-500 beneath.
+  A line above the table stating the ordering and that it cannot be changed — the constraint said out
+  loud, not merely obeyed.
+  <b>Standing is a union with four members, and only one is quiet.</b> Has access renders as plain text.
+  No longer has access renders settled on bg-surface-sunken with when and why. Suspended takes caution.
+  <b>Never been given access takes the hatch</b> — somebody on the record who was never set up is a gap,
+  not a settled state.
+  Standing carries who changed it and when, always. A standing with no author is a flag, not a record.
+
+  <h3>Staff detail</h3>
+  Hero <code>20px 24px</code>, avatar <code>60px</code>, name <code>22px/700</code>, role
+  <code>13px</code> ink-500.
+  Fields three across: role, site, standing. <b>Nothing else.</b> No start date, no contract type, no
+  employment fields — a field nobody has asked for is a field nobody has decided how to protect, and
+  inventing an employment record is how a care system starts holding HR data it was not built to hold.
+  <b>The "Not held here" block sits above the activity, not below it.</b> A page of what somebody
+  recorded reads as the beginning of a performance record unless it is told otherwise first. Reuse the
+  Phase 12 component exactly — solid bg-surface-sunken, plain border, no pattern, because pattern means
+  a gap somebody can close and nothing here can close this one.
+  Activity list <code>8rem minmax(0,1fr) auto</code>, most recent first, each row linking to the record
+  itself. A note beneath saying the figures live on the report, with their period and denominators, and
+  linking there.
+
+  <h3>Deactivation</h3>
+  A real act with a confirmation naming the person and stating what does not change: every note, dose
+  and signature they made stays on the record with their name on it.
+  <b>"(deactivated)" is derived from current standing at render time, never snapshotted into the
+  attribution.</b> The snapshot answers how somebody appeared on a record; standing answers whether they
+  can still get in. Only one of those changes, and a reactivated person whose historic notes still said
+  deactivated would be a fact about now stored in a record about then.
+</div>
+
+</div>
+
+<script>
+const TEAM = [
+  { n:'A. Okonkwo', full:'Adaeze Okonkwo', r:'Registered manager', s:'active', site:'Rosewood Court' },
+  { n:'C. Nwosu', full:'Chidi Nwosu', r:'Senior carer', s:'active', site:'Rosewood Court' },
+  { n:'F. Adebayo', full:'Folake Adebayo', r:'Care worker', s:'left', on:'02/08/2026',
+    why:'left the service', by:'A. Okonkwo', site:'Rosewood Court' },
+  { n:'H. Whitfield', full:'Hannah Whitfield', r:'Care worker', s:'susp', on:'14/08/2026',
+    why:'suspended pending review', by:'A. Okonkwo', site:'Rosewood Court' },
+  { n:'K. Osei', full:'Kwame Osei', r:'Care worker', s:'active', site:'Rosewood Court' },
+  { n:'M. Halloran', full:'Mary Halloran', r:'Deputy manager', s:'active', site:'Rosewood Court' },
+  { n:'N. Eze', full:'Ngozi Eze', r:'Senior carer', s:'active', site:'Rosewood Court' },
+  { n:'P. Lindqvist', full:'Petra Lindqvist', r:'Activities coordinator', s:'never', site:'Rosewood Court' },
+  { n:'S. Patel', full:'Sunita Patel', r:'Care worker', s:'active', site:'Ashgrove Lodge' },
+  { n:'T. Akinyemi', full:'Tunde Akinyemi', r:'Care worker', s:'active', site:'Rosewood Court' },
+];
+const STAND = {
+  active:{ c:'active', l:'Has access', d:'since 12/03/2024' },
+  left:{ c:'left', l:'No longer has access', d:'' },
+  susp:{ c:'susp', l:'Suspended', d:'' },
+  never:{ c:'never', l:'Never given access', d:'on the record, never set up' },
+};
+
+function list(){
+  return `<h1>Team</h1>
+  <p class="sub">Everybody who appears on a record at this organisation, whether or not they still work
+    here. Records outlive access, so somebody who has left stays on every note and dose they made.</p>
+  <div class="card">
+    <p class="sortNote">Ordered by name. <b>This list cannot be ordered by anything anybody did</b> —
+      a table of people sorted by a count is a ranking however it is labelled.</p>
+    ${TEAM.map(t => { const s = STAND[t.s]; return `<div class="srow">
+      <div class="who"><span class="av">${t.full.split(' ').map(w=>w[0]).join('')}</span>
+        <div><div class="n">${t.n}</div><div class="r">${t.full} · ${t.r}</div></div></div>
+      <div><span class="stand ${s.c}">${s.l}<small>${
+        t.s === 'active' ? s.d : t.s === 'never' ? s.d : `${t.on} · ${t.why} · ${t.by}`}</small></span></div>
+      <div class="site">${t.site}</div>
+      <div><button class="btn">Open</button></div>
+    </div>`; }).join('')}
+  </div>`;
+}
+
+const ACTS = [
+  { w:'16:22 BST', d:'today', k:'Care note', t:'Wrote a care note about <b>Grace Adeyemi</b> — social and emotional' },
+  { w:'16:04 BST', d:'today', k:'Medication', t:'Recorded the 16:00 round for <b>Emmanuel Okafor</b> — 3 doses' },
+  { w:'14:40 BST', d:'today', k:'Consent', t:'Recorded a capacity assessment for <b>Nathaniel Brennan</b> — medical treatment' },
+  { w:'11:15 BST', d:'yesterday', k:'Risk assessment', t:'Re-scored falls risk for <b>Beryl Hutchinson</b> — moderate to high' },
+  { w:'09:50 BST', d:'yesterday', k:'Care plan', t:'Finalised the mobility domain for <b>Grace Adeyemi</b> — version 3' },
+];
+
+function det(){
+  return `<h1>Team</h1>
+  <div class="card">
+    <div class="hero"><span class="av">AO</span>
+      <div><div class="n">Adaeze Okonkwo</div><div class="r">Registered manager · Rosewood Court</div></div>
+      <div class="acts"><button class="btn">Change role</button>
+        <button class="btn danger">Remove access</button></div></div>
+
+    <div class="sec">
+      <div class="fields">
+        <div class="f"><div class="k">Role</div><div class="v">Registered manager</div></div>
+        <div class="f"><div class="k">Site</div><div class="v">Rosewood Court</div></div>
+        <div class="f"><div class="k">Access</div>
+          <div class="v">Has access <span style="color:var(--ink-500);font-size:12.5px">· since
+            12/03/2024</span></div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="notHeld">
+        <div class="t">This is not a performance record</div>
+        <div class="d">diGi-Care does not hold supervision, appraisal, training or induction. Nothing on
+          this page says whether this person is doing their job well, and the absence of those things
+          here is a gap in this product rather than anything about them. They live in whatever the home
+          uses for staff records.</div>
+        <ul><li>Supervision</li><li>Appraisal</li><li>Training and competency</li><li>Induction</li>
+          <li>Disciplinary record</li></ul>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>What Adaeze has recorded recently</h2>
+      ${ACTS.map(a => `<div class="act">
+        <div class="actWhen">${a.w}<small>${a.d}</small></div>
+        <div><div class="actWhat">${a.t}</div><div class="actKind">${a.k}</div></div>
+        <div><button class="btn">Open the record</button></div>
+      </div>`).join('')}
+
+      <div class="more"><b>There are no counts on this page, and that is deliberate.</b> There is no rota
+        and no shift record in diGi-Care, so a count of what somebody recorded has no honest denominator
+        — and a bare count beside another person's bare count is a ranking whether or not anybody sorted
+        it. The figures live on the care note coverage report, where the period and the denominators are
+        stated alongside them.
+        <span class="moreLink">Open the coverage report &rarr;</span></div>
+    </div>
+  </div>`;
+}
+
+function gone(){
+  return `<h1>Team</h1>
+  <div class="card">
+    <div class="hero"><span class="av">FA</span>
+      <div><div class="n">Folake Adebayo</div>
+        <div class="r">Care worker · Rosewood Court · no longer has access</div></div>
+      <div class="acts"><button class="btn">Restore access</button></div></div>
+
+    <div class="sec">
+      <div class="fields">
+        <div class="f"><div class="k">Role</div><div class="v">Care worker</div></div>
+        <div class="f"><div class="k">Site</div><div class="v">Rosewood Court</div></div>
+        <div class="f"><div class="k">Access</div>
+          <div class="v">No longer has access
+            <span style="color:var(--ink-500);font-size:12.5px">· 02/08/2026 · left the service ·
+              recorded by A. Okonkwo</span></div></div>
+      </div>
+      <div class="deact" style="margin-top:16px">
+        <b>Removing access changed nothing on the record.</b> Every care note, medication entry and
+        signature Folake made is still there with her name on it, and still says Folake Adebayo. Records
+        outlive access — a record of who did something is not a permission, and removing one would leave
+        the home unable to say who gave a dose.
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="notHeld">
+        <div class="t">This is not a performance record</div>
+        <div class="d">diGi-Care does not hold supervision, appraisal, training or induction — including
+          any record of why somebody left. Nothing here says whether this person was doing their job
+          well.</div>
+        <ul><li>Supervision</li><li>Appraisal</li><li>Training and competency</li><li>Induction</li>
+          <li>Disciplinary record</li></ul>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>What Folake recorded, up to 02/08/2026</h2>
+      <div class="act">
+        <div class="actWhen">21:58 BST<small>02/08/2026</small></div>
+        <div><div class="actWhat">Signed the late &rarr; night handover at <b>Rosewood Court</b> —
+          never countersigned</div><div class="actKind">Handover · her last entry</div></div>
+        <div><button class="btn">Open the record</button></div>
+      </div>
+      <div class="act">
+        <div class="actWhen">19:14 BST<small>02/08/2026</small></div>
+        <div><div class="actWhat">Wrote a care note about <b>Emmanuel Okafor</b> — health observation,
+          later corrected</div><div class="actKind">Care note</div></div>
+        <div><button class="btn">Open the record</button></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+let view='list';
+function go(v,btn){
+  view=v;
+  document.querySelectorAll('.viewNav button').forEach(b=>b.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true'); render(); window.scrollTo(0,0);
+}
+function render(){
+  document.getElementById('view').innerHTML = view==='list'?list():view==='det'?det():gone();
+}
+render();
+</script>
+</body>
+</html>

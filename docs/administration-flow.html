@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Administration flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+  --shadow-overlay:0 8px 32px rgba(30,0,89,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1400px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.lede{margin-top:4px;font-size:13px;color:var(--ink-500)}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card)}
+
+/* ---------- round bar ---------- */
+.roundBar{display:flex;gap:24px;align-items:center;padding:16px 24px;margin-top:18px}
+.roundBar .now{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.roundBar .lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500)}
+.progress{margin-left:auto;text-align:right}
+.progress .n{font-size:15px;font-weight:700}
+.progress .d{font-size:12px;color:var(--ink-500);margin-top:1px}
+.bar{width:220px;height:6px;border-radius:var(--r-pill);background:var(--border-subtle);margin-top:8px;
+  overflow:hidden}
+.bar i{display:block;height:100%;background:var(--purple-600)}
+
+/* ---------- two columns ---------- */
+.cols{display:grid;grid-template-columns:19rem minmax(0,1fr);gap:18px;margin-top:18px;align-items:start}
+
+/* round list */
+.qHead{padding:14px 18px;border-bottom:1px solid var(--border-subtle)}
+.qHead h2{font-size:14px;font-weight:700}
+.qHead p{font-size:12px;color:var(--ink-500);margin-top:2px}
+.qItem{display:flex;gap:11px;align-items:center;width:100%;padding:11px 18px;border:0;
+  border-top:1px solid var(--border-subtle);background:none;text-align:left}
+.qItem:first-of-type{border-top:0}
+.qItem:hover{background:var(--purple-50)}
+.qItem[aria-current="true"]{background:var(--purple-50);box-shadow:inset 3px 0 0 var(--purple-600)}
+.qItem .rm{width:38px;flex:0 0 38px;font-size:11px;font-weight:700;color:var(--ink-500)}
+.qItem .nm{font-size:13px;font-weight:600;line-height:1.2}
+.qItem .st{font-size:11px;color:var(--ink-500);margin-top:1px}
+.mark{margin-left:auto;width:20px;height:20px;flex:0 0 20px;border-radius:50%;display:grid;
+  place-items:center;font-size:11px;font-weight:700}
+.mark.done{background:var(--positive-tint);color:var(--positive-ink);border:1px solid var(--positive)}
+.mark.todo{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink)}
+
+/* ---------- subject ---------- */
+.subject{display:flex;gap:16px;align-items:center;padding:18px 24px;
+  border-bottom:1px solid var(--border-subtle)}
+.av{width:56px;height:56px;flex:0 0 56px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:700;font-size:17px}
+.subject .nm{font-size:22px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+.subject .meta{font-size:13px;color:var(--ink-500);margin-top:2px}
+.allergy{margin-left:auto;display:flex;gap:9px;align-items:center;padding:10px 16px;
+  border-radius:var(--r-md);border:1px solid var(--critical);border-left-width:4px;
+  background:var(--critical-tint);color:var(--critical-ink);font-size:13px;font-weight:700}
+.allergy small{display:block;font-weight:400;font-size:11.5px}
+.allergy.none{border-color:var(--positive);background:var(--positive-tint);color:var(--positive-ink)}
+.allergy.unknown{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+
+/* ---------- dose rows ---------- */
+.doseHead{display:flex;justify-content:space-between;align-items:baseline;padding:14px 24px 6px}
+.doseHead h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500)}
+.doseHead span{font-size:12px;color:var(--ink-400)}
+.dose{display:grid;grid-template-columns:minmax(0,1fr) 15rem;gap:20px;align-items:start;
+  padding:16px 24px;border-top:1px solid var(--border-subtle)}
+.dose.answered{background:var(--bg-sunken)}
+.dose .drug{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.dose .strength{font-size:13px;color:var(--ink-700);margin-top:2px}
+.dose .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.tag{padding:2px 9px;border-radius:var(--r-pill);font-size:11px;font-weight:700}
+.tag.cd{background:var(--purple-50);color:var(--purple-600)}
+.tag.prn{background:var(--info-tint);color:var(--info-ink)}
+.tag.route{background:var(--bg-sunken);color:var(--ink-500);border:1px solid var(--border-subtle)}
+.dose .instr{font-size:12.5px;color:var(--ink-500);margin-top:7px;max-width:64ch}
+
+.answers{display:flex;flex-direction:column;gap:8px}
+.ans{display:flex;gap:8px}
+.ansBtn{flex:1;padding:11px 10px;border:1.5px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:700;color:var(--ink-700)}
+.ansBtn:hover{border-color:var(--purple-400)}
+.ansBtn.given[aria-pressed="true"]{border-color:var(--positive);background:var(--positive-tint);
+  color:var(--positive-ink)}
+.ansBtn.not[aria-pressed="true"]{border-color:var(--caution);background:var(--caution-tint);
+  color:var(--caution-ink)}
+select,input[type=text],input[type=number]{width:100%;padding:9px 11px;border:1px solid var(--border-strong);
+  border-radius:var(--r-md);font:inherit;font-size:13px;background:var(--bg-surface);color:var(--ink-900)}
+.reqNote{font-size:11.5px;color:var(--caution-ink);font-weight:600;margin-top:2px}
+.pending{display:flex;gap:8px;align-items:center;padding:9px 12px;border-radius:var(--r-sm);
+  border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);font-size:11.5px;font-weight:600;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+
+/* controlled drug block */
+.cdBlock{margin-top:10px;padding:12px 14px;border:1px solid var(--purple-200);border-left-width:4px;
+  border-radius:var(--r-md);background:var(--purple-50)}
+.cdBlock .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--purple-600);margin-bottom:8px}
+.cdRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cdRow label{display:block;font-size:11px;font-weight:600;color:var(--ink-500);margin-bottom:4px}
+.mismatch{margin-top:10px;padding:11px 14px;border-radius:var(--r-md);border:1px solid var(--critical);
+  border-left-width:4px;background:var(--critical-tint);color:var(--critical-ink);font-size:12.5px;
+  font-weight:600;line-height:1.5;display:none}
+.mismatch.on{display:block}
+
+/* footer */
+.foot{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:18px 24px;
+  border-top:1px solid var(--border-subtle)}
+.foot .state{font-size:13px;color:var(--ink-700)}
+.foot .state b{font-weight:700}
+.btn{padding:12px 22px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:14px;font-weight:600;color:var(--purple-600)}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* dialog */
+.scrim{position:fixed;inset:0;background:rgba(30,0,89,.4);display:none;place-items:center;z-index:60;
+  padding:24px}
+.scrim.open{display:grid}
+.dlg{width:100%;max-width:560px;background:var(--bg-surface);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-overlay);padding:24px;max-height:88vh;overflow:auto}
+.dlg h2{font-size:20px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
+.dlg .who{display:flex;gap:12px;align-items:center;margin-top:14px;padding:12px 14px;
+  border-radius:var(--r-md);background:var(--bg-sunken);border:1px solid var(--border-subtle)}
+.dlg .who .nm{font-size:15px;font-weight:700}
+.dlg .who .meta{font-size:12px;color:var(--ink-500);margin-top:1px}
+.dlg ul{margin-top:14px;list-style:none;display:flex;flex-direction:column;gap:8px}
+.dlg li{display:flex;gap:10px;align-items:baseline;padding:10px 12px;border-radius:var(--r-sm);
+  background:var(--bg-sunken);font-size:13.5px}
+.dlg li b{font-weight:700}
+.dlg li .r{margin-left:auto;font-size:12px;font-weight:700}
+.dlg li .r.g{color:var(--positive-ink)} .dlg li .r.n{color:var(--caution-ink)}
+.pin{margin-top:18px}
+.pin label{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:6px}
+.pin input{font-size:20px;letter-spacing:.4em;text-align:center;padding:12px}
+.dlg .acts{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.hintLine{margin-top:10px;font-size:12px;color:var(--ink-500);line-height:1.5}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:80;padding:13px 20px;
+  border-radius:var(--r-md);background:var(--purple-900);color:#fff;font-size:13.5px;font-weight:600;
+  box-shadow:var(--shadow-overlay);display:none;max-width:min(640px,90vw)}
+.toast.show{display:block}
+
+/* measurements block */
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;
+  font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Medication round</h1>
+<p class="lede">Layout reference for the administration flow. Icons are placeholders.</p>
+
+<div class="card roundBar">
+  <div>
+    <div class="lbl">Round</div>
+    <div class="now">08:00</div>
+  </div>
+  <div>
+    <div class="lbl">Site and date</div>
+    <div style="font-size:15px;font-weight:600;margin-top:3px">Rosewood Court · 22/08/2026</div>
+  </div>
+  <div>
+    <div class="lbl">Window closes</div>
+    <div style="font-size:15px;font-weight:600;margin-top:3px">09:00 · 47 minutes left</div>
+  </div>
+  <div class="progress">
+    <div class="n" id="prog">3 of 9 residents done</div>
+    <div class="d">6 residents still to see this round</div>
+    <div class="bar"><i id="bar" style="width:33%"></i></div>
+  </div>
+</div>
+
+<div class="cols">
+
+  <!-- round list, in room order — the physical order of the trolley -->
+  <div class="card">
+    <div class="qHead">
+      <h2>This round, in room order</h2>
+      <p>The order the trolley goes in</p>
+    </div>
+    <div id="queue"></div>
+  </div>
+
+  <!-- the resident in front of you -->
+  <div class="card">
+    <div class="subject">
+      <span class="av" id="sAv">EO</span>
+      <div>
+        <div class="nm" id="sName">Emmanuel</div>
+        <div class="meta" id="sMeta">Emmanuel Okafor · Room 14 · Born 07/07/1948 (78)</div>
+      </div>
+      <div class="allergy" id="sAllergy">ALLERGY: PENICILLIN<small>anaphylaxis — throat swelling and collapse</small></div>
+    </div>
+
+    <div class="doseHead">
+      <h3>Due at 08:00</h3>
+      <span id="doseCount">4 medications · none recorded yet</span>
+    </div>
+
+    <div id="doses"></div>
+
+    <div class="foot">
+      <p class="state" id="footState"></p>
+      <button class="btn primary" id="submit" disabled onclick="askPin()">Record 08:00 medications</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ measurements ============ -->
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>Round bar</h3>
+  Full width. Padding <code>16px 24px</code>. Four blocks left to right: round time, site and date,
+  window closes, progress right-aligned.
+  Round time <code>30px/800</code>. Block labels <code>11px/700</code> uppercase, letter-spacing
+  <code>.06em</code>, ink-500. Block values <code>15px/600</code>.
+  Progress bar <code>220px × 6px</code>, pill radius, purple-600 fill on border-subtle track, <code>8px</code> above it.
+
+  <h3>Two-column layout</h3>
+  <code>grid-template-columns: 19rem minmax(0,1fr)</code>, gap <code>18px</code>, aligned to start.
+  The round list does not scroll independently; the page scrolls.
+
+  <h3>Round list</h3>
+  Header padding <code>14px 18px</code>, title <code>14px/700</code>, subtitle <code>12px</code> ink-500.
+  Item padding <code>11px 18px</code>, <code>11px</code> gap, 1px top border border-subtle.
+  Room number column <code>38px</code> fixed, <code>11px/700</code> ink-500.
+  Name <code>13px/600</code>, status line <code>11px</code> ink-500.
+  Current item: purple-50 background plus <code>inset 3px 0 0 purple-600</code>.
+  Done mark <code>20px</code> circle, positive tint with 1px positive border.
+  Not-done mark <code>20px</code> circle, <code>1.5px dashed</code> unrecorded.
+
+  <h3>Subject strip</h3>
+  Padding <code>18px 24px</code>, gap <code>16px</code>, 1px bottom border.
+  Avatar <code>56px</code>. Preferred name <code>22px/700</code>. Meta line <code>13px</code> ink-500.
+  Allergy block right-aligned, padding <code>10px 16px</code>, radius <code>12px</code>,
+  1px border with <code>4px</code> left border. Label <code>13px/700</code>, detail <code>11.5px/400</code>.
+  Three states: allergies present (critical), none known (positive), not recorded (hatched, dashed).
+
+  <h3>Dose row</h3>
+  <code>grid-template-columns: minmax(0,1fr) 15rem</code>, gap <code>20px</code>,
+  padding <code>16px 24px</code>, 1px top border. Answered rows take bg-surface-sunken.
+  Drug name <code>16px/700</code>. Strength and route <code>13px</code> ink-700, <code>2px</code> beneath.
+  Tags <code>11px/700</code>, padding <code>2px 9px</code>, pill radius, <code>6px</code> gap,
+  <code>7px</code> above. Instruction line <code>12.5px</code> ink-500, max <code>64ch</code>.
+
+  <h3>Answer controls</h3>
+  Two buttons side by side, equal width, gap <code>8px</code>, padding <code>11px 10px</code>,
+  <code>1.5px</code> border, radius <code>12px</code>, <code>13px/700</code>.
+  Selected Given takes positive border and tint; selected Not given takes caution.
+  Reason select appears beneath when Not given is chosen, <code>8px</code> gap, and is required.
+  An unanswered dose shows the hatched pending chip, <code>9px 12px</code>, <code>11.5px/600</code>.
+
+  <h3>Controlled drug block</h3>
+  Appears beneath the answer controls when the drug is controlled. Padding <code>12px 14px</code>,
+  1px purple-200 border with <code>4px</code> left border, purple-50 background, radius <code>12px</code>.
+  Label <code>11px/700</code> uppercase purple-600. Two fields side by side, gap <code>10px</code>.
+  Mismatch warning: 1px critical border with <code>4px</code> left, critical tint,
+  <code>12.5px/600</code>, padding <code>11px 14px</code>, <code>10px</code> above.
+
+  <h3>Footer</h3>
+  Padding <code>18px 24px</code>, 1px top border. State text left <code>13px</code>,
+  submit right, padding <code>12px 22px</code>, <code>14px/600</code>.
+  Submit stays disabled until every dose has an answer, every Not given has a reason,
+  and every controlled drug has a witness and a reconciling count.
+
+  <h3>PIN dialog</h3>
+  Max width <code>560px</code>, padding <code>24px</code>, radius <code>16px</code>.
+  Title <code>20px/700</code>, and it names the resident and the action — never "Are you sure?".
+  Subject block beneath the title, padding <code>12px 14px</code>, bg-surface-sunken.
+  Each dose listed as its own row, padding <code>10px 12px</code>, <code>13.5px</code>,
+  with its answer right-aligned in <code>12px/700</code> tinted by state.
+  PIN input <code>20px</code>, letter-spacing <code>.4em</code>, centred, padding <code>12px</code>.
+</div>
+
+</div>
+
+<div class="scrim" id="scrim" role="dialog" aria-modal="true"><div class="dlg" id="dlg"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const REASONS = ['Resident refused','Resident asleep','Medication unavailable',
+                 'Resident in hospital','Other — say why'];
+
+const ROUND = [
+  { id:'okafor', room:'14', first:'Emmanuel', full:'Emmanuel Okafor', dob:'07/07/1948 (78)',
+    allergy:{ kind:'has', label:'ALLERGY: PENICILLIN', detail:'anaphylaxis — throat swelling and collapse' },
+    doses:[
+      { drug:'Amlodipine', strength:'5mg · one tablet', route:'Oral',
+        instr:'Take with or without food. Check blood pressure weekly.' },
+      { drug:'Morphine sulfate oral solution', strength:'2.5mg · 2.5ml', route:'Oral', cd:true,
+        instr:'Controlled drug. Second signature and stock count required before and after.',
+        stockBefore:48 },
+      { drug:'Levothyroxine', strength:'75 micrograms · one tablet', route:'Oral',
+        instr:'Give at least 30 minutes before breakfast.' },
+      { drug:'Paracetamol', strength:'1g · two tablets', route:'Oral', prn:true,
+        instr:'As required for pain, maximum 4g in 24 hours. Last given 21/08 22:10.' },
+    ] },
+  { id:'hutchinson', room:'214', first:'Beryl', full:'Beryl Hutchinson', dob:'09/07/1946 (80)',
+    allergy:{ kind:'none', label:'NO KNOWN ALLERGIES', detail:'recorded 13/05/2026 · A. Okonkwo' },
+    doses:[{ drug:'Furosemide', strength:'40mg · one tablet', route:'Oral', instr:'Give in the morning.' }] },
+  { id:'sowande', room:'4', first:'Ismail', full:'Ismail Sowande', dob:'19/11/1946 (79)',
+    allergy:{ kind:'unknown', label:'ALLERGIES NOT RECORDED',
+              detail:'nobody has recorded whether this person has allergies' },
+    doses:[{ drug:'Ramipril', strength:'2.5mg · one capsule', route:'Oral', instr:'Give in the morning.' }] },
+];
+
+const DONE = ['Ada Nwachukwu','Arthur Pemberton','Doris Kavanagh'];
+let cur = 0;
+let answers = {};   // index -> { a:'given'|'not', reason, witness, after }
+
+/* ---------- round list ---------- */
+function renderQueue(){
+  const q = document.getElementById('queue');
+  q.innerHTML = DONE.map(n => `
+    <button class="qItem">
+      <span class="rm">—</span>
+      <span><span class="nm">${n.split(' ')[0]}</span><span class="st">recorded 07:5${DONE.indexOf(n)}</span></span>
+      <span class="mark done">✓</span>
+    </button>`).join('') +
+  ROUND.map((r,i) => `
+    <button class="qItem" aria-current="${i===cur}" onclick="go(${i})">
+      <span class="rm">${r.room}</span>
+      <span><span class="nm">${r.first}</span>
+        <span class="st">${r.doses.length} due${r.doses.some(d=>d.cd)?' · 1 controlled':''}</span></span>
+      <span class="mark todo">—</span>
+    </button>`).join('');
+}
+
+/* ---------- the resident ---------- */
+function render(){
+  const r = ROUND[cur];
+  document.getElementById('sAv').textContent = r.full.split(' ').map(w=>w[0]).join('');
+  document.getElementById('sName').textContent = r.first;
+  document.getElementById('sMeta').textContent = `${r.full} · Room ${r.room} · Born ${r.dob}`;
+  const al = document.getElementById('sAllergy');
+  al.className = 'allergy' + (r.allergy.kind==='none'?' none':r.allergy.kind==='unknown'?' unknown':'');
+  al.innerHTML = `${r.allergy.label}<small>${r.allergy.detail}</small>`;
+
+  const answered = Object.keys(answers).length;
+  document.getElementById('doseCount').textContent =
+    `${r.doses.length} medication${r.doses.length===1?'':'s'} · ${answered ? `${answered} of ${r.doses.length} recorded` : 'none recorded yet'}`;
+
+  document.getElementById('doses').innerHTML = r.doses.map((d,i) => doseRow(d,i)).join('');
+  renderQueue(); check();
+}
+
+function doseRow(d,i){
+  const a = answers[i];
+  return `<div class="dose ${a?'answered':''}">
+    <div>
+      <div class="drug">${d.drug}</div>
+      <div class="strength">${d.strength}</div>
+      <div class="tags">
+        <span class="tag route">${d.route}</span>
+        ${d.cd?'<span class="tag cd">CONTROLLED DRUG</span>':''}
+        ${d.prn?'<span class="tag prn">AS REQUIRED</span>':''}
+      </div>
+      <p class="instr">${d.instr}</p>
+      ${d.cd && a?.a==='given' ? cdBlock(d,i) : ''}
+    </div>
+    <div class="answers">
+      <div class="ans">
+        <button class="ansBtn given" aria-pressed="${a?.a==='given'}" onclick="setA(${i},'given')">Given</button>
+        <button class="ansBtn not" aria-pressed="${a?.a==='not'}" onclick="setA(${i},'not')">Not given</button>
+      </div>
+      ${!a ? `<div class="pending">Nothing recorded for this dose yet</div>` : ''}
+      ${a?.a==='not' ? `
+        <select onchange="setReason(${i},this.value)">
+          <option value="">Why was it not given?</option>
+          ${REASONS.map(x=>`<option ${a.reason===x?'selected':''}>${x}</option>`).join('')}
+        </select>
+        ${!a.reason?'<p class="reqNote">A reason is required. Not given without one is not a record.</p>':''}` : ''}
+    </div>
+  </div>`;
+}
+
+function cdBlock(d,i){
+  const a = answers[i] || {};
+  const after = a.after ?? '';
+  const expected = d.stockBefore - 1;
+  const bad = after !== '' && Number(after) !== expected;
+  return `<div class="cdBlock">
+    <div class="k">Controlled drug — second signature and stock count</div>
+    <div class="cdRow">
+      <div><label>Witness — must be a different member of staff</label>
+        <select onchange="setW(${i},this.value)">
+          <option value="">Choose a witness</option>
+          ${['K. Osei','N. Eze','S. Patel'].map(s=>`<option ${a.witness===s?'selected':''}>${s}</option>`).join('')}
+        </select></div>
+      <div><label>Stock after — was ${d.stockBefore}</label>
+        <input type="number" value="${after}" oninput="setAfter(${i},this.value)" placeholder="${expected}"></div>
+    </div>
+    ${!a.witness?'<p class="reqNote" style="margin-top:8px">A second signature is required before this can be recorded.</p>':''}
+    <div class="mismatch ${bad?'on':''}">
+      Stock does not reconcile. Expected ${expected} after giving one dose; ${after} was counted.
+      This cannot be recorded until the count is resolved, and it raises a discrepancy incident —
+      the incident record itself arrives in Phase 4.
+    </div>
+  </div>`;
+}
+
+function setA(i,v){ answers[i] = { ...(answers[i]||{}), a:v }; render(); }
+function setReason(i,v){ answers[i].reason = v; render(); }
+function setW(i,v){ answers[i].witness = v; render(); }
+function setAfter(i,v){ answers[i].after = v; render(); }
+
+function check(){
+  const r = ROUND[cur];
+  let ok = true, missing = [];
+  r.doses.forEach((d,i) => {
+    const a = answers[i];
+    if (!a){ ok = false; missing.push(d.drug); return; }
+    if (a.a==='not' && !a.reason){ ok = false; missing.push(`${d.drug} — no reason`); }
+    if (d.cd && a.a==='given'){
+      if (!a.witness){ ok = false; missing.push(`${d.drug} — no witness`); }
+      if (a.after === '' || a.after === undefined){ ok = false; missing.push(`${d.drug} — no stock count`); }
+      else if (Number(a.after) !== d.stockBefore - 1){ ok = false; missing.push(`${d.drug} — stock does not reconcile`); }
+    }
+  });
+  document.getElementById('submit').disabled = !ok;
+  document.getElementById('footState').innerHTML = ok
+    ? `<b>All ${r.doses.length} doses have an answer.</b> Confirming records them against ${r.full}.`
+    : `<b>Waiting on:</b> ${missing.join(' · ')}`;
+}
+
+function go(i){ cur = i; answers = {}; render(); window.scrollTo(0,0); }
+
+/* ---------- PIN ---------- */
+function askPin(){
+  const r = ROUND[cur];
+  document.getElementById('dlg').innerHTML = `
+    <h2>Record 08:00 medications for ${r.full}?</h2>
+    <div class="who">
+      <span class="av" style="width:40px;height:40px;flex:0 0 40px;font-size:13px">
+        ${r.full.split(' ').map(w=>w[0]).join('')}</span>
+      <div><div class="nm">${r.full}</div>
+        <div class="meta">Room ${r.room} · Born ${r.dob} · Rosewood Court</div></div>
+    </div>
+    <ul>
+      ${r.doses.map((d,i) => {
+        const a = answers[i];
+        return `<li><b>${d.drug}</b> ${d.strength.split(' · ')[0]}
+          <span class="r ${a.a==='given'?'g':'n'}">${a.a==='given'?'GIVEN':'NOT GIVEN — '+a.reason}</span></li>`;
+      }).join('')}
+    </ul>
+    <div class="pin">
+      <label>Your PIN — A. Okonkwo</label>
+      <input type="password" inputmode="numeric" maxlength="4" id="pinIn" placeholder="••••"
+             oninput="document.getElementById('pinGo').disabled = this.value.length < 4">
+      <p class="hintLine">The record is signed by whoever enters a PIN here, not by whoever unlocked
+        the device. On a shared trolley those are often different people.</p>
+    </div>
+    <div class="acts">
+      <button class="btn" onclick="closeDlg()">Go back</button>
+      <button class="btn primary" id="pinGo" disabled onclick="confirmDose()">Confirm and sign</button>
+    </div>`;
+  document.getElementById('scrim').classList.add('open');
+  setTimeout(()=>document.getElementById('pinIn').focus(),40);
+}
+function closeDlg(){ document.getElementById('scrim').classList.remove('open'); }
+function confirmDose(){
+  const r = ROUND[cur];
+  closeDlg();
+  toast(`${r.full}'s 08:00 medications recorded. Held in memory only — gone on reload.`);
+  const next = cur + 1 < ROUND.length ? cur + 1 : cur;
+  const done = 3 + cur + 1;
+  document.getElementById('prog').textContent = `${done} of 9 residents done`;
+  document.getElementById('bar').style.width = `${(done/9)*100}%`;
+  go(next);
+}
+document.getElementById('scrim').onclick = e => { if (e.target.id==='scrim') closeDlg(); };
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeDlg(); });
+
+let tT;
+function toast(m){
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  clearTimeout(tT); tT = setTimeout(()=>t.classList.remove('show'), 4500);
+}
+
+render();
+</script>
+</body>
+</html>

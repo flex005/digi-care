@@ -1,67 +1,73 @@
+import { now as appNow } from '@/data/fixtures/clock'
 import { useOutletContext } from 'react-router-dom'
 import type { ResidentProfile } from '@/data/access/client'
 import type { Resident } from '@/data/types'
 import { Card, CardHeader } from '@/components/primitives'
-import { AllergyBadge, Unrecorded } from '@/components/status'
+import { Unrecorded } from '@/components/status'
 import { Field, FieldList } from './FieldList'
 import { GENERAL_INFORMATION_SECTIONS } from './general-information-fields'
 import styles from './profile.module.css'
+import { useState } from 'react'
+import type { IsoDateTime } from '@/data/types'
+import { editResident } from '@/data/access/client'
+import { useSession } from '@/app/session/use-session'
 
 /**
  * The General Information tab. PRD §6.2 — "all fields from source PRD §16.2".
  *
- * Two rules govern every row:
+ * Five sections, each headed by a 20px title and a one-line description of
+ * what the section is for in the reader's terms, above a divider. The
+ * description is not decoration: "Care team" alone does not tell a care
+ * worker that this is who to ring about somebody's health rather than who to
+ * ring about somebody's laundry.
+ *
+ * Three rules govern every row:
  *
  *  1. **Never an empty row, never an em dash.** A field either has a value or
  *     says in words that nobody recorded one. "—" is the most common way a
  *     care record turns "nobody asked" into "nothing to report".
- *  2. **Clinical and compliance fields carry their author and date**
+ *  2. **The three answer types stay visibly apart.** A recorded value reads
+ *     plainly; a recorded negative is a settled tinted pill with an author and
+ *     a date, because somebody asked and confirmed it; a gap is hatched and
+ *     says what is missing. Ismail Sowande's Placement section and Wilfred
+ *     Merrivale's Care team each show all three at once.
+ *  3. **Clinical and compliance fields carry their author and date**
  *     (CLAUDE.md §6). Person-centred fields do not, because sixteen
  *     attribution lines would bury the values they annotate.
  *
- * Allergies get a panel rather than a row. §6.2: they render in
- * `--status-critical` wherever they appear. As one row among twenty they would
- * read like any other; they are the field on this tab most likely to kill
- * somebody, and the only one with a three-state union where a recorded
- * negative must look different again from both a finding and a gap.
+ * Allergies are a full-width panel at the top of Clinical rather than a row —
+ * see AllergyPanel for why that is not a cosmetic preference.
  *
- * There are no edit controls. No phase in either document builds resident
- * editing, and a disabled Edit button would be inventing a feature in order to
- * disable it.
+ * **Editing arrives in Phase 16, and it is field by field.** Each change has
+ * its own author, its own moment and its own confirmation; a form with a save
+ * button invites somebody to sweep four corrections and a clinical change into
+ * one signature, which is the wrong shape for a clinical record.
  */
 export function GeneralInformationTab() {
-  const { resident } = useOutletContext<ResidentProfile>()
+  const { resident, site } = useOutletContext<ResidentProfile>()
+  const { currentUser } = useSession()
+  const [, setVersion] = useState(0)
 
   return (
     <div className={styles.tabPanel}>
-      <Card>
-        <CardHeader
-          title="Allergies and adverse reactions"
-          subtitle="Shown here, in the profile header, and on every medication and care screen."
-        />
-        <div className={styles.allergyPanel}>
-          <AllergyBadge status={resident.allergies} />
-          {resident.allergies.kind === 'allergies' ? (
-            <ul className={styles.allergyDetail}>
-              {resident.allergies.items.map((allergy) => (
-                <li key={allergy.substance}>
-                  <strong>{allergy.substance}</strong> — {allergy.reaction} (
-                  {allergy.severity})
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {resident.allergies.kind === 'not_recorded' ? (
-            <p className={styles.allergyNote}>
-              Nobody has recorded whether this person has allergies. That is not the
-              same as having none, and medication must not be given on the assumption
-              that it is.
-            </p>
-          ) : null}
-        </div>
-      </Card>
-
-      <ProfileSections resident={resident} />
+      <ProfileSections
+        resident={resident}
+        siteName={site.name}
+        onRecordNoneKnown={() => {
+          void editResident({
+            residentId: resident.id,
+            field: 'no known allergies',
+            patch: {
+              allergies: {
+                kind: 'none_known',
+                recordedBy: currentUser,
+                recordedAt: appNow().toISOString() as IsoDateTime,
+              },
+            },
+            by: currentUser,
+          }).then(() => setVersion((count) => count + 1))
+        }}
+      />
     </div>
   )
 }
@@ -72,16 +78,34 @@ export function GeneralInformationTab() {
  * re-implements it — a guard that tests a copy of the logic proves only that
  * the copy agrees with itself.
  */
-export function ProfileSections({ resident }: { resident: Resident }) {
+export function ProfileSections({
+  resident,
+  /** Named on any confirmation a banner raises. See ProfileSection.banner. */
+  siteName,
+  onRecordNoneKnown,
+}: {
+  resident: Resident
+  siteName: string
+  /** What a banner's write affordance calls. Absent in the structural guard. */
+  onRecordNoneKnown?: () => void
+}) {
   return (
     <>
       {GENERAL_INFORMATION_SECTIONS.map((section) => (
         <Card key={section.id}>
           <CardHeader title={section.title} subtitle={section.description} />
+          {section.banner
+            ? section.banner(resident, siteName, onRecordNoneKnown ?? (() => {}))
+            : null}
           <div className={styles.sectionBody}>
             <FieldList>
               {section.fields.map((field) => (
-                <Field key={field.id} id={field.id} label={field.label}>
+                <Field
+                  key={field.id}
+                  id={field.id}
+                  label={field.label}
+                  width={field.width}
+                >
                   {field.isUnrecorded(resident) && field.whenMissing === 'hatch' ? (
                     <Unrecorded label={`${field.label} not recorded`} />
                   ) : (

@@ -1,0 +1,912 @@
+/**
+ * CQC compliance. Built to docs/compliance-dashboard.html.
+ *
+ * The reference's 17px, 13.5px, 12.5px, 11.5px and 11px steps each take the
+ * nearest on the closed type scale, and its 18px, 20px, 13px and 9px spacings
+ * the nearest on the 4px one (CLAUDE.md §4).
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.pageHead {
+  display: flex;
+  gap: var(--space-20);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.pageSubtitle {
+  margin-top: var(--space-4);
+  max-width: 78ch;
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.pageActions {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.loading {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.errorTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.errorBody {
+  margin: var(--space-4) 0 var(--space-12);
+  max-width: 62ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.headLink,
+.backLink,
+.rowAction,
+.panelLink {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--purple-600);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.backLink {
+  align-self: flex-start;
+}
+
+/* The placeholder banner, on every compliance screen. */
+.banner {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  padding: var(--space-12) var(--space-16);
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+  max-width: 96ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+/* ---------------------------------------------------------------------------
+ * The analytical layout — varied tiles carrying the hierarchy
+ *
+ * Rule 5 expressed in geometry rather than in type size: the largest thing on
+ * the screen is the count of checks that cannot support a figure, and there is
+ * no green anywhere in it.
+ * ------------------------------------------------------------------------ */
+
+.analysisGrid {
+  display: grid;
+  gap: var(--space-16);
+  align-items: stretch;
+  grid-template-columns: 1.15fr 1fr 1.5fr;
+}
+
+.hero,
+.miniCritical,
+.miniGap,
+.chartPanel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+}
+
+/* Dark, and carrying the least reassuring number available. */
+.hero {
+  padding: var(--space-24);
+  background: var(--purple-900);
+  color: var(--bg-surface);
+}
+
+.heroLabel {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.heroValue {
+  margin-top: var(--space-8);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.heroBody {
+  margin-top: var(--space-8);
+  max-width: 36ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+  opacity: 0.86;
+}
+
+.heroSplit {
+  display: grid;
+  gap: var(--space-12);
+  margin-top: var(--space-20);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--border-unrecorded);
+  grid-template-columns: 1fr 1fr;
+}
+
+.heroSplitValue {
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.heroSplitLabel {
+  margin-top: var(--space-4);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  opacity: 0.72;
+}
+
+.pair {
+  display: grid;
+  gap: var(--space-16);
+  grid-template-rows: 1fr 1fr;
+}
+
+.miniCritical,
+.miniGap {
+  justify-content: center;
+  padding: var(--space-16) var(--space-20);
+}
+
+.miniCritical {
+  border: 1px solid var(--status-critical);
+  background: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+/* The hatch, unchanged — pattern rather than a lighter hue. */
+.miniGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-radius: var(--radius-xl);
+}
+
+.miniLabel {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.miniValue {
+  margin-top: var(--space-4);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.miniBody {
+  margin-top: var(--space-4);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* ---------------------------------------------------------------------------
+ * The chart — the hatch survives into it as a segment
+ * ------------------------------------------------------------------------ */
+
+.chartPanel {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.chartHead {
+  padding: var(--space-16) var(--space-20) 0;
+}
+
+.chartTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.chartNote {
+  margin-top: var(--space-4);
+  max-width: 56ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.legend {
+  display: flex;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+  margin-top: var(--space-12);
+}
+
+.legendItem {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-semibold);
+}
+
+.swatchRecorded,
+.swatchGap {
+  width: var(--space-12);
+  height: var(--space-12);
+  border-radius: var(--radius-sm);
+}
+
+.swatchRecorded {
+  background: var(--purple-600);
+}
+
+.swatchGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-width: 1px;
+}
+
+.chart {
+  display: flex;
+  gap: var(--space-8);
+  align-items: flex-end;
+  flex: 1;
+  min-height: 12rem;
+  padding: var(--space-16) var(--space-20) var(--space-12);
+  list-style: none;
+}
+
+.chartColumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  flex: 1;
+  height: 100%;
+}
+
+.barRecorded,
+.barGap {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.barRecorded {
+  background: var(--purple-600);
+}
+
+/*
+ * The missing segment keeps the pattern rather than taking a lighter shade of
+ * the recorded colour — so the distinction survives greyscale, exactly as it
+ * does everywhere else in the product.
+ */
+.barGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-bottom: 0;
+}
+
+.chartLabel {
+  display: block;
+  margin-top: var(--space-8);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  text-align: center;
+}
+
+.chartLabelDetail {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--ink-400);
+  font-weight: var(--weight-regular);
+}
+
+/* ---------------------------------------------------------------------------
+ * The dense table
+ * ------------------------------------------------------------------------ */
+
+.tableCard {
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.tableHead {
+  display: flex;
+  gap: var(--space-20);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: var(--space-16) var(--space-20);
+}
+
+.tableTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.tableNote {
+  margin-top: var(--space-4);
+  max-width: 78ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: separate;
+  font-size: var(--text-body-sm-size);
+}
+
+.table thead th {
+  padding: var(--space-8) var(--space-20);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table tbody td,
+.table tbody th {
+  padding: var(--space-12) var(--space-20);
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td,
+.table tbody tr:last-child th {
+  border-bottom: 0;
+}
+
+.table tbody tr:hover td,
+.table tbody tr:hover th {
+  background: var(--bg-surface-sunken);
+}
+
+.questionCell {
+  font-weight: var(--weight-regular);
+}
+
+.questionName {
+  display: block;
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-bold);
+}
+
+.questionAsks {
+  display: block;
+  margin-top: var(--space-4);
+  max-width: 34ch;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/*
+ * A dot beside a word, never a dot alone. Colour reinforces and never carries
+ * (§7), and the word is what a greyscale reader gets.
+ */
+.rating {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-bold);
+  white-space: nowrap;
+}
+
+.rating[data-rating='green'] {
+  color: var(--status-positive-ink);
+}
+
+.rating[data-rating='amber'] {
+  color: var(--status-caution-ink);
+}
+
+.rating[data-rating='red'] {
+  color: var(--status-critical-ink);
+}
+
+.dot {
+  display: inline-block;
+  width: var(--space-8);
+  height: var(--space-8);
+  border-radius: var(--radius-pill);
+}
+
+.dot[data-dot='green'] {
+  background: var(--status-positive);
+}
+
+.dot[data-dot='amber'] {
+  background: var(--status-caution);
+}
+
+.dot[data-dot='red'] {
+  background: var(--status-critical);
+}
+
+.driverCell {
+  max-width: 26rem;
+}
+
+.driverName {
+  display: block;
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+}
+
+.driverDetail {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.coverageBar {
+  width: 11rem;
+}
+
+.coverageTrack {
+  display: flex;
+  overflow: hidden;
+  height: var(--space-8);
+  border-radius: var(--radius-pill);
+  background: var(--border-subtle);
+}
+
+.coverageUsable {
+  display: block;
+  height: 100%;
+  background: var(--purple-600);
+}
+
+.coverageThin {
+  display: block;
+  height: 100%;
+  background: var(--status-unrecorded);
+}
+
+.coverageText {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.visuallyHidden {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Inert, because nothing here is a gap anybody can close. */
+.noOverall {
+  padding: var(--space-16) var(--space-20);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  max-width: 96ch;
+  background: var(--bg-surface-sunken);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.noOverall b {
+  color: var(--ink-700);
+  font-weight: var(--weight-bold);
+}
+
+/* ---------------------------------------------------------------------------
+ * Not held here — its own treatment, deliberately inert
+ *
+ * Solid, plain-bordered, no pattern. The hatch means "a gap you can close" and
+ * nothing on any screen closes this one.
+ * ------------------------------------------------------------------------ */
+
+.notHeld {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-500);
+}
+
+.notHeldLabel {
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+}
+
+.notHeldDetail {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-regular);
+}
+
+/* ---------------------------------------------------------------------------
+ * Check rows
+ * ------------------------------------------------------------------------ */
+
+.sectionHead {
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sectionTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.sectionNote {
+  margin-top: var(--space-4);
+  max-width: 78ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.check {
+  display: grid;
+  gap: var(--space-20);
+  align-items: center;
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: minmax(0, 1fr) 20rem 13rem;
+}
+
+.checks li:first-child .check {
+  border-top: 0;
+}
+
+.checkName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.checkFrom {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/* Where the evidence is weaker than the figure makes it look. */
+.checkCaveat {
+  margin-top: var(--space-4);
+  max-width: 60ch;
+  color: var(--ink-700);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+}
+
+.checkDetail {
+  max-width: 60ch;
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.checkFigure {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.checkValue {
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkRating {
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+}
+
+.checkFigure[data-check-figure='green'] .checkValue,
+.checkFigure[data-check-figure='green'] .checkRating {
+  color: var(--status-positive-ink);
+}
+
+.checkFigure[data-check-figure='amber'] .checkValue,
+.checkFigure[data-check-figure='amber'] .checkRating {
+  color: var(--status-caution-ink);
+}
+
+.checkFigure[data-check-figure='red'] .checkValue,
+.checkFigure[data-check-figure='red'] .checkRating {
+  color: var(--status-critical-ink);
+}
+
+.checkCoverage {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/* ---------------------------------------------------------------------------
+ * Inspection pack
+ * ------------------------------------------------------------------------ */
+
+.packSection {
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.packSection:first-of-type {
+  border-top: 0;
+}
+
+.packHeading {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.packNote {
+  margin-top: var(--space-4);
+  max-width: 80ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.packList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  list-style: none;
+}
+
+.packItem {
+  display: flex;
+  gap: var(--space-12);
+  align-items: baseline;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.packCount {
+  margin-left: auto;
+  color: var(--ink-900);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.packGapLink {
+  display: block;
+  text-decoration: none;
+}
+
+/* A grid rather than a flex row, so the Key Question labels line up: the
+   chips are different widths and a ragged column reads as an accident. */
+.packNotHeldRow {
+  display: grid;
+  gap: var(--space-12);
+  align-items: center;
+  grid-template-columns: minmax(0, 36rem) auto;
+}
+
+.packWhere {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+}
+
+.noFile {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  margin: var(--space-16) var(--space-24) var(--space-24);
+  padding: var(--space-16) var(--space-20);
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+}
+
+.noFileTitle {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.noFileBody {
+  margin-top: var(--space-4);
+  max-width: 80ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+/* ---------------------------------------------------------------------------
+ * Statutory notifications — the twelfth queue
+ * ------------------------------------------------------------------------ */
+
+.filters {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.filterPill {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+}
+
+.filterPill[aria-pressed='true'] {
+  border-color: var(--purple-900);
+  background: var(--purple-900);
+  color: var(--bg-surface);
+}
+
+.filterClaim {
+  max-width: 82ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.emptyFiltered {
+  padding: var(--space-16) var(--space-24);
+  max-width: 78ch;
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.row {
+  display: grid;
+  gap: var(--space-20);
+  align-items: center;
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: minmax(0, 1fr) 20rem auto;
+}
+
+.rows li:first-child .row {
+  border-top: 0;
+}
+
+.rowTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.rowMeta {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.notifyState,
+.notifyQuiet {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.notifyState {
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--status-caution);
+  border-radius: var(--radius-sm);
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+/* Recorded and settled: a decision somebody made, rendering quietly. */
+.notifyQuiet {
+  color: var(--ink-700);
+}
+
+.notifyLabel {
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+}
+
+.notifyQuiet .notifyLabel {
+  font-weight: var(--weight-medium);
+}
+
+.notifyDetail {
+  max-width: 46ch;
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.notifyQuiet .notifyDetail {
+  color: var(--ink-500);
+}

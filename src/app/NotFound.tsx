@@ -20,7 +20,7 @@ export function NotFound() {
       </h1>
       <p style={{ marginBottom: 'var(--space-16)' }}>
         <code>{window.location.pathname}</code> is not a route in diGi-Care. It may
-        belong to a module that has not been built yet — the sidebar shows which phase
+        belong to a module that has not been built yet. The sidebar shows which phase
         each one arrives in.
       </p>
       <Link to="/dev/states" style={{ color: 'var(--purple-600)', fontWeight: 600 }}>

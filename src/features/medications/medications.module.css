@@ -1,0 +1,2147 @@
+/**
+ * The MAR chart. PRD §6.4.
+ *
+ * The screen the Evidence Invariant was designed around, and the one place
+ * where density and legibility genuinely pull against each other: a week is
+ * 168 cells, a month is 720, and the handful that say nothing are the point.
+ */
+
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+/**
+ * The omissions figure, above the grid, **full width**.
+ *
+ * It was a `lead` card, which is a column-shaped thing: it sat in the left
+ * third with two thirds of the screen empty beside it. The one fact this
+ * screen exists to state cannot be a third of the container. `banner`
+ * emphasis is horizontal and fills the width.
+ *
+ * **Not hatched**, and that is a departure from the layout reference. The
+ * hatch is the treatment for the absence of a finding (§4.5, §2.3); this is a
+ * measured count of omissions, which is a finding. The same rule ruled the
+ * handover's lead coverage card unhatched, and one concept cannot have two
+ * answers.
+ */
+.omissions {
+  display: flex;
+  width: 100%;
+}
+
+.chartHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.chartTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.chartFacts {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.range {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+.segmented {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.segment {
+  padding: var(--space-4) var(--space-12);
+  border: 0;
+  background-color: var(--bg-surface);
+  color: var(--ink-700);
+  font-family: var(--font-family);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.segmentActive {
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+}
+
+/* ---- legend ---- */
+
+/**
+ * One row, six equal columns, never wrapping to a second.
+ *
+ * A grid rather than a wrapping flex row: with `1fr` columns the five share
+ * the width evenly and none can be orphaned onto a line of its own, which is
+ * the failure a wrap produces at exactly the widths this app runs at.
+ *
+ * Five, not six. At 1280px the content area is 984px; six columns leave 113px
+ * of text apiece and run the longest note to four lines, five leave 144px and
+ * two. Escalated is not a sixth state anyway — it is the same state with a
+ * mark, so both swatches sit in the "No record" cell.
+ */
+.legend {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-16);
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface-sunken);
+}
+
+.legendItem {
+  display: flex;
+  gap: var(--space-8);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/**
+ * 22px at the default root, growing with the type under zoom.
+ *
+ * The swatch overrides the cell's own size through a custom property rather
+ * than a descendant selector — reaching into `.cell` from here would put a
+ * more specific rule ahead of the definition it is overriding, and the
+ * cascade then reads bottom-up.
+ */
+.legendSwatch {
+  --mar-cell: 1.375rem;
+
+  display: flex;
+  flex: 0 0 auto;
+  gap: var(--space-4);
+}
+
+.legendTitle {
+  display: block;
+  color: var(--ink-900);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+}
+
+.legendNote {
+  display: block;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/* ---- the grid ---- */
+
+/**
+ * Scrolls in its own container so the page never scrolls sideways, and so the
+ * sticky header and medication column have something to stick to.
+ */
+.gridScroll {
+  max-height: 40rem;
+  overflow: auto;
+}
+
+/**
+ * Fills the card. The medication and totals columns are fixed; the day columns
+ * share what is left.
+ *
+ * `table-layout: auto` with a `min-width` on the round columns rather than
+ * `fixed`: fixed would shrink 112 month columns into unreadable slivers rather
+ * than letting the container scroll, and the container scrolling is the whole
+ * reason it has its own overflow.
+ */
+.grid {
+  --mar-cell: 2.125rem;
+
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  border-bottom: 1px solid var(--border-strong);
+  background-color: var(--bg-surface);
+}
+
+.grid thead tr:nth-child(2) th {
+  top: var(--space-32);
+}
+
+.dayHead {
+  padding: var(--space-4) 0;
+  border-left: 2px solid var(--border-strong);
+  color: var(--ink-700);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  white-space: nowrap;
+}
+
+.dayDate {
+  display: block;
+  color: var(--ink-500);
+  font-weight: var(--weight-medium);
+}
+
+/* The column is the button plus a gutter, so neighbouring cells do not touch. */
+.roundHead {
+  min-width: calc(var(--mar-cell) + var(--space-4));
+  padding: var(--space-4) 0;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  text-align: center;
+}
+
+.dayStart {
+  border-left: 2px solid var(--border-strong);
+}
+
+/* The medication column stays put: past column six the grid is unreadable
+   without it, and it is the only thing saying what a row is about. */
+
+/**
+ * The medication column, aligned to the card's content gutter.
+ *
+ * `--space-24` is what the chart heading, the legend and the detail area all
+ * use, so the column's text sits on the same left edge as "Week of 17/08 to
+ * 23/08" above it. At `--space-16` it hung 8px outside that edge — the one
+ * column on the screen that did not line up with anything, and the first thing
+ * a reader's eye runs down.
+ */
+.medHead,
+.medCell {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  width: 15.625rem;
+  min-width: 15.625rem;
+  padding: var(--space-12) var(--space-24);
+  border-right: 2px solid var(--border-strong);
+  background-color: var(--bg-surface);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.medHead {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.medCell {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/**
+ * Name over dose, with the two separated.
+ *
+ * They sat on consecutive line boxes with nothing between them, which read as
+ * one wrapped string rather than two facts — and the dose is the fact somebody
+ * checks before they act on the row.
+ */
+.medName {
+  display: block;
+  margin-bottom: var(--space-4);
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.medDose {
+  display: block;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.cdTag {
+  display: inline-block;
+  margin-top: var(--space-4);
+  padding: 0 var(--space-8);
+  border-radius: var(--radius-pill);
+  background-color: var(--purple-50);
+  color: var(--purple-600);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+}
+
+/* Rows were half the height they should be. The button centres in the row
+   rather than being pushed by a margin, so nothing here is off the 4px scale. */
+
+/**
+ * The only cell that wants no padding — the button inside it is the target,
+ * and padding here would shrink the column without making the button bigger.
+ *
+ * Declared here rather than by a blanket `.grid th, .grid td { padding: 0 }`.
+ * That reset was `(0,1,1)` — a class plus an element — and every cell rule in
+ * this file is a bare class at `(0,1,0)`, so the reset silently beat **all
+ * four** of them: the day headers, the round headers, the medication column
+ * and the totals column all rendered with no padding at all, whatever they
+ * declared. The grid looked tight everywhere and no declaration in this file
+ * was doing anything about it.
+ */
+.cellSlot {
+  height: 3rem;
+  padding: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* ---- the five states ---- */
+
+/**
+ * `--mar-cell` is declared on `.grid` above, **in rem, not px**. The reference
+ * used 34px. Under text-only zoom to 200% (WCAG 2.2 AA, PRD §7) a fixed cell
+ * keeps its size while every label around it doubles, so the glyph shrinks
+ * against its own row heading and the grid stops reading as a grid. In rem the
+ * cell grows with the type; the container scrolls sideways, which it already
+ * does. 2.125rem is exactly 34px at the default root size, so the reference's
+ * density is preserved where it was measured.
+ */
+.cell {
+  display: grid;
+  width: var(--mar-cell);
+  height: var(--mar-cell);
+  place-items: center;
+  margin: 0 auto;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+}
+
+/* 1. Not due — nothing is scheduled. The only genuinely empty cell, and it is
+      empty because there is nothing to record, not because nobody recorded. */
+.cellNotDue {
+  border-color: var(--border-subtle);
+  background-color: var(--bg-surface-sunken);
+}
+
+/* 2. Due — window open, nobody has acted. An open ring: unfinished, not late. */
+.cellDue {
+  border-color: var(--status-info);
+  background-color: var(--status-info-tint);
+  color: var(--status-info-ink);
+}
+
+/* 3. Given — a complete record. Closed glyph, solid fill. */
+.cellGiven {
+  border-color: var(--status-positive);
+  background-color: var(--status-positive-tint);
+  color: var(--status-positive-ink);
+}
+
+/* 4. Not given — ALSO a complete record. A decision somebody signed, with a
+      reason, and Rule 3 says it must read as settled because it is not a gap.
+      It differs from `given` by GLYPH — bar against tick — so the pair stays
+      apart when hue does not. */
+.cellNotGiven {
+  border-color: var(--status-caution);
+  background-color: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+/**
+ * 5. Omitted — the window closed and nobody wrote anything.
+ *
+ * The only patterned cell in the grid, which is what makes it the only one
+ * that survives desaturation by construction. Dashed, open, and glyphless:
+ * every closed shape here means somebody acted.
+ *
+ * Composed from the single hatch definition rather than redrawn — see
+ * scripts/check-hatch.mjs.
+ */
+.cellOmitted {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-radius: var(--radius-sm);
+}
+
+/* Escalated carries a glyph as well as the hue: hue does not survive
+   greyscale, and a mark does. No mark, nobody escalated. */
+.cellEscalated {
+  border-color: var(--status-critical);
+  color: var(--status-critical-ink);
+}
+
+/* Rule 3a: given AND missing its required second signature is two facts, so
+   the cell keeps its settled green and takes a dashed underline. Never a
+   different fill — that would average two facts into one. */
+.cellNoWitness {
+  border-bottom: 3px dashed var(--status-unrecorded);
+}
+
+/* Hover is a fill, not an outline: the outline belongs to focus and must not
+   be imitated by something a pointer causes (PRD §7). */
+.cell:hover {
+  border-color: var(--purple-400);
+}
+
+.cellSelected {
+  box-shadow: 0 0 0 2px var(--purple-600);
+}
+
+/* ---- row totals ---- */
+
+.totalHead,
+.totalCell {
+  position: sticky;
+  right: 0;
+  width: 8.75rem;
+  min-width: 8.75rem;
+  padding: var(--space-4) var(--space-12);
+  border-left: 2px solid var(--border-strong);
+  background-color: var(--bg-surface);
+  text-align: left;
+}
+
+.totalHead {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.totalCell {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Declared after both, so the cascade reads top to bottom. */
+.grid thead .medHead,
+.grid thead .totalHead {
+  z-index: 4;
+}
+
+.totalOmitted {
+  display: block;
+  color: var(--status-unrecorded-ink);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+}
+
+.totalGiven {
+  display: block;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/* ---- detail ---- */
+
+/* 74px minimum, so the grid does not jump when a cell is selected. */
+.detail {
+  min-height: 4.625rem;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface-sunken);
+}
+
+.detailCaption {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.detailBody {
+  max-width: 88ch;
+  margin-top: var(--space-4);
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* A slot. The treatment comes from <Unrecorded>, which is the only place the
+   hatch is defined and the only way it can be rendered with its words. */
+.detailGap {
+  display: flex;
+  margin-top: var(--space-8);
+}
+
+/* ---- states around the chart ---- */
+
+.loading {
+  padding: var(--space-32);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  text-align: center;
+}
+
+.errorTitle {
+  color: var(--status-critical-ink);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-semibold);
+}
+
+.errorBody {
+  max-width: 70ch;
+  margin: var(--space-8) 0 var(--space-16);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* ---- omissions view ---- */
+
+/**
+ * The module: title, the strip that moves between its screens, and whichever
+ * screen is open. The title sits above the strip rather than inside a screen,
+ * because it names what both screens are about — the same shape the resident
+ * profile uses.
+ */
+.module {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+/* Same step and weight as "Residents" and "Care notes". */
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+/**
+ * Pill tabs, as on /care-notes. This is a queue, and the segmented control
+ * belongs to the chart's range — two controls that look alike and mean
+ * different things is the failure, not two that look different.
+ */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.filterTab {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-surface);
+  color: var(--ink-500);
+  font-family: var(--font-family);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.filterTabActive {
+  border-color: var(--purple-600);
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+}
+
+.resultLine {
+  padding: var(--space-12) var(--space-24);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.omissionList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/**
+ * Four columns, the same shape as the care-notes queue: subject, state, the
+ * thing itself, action. A reader who has learned one queue has learned both.
+ */
+.omissionRow {
+  display: grid;
+  grid-template-columns: 15rem 13rem minmax(0, 1fr) auto;
+  gap: var(--space-8) var(--space-20);
+  align-items: start;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.omissionWho {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.omissionName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.omissionName:hover {
+  color: var(--purple-600);
+  text-decoration: underline;
+}
+
+.omissionFacts {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.omissionState {
+  display: flex;
+  min-width: 0;
+}
+
+.omissionState > * {
+  max-width: 12.5rem;
+}
+
+.omissionMain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.omissionDose {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.omissionMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-8);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.omissionAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.noteLink {
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.noteLink:hover {
+  text-decoration: underline;
+}
+
+/* Recorded and unremarkable, stated plainly. Rule 3b. */
+.settledNote {
+  max-width: 74ch;
+  padding: var(--space-20) var(--space-24);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.omissionList > .omissionRow:first-child {
+  border-top: none;
+}
+
+/* ==========================================================================
+   The round — /medications/round
+   Built to docs/administration-flow.html.
+
+   Where the reference and the rules disagreed, the rules won and the
+   substitution is named at the declaration. The type scale is closed
+   (CLAUDE.md §4) and spacing is the 4px scale, so the reference's 30px, 16px,
+   14px, 11.5px, 12.5px and 13.5px steps, and its 18px, 14px, 11px, 10px, 9px,
+   7px, 6px and 2px spacings, are each mapped to the nearest step rather than
+   introduced as new ones.
+   ========================================================================== */
+
+/**
+ * The round bar. Reference: padding 16px 24px, four blocks left to right.
+ *
+ * The third block is the round selector rather than the reference's "window
+ * closes" countdown. A countdown against a window this build does not model
+ * would be an invented deadline, and the round you are on is the thing that
+ * actually has to be choosable — a round derived from the clock alone strands
+ * anybody working late.
+ */
+.roundBar {
+  display: flex;
+  gap: var(--space-24);
+  align-items: center;
+  padding: var(--space-16) var(--space-24);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.roundBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.roundLabel {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Reference 30px/800. The scale's display step is 32 and it is the step for a
+   single figure that leads a page, which is what this is. */
+.roundTime {
+  color: var(--ink-900);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: -0.02em;
+}
+
+.roundValue {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.roundSlots {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
+/**
+ * One round of the day, and how much of it is recorded.
+ *
+ * `{done} of {total}` on every slot, not just the current one: a bare round
+ * time would say a round exists and nothing about whether anybody has been
+ * round it. §4 — every aggregate carries its denominator.
+ */
+.slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-4) var(--space-8);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.slot:hover {
+  border-color: var(--purple-400);
+}
+
+.slotCurrent {
+  border-color: var(--purple-600);
+  background-color: var(--purple-50);
+  color: var(--purple-900);
+}
+
+/* A complete round is recorded and unremarkable, so it is marked quietly —
+   a tick in the ink of the positive scale, not a filled green pill (§3b). */
+.slotComplete {
+  color: var(--status-positive-ink);
+}
+
+.slotCount {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-medium);
+}
+
+.slotCurrent .slotCount {
+  color: var(--purple-600);
+}
+
+.roundProgressBlock {
+  margin-left: auto;
+  align-items: flex-end;
+}
+
+/* Reference: 220px × 6px, pill radius, 8px above. The track is a graphic
+   dimension rather than spacing — the same latitude a 1px hairline takes —
+   so it keeps the measured height. Its width rounds to the 4px scale. */
+.progressTrack {
+  width: 224px;
+  height: 6px;
+  margin-top: var(--space-4);
+  border-radius: var(--radius-pill);
+  background-color: var(--border-subtle);
+  overflow: hidden;
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  background-color: var(--purple-600);
+}
+
+/* Reference: 19rem and minmax(0,1fr), gap 18px → the page's own 20px rhythm. */
+.roundColumns {
+  display: grid;
+  grid-template-columns: 19rem minmax(0, 1fr);
+  gap: var(--space-20);
+  align-items: start;
+}
+
+.queueHeadRound {
+  padding: var(--space-12) var(--space-16);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.queueTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.queueSubtitle {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.roundQueue {
+  list-style: none;
+}
+
+.queueItem {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-12) var(--space-16);
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  background: none;
+  text-align: left;
+}
+
+.queueItem:hover {
+  background-color: var(--purple-50);
+}
+
+.roundQueue > li:first-child .queueItem {
+  border-top: 0;
+}
+
+/* A 3px rule marking the current item, not spacing. */
+.queueItemCurrent {
+  background-color: var(--purple-50);
+  box-shadow: inset 3px 0 0 var(--purple-600);
+}
+
+.queueRoom {
+  flex: 0 0 var(--space-40);
+  width: var(--space-40);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+}
+
+.queueWho {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.queueName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.queueStatus {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/**
+ * Where each resident has got to. Both marks carry their own shape, so the
+ * distinction survives greyscale and does not rest on colour (§7).
+ *
+ * The pending mark is dashed and unrecorded-toned for the reason the hatch
+ * exists: a resident nobody has been to yet is not a resident with nothing
+ * due. A filled neutral dot would say the row was dealt with.
+ */
+.markDone {
+  flex: 0 0 var(--space-20);
+  width: var(--space-20);
+  height: var(--space-20);
+  margin-left: auto;
+  border: 1px solid var(--status-positive);
+  border-radius: var(--radius-pill);
+  background-color: var(--status-positive-tint);
+}
+
+.markPending {
+  flex: 0 0 var(--space-20);
+  width: var(--space-20);
+  height: var(--space-20);
+  margin-left: auto;
+  border: 2px dashed var(--status-unrecorded);
+  border-radius: var(--radius-pill);
+}
+
+/**
+ * The subject strip. PRD §2.4, and the reason this screen is laid out the way
+ * it is: the person in front of you, at the top, with their allergies beside
+ * them, on the screen where writing to the wrong record is fatal.
+ *
+ * Reference avatar 56px. The scale has 48 and 64 and no step between; 64 is
+ * the one that errs in the safe direction for a control whose job is being
+ * unmissable.
+ */
+.subjectStrip {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.subjectWho {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* 20px, the h2 step — the preferred name leads without competing with the
+   round time, which is the figure the bar above is for. */
+.subjectName {
+  color: var(--ink-900);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.01em;
+}
+
+.subjectMeta {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.subjectAllergy {
+  margin-left: auto;
+}
+
+.doseHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-16);
+  padding: var(--space-16) var(--space-24) var(--space-8);
+}
+
+.doseHeadTitle {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.doseHeadCount {
+  color: var(--ink-400);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.doseList {
+  list-style: none;
+}
+
+/* Reference: minmax(0,1fr) 15rem, gap 20px, padding 16px 24px. */
+.dose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  gap: var(--space-20);
+  align-items: start;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* An answered row settles into the sunken surface. Quiet, because a dose with
+   an answer is done — the rows still needing one are the finding. */
+.doseAnswered {
+  background-color: var(--bg-sunken);
+}
+
+.doseAbout {
+  min-width: 0;
+}
+
+/* Reference 16px/700; the scale steps 15 → 17 and the drug name is the row's
+   subject, so it takes the h3 step rather than dropping to body. */
+.doseDrug {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.01em;
+}
+
+.doseStrength {
+  margin-top: var(--space-4);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.doseTags {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  margin-top: var(--space-8);
+}
+
+.doseTags:empty {
+  display: none;
+}
+
+.doseTag {
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+}
+
+.doseTagCd {
+  background-color: var(--purple-50);
+  color: var(--purple-600);
+}
+
+.doseAnswers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.answerButtons {
+  display: flex;
+  gap: var(--space-8);
+}
+
+/**
+ * Given and Not given. Two buttons, equal width, neither pre-selected.
+ *
+ * The 1.5px border is the reference's, kept because it is a border weight and
+ * not spacing — and because at 1px the unselected pair reads as two disabled
+ * fields rather than two answers waiting to be chosen.
+ */
+.answerButton {
+  flex: 1;
+  padding: var(--space-12) var(--space-8);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.answerButton:hover {
+  border-color: var(--purple-400);
+}
+
+.answerGiven[aria-pressed='true'] {
+  border-color: var(--status-positive);
+  background-color: var(--status-positive-tint);
+  color: var(--status-positive-ink);
+}
+
+.answerNotGiven[aria-pressed='true'] {
+  border-color: var(--status-caution);
+  background-color: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+/**
+ * A dose already on the record, in the answer column where the buttons would be.
+ *
+ * It takes the MAR chart's own cell treatment rather than a second one written
+ * here, so a given dose looks the same wherever it is read — and a controlled
+ * drug given without its second signature still arrives as two facts.
+ */
+.settledDose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.reasonField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/**
+ * What is still required before this can be recorded.
+ *
+ * Caution ink, not the hatch. The hatch says nobody has looked; this says
+ * somebody is looking right now and has not finished. Using the hatch here
+ * would spend the one treatment that means "unrecorded" on a form in progress.
+ */
+.required {
+  color: var(--status-caution-ink);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+}
+
+.cdBlock {
+  margin-top: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--purple-200);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--purple-50);
+}
+
+.cdLabel {
+  margin-bottom: var(--space-8);
+  color: var(--purple-600);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cdFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-12);
+  align-items: end;
+}
+
+.cdField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.cdFieldLabel {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+}
+
+.cdInput {
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/**
+ * A count that does not reconcile.
+ *
+ * Critical, and it blocks the record. It also says what follows rather than
+ * claiming it has happened — the discrepancy incident is Phase 4, and a
+ * message asserting an incident was raised would be a record of something the
+ * build cannot produce.
+ */
+.mismatch {
+  margin-top: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--status-critical);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+}
+
+/* ---- Available if needed ---- */
+
+/**
+ * PRN, in its own section beneath the due list.
+ *
+ * Visually separated for the reason it is structurally separated: nothing in
+ * here is due, so nothing in here can be an omission, and it must never look
+ * like a row of the round left unanswered.
+ */
+.prn {
+  border-top: 1px solid var(--border-subtle);
+  background-color: var(--bg-sunken);
+}
+
+.prnHead {
+  padding: var(--space-16) var(--space-24) var(--space-8);
+}
+
+.prnTitle {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.prnNote {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.prnList {
+  list-style: none;
+}
+
+.prnRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-16);
+  align-items: start;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.prnAbout {
+  min-width: 0;
+}
+
+.prnAction {
+  justify-self: end;
+}
+
+.prnForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  grid-column: 1 / -1;
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+}
+
+.prnFormActions {
+  display: flex;
+  gap: var(--space-8);
+  justify-content: flex-end;
+}
+
+.prnGiven {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  padding: var(--space-12);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+}
+
+.prnGivenLine {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* Recorded and unremarkable: plain text with its author and time, not a pill. */
+.prnOutcome {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.prnOutcomePending {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  align-items: flex-start;
+}
+
+/* ---- Footer ---- */
+
+.roundFoot {
+  display: flex;
+  gap: var(--space-20);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.footState {
+  flex: 1 1 20rem;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* ---- The confirmation ---- */
+
+/**
+ * Inside the dialog, beneath the sentence naming the resident.
+ *
+ * Every dose is listed with its answer. A PIN that signs "the round" signs
+ * nothing anybody read; a PIN that signs four named doses and their answers
+ * signs a record.
+ *
+ * Spans rather than block elements throughout: this is the content of Radix's
+ * `Description`, which renders a `<p>`.
+ */
+.confirmBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.confirmIntro {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.confirmList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.confirmRow {
+  display: flex;
+  gap: var(--space-12);
+  align-items: baseline;
+  padding: var(--space-12);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-sunken);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.confirmDrug {
+  color: var(--ink-900);
+  font-weight: var(--weight-bold);
+}
+
+.confirmGiven {
+  margin-left: auto;
+  color: var(--status-positive-ink);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+}
+
+.confirmNotGiven {
+  margin-left: auto;
+  color: var(--status-caution-ink);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+}
+
+.confirmPin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/* Reference: 20px, letter-spacing .4em, centred, padding 12px. */
+.pinInput {
+  width: 100%;
+  padding: var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  letter-spacing: 0.4em;
+  text-align: center;
+}
+
+.confirmPinNote {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* ==========================================================================
+   The controlled drug register — /medications/register
+   Built to docs/cd-register.html.
+
+   Same mapping discipline as the round: the type scale is closed and spacing
+   is the 4px scale, so the reference's 32px, 22px, 14px, 12.5px, 11.5px and
+   its 18px/22px/14px/13px/10px/7px/5px spacings each take the nearest step,
+   named where it matters.
+   ========================================================================== */
+
+/**
+ * Two findings, side by side. `1fr 1fr`, never one card and never a sum.
+ *
+ * They are different things and adding them would produce a number nobody can
+ * act on: one needs a first count, the other needs an investigation. The
+ * treatments differ for the same reason — critical for a finding, the hatch
+ * for an absence — so the distinction survives greyscale and a reader who
+ * never reads the words.
+ */
+.findings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+
+  /* Equal height — they render as one comparison, not two cards. */
+  align-items: stretch;
+}
+
+.finding {
+  display: flex;
+  gap: var(--space-16);
+  align-items: flex-start;
+  padding: var(--space-16) var(--space-24);
+  border-radius: var(--radius-lg);
+
+  /* Reference 5px. The 4px step reads the same at the card's scale and keeps
+     the bar identical to every other left-edge rule in the app. */
+  border-left: var(--space-4) solid transparent;
+}
+
+.findingDiscrepancy {
+  border: 1px solid var(--status-critical);
+  border-left: var(--space-4) solid var(--status-critical);
+  background-color: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+/*
+ * An absence, not a finding. The hatch, from its one definition.
+ *
+ * Composes the **treatment** rather than the panel box: `unrecordedPanel` is a
+ * flex column, so composing it meant the local `flex-direction: row` was
+ * fighting the composed rule and losing, and the card rendered stacked and
+ * taller than its content. The same defect as the four queue lead cards.
+ */
+.findingNever {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-16);
+  align-items: flex-start;
+  padding: var(--space-16) var(--space-24);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.findingFigure {
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: -0.02em;
+}
+
+.findingBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.findingTitle {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.findingDetail {
+  max-width: 46ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-regular);
+}
+
+/* ---- The list ---- */
+
+.ledgerHead {
+  display: flex;
+  gap: var(--space-20);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-20) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.ledgerTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-bold);
+}
+
+.ledgerSubtitle {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.registerList {
+  list-style: none;
+}
+
+/**
+ * Reference: `15rem minmax(0,1fr) 9rem 13rem auto`.
+ *
+ * The balance sits after the drug and before the state chip, so it is the
+ * rightmost *figure* on the row — the running total the register carries, in a
+ * column the eye can go straight down without crossing another number.
+ */
+.registerRow {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr) 9rem 13rem auto;
+  gap: var(--space-20);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--ink-900);
+  text-decoration: none;
+}
+
+.registerRow:hover {
+  background-color: var(--purple-50);
+}
+
+.registerList > li:first-child .registerRow {
+  border-top: 0;
+}
+
+.registerWho,
+.registerDrug {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.registerName {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.registerMeta {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.registerBalance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* Left-aligned where there is no figure, because the hatched state is words
+   rather than a number and a right-aligned sentence reads as a stray label. */
+.registerBalanceNone {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.balanceFigure {
+  color: var(--ink-900);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: -0.01em;
+}
+
+.balanceUnit {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/**
+ * The state chip.
+ *
+ * Reconciled is plain text with its timestamp, not a filled green pill: a
+ * register where seventeen rows glow green would drown the two that are not
+ * (§3b). Only the discrepancy is filled, because only the discrepancy is a
+ * finding.
+ */
+.registerState {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  max-width: 200px;
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+}
+
+.registerState small {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-regular);
+}
+
+.stateDiscrepancy {
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-md);
+  background-color: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+.stateDiscrepancy small {
+  color: var(--status-critical-ink);
+}
+
+.registerOpen {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  color: var(--purple-600);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+/* Back to the list. Same treatment as the profile's, for the same job. */
+.backLink {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  align-self: flex-start;
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+/* ---- One drug's ledger ---- */
+
+.ledgerBalance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.ledgerFigure {
+  color: var(--ink-900);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: -0.02em;
+}
+
+.ledgerUnit {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/* A register is wide and a page must never scroll sideways. */
+.ledgerScroll {
+  overflow-x: auto;
+}
+
+.ledgerTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ledgerCaption {
+  padding: var(--space-8) var(--space-24);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  text-align: left;
+}
+
+.ledgerHeadCell {
+  padding: var(--space-8) var(--space-24);
+  background-color: var(--bg-sunken);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ledgerCell {
+  padding: var(--space-12) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  vertical-align: top;
+}
+
+.ledgerNum {
+  text-align: right;
+  font-weight: var(--weight-bold);
+  white-space: nowrap;
+}
+
+/* The whole row, because the finding is the row, not one cell of it. */
+.ledgerFlagged .ledgerCell {
+  background-color: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+.entryKind {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-weight: var(--weight-bold);
+}
+
+.entryKind small {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-regular);
+}
+
+.ledgerFlagged .entryKind small {
+  color: var(--status-critical-ink);
+}
+
+.signatures {
+  display: inline-block;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.signatures strong {
+  color: var(--ink-700);
+  font-weight: var(--weight-semibold);
+}
+
+.ledgerFlagged .signatures,
+.ledgerFlagged .signatures strong {
+  color: var(--status-critical-ink);
+}
+
+/* A count says what the stock is; it does not move it. The em dash is that
+   fact, and it carries an accessible label rather than reading as "dash". */
+.changeNone {
+  color: var(--ink-400);
+  font-weight: var(--weight-regular);
+}
+
+.changeMinus {
+  color: var(--status-caution-ink);
+  font-weight: var(--weight-bold);
+}
+
+.changePlus {
+  color: var(--status-positive-ink);
+  font-weight: var(--weight-bold);
+}
+
+/**
+ * What the discrepancy means, beneath the table rather than inside it.
+ *
+ * The row is the record; this is the reading of it. It states the figures and
+ * stops — it does not offer an explanation, because the register does not hold
+ * one and inventing a reason is worse than naming the gap.
+ */
+.discrepancyNote {
+  margin: var(--space-20) var(--space-24);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--status-critical);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+/* A drug with no entries renders this and no table at all. */
+.openNote {
+  composes: unrecordedPanel from '../../styles/unrecorded.module.css';
+  margin: var(--space-20) var(--space-24);
+  padding: var(--space-12) var(--space-16);
+  border-left-width: var(--space-4);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+/* ==========================================================================
+   Prescriptions — /residents/:id/medications/prescriptions
+   Built to docs/medication-setup.html.
+
+   Same mapping as the rest of the module: the reference's 19px, 14px, 12.5px,
+   11.5px and its 18px/22px/26px/9px/6px/3px/2px spacings each take the nearest
+   step on the closed scales.
+   ========================================================================== */
+
+.subTabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.prescriptions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.prescriptionCount {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.countLine {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.countFigure {
+  color: var(--ink-900);
+  font-weight: var(--weight-bold);
+}
+
+.prescriptionHead {
+  display: flex;
+  gap: var(--space-20);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.prescriptionAbout {
+  min-width: 0;
+}
+
+/* Reference 19px. The scale steps 17 → 20, and the drug name is this card's
+   subject, so it takes the h2 step rather than dropping to a sub-heading. */
+.prescriptionName {
+  color: var(--ink-900);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.01em;
+}
+
+.prescriptionForm {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.prescriptionTags {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  margin-top: var(--space-8);
+}
+
+.doseTagRoute {
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-sunken);
+  color: var(--ink-500);
+}
+
+.doseTagPrn {
+  background-color: var(--status-info-tint);
+  color: var(--status-info-ink);
+}
+
+.prescriptionSchedule {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.scheduleTimes {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.scheduleInterval {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/* Three equal columns. Anything that would run long spans two or three rather
+   than wrapping inside one. */
+.prescriptionFields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-16) var(--space-24);
+  padding: var(--space-16) var(--space-24);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.fieldWide {
+  grid-column: span 2;
+}
+
+.fieldLabel {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fieldValue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.fieldMain {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.fieldNote {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/**
+ * What this requires of you.
+ *
+ * **The reason the screen exists.** A prescription is an obligation on
+ * whoever administers it, and none of that obligation is legible from a drug
+ * name or a grid of cells.
+ */
+.requires {
+  margin: 0 var(--space-24) var(--space-16);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--purple-200);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--purple-50);
+}
+
+/**
+ * A requirement the system cannot enforce, because something is unrecorded.
+ *
+ * Critical, not the hatch — the hatch says a record is missing, and this says
+ * **a check cannot run**. The whole block turns, because the block is the
+ * claim: it is no longer a list of what to do, it is a list with a hole in it
+ * that a person has to cover.
+ */
+.requiresBlocked {
+  border-color: var(--status-critical);
+  background-color: var(--status-critical-tint);
+}
+
+.requiresLabel {
+  margin-bottom: var(--space-8);
+  color: var(--purple-600);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.requiresBlocked .requiresLabel {
+  color: var(--status-critical-ink);
+}
+
+.requiresList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  list-style: none;
+}
+
+.requiresItem {
+  position: relative;
+  padding-left: var(--space-16);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.requiresItem::before {
+  content: '';
+  position: absolute;
+  top: 0.55em;
+  left: 0;
+  width: var(--space-8);
+  height: var(--space-8);
+  border-radius: var(--radius-pill);
+  background-color: var(--purple-400);
+}
+
+.requiresBlocked .requiresItem {
+  color: var(--status-critical-ink);
+  font-weight: var(--weight-semibold);
+}
+
+.requiresBlocked .requiresItem::before {
+  background-color: var(--status-critical);
+}
+
+/* ---- MAR PDF export, stubbed ---- */
+
+/**
+ * What the export would contain.
+ *
+ * The list is the substance of the dialog, not decoration on a refusal. A
+ * disabled capability that does not say what it does cannot be planned around,
+ * and this one is the artefact somebody hands an inspector.
+ */
+.exportBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  margin-top: var(--space-16);
+}
+
+.exportLead {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.exportList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding-left: var(--space-20);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.exportRange {
+  color: var(--ink-900);
+  font-weight: var(--weight-semibold);
+}
+
+.exportNote {
+  padding: var(--space-12);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-sunken);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}

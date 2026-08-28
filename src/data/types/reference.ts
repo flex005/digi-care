@@ -9,7 +9,22 @@
  * what it has and calls that the list.
  */
 
-/** The ten built-in risk assessment templates. Source PRD §4.3. */
+/**
+ * The nine built-in risk assessment templates. Source PRD §4.3, less one.
+ *
+ * **Mental Capacity is deliberately not here.** The source PRD lists it among
+ * the risk assessments; it is a *capacity determination*, not a risk. It
+ * produces "has capacity for this decision" or "lacks capacity, and here is
+ * the best-interests process" — never low, moderate or high.
+ *
+ * Forcing it into a union whose job is producing a risk level would make it
+ * say something it does not say, and that level would then feed the badge
+ * strip and the risk column as if it were a risk. It lives with Consent
+ * (Phase 10), where the same test is already being made: §6.7 puts a mandatory
+ * capacity gate on consent with no default selection.
+ *
+ * Recorded as a departure from the source PRD in `PROGRESS.md`, as EOLC was.
+ */
 export const RISK_ASSESSMENT_TEMPLATES = [
   { id: 'falls', name: 'Falls Risk', framework: 'Morse Fall Scale' },
   { id: 'pressure_ulcer', name: 'Pressure Ulcer Risk', framework: 'Waterlow Score' },
@@ -22,11 +37,6 @@ export const RISK_ASSESSMENT_TEMPLATES = [
     id: 'moving_handling',
     name: 'Moving and Handling',
     framework: 'Manual Handling Operations Regulations assessment',
-  },
-  {
-    id: 'mental_capacity',
-    name: 'Mental Capacity',
-    framework: 'Mental Capacity Act 2005 two-stage test',
   },
   { id: 'skin_integrity', name: 'Skin Integrity', framework: 'Braden Scale' },
   { id: 'choking', name: 'Choking and Dysphagia', framework: 'IDDSI Framework' },

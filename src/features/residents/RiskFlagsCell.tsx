@@ -26,6 +26,25 @@ import styles from './residents.module.css'
  * *what does this person need right now* versus *can you prove you did what
  * you said*). Suppressing one would be tidier and less true.
  */
+/**
+ * Whether this resident's picture is entirely settled — nothing unrecorded and
+ * nothing notable.
+ *
+ * **Exported because the guard that keeps the branch alive has to ask the same
+ * question the screen does.** `fixtures.test.ts` asserted a hand-written
+ * approximation of this — falls low, choking not high, no allergies, for
+ * resuscitation — which is a *weaker* condition than the cell's, so it stayed
+ * green while a change to the fixture stream removed the last resident who
+ * actually reached the branch. A guard that asserts less than the screen
+ * requires is a guard that passes while the thing it protects goes dead (§8).
+ */
+export function hasNoRiskFlags(resident: Resident): boolean {
+  return RISK_FLAG_SOURCES.every(
+    (source) =>
+      !source.isUnrecorded(resident) && source.renderNotable(resident).length === 0,
+  )
+}
+
 export function RiskFlagsCell({ resident }: { resident: Resident }) {
   const flags = RISK_FLAG_SOURCES.flatMap((source) =>
     source.isUnrecorded(resident)
@@ -44,7 +63,7 @@ export function RiskFlagsCell({ resident }: { resident: Resident }) {
     // be the loudest thing on the row.
     return (
       <div className={styles.flags}>
-        <Settled label="All assessed — no flags" />
+        <Settled label="All assessed, no flags" />
       </div>
     )
   }

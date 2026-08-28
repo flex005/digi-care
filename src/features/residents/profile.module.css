@@ -1,26 +1,37 @@
 /**
- * The persistent subject header. PRD §2.4.
+ * The subject header. PRD §2.4.
  *
- * Sticky and not collapsible: whoever is writing must be able to see who they
- * are writing about, without scrolling, at any point on any tab. It carries
- * the site as well as the person, because the app top bar scrolls away on a
- * long profile and §2.4 requires the site to stay visible.
+ * **Not sticky.** It was, and PRD §2.4 originally required it to be, because a
+ * subject header is the structural mitigation against a record written against
+ * the wrong resident. Two things made that the wrong trade on this screen:
+ *
+ *  1. It is about 410px tall, which is half a laptop viewport held permanently
+ *     against four tabs of dense record.
+ *  2. §2.4's rule is about write surfaces, and the profile has none. It is
+ *     read-only throughout, and the two change controls on Future Plans open a
+ *     confirmation that names the subject in its own sentence, which is a
+ *     separate §2.4 bullet and unaffected.
+ *
+ * §2.4 was amended rather than quietly contradicted (Frank's decision,
+ * 21/08/2026). **The rule still stands for write surfaces**, so Phase 2's note
+ * composer carries a sticky subject header of its own; that is not inherited
+ * from here and has to be built.
+ *
+ * The site stays permanently visible regardless. That is the app top bar's
+ * job, and the shell is a fixed-height grid in which only the content column
+ * scrolls, so the bar cannot scroll away.
  */
 
 /**
- * One surface, three bands. PRD §2.4 — sticky, non-collapsing, the structural
- * mitigation against a record written against the wrong resident.
+ * One surface, three bands.
  *
  * Bands rather than cards: three equal cards were three equal invitations, so
- * the eye had nowhere to start. Ordered by when somebody needs them — who this
- * is and who to call, what to know before the room, then the routine facts —
- * and separated by a hairline, which says "next" where a border says
+ * the eye had nowhere to start. Ordered by when somebody needs them, so who
+ * this is and who to call, then what to know before the room, then the routine
+ * facts, separated by a hairline, which says "next" where a border says
  * "elsewhere".
  */
 .header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   background-color: var(--bg-surface);
@@ -428,26 +439,15 @@
   text-decoration: underline;
 }
 
+/* No padding under the row: the rule below the tabs and the active tab's
+   underline are the same line, so a gap between them read as two rules that
+   had failed to meet. */
 .tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--border-strong);
+  composes: tabs from '@/components/shell/ScreenTabs.module.css';
 }
 
 .tab {
-  display: flex;
-  gap: var(--space-8);
-  align-items: center;
-  min-height: var(--space-40);
-  padding: var(--space-8) var(--space-16);
-  border-bottom: 2px solid transparent;
-  color: var(--ink-400);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-  font-weight: var(--weight-semibold);
-  cursor: not-allowed;
+  composes: tab from '@/components/shell/ScreenTabs.module.css';
 }
 
 .tabPhase {
@@ -500,33 +500,64 @@
 }
 
 .sectionBody {
-  padding: var(--space-20) var(--space-24);
+  padding: var(--space-16) var(--space-24) var(--space-20);
 }
 
 /**
- * A read-only field list. Two columns so the label and its value sit on one
- * line and the eye can run down the labels.
+ * A read-only field list. One field per row — label left, value right,
+ * hairline between — so the eye runs down a single column of labels and every
+ * answer starts at the same left edge.
+ *
+ * This replaced a two-up grid of stacked label-over-value cards. The grid fit
+ * more on a screen and read worse: with two independent columns there was no
+ * single place to look for "the answers", and a hatched gap in the right-hand
+ * column sat level with a recorded value in the left, so scanning for holes
+ * meant reading both columns in parallel. On a screen whose entire job is
+ * making gaps conspicuous, that is the wrong trade.
  */
 .fieldList {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--space-20) var(--space-32);
   margin: 0;
 }
 
+/* 240px is a track width, not spacing — the label column sized to hold the
+   longest label ("Communication needs and preferences" wraps to two lines and
+   is meant to). At 200% zoom the text doubles and the column does not, so
+   labels wrap further; wrapping is the intended behaviour, and nothing here
+   truncates. */
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: var(--space-4) var(--space-24);
+  align-items: baseline;
+  padding: var(--space-12) 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.field:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+/**
+ * A field whose answer is paragraphs rather than a phrase — medical history,
+ * communication preferences. Label above, value across the full width.
+ *
+ * Four sentences of medical history in a column sized for "she / her" is a
+ * tall grey ribbon nobody reads, and what nobody reads is functionally
+ * missing. The value is capped at 78ch so the line length stays readable;
+ * that is a wrap point, never a truncation.
+ */
+.fieldFull {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
 }
 
 .fieldLabel {
   color: var(--ink-500);
-  font-size: var(--text-caption-size);
-  line-height: var(--text-caption-line);
-  font-weight: var(--weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-medium);
 }
 
 .fieldValue {
@@ -537,6 +568,13 @@
   color: var(--ink-900);
   font-size: var(--text-body-size);
   line-height: var(--text-body-line);
+}
+
+/* A long value gets the full row and a readable measure. A wrap point, never
+   a truncation — nothing on this tab is cut off with an ellipsis. */
+.fieldFull .value {
+  max-width: 78ch;
+  color: var(--ink-700);
 }
 
 /* The author and date of a clinical record. Always visible, never
@@ -593,44 +631,122 @@
   line-height: var(--text-caption-line);
 }
 
-/* Allergies get a panel, not a row. PRD §6.2. */
-.allergyPanel {
+/**
+ * A section banner: a full-width panel between a section header and its
+ * fields, for the one fact in that section that must not be row twelve of
+ * sixteen.
+ *
+ * Two sections have one. Clinical opens with allergies; In an emergency opens
+ * with the resuscitation decision. Both are fields where being easy to miss
+ * has a body count, and both are three-state unions where each state has to
+ * look different from the other two at a glance.
+ *
+ * The slot is what insets the panel from the card edges, so every state —
+ * including the hatched one, which is drawn by <Unrecorded> and cannot take
+ * layout from here — sits in exactly the same place.
+ */
+.bannerSlot {
+  padding: var(--space-20) var(--space-24) 0;
+}
+
+.banner {
   display: flex;
   flex-direction: column;
-  gap: var(--space-12);
-  align-items: flex-start;
-  padding: var(--space-20) var(--space-24);
+  gap: var(--space-8);
+  padding: var(--space-16) var(--space-20);
+  border: 1px solid transparent;
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-lg);
 }
 
-.allergyDetail {
-  margin: 0;
-  padding-left: var(--space-20);
-  color: var(--ink-700);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
+/* The field being answered. Its own line above the answer, so the answer can
+   be read on its own and still be a complete statement. */
+.bannerCaption {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.allergyNote {
+/* The answer. The largest thing in the panel, and on a tab of 15px values
+   that is the whole point of the panel existing. */
+.bannerHeadline {
+  display: block;
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-bold);
+}
+
+.bannerDetail {
+  display: block;
   max-width: 70ch;
-  color: var(--status-critical-ink);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
-  font-weight: var(--weight-medium);
+}
+
+.bannerList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A finding. Red wherever allergies appear — PRD §6.2. */
+.bannerCritical {
+  border-color: var(--status-critical);
+  background-color: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+/* A recorded NEGATIVE, and a complete clinical record. Solid tint, settled,
+   never hatched: somebody asked and confirmed there are none. */
+.bannerSettled {
+  border-color: var(--status-positive);
+  background-color: var(--status-positive-tint);
+  color: var(--status-positive-ink);
+}
+
+/**
+ * A recorded clinical decision that is neither good news nor bad news.
+ *
+ * A DNAR in place gets this rather than red or green. Colouring a signed legal
+ * document would editorialise it, and a care worker reading red would hesitate
+ * over a decision somebody has already made properly. Same reasoning as
+ * <StatusPill tone="brand">, PRD §6.2.
+ */
+.bannerBrand {
+  border-color: var(--purple-600);
+  background-color: var(--purple-50);
+  color: var(--purple-900);
+}
+
+/* Recorded, complete, and neutral — the second flavour of recorded negative.
+   See RecordedListField for why this is not green. */
+.bannerInfo {
+  border-color: var(--status-info);
+  background-color: var(--status-info-tint);
+  color: var(--status-info-ink);
+}
+
+/* Attribution inside a tinted panel keeps the panel's ink rather than the
+   page's grey, which on a red or green tint drops below 4.5:1. */
+.banner .attribution {
+  color: inherit;
 }
 
 /* A built tab is a real link; an unbuilt one is a disabled span. */
 .tabBuilt {
-  color: var(--ink-500);
-  cursor: pointer;
-}
-
-.tabBuilt:hover {
-  color: var(--purple-900);
+  composes: tabBuilt from '@/components/shell/ScreenTabs.module.css';
 }
 
 .tabActive {
-  border-bottom-color: var(--purple-600);
-  color: var(--purple-900);
+  composes: tabActive from '@/components/shell/ScreenTabs.module.css';
 }
 
 /* ---- Needs tab ---- */
@@ -650,10 +766,18 @@
   list-style: none;
 }
 
+/**
+ * A domain: the term on the left, its facts on the right, the (disabled)
+ * write affordance at the far edge — the same label-left value-right rhythm
+ * General Information uses, one level down.
+ *
+ * The label column is 240px here as it is there, so the two tabs line up when
+ * a reader switches between them.
+ */
 .domainRow {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(200px, auto) minmax(260px, 2fr) auto;
-  gap: var(--space-16);
+  grid-template-columns: 240px minmax(0, 1fr) auto;
+  gap: var(--space-16) var(--space-24);
   align-items: start;
   padding: var(--space-16) var(--space-24);
   border-bottom: 1px solid var(--border-subtle);
@@ -670,23 +794,56 @@
   font-weight: var(--weight-semibold);
 }
 
-.domainBadges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
+/* Three facts, never merged into one. A domain nobody has written, for
+   somebody nobody has assessed, is two gaps and shows two — Rule 3a. */
+.domainFacts {
+  display: grid;
+  gap: var(--space-8);
+  margin: 0;
+  min-width: 0;
 }
 
-.domainSummary {
+.domainFact {
+  display: grid;
+  grid-template-columns: 152px minmax(0, 1fr);
+  gap: var(--space-4) var(--space-16);
+  align-items: baseline;
+}
+
+.domainFactLabel {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-medium);
+}
+
+.domainFactValue {
   min-width: 0;
+  margin: 0;
 }
 
 /* The care plan is written in the resident's own voice — source PRD §3.3,
    "I like to..." rather than clinical language. Quoted so it reads as theirs. */
 .domainQuote {
+  max-width: 78ch;
   color: var(--ink-700);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-style: italic;
+}
+
+/*
+ * Somebody is rewriting this domain. Context, not a call to action.
+ *
+ * No chip, no tint and no hatch: this tab is read-only, and a treatment here
+ * would put a revision above the three facts about the plan it sits beside.
+ */
+.domainRevision {
+  max-width: 78ch;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
 }
 
 .domainAction {
@@ -694,7 +851,29 @@
   justify-content: flex-end;
 }
 
-.domainLink {
+/* The care plan editor, reached from the domain it would fill in. */
+.domainActionLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--space-32);
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.domainActionLink:hover {
+  border-color: var(--purple-600);
+  background-color: var(--purple-50);
+}
+
+/* A link to a screen a later phase builds. Present, disabled, saying so. */
+.pendingLink {
   display: inline-flex;
   align-items: center;
   min-height: var(--space-32);
@@ -707,4 +886,114 @@
   font-weight: var(--weight-semibold);
   white-space: nowrap;
   cursor: not-allowed;
+}
+
+/* ---- Important People ---- */
+
+/**
+ * One person. Name and relationship, how to reach them, how they asked to be
+ * reached, and whether they are the one the home rings first — in the order
+ * somebody needs them.
+ */
+.person {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.personName {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.personRelationship {
+  color: var(--ink-500);
+  font-weight: var(--weight-regular);
+}
+
+.personLine {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* A qualifier on the lines above it — the preferred contact method, the LPA's
+   authority, the placement review. Labelled, because "Phone · Yoruba" on its
+   own is not a sentence. */
+.personPreference {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-8);
+  align-items: flex-start;
+  margin-top: var(--space-4);
+}
+
+.personPreferenceLabel {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-medium);
+}
+
+.personPreferenceValue {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.personActions {
+  margin-top: var(--space-8);
+}
+
+/* Several people under one label — family with visiting rights, other
+   professionals. Ruled between, so two people never read as one. */
+.personList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.personList > li + li {
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ---- Future Plans ---- */
+
+/* Recorded in this person's own words, most of the time. Not italicised the
+   way the care plan summary is: these are signed statements of intent, not
+   quotations, and italic at length is harder to read. */
+.planText {
+  display: block;
+  max-width: 78ch;
+  color: var(--ink-900);
+}
+
+/* The change control on a resuscitation decision or an ADRT. Set apart from
+   the record above it, because pressing it overrides a signed document. */
+.changeControl {
+  margin-top: var(--space-12);
+}
+
+/* The same control when it belongs to a hatched banner, which is drawn by
+   <Unrecorded> and cannot hold a child. */
+.bannerActions {
+  margin-top: var(--space-12);
+}
+
+/* A link into the document library from a record that references a document. */
+.documentLink {
+  display: inline-block;
+  margin-top: var(--space-4);
+  color: var(--purple-600);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
 }

@@ -1,0 +1,407 @@
+import { now as appNow } from '@/data/fixtures/clock'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import type { StaffStanding } from '@/data/types'
+import { STAFF_ROLE_NAMES } from '@/data/types'
+import {
+  inviteMember,
+  isAddedThisSession,
+  memberById,
+  removeMember,
+  setStanding,
+  suspendMember,
+} from '@/data/access/team-store'
+import { sites } from '@/data/fixtures/organisation'
+import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { Avatar, Button, Card, Dialog } from '@/components/primitives'
+import { Icon } from '@/components/icon/Icon'
+import { formatDate } from '@/lib/format'
+import { NotAPerformanceRecord, Standing } from './TeamParts'
+import { RECENT_ACTS, staffActivity } from './staff-activity'
+import styles from './team.module.css'
+
+/**
+ * One member of staff. PRD §6.7, Phase 14.
+ *
+ * The sentence: **who this person is and what access they have, then plainly
+ * that supervision and appraisal are not held here, then what they have
+ * recorded.**
+ *
+ * **No counts on this page, and that is the point rather than an omission.**
+ * There is no rota and no shift record, so a count of what somebody recorded
+ * has no honest denominator, and a bare count beside another person's bare
+ * count is a ranking the reader performs themselves. The figures are not
+ * wrong; they are wrong without the framing the report gives them, so they
+ * live there with their period and denominators stated.
+ */
+export function StaffDetailRoute() {
+  const { staffId } = useParams()
+  const { currentUser } = useSession()
+  const format = useSiteFormat()
+  const [version, setVersion] = useState(0)
+  const [confirming, setConfirming] = useState(false)
+  const [suspending, setSuspending] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [reason, setReason] = useState('')
+  const navigate = useNavigate()
+
+  const member = staffId === undefined ? undefined : memberById(staffId)
+
+  const acts = useMemo(
+    () => (member === undefined ? [] : staffActivity(member.id).slice(0, RECENT_ACTS)),
+    [member, version],
+  )
+
+  if (member === undefined) {
+    return (
+      <div className={styles.page}>
+        <p className={styles.errorTitle}>Nobody here by that name</p>
+        <p className={styles.errorBody}>
+          Nothing is shown rather than a partial page, because a page of somebody
+          else&rsquo;s records under a name nobody recognised is the wrong-subject
+          failure with a staff list around it.
+        </p>
+        <Link to=".." relative="path" className={styles.backLink}>
+          Back to the team
+        </Link>
+      </div>
+    )
+  }
+
+  const site = sites.find((entry) => entry.id === member.siteId)
+  const hasAccessNow = member.standing.kind === 'has_access'
+
+  const change = (standing: StaffStanding) => {
+    setStanding(member.id, standing)
+    setVersion((count) => count + 1)
+    setConfirming(false)
+  }
+
+  return (
+    <div className={styles.page} data-staff-detail={member.id}>
+      <Link to=".." relative="path" className={styles.backLink} data-back-link>
+        <Icon name="arrows-sharp/arrow-left-01-sharp" size={16} aria-hidden />
+        Team
+      </Link>
+
+      <Card>
+        <header className={styles.hero}>
+          <Avatar
+            photo={{ kind: 'not_on_file' }}
+            name={member.ref.fullName}
+            size="large"
+            tone="brand"
+          />
+          <div>
+            {/* Says what kind of record this is before it says whose. A person
+                on a care screen is a resident; here they are neither. */}
+            <p className={styles.heroKind}>Team member</p>
+            <h1 className={styles.heroName}>{member.ref.fullName}</h1>
+            <p className={styles.heroRole}>
+              {STAFF_ROLE_NAMES[member.role]} · {site?.name ?? 'Site not on record'}
+            </p>
+          </div>
+          <div className={styles.heroActions}>
+            {member.standing.kind === 'never_given_access' ? (
+              <Button
+                data-invite
+                onClick={() => {
+                  inviteMember(member.id, currentUser)
+                  setVersion((count) => count + 1)
+                }}
+              >
+                Give access
+              </Button>
+            ) : null}
+
+            {hasAccessNow ? (
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={() => setSuspending(true)}
+                  data-suspend
+                >
+                  Suspend
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setConfirming(true)}
+                  data-remove-access
+                >
+                  Remove access
+                </Button>
+              </>
+            ) : member.standing.kind === 'never_given_access' ? null : (
+              <Button
+                variant="secondary"
+                data-restore-access
+                onClick={() =>
+                  change({
+                    kind: 'has_access',
+                    since: todayIso(),
+                    grantedBy: currentUser,
+                  })
+                }
+              >
+                Restore access
+              </Button>
+            )}
+
+            <Link
+              to="../permissions"
+              relative="path"
+              className={styles.heroLink}
+              data-permissions
+            >
+              Permissions
+            </Link>
+
+            {isAddedThisSession(member.id) ? (
+              <Button variant="ghost" onClick={() => setDeleting(true)} data-delete>
+                Delete
+              </Button>
+            ) : null}
+          </div>
+        </header>
+
+        {/* Role, site, access. Nothing else — a field nobody has asked for is a
+            field nobody has decided how to protect. */}
+        <section className={styles.section}>
+          <dl className={styles.fields}>
+            <div className={styles.field} data-field="role">
+              <dt className={styles.fieldLabel}>Role</dt>
+              <dd className={styles.fieldValue}>{STAFF_ROLE_NAMES[member.role]}</dd>
+            </div>
+            <div className={styles.field} data-field="site">
+              <dt className={styles.fieldLabel}>Site</dt>
+              <dd className={styles.fieldValue}>
+                {site?.name ?? 'Site not on record'}
+              </dd>
+            </div>
+            <div className={styles.field} data-field="standing">
+              <dt className={styles.fieldLabel}>Access</dt>
+              <dd className={styles.fieldValue}>
+                <Standing standing={member.standing} />
+              </dd>
+            </div>
+          </dl>
+
+          {member.standing.kind === 'no_longer_has_access' ? (
+            <p className={styles.unchanged} data-removal-unchanged>
+              <b>Removing access changed nothing on the record.</b> Every care note,
+              medication entry and signature {member.ref.fullName.split(' ')[0]} made is
+              still there with their name on it. Records outlive access: a record of who
+              did something is not a permission, and removing one would leave the home
+              unable to say who gave a dose.
+            </p>
+          ) : null}
+        </section>
+
+        {/* Above the activity, never below it. */}
+        <section className={styles.section}>
+          <NotAPerformanceRecord
+            name={member.ref.fullName.split(' ')[0] ?? 'this person'}
+          />
+        </section>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>
+            What {member.ref.fullName.split(' ')[0]} has recorded recently
+          </h2>
+
+          {acts.length === 0 ? (
+            <p className={styles.noActs} data-no-acts>
+              Nothing in this record was written by {member.ref.fullName}. That is a
+              statement about this record, not about their work, and for somebody who
+              has never been given access it is what you would expect.
+            </p>
+          ) : (
+            <ul className={styles.acts}>
+              {acts.map((act) => (
+                <li key={act.id}>
+                  <div className={styles.act} data-act={act.id}>
+                    <p className={styles.actWhen}>
+                      <span>{format.time(act.at)}</span>
+                      <span className={styles.actDate}>
+                        {format.instantDate(act.at)}
+                      </span>
+                    </p>
+                    <div>
+                      <p className={styles.actWhat}>{act.what}</p>
+                      <p className={styles.actModule}>{act.module}</p>
+                    </div>
+                    <Link
+                      to={act.to}
+                      className={styles.actLink}
+                      aria-label={`Open the record: ${act.what}`}
+                    >
+                      Open the record
+                      <Icon
+                        name="arrows-sharp/arrow-right-01-sharp"
+                        size={16}
+                        aria-hidden
+                      />
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className={styles.noCounts} data-no-counts>
+            <p>
+              <b>There are no counts on this page, and that is deliberate.</b> There is
+              no rota and no shift record in diGi-Care, so a count of what somebody
+              recorded has no honest denominator, and a bare count beside another
+              person&rsquo;s bare count is a ranking whether or not anybody sorted it.
+              The figures live on the care note coverage report, where the period and
+              the denominators are stated alongside them.
+            </p>
+            <Link
+              to="/reports/care-note-coverage"
+              className={styles.noCountsLink}
+              data-coverage-link
+            >
+              Open the coverage report
+              <Icon name="arrows-sharp/arrow-right-01-sharp" size={16} aria-hidden />
+            </Link>
+          </div>
+        </section>
+      </Card>
+
+      {suspending ? (
+        <Dialog
+          open
+          onOpenChange={(next) => {
+            if (!next) setSuspending(false)
+          }}
+          title={`Suspend ${member.ref.fullName}?`}
+          description="Suspending holds access without ending it. The reason goes on the record with your name."
+          actions={
+            <>
+              <Button variant="ghost" onClick={() => setSuspending(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                data-confirm-suspend
+                disabled={reason.trim() === ''}
+                onClick={() => {
+                  suspendMember(member.id, reason.trim(), currentUser)
+                  setReason('')
+                  setSuspending(false)
+                  setVersion((count) => count + 1)
+                }}
+              >
+                Suspend
+              </Button>
+            </>
+          }
+        >
+          <label className={styles.formField}>
+            <span className={styles.formLabel}>Why</span>
+            <input
+              type="text"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              data-field="suspend-reason"
+              autoComplete="off"
+            />
+            {/*
+             * In words, never a code. A standing with no reason is a flag
+             * rather than a record, and the person it is about is entitled to
+             * know what it says.
+             */}
+            <span className={styles.formHint}>
+              In words. This is what the team screen will show, and it carries your name
+              and today&rsquo;s date.
+            </span>
+          </label>
+        </Dialog>
+      ) : null}
+
+      {deleting ? (
+        <Dialog
+          open
+          onOpenChange={(next) => {
+            if (!next) setDeleting(false)
+          }}
+          title={`Delete ${member.ref.fullName} from the team?`}
+          description="They were added this session and have written nothing, so there is no record for the deletion to orphan."
+          actions={
+            <>
+              <Button variant="ghost" onClick={() => setDeleting(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                data-confirm-delete
+                onClick={() => {
+                  removeMember(member.id)
+                  navigate('..', { relative: 'path' })
+                }}
+              >
+                Delete
+              </Button>
+            </>
+          }
+        >
+          <p className={styles.confirmBody}>
+            <b>Deleting is only ever available here.</b> Somebody who appears on a note,
+            a dose or a signature cannot be deleted, because the records naming them
+            would outlive the deletion and the home could no longer say who did what.
+            Removing access is the act for them, and it is not the same act.
+          </p>
+        </Dialog>
+      ) : null}
+
+      {confirming ? (
+        <Dialog
+          open
+          onOpenChange={(next) => {
+            if (!next) setConfirming(false)
+          }}
+          title={`Remove ${member.ref.fullName}'s access?`}
+          description={`${member.ref.fullName} will no longer be able to open diGi-Care.`}
+          actions={
+            <>
+              <Button variant="ghost" onClick={() => setConfirming(false)}>
+                Keep access
+              </Button>
+              <Button
+                variant="primary"
+                data-confirm-remove
+                onClick={() =>
+                  change({
+                    kind: 'no_longer_has_access',
+                    on: todayIso(),
+                    reason: 'access removed from the team screen',
+                    by: currentUser,
+                  })
+                }
+              >
+                Remove access
+              </Button>
+            </>
+          }
+        >
+          {/* What does not change is the part somebody needs to be told. */}
+          <p className={styles.confirmBody} data-confirm-unchanged>
+            <b>Nothing on the record changes.</b> Every care note, dose and signature{' '}
+            {member.ref.fullName} has made stays exactly where it is, with their name on
+            it. Records outlive access: a record of who did something is not a
+            permission, and removing it would leave the home unable to say who gave a
+            dose.
+          </p>
+          <p className={styles.confirmBody}>
+            It will be recorded as {formatDate(todayIso())}, by {currentUser.fullName}.
+          </p>
+        </Dialog>
+      ) : null}
+    </div>
+  )
+}
+
+/** Today, as a date. A standing change is dated, not timed. */
+const todayIso = () =>
+  appNow().toISOString().slice(0, 10) as `${number}-${number}-${number}`

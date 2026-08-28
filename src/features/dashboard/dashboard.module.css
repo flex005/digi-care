@@ -1,0 +1,566 @@
+/**
+ * The Dashboard. Built to docs/compliance-dashboard.html.
+ *
+ * The reference's 34px, 13.5px, 12.5px, 11.5px and 11px steps each take the
+ * nearest on the closed type scale, and its 18px, 15px and 11px spacings the
+ * nearest on the 4px one (CLAUDE.md §4).
+ *
+ * **Nothing in this file uses a positive token.** Green is a reassurance and
+ * this screen exists to say what is left; a tile with nothing wrong takes the
+ * plain surface and an ink-700 figure.
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.pageSubtitle {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.loading {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* ---------------------------------------------------------------------------
+ * Rows 2 and 3 — the charts
+ * ------------------------------------------------------------------------ */
+
+.rowTwo,
+.rowThree {
+  display: grid;
+  gap: var(--space-16);
+  align-items: stretch;
+}
+
+.rowTwo {
+  grid-template-columns: 1.85fr 1fr;
+}
+
+.rowThree {
+  grid-template-columns: 1fr 1fr;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.panelHead {
+  padding: var(--space-16) var(--space-20) 0;
+}
+
+.panelTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.panelNote {
+  margin-top: var(--space-4);
+  max-width: 62ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.legend {
+  display: flex;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+  margin-top: var(--space-12);
+}
+
+.legendItem {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-semibold);
+}
+
+.swatchRecorded,
+.swatchGap,
+.swatchDueNow,
+.swatchDueSoon,
+.swatchNotDue {
+  flex: 0 0 auto;
+  width: var(--space-12);
+  height: var(--space-12);
+  border-radius: var(--radius-sm);
+}
+
+.swatchRecorded {
+  background: var(--purple-600);
+}
+
+.swatchGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-width: 1px;
+}
+
+.swatchDueNow {
+  background: var(--status-critical);
+}
+
+.swatchDueSoon {
+  background: var(--status-caution);
+}
+
+/* Not a success colour: it has not happened, so nobody has succeeded at it. */
+.swatchNotDue {
+  background: var(--border-strong);
+}
+
+.areaWrap {
+  padding: var(--space-8) var(--space-12) var(--space-16);
+}
+
+/* ---------------------------------------------------------------------------
+ * The donut
+ * ------------------------------------------------------------------------ */
+
+.donutWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-16) var(--space-20) var(--space-20);
+}
+
+.donutCentre {
+  position: relative;
+  width: 190px;
+  height: 190px;
+}
+
+/*
+ * Inset to the ring's hole, not to the ring.
+ *
+ * Centred on the whole 190px box, the second line of the label ran under the
+ * arc — and the line it hid was the denominator. A figure whose "of 162" is
+ * behind the graphic is a bare count, which is the one thing Rule 4 does not
+ * allow the chart to become while looking like it is obeying it.
+ *
+ * And flex column, not a grid: two children in a grid become two rows, the
+ * rows shared the container's height and centred the text inside each one, so
+ * the figure and its denominator were held apart by the layout rather than by
+ * any margin. Trimming margins could never have closed it.
+ */
+.donutMid {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  inset: var(--space-40);
+  text-align: center;
+}
+
+/*
+ * The figure and its denominator sit as one block: the value's own line box
+ * carried the gap between them, so trimming the margin alone did nothing.
+ */
+.donutValue {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-size);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.donutLabel {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+}
+
+.donutKey {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: 100%;
+  margin-top: var(--space-16);
+  list-style: none;
+}
+
+.donutKeyRow {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.donutKeyName {
+  color: var(--ink-700);
+}
+
+.donutKeyNote {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+}
+
+.donutKeyValue {
+  margin-left: auto;
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+ * Module bars
+ * ------------------------------------------------------------------------ */
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: var(--space-16) var(--space-20) var(--space-20);
+  list-style: none;
+}
+
+.barHead {
+  display: flex;
+  gap: var(--space-12);
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.barName {
+  color: var(--ink-700);
+  font-weight: var(--weight-semibold);
+}
+
+.barFigure {
+  color: var(--ink-900);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.barOf {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-medium);
+}
+
+.barTrack {
+  display: flex;
+  overflow: hidden;
+  height: var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--border-subtle);
+}
+
+.barRecorded,
+.barGap,
+.barFinding {
+  display: block;
+  height: 100%;
+}
+
+.barRecorded {
+  background: var(--purple-600);
+}
+
+.barGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border: 0;
+  border-radius: 0;
+}
+
+/* A recorded fact with an unwelcome answer, never the hatch. */
+.barFinding {
+  background: var(--status-critical);
+}
+
+/* ---------------------------------------------------------------------------
+ * Filters and paging on the late list
+ *
+ * Pills, because a pill means a filter in this product and an underline strip
+ * means navigation (CLAUDE.md §6). Same treatment as the omissions screen.
+ * ------------------------------------------------------------------------ */
+
+.filters {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  padding: var(--space-12) var(--space-24) 0;
+}
+
+.filterTab {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-surface);
+  color: var(--ink-500);
+  font-family: var(--font-family);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.filterTabActive {
+  border-color: var(--purple-600);
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+}
+
+.filterCount {
+  color: var(--ink-400);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.filterTabActive .filterCount {
+  color: var(--bg-surface);
+  opacity: 0.85;
+}
+
+.resultLine {
+  padding: var(--space-12) var(--space-24);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.pager {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.pagerButton {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--purple-600);
+  font-family: var(--font-family);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.pagerButton:disabled {
+  color: var(--ink-400);
+  cursor: default;
+}
+
+.pagerWhere {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+ * Rounds today
+ * ------------------------------------------------------------------------ */
+
+.roundRows {
+  padding: var(--space-8) 0;
+  list-style: none;
+}
+
+.roundRow {
+  display: grid;
+  gap: var(--space-12);
+  align-items: center;
+  padding: var(--space-8) var(--space-20);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.roundRows > li:first-child .roundRow {
+  border-top: 0;
+}
+
+.roundName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.roundNote {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.roundFigure {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.roundOf {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-medium);
+}
+
+/* ---------------------------------------------------------------------------
+ * Sections and rows
+ * ------------------------------------------------------------------------ */
+
+.sectionHead {
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sectionTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.sectionNote {
+  margin-top: var(--space-4);
+  max-width: 78ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.calmEmpty {
+  padding: var(--space-16) var(--space-24);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.rows {
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  gap: var(--space-16);
+  align-items: center;
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: 9rem minmax(0, 1fr) 15rem auto;
+}
+
+.rows li:first-child .row {
+  border-top: 0;
+}
+
+/* Time first, because the screen is ordered by when. */
+.when {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.whenLabel {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.whenDetail {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.rowTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.rowMeta {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.lateChip {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--status-critical);
+  border-radius: var(--radius-sm);
+  background: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+.lateLabel {
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+}
+
+.lateDetail {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.rowAction {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--purple-600);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}

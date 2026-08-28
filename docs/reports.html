@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Reports</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1250px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.sub{margin-top:4px;font-size:13px;color:var(--ink-500);max-width:80ch}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:16px}
+.viewNav{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+.viewNav button{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.viewNav button[aria-pressed="true"]{background:var(--purple-900);border-color:var(--purple-900);color:#fff}
+
+/* index */
+.grp{padding:16px 24px 6px;border-top:1px solid var(--border-subtle)}
+.grp:first-of-type{border-top:0}
+.grp h2{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.rep{display:grid;grid-template-columns:minmax(0,1fr) 15rem auto;gap:20px;align-items:center;
+  padding:14px 24px;border-top:1px solid var(--border-subtle)}
+.repName{font-size:15px;font-weight:600}
+.repAsk{font-size:12.5px;color:var(--ink-500);margin-top:3px;max-width:62ch;line-height:1.45}
+.thin{display:inline-flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700;border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.thin small{font-size:11px;font-weight:400;line-height:1.35}
+.ready{font-size:12px;color:var(--ink-500)}
+.ready b{color:var(--ink-700);font-weight:600}
+.btn{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.drill{display:inline-block;margin-top:3px;font-size:11px;font-weight:700;color:var(--purple-600)}
+
+/* report view */
+.finding{margin-top:20px;padding:20px 24px;border-radius:var(--r-lg);display:flex;gap:20px;
+  align-items:flex-start}
+.finding .n{font-size:36px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.finding .t{font-size:15px;font-weight:700}
+.finding .d{font-size:12.5px;margin-top:4px;line-height:1.55;max-width:78ch}
+.finding.bad{border:1px solid var(--critical);border-left-width:5px;background:var(--critical-tint);
+  color:var(--critical-ink)}
+.finding.thinf{border:1.5px dashed var(--unrecorded);border-left-width:5px;color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 24px;
+  border-bottom:1px solid var(--border-subtle)}
+select{padding:8px 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);font:inherit;
+  font-size:13px;background:var(--bg-surface);color:var(--ink-900)}
+.seg{display:flex;border:1px solid var(--border-strong);border-radius:var(--r-md);overflow:hidden}
+.seg button{padding:7px 14px;border:0;background:var(--bg-surface);font-size:13px;font-weight:600;
+  color:var(--ink-700)}
+.seg button[aria-pressed="true"]{background:var(--purple-600);color:#fff}
+.restated{padding:12px 24px;font-size:13px;color:var(--ink-500);border-bottom:1px solid var(--border-subtle);
+  line-height:1.55}
+.restated b{color:var(--ink-700);font-weight:600}
+
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px}
+thead th{text-align:left;padding:11px 24px;font-size:11px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-500);background:var(--bg-sunken);
+  border-bottom:1px solid var(--border-subtle);white-space:nowrap}
+thead th.num{text-align:right}
+tbody td{padding:12px 24px;border-bottom:1px solid var(--border-subtle);vertical-align:top}
+tbody td.num{text-align:right;font-weight:700}
+tbody tr.thinRow td{background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px);
+  color:var(--unrecorded-ink)}
+.rowName{font-weight:600}
+.rowSub{font-size:11.5px;color:var(--ink-500);margin-top:2px;font-weight:400}
+.delta{font-size:12px;font-weight:700;white-space:nowrap}
+.delta.up{color:var(--critical-ink)}
+.delta.down{color:var(--positive-ink)}
+.delta.flat{color:var(--ink-500)}
+.ieCell{display:inline-block;padding:5px 9px;border-radius:var(--r-sm);font-size:11px;font-weight:700;
+  border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink)}
+
+.staffNote{margin:16px 24px 0;padding:14px 18px;border-radius:var(--r-md);border:1px solid var(--purple-200);
+  border-left-width:4px;background:var(--purple-50);font-size:12.5px;color:var(--ink-700);line-height:1.6;
+  max-width:88ch}
+.staffNote b{color:var(--purple-600)}
+.noFile{margin:18px 24px;padding:15px 19px;border-radius:var(--r-md);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);font-size:13px;font-weight:700;line-height:1.55;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.noFile small{display:block;font-weight:400;margin-top:5px;max-width:82ch}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="viewNav">
+  <button aria-pressed="true" onclick="go('idx',this)">1 · Report index</button>
+  <button aria-pressed="false" onclick="go('rep',this)">2 · A report — omissions by drug</button>
+  <button aria-pressed="false" onclick="go('staff',this)">3 · A report — by staff member</button>
+</div>
+
+<div id="view"></div>
+
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>Eight reports, not fifteen</h3>
+  A screen whose only distinction is a name is a screen somebody has to learn for nothing. The seven that
+  would have been a compliance check with a table under it are drill-downs from that check instead —
+  which is also where a reader already is when the question occurs to them. The index says so where it
+  would otherwise list them.
+
+  <h3>Index</h3>
+  Grouped by the question the report serves, not alphabetically.
+  Row <code>minmax(0,1fr) 15rem auto</code>, gap <code>20px</code>, padding <code>14px 24px</code>.
+  Name <code>15px/600</code>, then what it answers at <code>12.5px</code> ink-500 max <code>62ch</code> —
+  <b>a report whose question cannot be stated in one line is a table looking for a purpose</b>.
+  <b>Reports whose data is too thin are marked before you open them</b>, hatched, saying how thin.
+  Opening a report to discover it cannot say anything is a wasted trip, and this screen is where that is
+  cheapest to prevent.
+
+  <h3>Report view — finding first, always</h3>
+  The finding renders above the filters and above the table, <code>20px 24px</code>, figure
+  <code>36px/800</code>. Where the data is too thin the finding <i>is</i> that, in the hatched treatment,
+  and <b>the table still renders beneath it</b> — refusing to render hides data somebody may still need,
+  and the finding above is what stops the table being read as a conclusion. Same relationship the
+  omissions banner has to the MAR grid: the finding states it, the table proves it.
+  <b>No ratings anywhere.</b> Figures and coverage here; judgement stays on the compliance panel. A green
+  rating on a report would reintroduce the reassurance the Dashboard refuses.
+
+  <h3>Filters and the restatement</h3>
+  Period first, then the cut, then the population. Beneath them, one line restating every figure below in
+  terms of all three — Rule 3c, applied to a whole screen rather than one claim.
+  Period comparison is a segmented control: this period, or this against the one before.
+
+  <h3>Table</h3>
+  Header <code>11px/700</code> uppercase on bg-surface-sunken. Body <code>12px 24px</code>, numerics
+  right-aligned at <code>700</code>.
+  <b>A row below the population floor renders hatched with Insufficient Evidence in its figure cell</b>,
+  not a percentage — and it stays in the table, because removing it would make the table look complete.
+  Change against the previous period is a figure with a direction word, never an arrow alone —
+  <code>12px/700</code>, critical when worse, positive when better, ink-500 when flat.
+
+  <h3>Per-staff reports carry a constraint the others do not</h3>
+  <b>Workload and coverage, never a league table.</b> Never sorted worst-first, always with the
+  denominator that makes it meaningful — 3 omissions against 41 rounds worked is a different fact from 3
+  against 4.
+  A note above the table saying plainly that a gap in a record is not necessarily a failure by whoever
+  was on shift: a missed dose can be a broken trolley, a short round, or a resident in hospital nobody
+  updated. This is the first screen in the build whose subject is a member of staff, and a figure about a
+  person that does not carry what it is out of is an accusation rather than a measurement.
+  Deactivated staff stay visible, marked, because records outlive access.
+
+  <h3>Export</h3>
+  <b>No download control at all</b>, as the inspection pack settled. A line saying what a real export
+  would contain — this report, this period, this filter, this many rows — so a manager can plan around
+  it. A button that produced nothing would be worse than its absence.
+</div>
+
+</div>
+
+<script>
+const GROUPS = [
+  { g:'Medication', reps:[
+    { n:'Omissions over a period', a:'Which drugs and which rounds go unrecorded, and whether it is getting better or worse.', ready:'1,219 doses in the last 30 days' },
+    { n:'Controlled drug reconciliation', a:'Every count in the period, and whether the balances held.', thin:'18 controlled drugs · 1 with a discrepancy', thinWhy:'too few counts in 30 days to support a rate' },
+  ]},
+  { g:'Safety', reps:[
+    { n:'Incidents by type and location', a:'Where incidents happen, what kind, and how this period compares with the last.', ready:'40 incidents in 90 days' },
+    { n:'Risk assessment and review coverage over time', a:'Whether the home is assessing and re-assessing, or falling behind.', ready:'252 expected assessments' },
+  ]},
+  { g:'The record itself', reps:[
+    { n:'Care note coverage by staff and shift', a:'Who is writing residents up, on which shifts, and where the gaps fall.', ready:'12,139 notes · 14 staff' },
+    { n:'Document expiry forecast', a:'What lapses in the next 90 days, and what has no expiry decision at all.', ready:'291 documents' },
+  ]},
+  { g:'The person', reps:[
+    { n:'Activity participation over a period', a:'Who is joining in, who is not, and who nobody has recorded either way.', ready:'7 sessions this week' },
+    { n:'Consent and capacity coverage', a:'Which consents have been sought, by whose authority, and with what capacity assessment behind them.', ready:'224 possible consents' },
+  ]},
+];
+
+function idx(){
+  return `<h1>Reports</h1>
+  <p class="sub">Eight reports, each answering something a queue or a compliance panel cannot: a figure
+    over a period, cut by something other than resident. Seven questions that would have been a
+    compliance check with a table under it are drill-downs from that check instead.</p>
+  <div class="card">
+    ${GROUPS.map(g => `<div class="grp"><h2>${g.g}</h2></div>
+      ${g.reps.map(r => `<div class="rep">
+        <div><div class="repName">${r.n}</div><div class="repAsk">${r.a}</div></div>
+        <div>${r.thin
+          ? `<span class="thin">Too thin to conclude<small>${r.thinWhy}</small></span>`
+          : `<span class="ready"><b>${r.ready}</b><br>in the current period</span>`}</div>
+        <div><button class="btn">Open</button></div>
+      </div>`).join('')}`).join('')}
+    <div class="grp"><h2>Drill-downs, not reports</h2></div>
+    <div class="rep">
+      <div><div class="repName">Seven further questions</div>
+        <div class="repAsk">Omission rate by resident · consents never sought · goals past their date ·
+          reviews never scheduled · documents with no expiry · unacknowledged incidents · care plan
+          domains never written. Each is a compliance check with a table under it, so each opens from
+          that check rather than having a screen of its own.</div>
+        <span class="drill">Open from Compliance &rarr;</span></div>
+      <div></div><div></div>
+    </div>
+  </div>`;
+}
+
+const DRUGS = [
+  { d:'Morphine sulfate oral solution', f:'10mg/5ml · controlled', due:420, om:11, prev:6, n:'up' },
+  { d:'Paracetamol', f:'500mg · as required', due:0, om:0, ie:true },
+  { d:'Furosemide', f:'20mg · oral', due:186, om:4, prev:5, n:'down' },
+  { d:'Amlodipine', f:'5mg · oral', due:210, om:3, prev:3, n:'flat' },
+  { d:'Levothyroxine', f:'75mcg · oral', due:180, om:2, prev:4, n:'down' },
+  { d:'Fentanyl patch', f:'25mcg/hr · controlled', due:31, om:0, prev:1, n:'down' },
+  { d:'Oxycodone MR', f:'10mg · controlled', due:6, om:0, ie:true },
+];
+
+function rep(){
+  return `<h1>Medication omissions</h1>
+  <p class="sub">Rosewood Court · by drug · last 30 days against the 30 before</p>
+
+  <div class="finding bad">
+    <div class="n">20</div>
+    <div><div class="t">doses with no record, of 1,219 due — 1.6%</div>
+      <div class="d">Up from 14 of 1,186 in the preceding 30 days. More than half of them are morphine
+        sulfate oral solution, which accounts for 11 of the 20 against 420 doses due.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="filters">
+      <div class="seg"><button aria-pressed="true">This period</button>
+        <button aria-pressed="true" style="background:var(--purple-600);color:#fff">Against the last</button></div>
+      <select><option selected>Last 30 days</option><option>Last 7 days</option><option>Last 90 days</option></select>
+      <select><option selected>By drug</option><option>By round</option><option>By day of week</option>
+        <option>By resident</option></select>
+      <select><option selected>All medications</option><option>Controlled drugs only</option></select>
+    </div>
+    <p class="restated">Every figure below is <b>doses with no record, of doses due, at Rosewood Court,
+      between 25/07/2026 and 23/08/2026</b>, compared with 25/06 to 24/07. A drug with fewer than 8 doses
+      due in the period cannot support a rate and says so rather than showing one.</p>
+
+    <table>
+      <thead><tr><th>Medication</th><th class="num">Doses due</th><th class="num">No record</th>
+        <th class="num">Rate</th><th class="num">Against last period</th></tr></thead>
+      <tbody>
+        ${DRUGS.map(d => d.ie
+          ? `<tr class="thinRow"><td><div class="rowName">${d.d}</div><div class="rowSub">${d.f}</div></td>
+              <td class="num">${d.due}</td><td class="num">${d.om}</td>
+              <td class="num"><span class="ieCell">Insufficient evidence</span></td>
+              <td class="num"><span class="ieCell">No comparison</span></td></tr>`
+          : `<tr><td><div class="rowName">${d.d}</div><div class="rowSub">${d.f}</div></td>
+              <td class="num">${d.due}</td><td class="num">${d.om}</td>
+              <td class="num">${((d.om/d.due)*100).toFixed(1)}%</td>
+              <td class="num"><span class="delta ${d.n}">${
+                d.n==='up' ? `worse — was ${d.prev}` : d.n==='down' ? `better — was ${d.prev}` : `unchanged — ${d.prev}`}</span></td></tr>`).join('')}
+      </tbody>
+    </table>
+
+    <div class="noFile">No file can be produced here.
+      <small>A real export would contain this table — medication omissions at Rosewood Court, by drug,
+        25/07/2026 to 23/08/2026 against the preceding period, 7 rows including 2 that cannot support a
+        rate. This build has no backend and no file storage, so there is no download control rather than
+        one that produces nothing.</small></div>
+  </div>`;
+}
+
+const STAFF = [
+  { s:'A. Okonkwo', r:'Registered manager', rounds:12, notes:284, res:26, gaps:1, dea:false },
+  { s:'C. Nwosu', r:'Senior carer', rounds:41, notes:612, res:28, gaps:3, dea:false },
+  { s:'K. Osei', r:'Care worker', rounds:38, notes:701, res:28, gaps:2, dea:false },
+  { s:'N. Eze', r:'Senior carer', rounds:36, notes:588, res:27, gaps:4, dea:false },
+  { s:'S. Patel', r:'Care worker', rounds:29, notes:497, res:24, gaps:2, dea:false },
+  { s:'T. Akinyemi', r:'Care worker', rounds:31, notes:530, res:26, gaps:1, dea:false },
+  { s:'F. Adebayo', r:'Care worker', rounds:4, notes:61, res:9, gaps:0, dea:true },
+];
+
+function staff(){
+  return `<h1>Care note coverage by staff</h1>
+  <p class="sub">Rosewood Court · last 30 days · workload and coverage</p>
+
+  <div class="finding thinf">
+    <div class="n">13</div>
+    <div><div class="t">of 14 staff have enough shifts in the period to say anything about</div>
+      <div class="d">One member of staff worked fewer than 8 rounds and their figures cannot support a
+        rate. They stay in the table, because removing them would make it look complete.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="staffNote"><b>This is workload and coverage, not a ranking.</b> A gap in a record is not
+      necessarily a failure by whoever was on shift — a missed dose can be a broken trolley, a short
+      round, or a resident in hospital nobody updated. The table is ordered by name, and it will not be
+      ordered by anything else.</div>
+
+    <div class="filters" style="border-top:1px solid var(--border-subtle);margin-top:16px">
+      <select><option selected>Last 30 days</option><option>Last 90 days</option></select>
+      <select><option selected>All staff, including deactivated</option><option>Currently active only</option></select>
+    </div>
+    <p class="restated">Every figure below is <b>over 30 days at Rosewood Court, for shifts this person
+      worked</b>. Rounds worked is the denominator for omissions; residents seen is the denominator for
+      notes.</p>
+
+    <table>
+      <thead><tr><th>Staff member</th><th class="num">Rounds worked</th><th class="num">Notes written</th>
+        <th class="num">Residents seen</th><th class="num">Doses with no record</th></tr></thead>
+      <tbody>
+        ${STAFF.map(s => s.rounds < 8
+          ? `<tr class="thinRow"><td><div class="rowName">${s.s}${s.dea ? ' (deactivated)' : ''}</div>
+              <div class="rowSub">${s.r}</div></td>
+              <td class="num">${s.rounds}</td><td class="num">${s.notes}</td><td class="num">${s.res}</td>
+              <td class="num"><span class="ieCell">Insufficient evidence</span></td></tr>`
+          : `<tr><td><div class="rowName">${s.s}</div><div class="rowSub">${s.r}</div></td>
+              <td class="num">${s.rounds}</td><td class="num">${s.notes}</td><td class="num">${s.res}</td>
+              <td class="num">${s.gaps} <span class="rowSub" style="display:inline">of ${s.rounds} rounds</span></td></tr>`).join('')}
+      </tbody>
+    </table>
+
+    <div class="noFile">No file can be produced here.
+      <small>A real export would contain this table — care note coverage by staff at Rosewood Court,
+        25/07/2026 to 23/08/2026, 7 rows including 1 below the population floor.</small></div>
+  </div>`;
+}
+
+let view='idx';
+function go(v,btn){
+  view=v;
+  document.querySelectorAll('.viewNav button').forEach(b=>b.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true'); render(); window.scrollTo(0,0);
+}
+function render(){
+  document.getElementById('view').innerHTML = view==='idx'?idx():view==='rep'?rep():staff();
+}
+render();
+</script>
+</body>
+</html>

@@ -1,8 +1,9 @@
 import type { CareNote } from '@/data/types'
 import { CARE_NOTE_CATEGORIES } from '@/data/types'
-import { Unrecorded } from '@/components/status'
+import { NeverWrittenUp } from '@/components/status'
 import { useSiteFormat } from '@/app/session/use-session'
 import styles from './residents.module.css'
+import { staffLabel } from '@/data/access/team-store'
 
 /**
  * The last care note. PRD §6.2.
@@ -18,7 +19,7 @@ export function LastNoteCell({ note }: { note: CareNote | 'none' }) {
   const format = useSiteFormat()
 
   if (note === 'none') {
-    return <Unrecorded label="No care note recorded" detail="not once, ever" />
+    return <NeverWrittenUp />
   }
 
   const category = CARE_NOTE_CATEGORIES.find((entry) => entry.id === note.category)
@@ -31,11 +32,7 @@ export function LastNoteCell({ note }: { note: CareNote | 'none' }) {
       <span className={styles.lastNoteMeta}>
         {category ? category.name : note.category} · {format.relative(note.recordedAt)}
       </span>
-      <span className={styles.lastNoteMeta}>
-        {note.recordedBy.isActive
-          ? note.recordedBy.displayName
-          : `${note.recordedBy.displayName} (deactivated)`}
-      </span>
+      <span className={styles.lastNoteMeta}>{staffLabel(note.recordedBy)}</span>
     </div>
   )
 }

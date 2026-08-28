@@ -13,9 +13,16 @@
  */
 
 import type { IsoDate, IsoDateTime } from '../types'
+import { GENERATED_AT } from './clock'
 
-/** The instant the whole fixture set is generated against. */
-export const NOW = new Date()
+/**
+ * The instant the whole fixture set is generated against.
+ *
+ * Read from `clock.ts`, which takes it from the URL where one is given. That
+ * is what makes a state existing only at certain hours — a dose inside its
+ * window — reachable at all in a build with no backend to ask.
+ */
+export const NOW = GENERATED_AT
 
 /**
  * Mulberry32 — small, fast, and stable across runs. The point is not

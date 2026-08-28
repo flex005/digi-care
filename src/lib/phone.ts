@@ -2,9 +2,9 @@
  * Dialable `tel:` hrefs.
  *
  * The display format and the dialable one are different strings and always
- * have been: "0161 999 6789" is what a person reads, `+441619996789` is what a
+ * have been: "0161 496 0789" is what a person reads, `+441614960789` is what a
  * handset dials. Putting the display string in the href — which every contact
- * link in this app did — produces `tel:0161 999 6789`, with spaces a URI is
+ * link in this app did — produces `tel:0161 496 0789`, with spaces a URI is
  * not supposed to carry, and no country code. Some dialers cope. Some strip
  * the spaces and dial a national number from a roaming phone, which fails
  * silently at the moment somebody is trying to reach a GP.

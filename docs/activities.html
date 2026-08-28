@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Activities</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+  --shadow-overlay:0 8px 32px rgba(30,0,89,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1400px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:16px}
+.viewNav{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+.viewNav button{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.viewNav button[aria-pressed="true"]{background:var(--purple-900);border-color:var(--purple-900);color:#fff}
+
+.head{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.controls{display:flex;gap:8px;align-items:center}
+.seg{display:flex;border:1px solid var(--border-strong);border-radius:var(--r-md);overflow:hidden}
+.seg button{padding:7px 14px;border:0;background:var(--bg-surface);font-size:13px;font-weight:600;
+  color:var(--ink-700)}
+.seg button[aria-pressed="true"]{background:var(--purple-600);color:#fff}
+.nav{padding:7px 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.btn{padding:9px 16px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.lead{margin-top:20px;padding:18px 22px;border-radius:var(--r-lg);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);display:flex;gap:16px;align-items:flex-start;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.lead .n{font-size:32px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.lead .t{font-size:14px;font-weight:700}
+.lead .d{font-size:12.5px;margin-top:3px;line-height:1.5;max-width:70ch}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border-subtle)}
+.day{background:var(--bg-surface);min-height:210px;padding:0 0 10px}
+.dayHead{padding:10px 12px 8px;border-bottom:1px solid var(--border-subtle)}
+.dayHead .d{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.dayHead .n{font-size:17px;font-weight:700;margin-top:1px}
+.day.today .dayHead .n{color:var(--purple-600)}
+.day.future{background:var(--bg-sunken)}
+.sess{display:block;width:100%;text-align:left;margin:8px 10px 0;padding:9px 11px;border-radius:var(--r-sm);
+  border:1px solid var(--border-subtle);background:var(--bg-surface);width:calc(100% - 20px)}
+.sess:hover{border-color:var(--purple-400)}
+.sess .t{font-size:12.5px;font-weight:700;line-height:1.3}
+.sess .m{font-size:11px;color:var(--ink-500);margin-top:3px}
+.sess .s{font-size:11px;font-weight:700;margin-top:6px}
+.sess.unrec{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.sess.unrec .m{color:var(--unrecorded-ink)}
+.sess.part{border-color:var(--caution)}
+.sess.part .s{color:var(--caution-ink)}
+.sess.done .s{color:var(--ink-500);font-weight:500}
+.sess.planned{border-style:dashed;border-color:var(--purple-200)}
+.sess.planned .s{color:var(--purple-600)}
+
+/* completion grid */
+.actHead{padding:18px 24px;border-bottom:1px solid var(--border-subtle)}
+.actHead h2{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.actHead .m{font-size:13px;color:var(--ink-500);margin-top:3px}
+.tally{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border-subtle)}
+.tal{background:var(--bg-surface);padding:14px 20px}
+.tal .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.tal .v{font-size:24px;font-weight:800;margin-top:2px;letter-spacing:-.02em}
+.tal .d{font-size:11.5px;color:var(--ink-500);margin-top:2px}
+.tal.gap{background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.tal.gap .v{color:var(--unrecorded-ink)}
+
+.arow{display:grid;grid-template-columns:16rem 20rem minmax(0,1fr);gap:20px;align-items:center;
+  padding:12px 24px;border-top:1px solid var(--border-subtle)}
+.arow:first-of-type{border-top:0}
+.arow.answered{background:var(--bg-sunken)}
+.who{display:flex;gap:11px;align-items:center;min-width:0}
+.av{width:36px;height:36px;flex:0 0 36px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:700;font-size:11.5px}
+.who .n{font-size:14px;font-weight:600;line-height:1.2}
+.who .r{font-size:11.5px;color:var(--ink-500);margin-top:1px}
+.ans{display:flex;gap:7px}
+.ansBtn{flex:1;padding:9px 8px;border:1.5px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:12.5px;font-weight:700;color:var(--ink-700)}
+.ansBtn:hover{border-color:var(--purple-400)}
+.ansBtn.y[aria-pressed="true"]{border-color:var(--positive);background:var(--positive-tint);color:var(--positive-ink)}
+.ansBtn.n[aria-pressed="true"]{border-color:var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+select{width:100%;padding:8px 10px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  font:inherit;font-size:12.5px;background:var(--bg-surface);color:var(--ink-900)}
+.pend{display:inline-block;padding:7px 11px;border-radius:var(--r-sm);font-size:11.5px;font-weight:600;
+  border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.joined{padding:12px 24px;border-top:1px solid var(--border-subtle);background:var(--info-tint)}
+.joined .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--info-ink);margin-bottom:8px}
+.foot{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:18px 24px}
+.foot .st{font-size:13px;color:var(--ink-700);max-width:70ch}
+.foot .st b{font-weight:700}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(30,0,89,.36);display:grid;place-items:end stretch;
+  z-index:60;pointer-events:none;opacity:0}
+.scrim.open{pointer-events:auto;opacity:1}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,92vw);background:var(--bg-surface);
+  box-shadow:var(--shadow-overlay);overflow:auto;padding:0}
+.dHead{padding:20px 24px;border-bottom:1px solid var(--border-subtle);display:flex;
+  justify-content:space-between;align-items:flex-start;gap:16px}
+.dHead h2{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.dHead .m{font-size:13px;color:var(--ink-500);margin-top:3px}
+.dSec{padding:18px 24px;border-bottom:1px solid var(--border-subtle)}
+.dSec > h3{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:10px}
+.inv{display:flex;gap:11px;align-items:center;padding:10px 0;border-top:1px solid var(--border-subtle)}
+.inv:first-of-type{border-top:0}
+.inv .n{font-size:13.5px;font-weight:600}
+.inv .p{font-size:11.5px;color:var(--ink-500);margin-top:2px;font-style:italic;max-width:44ch}
+.inv .none{margin-left:auto;flex:0 0 auto;padding:6px 10px;border-radius:var(--r-sm);font-size:11px;
+  font-weight:700;border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.prefLead{padding:14px 17px;border-radius:var(--r-md);border:1.5px dashed var(--unrecorded);
+  border-left-width:4px;color:var(--unrecorded-ink);font-size:12.5px;font-weight:600;line-height:1.5;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px);
+  margin-bottom:14px}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="viewNav">
+  <button aria-pressed="true" onclick="go('cal',this)">1 · Week calendar</button>
+  <button aria-pressed="false" onclick="go('grid',this)">2 · Recording who came</button>
+  <button aria-pressed="false" onclick="go('drawer',this)">3 · Plan drawer</button>
+</div>
+
+<div id="view"></div>
+
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>Week calendar</h3>
+  Seven equal columns, <code>1px</code> gap on border-subtle so the week reads as one grid.
+  Day minimum height <code>210px</code>; days in the future take bg-surface-sunken.
+  Day header <code>10px 12px 8px</code>, weekday <code>11px/700</code> uppercase ink-500, date
+  <code>17px/700</code>, today's date in purple-600.
+  Session block <code>9px 11px</code>, radius <code>8px</code>, <code>8px</code> below the previous.
+  Title <code>12.5px/700</code>, time and place <code>11px</code> ink-500, status line <code>11px/700</code>.
+  <b>Four session states, and only one takes the hatch.</b> A session that has happened with nothing
+  recorded is hatched — it is the lead finding. Partly recorded takes a caution border. Fully recorded
+  is a plain border with its status in ink-500, quiet. A future session takes a dashed purple-200
+  border: planned, not a gap.
+  The lead card counts sessions that happened and were never written up, with its denominator.
+
+  <h3>Range and arrangement both use the segmented control</h3>
+  Week/month and calendar/list are the same shape — one of a small set of mutually exclusive
+  presentations of the same data. §4.6a widens to say so rather than inventing a fourth shape.
+
+  <h3>Recording who came — the grid</h3>
+  Activity header names the session, its time and its place. Beneath it a four-cell tally:
+  invited, attended, did not attend, and <b>not recorded in the hatched cell</b>. Each carries its
+  denominator, and the denominator is the invitation list.
+  <b>An activity nobody wrote up renders 18 hatched rows, never "0 attended".</b> Zero attended says
+  nobody came; nothing recorded says nobody wrote it down.
+  Row <code>16rem 20rem minmax(0,1fr)</code>, gap <code>20px</code>, padding <code>12px 24px</code>.
+  <b>Every row carries its own resident identity</b> — avatar, preferred name, full name and room.
+  §2.4 applied per row: on a grid you do not pick the wrong person from a list, you slip a row, and
+  Doris is marked present while Beryl is marked absent. The identity is what stops that.
+  Two answer buttons, equal width, gap <code>7px</code>, <code>1.5px</code> border. Did not attend
+  reveals a reason select and cannot be saved without one.
+  An unanswered row shows the hatched pending chip. No row has a default.
+  <b>There is no "mark all attended".</b> One click asserting twelve facts nobody checked is the
+  handover "sign for everybody" failure with twelve people in it.
+  Somebody who joined without being invited is recorded in their own section beneath, on the info tint,
+  and is not added to the invitation list — that would rewrite the plan to say they were always
+  expected. Three facts, all true: 12 of 18 invited attended, 4 not recorded, 2 joined uninvited.
+
+  <h3>Plan drawer</h3>
+  <code>min(560px,92vw)</code>, right-anchored, full height, overlay shadow.
+  Header <code>20px 24px</code>, title <code>20px/700</code>.
+  Sections <code>18px 24px</code> with <code>11px/700</code> uppercase headings.
+  Invitation list: each row carries the resident and, beneath, <b>what they have said they like — read
+  from the care plan's social and emotional wellbeing domain, never duplicated into a new field</b>.
+  Where that domain is unwritten the row shows the hatched "never asked what they like", because an
+  unwritten domain <i>is</i> nobody having asked, and the drawer points at the screen that fixes it.
+  A lead note above the list counts how many of the invited have never been asked.
+</div>
+
+</div>
+
+<script>
+const DAYS = [
+  { d:'Mon', n:'17', past:true, s:[
+    { t:'Chair exercises', m:'10:30 · Main lounge', st:'done', sl:'14 of 16 recorded · 12 attended' },
+  ]},
+  { d:'Tue', n:'18', past:true, s:[
+    { t:'Knitting group', m:'14:00 · Craft room', st:'unrec', sl:'Nothing recorded · 12 invited' },
+    { t:'Film afternoon', m:'15:30 · Main lounge', st:'done', sl:'All 22 recorded · 18 attended' },
+  ]},
+  { d:'Wed', n:'19', past:true, s:[
+    { t:'Gardening club', m:'11:00 · Garden', st:'part', sl:'9 of 14 recorded' },
+  ]},
+  { d:'Thu', n:'20', past:true, s:[
+    { t:'Music and memories', m:'14:30 · Main lounge', st:'unrec', sl:'Nothing recorded · 18 invited' },
+    { t:'Hairdresser', m:'09:30 · Salon', st:'done', sl:'All 6 recorded · 6 attended' },
+  ]},
+  { d:'Fri', n:'21', past:true, s:[
+    { t:'Quiz', m:'14:00 · Dining room', st:'unrec', sl:'Nothing recorded · 20 invited' },
+  ]},
+  { d:'Sat', n:'22', past:true, s:[
+    { t:'Church service', m:'10:00 · Quiet lounge', st:'done', sl:'All 9 recorded · 7 attended' },
+  ]},
+  { d:'Sun', n:'23', past:false, s:[
+    { t:'Family visiting tea', m:'15:00 · Main lounge', st:'planned', sl:'Planned · 24 invited' },
+  ]},
+];
+
+function cal(){
+  return `<div class="head">
+    <h1>Activities</h1>
+    <div class="controls">
+      <button class="nav">&larr;</button>
+      <div class="seg"><button aria-pressed="true">Week</button><button>Month</button></div>
+      <button class="nav">&rarr;</button>
+      <div class="seg" style="margin-left:8px"><button aria-pressed="true">Calendar</button><button>List</button></div>
+      <button class="btn primary" style="margin-left:8px">Plan an activity</button>
+    </div>
+  </div>
+
+  <div class="lead"><div class="n">3</div>
+    <div><div class="t">sessions happened and nobody recorded who came</div>
+      <div class="d">Of 7 sessions at Rosewood Court this week. 50 residents were invited to them
+        between them, and there is no record of whether any of them came.</div></div></div>
+
+  <div class="card"><div class="cal">
+    ${DAYS.map(day => `<div class="day ${day.past ? '' : 'future'} ${day.n === '23' ? 'today' : ''}">
+      <div class="dayHead"><div class="d">${day.d}</div><div class="n">${day.n}</div></div>
+      ${day.s.map(s => `<button class="sess ${s.st}">
+        <span class="t">${s.t}</span><span class="m">${s.m}</span><span class="s">${s.sl}</span>
+      </button>`).join('')}
+    </div>`).join('')}
+  </div></div>`;
+}
+
+const PEOPLE = [
+  { n:'Grace', f:'Grace Adeyemi', r:'302', a:'y' },
+  { n:'Beryl', f:'Beryl Hutchinson', r:'214', a:'y' },
+  { n:'Doris', f:'Doris Kavanagh', r:'311', a:'n', why:'Declined — said she was tired' },
+  { n:'Emmanuel', f:'Emmanuel Okafor', r:'14', a:null },
+  { n:'Arthur', f:'Arthur Pemberton', r:'315', a:null },
+  { n:'Ada', f:'Ada Nwachukwu', r:'109', a:'y' },
+];
+
+function grid(){
+  const rec = PEOPLE.filter(p => p.a).length;
+  return `<h1>Knitting group</h1>
+  <div class="card">
+    <div class="actHead"><h2>Knitting group</h2>
+      <div class="m">Tuesday 18/08/2026, 14:00 · Craft room · run by K. Osei</div></div>
+    <div class="tally">
+      <div class="tal"><div class="k">Invited</div><div class="v">6</div>
+        <div class="d">the denominator for everything here</div></div>
+      <div class="tal"><div class="k">Attended</div><div class="v">3</div><div class="d">of 6 invited</div></div>
+      <div class="tal"><div class="k">Did not attend</div><div class="v">1</div>
+        <div class="d">recorded, with a reason</div></div>
+      <div class="tal gap"><div class="k">Not recorded</div><div class="v">2</div>
+        <div class="d">nobody said whether they came</div></div>
+    </div>
+
+    ${PEOPLE.map((p,i) => `<div class="arow ${p.a ? 'answered' : ''}">
+      <div class="who"><span class="av">${p.f.split(' ').map(w=>w[0]).join('')}</span>
+        <div><div class="n">${p.n}</div><div class="r">${p.f} · Room ${p.r}</div></div></div>
+      <div class="ans">
+        <button class="ansBtn y" aria-pressed="${p.a==='y'}">Came</button>
+        <button class="ansBtn n" aria-pressed="${p.a==='n'}">Did not</button>
+      </div>
+      <div>${p.a === 'n'
+        ? `<select><option selected>Declined — said she was tired</option><option>Unwell</option>
+             <option>Off site</option><option>Asleep</option><option>Other — say why</option></select>`
+        : p.a === 'y' ? '' : '<span class="pend">Nobody has said whether they came</span>'}</div>
+    </div>`).join('')}
+
+    <div class="joined">
+      <div class="k">Joined without being invited</div>
+      <div class="who"><span class="av">WM</span>
+        <div><div class="n">Wilfred</div><div class="r">Wilfred Merrivale · Room 118 · came in from the
+          lounge and stayed</div></div></div>
+    </div>
+
+    <div class="foot">
+      <p class="st"><b>Waiting on 2 of 6:</b> Emmanuel Okafor · Arthur Pemberton.<br>
+        There is no "mark all attended" — one click asserting six facts nobody checked is not a record.</p>
+      <button class="btn primary" disabled>Record attendance</button>
+    </div>
+  </div>`;
+}
+
+const INV = [
+  { n:'Grace Adeyemi', r:'302', p:'“I made the blanket on my bed at the knitting group.”' },
+  { n:'Beryl Hutchinson', r:'214', p:'“I like anything with other people in it.”' },
+  { n:'Doris Kavanagh', r:'311', p:null },
+  { n:'Emmanuel Okafor', r:'14', p:null },
+  { n:'Arthur Pemberton', r:'315', p:'“I’d rather read than sit in a group.”' },
+  { n:'Ada Nwachukwu', r:'109', p:null },
+];
+
+function drawer(){
+  const unasked = INV.filter(i => !i.p).length;
+  return `<h1>Activities</h1>
+  <p style="margin-top:6px;font-size:13px;color:var(--ink-500)">The drawer, shown inline for review.</p>
+  <div class="card" style="max-width:560px">
+    <div class="dHead">
+      <div><h2>Knitting group</h2>
+        <div class="m">Tuesday 18/08/2026, 14:00–15:30 · Craft room</div></div>
+      <button class="btn">Close</button>
+    </div>
+
+    <div class="dSec"><h3>Run by</h3>
+      <div style="font-size:14px">K. Osei · recorded as planner</div></div>
+
+    <div class="dSec"><h3>Invited — 6 residents</h3>
+      <div class="prefLead">${unasked} of 6 invited have never been asked what they like doing.
+        Their social and emotional wellbeing care plan domain has not been written, which is what that
+        question lives in — open the domain to ask them.</div>
+      ${INV.map(i => `<div class="inv">
+        <span class="av">${i.n.split(' ').map(w=>w[0]).join('')}</span>
+        <div><div class="n">${i.n}</div>
+          ${i.p ? `<div class="p">${i.p}</div>` : ''}</div>
+        ${i.p ? '' : '<span class="none">Never asked what they like</span>'}
+      </div>`).join('')}
+    </div>
+
+    <div class="dSec"><h3>What it is</h3>
+      <div style="font-size:14px;line-height:1.6;color:var(--ink-700)">Knitting and crochet in the craft
+        room. Wool and needles provided. Tea at 15:00.</div></div>
+
+    <div style="padding:18px 24px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn">Save as planned</button>
+      <button class="btn primary">Record who came</button>
+    </div>
+  </div>`;
+}
+
+let view='cal';
+function go(v,btn){
+  view=v;
+  document.querySelectorAll('.viewNav button').forEach(b=>b.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true'); render(); window.scrollTo(0,0);
+}
+function render(){
+  document.getElementById('view').innerHTML =
+    view==='cal'?cal():view==='grid'?grid():drawer();
+}
+render();
+</script>
+</body>
+</html>

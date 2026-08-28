@@ -1,0 +1,591 @@
+/**
+ * Consent. Built to docs/consent.html.
+ *
+ * The reference's 14.5px, 13.5px, 12.5px, 11.5px, 18px and 20px steps each
+ * take the nearest on the closed scale, and its 15px, 22px, 14px and 5px
+ * spacings the nearest on the 4px one (CLAUDE.md §4).
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.screenTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-bold);
+}
+
+.loading {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.errorTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.errorBody {
+  margin: var(--space-4) 0 var(--space-12);
+  max-width: 62ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.backLink {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  align-self: flex-start;
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+/* ---- The lead ---- */
+
+.lead {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-16);
+  align-items: flex-start;
+  padding: var(--space-16) var(--space-20);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.leadFigure {
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: -0.02em;
+}
+
+.leadBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.leadTitle {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.leadDetail {
+  max-width: 64ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* ---- One consent type ---- */
+
+.consentList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.consentRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 13rem 17rem 10rem;
+  gap: var(--space-20);
+  align-items: start;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.consentList > li:first-child .consentRow {
+  border-top: 0;
+}
+
+.typeName {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+/*
+ * What consenting to this actually permits, in plain English.
+ *
+ * **A consent nobody can explain is not informed.** This line is the
+ * difference between a record of consent and a record of a signature.
+ */
+.typeMeans {
+  max-width: 58ch;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* ---- The authority column ---- */
+
+.authority {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.authorityKey {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.authorityWho {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+/* The assessment that authorised it, named beneath. */
+.authorityCapacity {
+  max-width: 40ch;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* ---- What a withdrawal did not undo ---- */
+
+.remains {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  padding: var(--space-16) var(--space-20);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.remainsTitle {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-extrabold);
+}
+
+.remainsIntro {
+  max-width: 72ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.remainsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.effect {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-16);
+  align-items: center;
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+}
+
+.effectName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.effectWhy {
+  max-width: 68ch;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.effectCount {
+  color: var(--ink-900);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-extrabold);
+}
+
+/* ---- The gate ---- */
+
+.gateNote {
+  max-width: 82ch;
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--purple-200);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--purple-50);
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.gateNote b {
+  color: var(--purple-600);
+  font-weight: var(--weight-bold);
+}
+
+.section {
+  padding: var(--space-20) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.question {
+  max-width: 72ch;
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.questionHint {
+  max-width: 72ch;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: var(--space-16);
+}
+
+.option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-4) var(--space-12);
+  align-items: center;
+  padding: var(--space-12) var(--space-16);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.optionSelected {
+  border-color: var(--purple-600);
+  background-color: var(--purple-50);
+}
+
+.optionMark {
+  display: grid;
+  grid-row: span 2;
+  place-items: center;
+  width: var(--space-20);
+  height: var(--space-20);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-surface);
+  color: transparent;
+}
+
+.optionMark[data-selected] {
+  border-color: var(--purple-600);
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+}
+
+.optionTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.optionHint {
+  max-width: 68ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.unanswered {
+  display: inline-block;
+  margin-top: var(--space-12);
+}
+
+/* Both stages, both required. */
+.stage {
+  margin-top: var(--space-16);
+  padding: var(--space-16) var(--space-20);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface-sunken);
+}
+
+.stageNumber {
+  color: var(--purple-600);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stageQuestion {
+  margin-top: var(--space-4);
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.stageHint {
+  max-width: 72ch;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  margin-top: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  resize: vertical;
+}
+
+.textarea::placeholder {
+  color: var(--ink-400);
+  font-style: italic;
+}
+
+/* ---- The scope selector ---- */
+
+.scope {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  margin-top: var(--space-12);
+}
+
+.scopeChip {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-12);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-surface);
+  color: var(--ink-700);
+  font-family: var(--font-family);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.scopeChipOn {
+  border-color: var(--purple-600);
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+}
+
+.scopeChipFixed {
+  border-color: var(--purple-600);
+  background-color: var(--purple-50);
+  color: var(--purple-600);
+  cursor: default;
+}
+
+.foot {
+  display: flex;
+  gap: var(--space-20);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.footState {
+  max-width: 68ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.footState strong {
+  font-weight: var(--weight-bold);
+}
+
+/* ---- The dashboard ---- */
+
+.filters {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  align-items: center;
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.filterPill {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-surface);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.filterPillActive {
+  border-color: var(--purple-900);
+  background-color: var(--purple-900);
+  color: var(--bg-surface);
+}
+
+.sortLine {
+  max-width: 82ch;
+  padding: var(--space-12) var(--space-24);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.settledNote {
+  padding: var(--space-20) var(--space-24);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.queueRow {
+  display: grid;
+
+  /*
+   * Flexible content tracks, so the row spans the card.
+   *
+   * Every track was a fixed rem width, which made the row as wide as its
+   * columns and no wider: on a 1,990px card the content stopped at about 800px
+   * and the last third was dead. An earlier pass fixed the *action* by giving
+   * it a named width, which was the wrong end of the problem, and the comment
+   * that used to sit here described a middle 1fr absorbing all the slack and
+   * stranding the chip. Both readings were about where the slack went; there
+   * should not be that much slack. Each column now has a floor and a share of
+   * the width, and the action sits at the right edge of a row that reaches it.
+   */
+  grid-template-columns:
+    minmax(11rem, 1fr) minmax(14rem, 1.4fr) minmax(12rem, 1.1fr)
+    10rem;
+  gap: var(--space-20);
+  align-items: center;
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.rowWho {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.rowName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.rowMeta {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.action,
+.actionPrimary {
+  /*
+   * Fills the column it sits in rather than hugging its label. The track was
+   * `auto`, which sized the control to the word "Open" and left the rest of a
+   * wide row empty between the last column and the edge.
+   */
+  width: 100%;
+  justify-content: center;
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-self: start;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.actionPrimary {
+  border-color: var(--purple-600);
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+}
+
+.action:hover,
+.actionPrimary:hover {
+  text-decoration: underline;
+}

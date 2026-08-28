@@ -1,3 +1,4 @@
+import { now as appNow } from '@/data/fixtures/clock'
 /**
  * Read a promise-shaped fixture function into an AsyncResource.
  *
@@ -11,7 +12,7 @@ import type { AsyncResource } from './resource'
 import type { IsoDateTime } from '../types'
 
 function nowIso(): IsoDateTime {
-  return new Date().toISOString() as IsoDateTime
+  return appNow().toISOString() as IsoDateTime
 }
 
 export function useResource<T>(

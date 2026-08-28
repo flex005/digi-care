@@ -1,0 +1,573 @@
+/**
+ * Documents. Built to docs/documents.html.
+ *
+ * The reference's 13.5px, 12.5px, 11.5px, 14px, 15px and 31px steps each take
+ * the nearest on the closed type scale, and its 11px, 13px, 15px, 17px, 18px,
+ * 22px and 26px spacings the nearest on the 4px one (CLAUDE.md §4).
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.pageHead {
+  display: flex;
+  gap: var(--space-20);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.pageSubtitle {
+  margin-top: var(--space-4);
+  max-width: 74ch;
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.pageActions {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+.tabActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.loading {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.queueLink {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * The three findings — 1.3fr 1fr 1fr, and never summed.
+ * ------------------------------------------------------------------------ */
+
+.findings {
+  display: grid;
+  gap: var(--space-16);
+  grid-template-columns: 1.3fr 1fr 1fr;
+}
+
+.finding,
+.findingHatched {
+  display: flex;
+  gap: var(--space-16);
+  align-items: flex-start;
+  padding: var(--space-16) var(--space-20);
+  border-radius: var(--radius-lg);
+}
+
+.finding[data-finding='expired'] {
+  border: 1px solid var(--status-critical);
+  border-left-width: 5px;
+  background: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+.finding[data-finding='expiring'] {
+  border: 1px solid var(--status-caution);
+  border-left-width: 5px;
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+/* The third is the absence of the fact the other two are made of, so it takes
+   the hatch — composed from the single definition, never redrawn here. */
+.findingHatched {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-left-width: 5px;
+}
+
+.findingFigure {
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.findingTitle {
+  display: block;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.findingDetail {
+  display: block;
+  margin-top: var(--space-4);
+  max-width: 52ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* ---------------------------------------------------------------------------
+ * Categories and rows
+ * ------------------------------------------------------------------------ */
+
+.category {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.category:first-of-type {
+  border-top: 0;
+}
+
+.categoryHead {
+  display: flex;
+  gap: var(--space-12);
+  align-items: baseline;
+  padding: var(--space-16) var(--space-24) var(--space-8);
+}
+
+.categoryTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.categoryCount {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.categoryEmpty {
+  margin: 0 var(--space-24) var(--space-16);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.categoryGap {
+  margin: 0 var(--space-24) var(--space-16);
+}
+
+.rows {
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  gap: var(--space-20);
+  align-items: center;
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: minmax(0, 1fr) 13rem 13rem auto;
+}
+
+.rowTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.rowMeta {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.fileFacts {
+  color: var(--ink-500);
+}
+
+.rowFiled {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.rowActionDisabled {
+  color: var(--ink-400);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+ * Expiry chips — a finding is a chip, a settled fact is plain text
+ * ------------------------------------------------------------------------ */
+
+.expiry {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.expiry[data-expiry='expired'] {
+  border: 1px solid var(--status-critical);
+  background: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+.expiry[data-expiry='expiring'] {
+  border: 1px solid var(--status-caution);
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+/* Recorded and unremarkable renders quietly — no fill, no border. */
+.expiryQuiet {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.expiryLabel {
+  font-weight: var(--weight-semibold);
+}
+
+.expiryQuiet .expiryLabel {
+  font-weight: var(--weight-medium);
+}
+
+.expiryDetail {
+  color: inherit;
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-regular);
+}
+
+.expiryQuiet .expiryDetail {
+  color: var(--ink-500);
+}
+
+/* ---------------------------------------------------------------------------
+ * Organisation library
+ * ------------------------------------------------------------------------ */
+
+.coverageNote {
+  max-width: 74ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.organisationRows {
+  list-style: none;
+}
+
+.organisationRow {
+  display: grid;
+  gap: var(--space-16);
+  align-items: center;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: minmax(0, 1fr) 8rem 8rem 11rem 14rem;
+}
+
+.organisationRows li:first-child .organisationRow {
+  border-top: 0;
+}
+
+.orgCount {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.orgCount [data-numeric] {
+  color: var(--ink-900);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.orgCount[data-any='true'][data-org-count='expired'] [data-numeric] {
+  color: var(--status-critical-ink);
+}
+
+.orgCount[data-any='true'][data-org-count='expiring'] [data-numeric] {
+  color: var(--status-caution-ink);
+}
+
+/* ---------------------------------------------------------------------------
+ * Expiry queue
+ * ------------------------------------------------------------------------ */
+
+.filters {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.filterPill {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+}
+
+.filterPill[aria-pressed='true'] {
+  border-color: var(--purple-900);
+  background: var(--purple-900);
+  color: var(--bg-surface);
+}
+
+.filterClaim {
+  max-width: 78ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.queueRow {
+  display: grid;
+  gap: var(--space-20);
+  align-items: center;
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: minmax(0, 1fr) 16rem 14rem;
+}
+
+.rows li:first-child .queueRow {
+  border-top: 0;
+}
+
+.queueSubject {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.queueSubject a {
+  color: var(--purple-600);
+}
+
+/* ---------------------------------------------------------------------------
+ * Upload drawer
+ * ------------------------------------------------------------------------ */
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  max-width: 35rem;
+}
+
+.drawerSection {
+  padding: var(--space-16) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.drawerHeading {
+  margin-bottom: var(--space-8);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.subjectLocked {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.subjectLockNote {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-regular);
+}
+
+.field {
+  display: block;
+  margin-top: var(--space-12);
+}
+
+.fieldLabel {
+  display: block;
+  margin-bottom: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.field select,
+.field input {
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.choice {
+  display: flex;
+  gap: var(--space-8);
+  align-items: flex-start;
+  padding: var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.choice:has(input:checked) {
+  border-color: var(--purple-600);
+  background: var(--purple-50);
+}
+
+.choiceHint {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-regular);
+}
+
+.choiceNote {
+  margin-top: var(--space-8);
+  max-width: 62ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.fileChoice {
+  padding: var(--space-12);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-semibold);
+}
+
+.fileChoice[aria-pressed='true'] {
+  border-style: solid;
+  border-color: var(--purple-600);
+  background: var(--purple-50);
+  color: var(--purple-600);
+}
+
+/* Said where the file is chosen, not afterwards in a toast. */
+.notStored {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  margin-top: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  max-width: 62ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.drawerFoot {
+  display: flex;
+  gap: var(--space-20);
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-16);
+}
+
+.waiting {
+  max-width: 52ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+/* A document whose metadata is real opens; the disabled twin above says when
+   one does not, and they must not look alike. */
+.rowAction {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-self: stretch;
+  justify-content: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--purple-600);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}

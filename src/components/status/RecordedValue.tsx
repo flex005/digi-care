@@ -3,6 +3,7 @@ import { assertNever } from '@/lib/assert-never'
 import { useSiteFormat } from '@/app/session/use-session'
 import { StatusPill } from './StatusPill'
 import { Unrecorded } from './Unrecorded'
+import { staffLabel } from '@/data/access/team-store'
 
 /**
  * The general shape, for any clinical value without a bespoke union.
@@ -49,11 +50,7 @@ export function RecordedValue<T>({
         <StatusPill
           tone={tone}
           label={render(record.value)}
-          detail={format.attribution(
-            record.recordedBy.displayName,
-            record.recordedAt,
-            record.recordedBy.isActive,
-          )}
+          detail={format.attribution(staffLabel(record.recordedBy), record.recordedAt)}
         />
       )
 

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — MAR grid reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+  --shadow-overlay:0 8px 32px rgba(30,0,89,.16);
+  --cell:34px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+body.grey{filter:grayscale(1)}
+.wrap{max-width:1400px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.lede{margin-top:4px;font-size:13px;color:var(--ink-500)}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:18px}
+.hd{padding:16px 22px;border-bottom:1px solid var(--border-subtle);display:flex;gap:16px;
+  align-items:center;justify-content:space-between;flex-wrap:wrap}
+.hd h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
+
+/* subject strip */
+.subj{display:flex;gap:14px;align-items:center;padding:14px 22px}
+.av{width:42px;height:42px;flex:0 0 42px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:700;font-size:13px}
+.subj .nm{font-size:17px;font-weight:700;line-height:1.2}
+.subj .meta{font-size:12px;color:var(--ink-500);margin-top:2px}
+.allergy{margin-left:auto;display:flex;gap:8px;align-items:center;padding:7px 13px;border-radius:var(--r-sm);
+  border:1px solid var(--critical);border-left-width:4px;background:var(--critical-tint);
+  color:var(--critical-ink);font-size:12px;font-weight:700}
+.allergy small{font-weight:400}
+
+/* omissions banner — the fact the screen exists for */
+.omBanner{display:flex;gap:18px;align-items:center;padding:16px 22px;border-radius:var(--r-lg);
+  border:1.5px dashed var(--unrecorded);border-left-width:5px;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px);
+  margin-top:18px}
+.omBanner .n{font-size:30px;font-weight:800;color:var(--unrecorded-ink);line-height:1;letter-spacing:-.02em}
+.omBanner .t{font-size:14px;font-weight:700;color:var(--unrecorded-ink)}
+.omBanner .d{font-size:12.5px;color:var(--unrecorded-ink);margin-top:2px;max-width:72ch}
+.omBanner .btn{margin-left:auto}
+.btn{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn:hover{border-color:var(--purple-400);background:var(--purple-50)}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+
+/* range control */
+.range{display:flex;gap:6px;align-items:center}
+.seg{display:flex;border:1px solid var(--border-strong);border-radius:var(--r-md);overflow:hidden}
+.seg button{padding:6px 13px;border:0;background:var(--bg-surface);font-size:13px;font-weight:600;
+  color:var(--ink-700)}
+.seg button[aria-pressed="true"]{background:var(--purple-600);color:#fff}
+.nav{padding:6px 11px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+
+/* legend — permanent, never a tooltip */
+.legend{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;padding:14px 22px;
+  border-bottom:1px solid var(--border-subtle);background:var(--bg-sunken)}
+.lg{display:flex;gap:9px;align-items:flex-start;font-size:12px;color:var(--ink-700);max-width:210px}
+.lg b{display:block;font-size:12px;font-weight:700;color:var(--ink-900)}
+.lg span{color:var(--ink-500);font-size:11.5px;line-height:1.35}
+
+/* ============ the grid ============ */
+.gridWrap{overflow:auto;max-height:640px}
+table{border-collapse:separate;border-spacing:0;font-size:12px}
+th,td{padding:0;margin:0}
+thead th{position:sticky;top:0;z-index:3;background:var(--bg-surface);
+  border-bottom:1px solid var(--border-strong)}
+thead tr:first-child th{top:0}
+thead tr:nth-child(2) th{top:30px}
+.dayHead{font-size:11px;font-weight:700;color:var(--ink-700);padding:6px 0 5px;
+  border-left:2px solid var(--border-strong);white-space:nowrap}
+.dayHead small{display:block;font-weight:500;color:var(--ink-500);font-size:10px}
+.roundHead{width:var(--cell);min-width:var(--cell);font-size:10px;font-weight:600;color:var(--ink-500);
+  padding:4px 0 6px;text-align:center}
+.roundHead.first{border-left:2px solid var(--border-strong)}
+.medHead{position:sticky;left:0;z-index:5;background:var(--bg-surface);width:250px;min-width:250px;
+  text-align:left;padding:8px 14px;border-right:2px solid var(--border-strong);font-size:11px;
+  font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-500)}
+thead .medHead{z-index:6}
+.medCell{position:sticky;left:0;z-index:2;background:var(--bg-surface);padding:9px 14px;
+  border-right:2px solid var(--border-strong);border-bottom:1px solid var(--border-subtle);
+  text-align:left;vertical-align:middle}
+.medName{font-size:13px;font-weight:600;line-height:1.25}
+.medDose{font-size:11px;color:var(--ink-500);margin-top:1px}
+.cdTag{display:inline-block;margin-top:3px;padding:0 6px;border-radius:var(--r-pill);
+  background:var(--purple-50);color:var(--purple-600);font-size:10px;font-weight:700}
+tbody td.c{border-bottom:1px solid var(--border-subtle);text-align:center;vertical-align:middle}
+tbody td.c.first{border-left:2px solid var(--border-strong)}
+
+/* ---- the five states ---- */
+.cell{width:calc(var(--cell) - 5px);height:calc(var(--cell) - 5px);margin:2px auto;display:grid;
+  place-items:center;border-radius:5px;position:relative;background:none;padding:0}
+.cell svg{width:14px;height:14px}
+
+/* 1. not due — nothing is scheduled. The only genuinely empty cell, and it is
+      empty because there is nothing to record, not because nobody recorded. */
+.notDue{border:1px solid var(--border-subtle);background:var(--bg-sunken)}
+
+/* 2. due — window open, nobody has acted yet. Open ring: unfinished but not late. */
+.due{border:1.5px solid var(--info);background:var(--info-tint);color:var(--info-ink)}
+
+/* 3. given — recorded and complete. Solid fill, solid border, closed glyph. */
+.given{border:1px solid var(--positive);background:var(--positive-tint);color:var(--positive-ink)}
+
+/* 4. not given — ALSO recorded and complete. Settled, closed, solid — it is a
+      clinical decision somebody signed, not a gap. Differs from given by glyph
+      shape, not by tint alone, so it survives greyscale. */
+.notGiven{border:1px solid var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+
+/* 5. omitted — nobody recorded anything and the window has closed. The only
+      patterned cell in the grid, so it is the only one that survives
+      desaturation by construction. Dashed, open, no glyph: an unfinished loop. */
+.omitted{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 5px,transparent 5px 10px)}
+.omitted.escalated{border-color:var(--critical);color:var(--critical-ink)}
+.omitted::after{content:'';position:absolute;inset:auto 3px 3px auto;width:5px;height:5px;
+  border-radius:50%;background:currentColor;display:none}
+.omitted.escalated::after{display:block}
+
+/* witness gap — Rule 3a: given AND missing its second signature is two facts */
+.given.noWitness{border-bottom:3px dashed var(--unrecorded)}
+
+.cell:hover{outline:2px solid var(--purple-600);outline-offset:1px}
+
+/* row totals */
+.tot{position:sticky;right:0;background:var(--bg-surface);border-left:2px solid var(--border-strong);
+  border-bottom:1px solid var(--border-subtle);padding:0 12px;font-size:11px;white-space:nowrap;
+  text-align:left;min-width:120px}
+.tot b{font-weight:700}
+.tot .bad{color:var(--unrecorded-ink);font-weight:700}
+thead .tot{z-index:4}
+
+/* detail panel */
+.detail{padding:16px 22px;border-top:1px solid var(--border-subtle);background:var(--bg-sunken);
+  font-size:13px;color:var(--ink-700);min-height:74px}
+.detail .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.detail .v{font-size:15px;font-weight:600;margin-top:3px;color:var(--ink-900)}
+.detail .m{margin-top:3px;color:var(--ink-500);font-size:12.5px}
+.detail .warn{margin-top:8px;padding:9px 13px;border-radius:var(--r-sm);border:1.5px dashed var(--unrecorded);
+  color:var(--unrecorded-ink);font-size:12px;font-weight:600;display:inline-block}
+
+.tools{display:flex;gap:8px;align-items:center;margin-top:16px}
+.note{font-size:12.5px;color:var(--ink-500);max-width:88ch;margin-top:16px;line-height:1.55}
+.note b{color:var(--ink-900)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Medication administration record</h1>
+<p class="lede">Layout reference. Icons are placeholders — use the real set.</p>
+
+<!-- subject: the wrong-subject control, compact but unmissable -->
+<div class="card">
+  <div class="subj">
+    <span class="av">EO</span>
+    <div>
+      <div class="nm">Emmanuel</div>
+      <div class="meta">Emmanuel Okafor · Room 14 · Born 07/07/1948 (78) · Rosewood Court</div>
+    </div>
+    <div class="allergy">ALLERGY: PENICILLIN <small>anaphylaxis</small></div>
+  </div>
+</div>
+
+<!-- the fact the screen exists for, stated before a single cell is scanned -->
+<div class="omBanner">
+  <div class="n">3</div>
+  <div>
+    <div class="t">doses with no record, of 168 due this week</div>
+    <div class="d">One escalated past 60 minutes, one inside the 30–60 minute window, one not yet
+      escalated. Every other dose this week has a record against it.</div>
+  </div>
+  <button class="btn">Show only these</button>
+</div>
+
+<div class="card">
+  <div class="hd">
+    <div>
+      <h2>Week of 17–23 August 2026</h2>
+      <p style="font-size:12.5px;color:var(--ink-500);margin-top:2px">
+        6 medications · 4 rounds a day · times in Rosewood Court's zone</p>
+    </div>
+    <div class="range">
+      <button class="nav">←</button>
+      <div class="seg">
+        <button aria-pressed="true">Week</button>
+        <button aria-pressed="false">Month</button>
+      </div>
+      <button class="nav">→</button>
+    </div>
+  </div>
+
+  <!-- permanent legend, never a tooltip -->
+  <div class="legend">
+    <div class="lg"><span class="cell notDue"></span>
+      <div><b>Not due</b><span>nothing is scheduled — the only empty cell in the grid</span></div></div>
+    <div class="lg"><span class="cell due">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
+      <div><b>Due</b><span>window open, nobody has acted yet</span></div></div>
+    <div class="lg"><span class="cell given">
+      <svg viewBox="0 0 16 16"><path d="M3 8.5l3.5 3.5L13 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div><b>Given</b><span>recorded, with who and when</span></div></div>
+    <div class="lg"><span class="cell notGiven">
+      <svg viewBox="0 0 16 16"><path d="M4 12L12 4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span>
+      <div><b>Not given</b><span>also a complete record — a decision somebody signed, with a reason</span></div></div>
+    <div class="lg"><span class="cell omitted"></span>
+      <div><b>No record</b><span>window closed, nobody wrote anything. A red edge means escalated.</span></div></div>
+  </div>
+
+  <div class="gridWrap">
+    <table id="grid" aria-label="Medication administration record, week of 17 to 23 August 2026">
+      <thead>
+        <tr id="dayRow"><th class="medHead" rowspan="2">Medication</th><th class="tot" rowspan="2">This week</th></tr>
+        <tr id="roundRow"></tr>
+      </thead>
+      <tbody id="body"></tbody>
+    </table>
+  </div>
+
+  <div class="detail" id="detail">
+    <div class="k">Cell detail</div>
+    <div class="m">Click any cell. Its full sentence is what a screen reader announces.</div>
+  </div>
+</div>
+
+<div class="tools">
+  <button class="btn" onclick="document.body.classList.toggle('grey')">Toggle greyscale</button>
+  <span style="font-size:12.5px;color:var(--ink-500)">
+    The check that matters: given vs not given must stay apart by glyph, and no record must stay
+    the only patterned cell.</span>
+</div>
+
+<p class="note">
+  <b>Three things this layout is arguing for.</b>
+  The omissions figure sits above the grid because the screen's one fact is "these doses have no
+  record" — the grid proves it, the banner states it.
+  Not-given is deliberately as solid and settled as given: it is a decision somebody signed, and
+  only the omitted cell is hatched.
+  And a dose given without its required second signature carries a dashed underline rather than a
+  different fill — two facts, two treatments, Rule 3a.
+</p>
+
+<script>
+const DAYS = [
+  { d:'Mon', n:'17/08' }, { d:'Tue', n:'18/08' }, { d:'Wed', n:'19/08' }, { d:'Thu', n:'20/08' },
+  { d:'Fri', n:'21/08' }, { d:'Sat', n:'22/08' }, { d:'Sun', n:'23/08' },
+];
+const ROUNDS = ['08:00','12:00','18:00','22:00'];
+
+const MEDS = [
+  { name:'Amlodipine', dose:'5mg · oral', rounds:['08:00'] },
+  { name:'Furosemide', dose:'20mg · oral', rounds:['08:00','12:00'] },
+  { name:'Paracetamol', dose:'1g · oral · PRN', rounds:['08:00','12:00','18:00','22:00'] },
+  { name:'Donepezil', dose:'10mg · oral', rounds:['22:00'] },
+  { name:'Oramorph', dose:'2.5mg · oral', rounds:['08:00','18:00'], cd:true },
+  { name:'Lactulose', dose:'15ml · oral', rounds:['08:00','18:00'] },
+];
+
+/* Deliberate states, pinned rather than random — the three omissions are §5.3 gap 4. */
+const PINNED = {
+  'Furosemide|19/08|12:00': { s:'omitted', esc:'escalated', at:'12:00', escAt:'13:04' },
+  'Oramorph|20/08|18:00':   { s:'omitted', esc:'window',    at:'18:00' },
+  'Lactulose|21/08|08:00':  { s:'omitted', esc:'none',      at:'08:00' },
+  'Amlodipine|18/08|08:00': { s:'notGiven', reason:'resident refused' },
+  'Donepezil|20/08|22:00':  { s:'notGiven', reason:'resident asleep' },
+  'Oramorph|19/08|08:00':   { s:'given', witness:'missing' },
+  'Paracetamol|22/08|18:00':{ s:'due' },
+  'Paracetamol|22/08|22:00':{ s:'notDue' },
+  'Amlodipine|23/08|08:00': { s:'due' },
+};
+const STAFF = ['C. Nwosu','K. Osei','N. Eze','S. Patel','T. Akinyemi'];
+const pick = (a,i) => a[i % a.length];
+
+function stateFor(med, day, round, i){
+  if (!med.rounds.includes(round)) return { s:'notDue' };
+  const key = `${med.name}|${day.n}|${round}`;
+  if (PINNED[key]) return PINNED[key];
+  if (day.n === '23/08') return { s:'notDue' };          // future
+  return { s:'given', by:pick(STAFF,i), at:round.replace(':', ':').replace(/(\d\d):(\d\d)/, (m,h,mm)=>`${h}:${String((+mm+4)%60).padStart(2,'0')}`) };
+}
+
+const TICK = '<svg viewBox="0 0 16 16"><path d="M3 8.5l3.5 3.5L13 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const BAR  = '<svg viewBox="0 0 16 16"><path d="M4 12L12 4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>';
+const RING = '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+
+/* header */
+const dayRow = document.getElementById('dayRow'), roundRow = document.getElementById('roundRow');
+DAYS.forEach(day => {
+  const th = document.createElement('th');
+  th.className = 'dayHead'; th.colSpan = ROUNDS.length; th.scope = 'colgroup';
+  th.innerHTML = `${day.d}<small>${day.n}</small>`;
+  dayRow.insertBefore(th, dayRow.lastElementChild);
+  ROUNDS.forEach((r, i) => {
+    const t = document.createElement('th');
+    t.className = 'roundHead' + (i === 0 ? ' first' : ''); t.scope = 'col';
+    t.textContent = r.slice(0,2);
+    roundRow.appendChild(t);
+  });
+});
+
+/* body */
+const body = document.getElementById('body');
+MEDS.forEach((med, mi) => {
+  const tr = document.createElement('tr');
+  let omitted = 0, given = 0, due = 0;
+  let cells = '';
+  DAYS.forEach(day => ROUNDS.forEach((round, ri) => {
+    const st = stateFor(med, day, round, mi + ri + day.n.charCodeAt(1));
+    if (st.s === 'omitted') omitted++;
+    if (st.s === 'given') given++;
+    if (st.s === 'due') due++;
+    const cls = ['cell', st.s,
+      st.esc === 'escalated' ? 'escalated' : '',
+      st.witness === 'missing' ? 'noWitness' : ''].filter(Boolean).join(' ');
+    const glyph = st.s === 'given' ? TICK : st.s === 'notGiven' ? BAR : st.s === 'due' ? RING : '';
+    const label = sentence(med, day, round, st);
+    cells += `<td class="c${ri===0?' first':''}">
+      <button class="${cls}" aria-label="${label}" data-l="${label}"
+        data-s="${st.s}" onclick="show(this)">${glyph}</button></td>`;
+  }));
+  tr.innerHTML = `<th class="medCell" scope="row">
+      <div class="medName">${med.name}</div>
+      <div class="medDose">${med.dose}</div>
+      ${med.cd ? '<span class="cdTag">CONTROLLED DRUG</span>' : ''}
+    </th>${cells}
+    <td class="tot">${omitted ? `<span class="bad">${omitted} with no record</span><br>` : ''}
+      <b>${given}</b> given · ${due} due</td>`;
+  body.appendChild(tr);
+});
+
+function sentence(med, day, round, st){
+  const stem = `${round}, ${day.n}, ${med.name} ${med.dose.split(' · ')[0]}`;
+  switch (st.s){
+    case 'notDue':   return `${stem} — not due, nothing scheduled at this round`;
+    case 'due':      return `${stem} — due, window open, nobody has recorded anything yet`;
+    case 'given':    return st.witness === 'missing'
+      ? `${stem} — given by C. Nwosu at 08:04. Second signature required and not recorded.`
+      : `${stem} — given by ${st.by || 'C. Nwosu'} at ${st.at || round}`;
+    case 'notGiven': return `${stem} — not given, ${st.reason}, recorded by C. Nwosu at ${round}`;
+    case 'omitted':  return st.esc === 'escalated'
+      ? `${stem} — no record. Window closed at ${st.at}, escalated at ${st.escAt}.`
+      : st.esc === 'window'
+        ? `${stem} — no record. Window closed at ${st.at}, inside the escalation window.`
+        : `${stem} — no record. Window closed at ${st.at}, not yet escalated.`;
+  }
+}
+
+function show(btn){
+  const s = btn.dataset.s, l = btn.dataset.l;
+  const title = { notDue:'Not due', due:'Due', given:'Given', notGiven:'Not given', omitted:'No record' }[s];
+  const extra = s === 'omitted'
+    ? '<div class="warn">Nobody recorded anything. This is not a record that the dose was withheld.</div>'
+    : s === 'given' && btn.classList.contains('noWitness')
+      ? '<div class="warn">Second signature required and not recorded</div>'
+      : '';
+  document.getElementById('detail').innerHTML =
+    `<div class="k">Cell detail</div><div class="v">${title}</div><div class="m">${l}</div>${extra}`;
+}
+</script>
+</div>
+</body>
+</html>

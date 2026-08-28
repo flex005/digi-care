@@ -1,0 +1,589 @@
+/**
+ * Multi-site. Built to docs/group-overview.html.
+ *
+ * The reference's 19px, 14px, 13px, 12.5px and 11.5px steps each take the
+ * nearest on the closed type scale, and its 22px, 18px, 14px and 11px spacings
+ * the nearest on the 4px one (CLAUDE.md §4).
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.pageSubtitle {
+  margin-top: var(--space-4);
+  max-width: 90ch;
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.loading {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* ---------------------------------------------------------------------------
+ * Site cards — side by side, never a table
+ * ------------------------------------------------------------------------ */
+
+.sites {
+  display: grid;
+  gap: var(--space-16);
+  grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+}
+
+.site {
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.siteHead {
+  display: flex;
+  gap: var(--space-16);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-16) var(--space-20);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.siteName {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.siteMeta {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.siteRows,
+.groupRows {
+  list-style: none;
+}
+
+.siteRow {
+  display: grid;
+  gap: var(--space-12);
+  align-items: center;
+  padding: var(--space-12) var(--space-20);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.siteRows li:first-child .siteRow {
+  border-top: 0;
+}
+
+.siteRowLabel {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.siteRowNote {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.siteRowValue {
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.siteRowValue[data-tone='critical'] {
+  color: var(--status-critical-ink);
+}
+
+.siteRowValue[data-tone='caution'] {
+  color: var(--status-caution-ink);
+}
+
+.siteRowValue[data-tone='calm'] {
+  color: var(--ink-700);
+}
+
+.siteFoot {
+  padding: var(--space-12) var(--space-20);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ---------------------------------------------------------------------------
+ * Group rows — each site keeps its own column and its own standing
+ * ------------------------------------------------------------------------ */
+
+.groupHead {
+  padding: var(--space-16) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.groupTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.groupNote {
+  margin-top: var(--space-4);
+  max-width: 88ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.groupRow {
+  display: grid;
+  gap: var(--space-20);
+  align-items: start;
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: minmax(0, 1fr) 14rem 14rem;
+}
+
+.groupRows li:first-child .groupRow {
+  border-top: 0;
+}
+
+.groupName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.groupSpread {
+  margin-top: var(--space-4);
+  max-width: 70ch;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-caption-line);
+}
+
+.siteFigure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.siteFigureValue {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.siteFigureNote {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/* Inert: nothing here is a gap anybody can close. */
+.noRating {
+  margin: var(--space-16) var(--space-24) var(--space-24);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  max-width: 90ch;
+  background: var(--bg-surface-sunken);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.noRating b {
+  color: var(--ink-700);
+  font-weight: var(--weight-bold);
+}
+
+/* ---------------------------------------------------------------------------
+ * The cross-site banner — information, not an alarm
+ * ------------------------------------------------------------------------ */
+
+.crossSite {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  padding: var(--space-12) var(--space-20);
+  border: 1px solid var(--status-info);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  background: var(--status-info-tint);
+  color: var(--status-info-ink);
+}
+
+.crossSiteTitle {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.crossSiteBody {
+  margin-top: var(--space-4);
+  max-width: 78ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.crossSiteAction {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* ---------------------------------------------------------------------------
+ * Settings
+ * ------------------------------------------------------------------------ */
+
+.settingsSection {
+  padding: var(--space-20) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.settingsTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.settingsNote {
+  margin-top: var(--space-4);
+  max-width: 88ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.field,
+.figureField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-12);
+  max-width: 28rem;
+}
+
+.fieldLabel {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.field input,
+.field select,
+.figureField input {
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+}
+
+.figures {
+  list-style: none;
+}
+
+.figure {
+  display: grid;
+  gap: var(--space-16);
+  align-items: start;
+  padding: var(--space-12) 0;
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: minmax(0, 1fr) 9rem 12rem;
+}
+
+.figures li:first-child .figure {
+  border-top: 0;
+}
+
+.figureLabel {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.figureEffect {
+  margin-top: var(--space-4);
+  max-width: 72ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.figureSeen {
+  margin-top: var(--space-4);
+  color: var(--ink-400);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.figureField {
+  margin-top: 0;
+}
+
+.figureDefault {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-caption-line);
+}
+
+.figureChanged {
+  color: var(--status-caution-ink);
+  font-weight: var(--weight-bold);
+}
+
+.fixedFigure {
+  margin-top: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  max-width: 88ch;
+  background: var(--bg-surface-sunken);
+}
+
+/* ---------------------------------------------------------------------------
+ * The changed-this-session banner, on every screen
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The clock strip.
+ *
+ * **Quiet, and deliberately not the caution treatment.** The first version
+ * wore the amber a finding wears and ran to four lines saying nothing here is a
+ * record of what really happened, which is true of every screen in this build
+ * at every hour: the whole record is fixtures. Saying it loudly only where the
+ * clock has moved implies the rest is real, and spending the alarm vocabulary
+ * on a thing that is not a finding is what makes the alarm stop working where
+ * one is.
+ *
+ * What a reader needs is the instant, why, and the way back.
+ */
+.clockStrip {
+  display: flex;
+  gap: var(--space-8);
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-16);
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.clockNow {
+  color: var(--ink-900);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.clockLink {
+  margin-left: auto;
+  color: var(--purple-600);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.changedBanner {
+  margin-bottom: var(--space-20);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--status-caution);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+.changedTitle {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.changedBody {
+  margin-top: var(--space-4);
+  max-width: 90ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.changedLink {
+  display: inline-block;
+  margin-top: var(--space-8);
+  color: var(--status-caution-ink);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-bold);
+}
+
+/* ---------------------------------------------------------------------------
+ * Analytical layout
+ *
+ * Nothing here is green. A home with nothing outstanding has not achieved
+ * anything, it is simply the ordinary state.
+ * ------------------------------------------------------------------------ */
+
+.allHomes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: var(--space-20);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.allHomesHead {
+  display: flex;
+  gap: var(--space-12);
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.allHomesTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.allHomesMeta {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.metricRow {
+  display: grid;
+  gap: var(--space-12);
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.metricGrid {
+  display: grid;
+  gap: var(--space-12);
+  padding: var(--space-16) var(--space-20);
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-sunken);
+}
+
+.metric[data-tone='critical'] {
+  border-color: var(--status-critical);
+  background: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+.metric[data-tone='caution'] {
+  border-color: var(--status-caution);
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+.metricLabel {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.metric[data-tone='calm'] .metricLabel {
+  color: var(--ink-500);
+}
+
+.metricValue {
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric[data-tone='calm'] .metricValue {
+  color: var(--ink-900);
+}
+
+.metricOf {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.metric[data-tone='calm'] .metricOf {
+  color: var(--ink-500);
+}
+
+/* ---------------------------------------------------------------------------
+ * The generation clock
+ * ------------------------------------------------------------------------ */
+
+.clockChoices {
+  display: grid;
+  gap: var(--space-8);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.clockChoice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  text-decoration: none;
+}
+
+.clockTime {
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.clockWhat {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Compliance and Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1300px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.sub{margin-top:4px;font-size:13px;color:var(--ink-500)}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:16px}
+.viewNav{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+.viewNav button{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.viewNav button[aria-pressed="true"]{background:var(--purple-900);border-color:var(--purple-900);color:#fff}
+
+.banner{margin-top:16px;padding:14px 18px;border-radius:var(--r-md);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);font-size:12.5px;font-weight:600;line-height:1.55;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+
+/* ---------- dashboard ---------- */
+.now{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px}
+.tile{padding:18px 20px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);box-shadow:var(--shadow-card)}
+.tile .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.tile .v{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.02em;margin-top:6px}
+.tile .d{font-size:12px;color:var(--ink-500);margin-top:4px;line-height:1.45}
+.tile.late{border-color:var(--critical);border-left-width:5px;background:var(--critical-tint)}
+.tile.late .v,.tile.late .k{color:var(--critical-ink)}
+.tile.late .d{color:var(--critical-ink)}
+.tile.soon{border-color:var(--caution);border-left-width:5px;background:var(--caution-tint)}
+.tile.soon .v,.tile.soon .k,.tile.soon .d{color:var(--caution-ink)}
+.tile.gap{border:1.5px dashed var(--unrecorded);border-left-width:5px;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.tile.gap .v,.tile.gap .k,.tile.gap .d{color:var(--unrecorded-ink)}
+.tile.calm .v{color:var(--ink-700)}
+
+.sect{padding:16px 24px;border-bottom:1px solid var(--border-subtle)}
+.sect h2{font-size:15px;font-weight:700}
+.sect p{font-size:12.5px;color:var(--ink-500);margin-top:2px}
+.drow{display:grid;grid-template-columns:9rem minmax(0,1fr) 13rem auto;gap:18px;align-items:center;
+  padding:12px 24px;border-top:1px solid var(--border-subtle)}
+.drow:first-of-type{border-top:0}
+.dtime{font-size:13px;font-weight:700}
+.dtime small{display:block;font-size:11px;font-weight:400;color:var(--ink-500);margin-top:1px}
+.dwhat{font-size:14px;font-weight:600}
+.dwho{font-size:11.5px;color:var(--ink-500);margin-top:2px}
+.chip{display:inline-flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700}
+.chip small{font-size:11px;font-weight:400}
+.chip.late{border:1px solid var(--critical);background:var(--critical-tint);color:var(--critical-ink)}
+.chip.soon{border:1px solid var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.chip.gap{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.btn{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.btn.mute{color:var(--ink-400);cursor:not-allowed}
+
+/* ---------- compliance ---------- */
+.kq{display:grid;grid-template-columns:14rem 11rem minmax(0,1fr) 11rem auto;gap:20px;align-items:center;
+  padding:18px 24px;border-top:1px solid var(--border-subtle)}
+.kq:first-of-type{border-top:0}
+.kqName{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.kqAsk{font-size:11.5px;color:var(--ink-500);margin-top:3px;line-height:1.4}
+.rating{display:inline-flex;flex-direction:column;gap:2px;padding:9px 13px;border-radius:var(--r-sm);
+  font-size:13px;font-weight:800}
+.rating small{font-size:11px;font-weight:400;line-height:1.35}
+.rating.g{border:1px solid var(--positive);background:var(--positive-tint);color:var(--positive-ink)}
+.rating.a{border:1px solid var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.rating.r{border:1px solid var(--critical);background:var(--critical-tint);color:var(--critical-ink)}
+.rating.ie{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.covBar{height:8px;border-radius:var(--r-pill);background:var(--border-subtle);overflow:hidden;display:flex}
+.covBar i{display:block;height:100%}
+.covBar .ok{background:var(--purple-600)}
+.covBar .ie{background:var(--unrecorded)}
+.covTxt{font-size:11.5px;color:var(--ink-500);margin-top:7px;line-height:1.5}
+.notHeld{display:inline-flex;flex-direction:column;gap:2px;padding:8px 12px;border-radius:var(--r-sm);
+  background:var(--bg-sunken);border:1px solid var(--border-strong);color:var(--ink-500);
+  font-size:12px;font-weight:700}
+.notHeld small{font-size:11px;font-weight:400;line-height:1.35}
+
+.chk{display:grid;grid-template-columns:minmax(0,1fr) 13rem 11rem;gap:20px;align-items:center;
+  padding:12px 24px;border-top:1px solid var(--border-subtle)}
+.chkName{font-size:14px;font-weight:600}
+.chkFrom{font-size:11px;color:var(--ink-500);margin-top:2px}
+.figure{font-size:13px;font-weight:700}
+.figure small{display:block;font-size:11px;font-weight:400;color:var(--ink-500);margin-top:1px}
+
+/* ---------- pack ---------- */
+.packSec{padding:18px 24px;border-top:1px solid var(--border-subtle)}
+.packSec h3{font-size:13px;font-weight:700;margin-bottom:4px}
+.packSec p{font-size:12.5px;color:var(--ink-500);line-height:1.55;max-width:80ch}
+.packList{list-style:none;margin-top:12px;display:flex;flex-direction:column;gap:7px}
+.packList li{display:flex;gap:12px;align-items:baseline;padding:10px 13px;border-radius:var(--r-sm);
+  background:var(--bg-sunken);border:1px solid var(--border-subtle);font-size:13px}
+.packList li .c{margin-left:auto;font-size:12px;font-weight:700;white-space:nowrap}
+.packList.cant li{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px);
+  font-weight:600}
+.packList.absent li{background:var(--bg-sunken);border:1px solid var(--border-strong);
+  color:var(--ink-500);font-weight:600}
+.noFile{margin:18px 24px;padding:15px 19px;border-radius:var(--r-md);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);font-size:13px;font-weight:700;line-height:1.55;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.noFile small{display:block;font-weight:400;margin-top:5px;max-width:80ch}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="viewNav">
+  <button aria-pressed="true" onclick="go('dash',this)">1 · Dashboard</button>
+  <button aria-pressed="false" onclick="go('comp',this)">2 · Compliance overview</button>
+  <button aria-pressed="false" onclick="go('pack',this)">3 · Inspection pack</button>
+</div>
+
+<div id="view"></div>
+
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>The two screens share machinery and share no figure</h3>
+  The Dashboard is deadline-shaped, over today, ordered by urgency. Compliance is coverage-shaped, over
+  the whole record, ordered by Key Question.
+  <b>No compliance percentage appears anywhere on the Dashboard.</b> A "92% compliant" tile on the front
+  door is the reassurance this product exists to refuse, and it would be most reassuring exactly when the
+  record is thinnest.
+
+  <h3>Dashboard tiles</h3>
+  Four across, gap <code>16px</code>, padding <code>18px 20px</code>. Label <code>11px/700</code>
+  uppercase, figure <code>34px/800</code>, description <code>12px</code> ink-500 carrying the denominator.
+  Late takes critical with a <code>5px</code> left border; due-soon takes caution; a tile counting things
+  nobody wrote up takes the hatch. A tile with nothing wrong renders calm — plain surface, ink-700
+  figure, no green. <b>Nothing on this screen is green.</b> Green would be a reassurance tile, and this
+  screen exists to say what is left.
+  Row <code>9rem minmax(0,1fr) 13rem auto</code>, gap <code>18px</code>, padding <code>12px 24px</code>.
+  Time first at <code>13px/700</code> because the screen is ordered by when.
+
+  <h3>Compliance overview</h3>
+  Five Key Questions in CQC's order, one row each: <code>14rem 11rem minmax(0,1fr) 11rem auto</code>.
+  Name <code>17px/700</code> with the question it asks beneath at <code>11.5px</code> ink-500.
+  Rating chip <code>9px 13px</code>, <code>13px/800</code>. Green, amber and red are ratings;
+  <b>Insufficient Evidence takes the hatch and is not a fourth colour</b> — it is the absence of a
+  finding, not a milder one, and it states its coverage rather than a rating.
+  Coverage bar <code>8px</code>, split into usable and unusable segments, with the sentence beneath at
+  <code>11.5px</code> naming both figures.
+  <b>Not held here is its own treatment</b> — solid bg-surface-sunken, <code>1px</code> border-strong,
+  ink-500, no pattern. Pattern in this system means "a gap you can close", and nothing on any screen can
+  close this one. It is listed, it never counts toward coverage, and it never contributes to a rating.
+  Its wording says the product does not record the thing, never that the home has not done it.
+
+  <h3>Check rows in the drill-down</h3>
+  <code>minmax(0,1fr) 13rem 11rem</code>. Every check listed whether or not it has data, findings first.
+  Name <code>14px/600</code> with the module it comes from beneath at <code>11px</code> ink-500 — a
+  figure whose origin is not stated is a figure nobody can check.
+  Where the evidence is weaker than it looks, the row says so: fire and legionella are evidenced by a
+  document existing rather than by an assessment record, and the panel says that rather than hiding it
+  behind a tick.
+
+  <h3>Inspection pack — a manifest, not a file</h3>
+  Three sections in this order: what the pack would contain, what it cannot contain and why, and the
+  plain statement that no file can be produced here.
+  <b>The second section is the useful half</b> and is longer than the first. A manager reading this before
+  an inspection gets more from the gaps than from the list.
+  Two kinds of exclusion, and they render differently: evidence the home has not recorded (hatched — a
+  gap somebody can close) and evidence this product does not hold (bg-surface-sunken — nothing anybody
+  can do here).
+  No download control at all. Not a disabled one — there is no file, and a disabled button implies one
+  could exist.
+</div>
+
+</div>
+
+<script>
+function dash(){
+  return `<h1>Rosewood Court</h1>
+  <p class="sub">Sunday 23 August 2026, 16:42 BST · 28 residents · late shift</p>
+
+  <div class="now">
+    <div class="tile late"><div class="k">Overdue now</div><div class="v">6</div>
+      <div class="d">3 medication rounds · 2 review flags · 1 handover unsigned</div></div>
+    <div class="tile soon"><div class="k">Due in the next 2 hours</div><div class="v">14</div>
+      <div class="d">doses across 9 residents · 18:00 round</div></div>
+    <div class="tile gap"><div class="k">Not written up today</div><div class="v">7</div>
+      <div class="d">of 28 residents · nobody has recorded a care note</div></div>
+    <div class="tile calm"><div class="k">Unacknowledged incidents</div><div class="v">2</div>
+      <div class="d">of 40 in the last 90 days · oldest waiting 5 days</div></div>
+  </div>
+
+  <div class="card">
+    <div class="sect"><h2>Already late</h2>
+      <p>Ordered by how long. Everything here should have happened and has not.</p></div>
+
+    <div class="drow">
+      <div class="dtime">12:00<small>4h 42m ago</small></div>
+      <div><div class="dwhat">Furosemide 20mg — midday round</div>
+        <div class="dwho">Grace Adeyemi · Room 302</div></div>
+      <div><span class="chip late">No record<small>window closed 13:00, escalated 13:06</small></span></div>
+      <div><button class="btn">Open MAR</button></div>
+    </div>
+
+    <div class="drow">
+      <div class="dtime">23/08<small>2 days ago</small></div>
+      <div><div class="dwhat">Falls risk re-score — post-incident review</div>
+        <div class="dwho">Beryl Hutchinson · Room 214 · flagged by the unwitnessed fall of 21/08</div></div>
+      <div><span class="chip late">2 days late<small>due 23/08</small></span></div>
+      <div><button class="btn">Re-score</button></div>
+    </div>
+
+    <div class="drow">
+      <div class="dtime">14:00<small>2h 42m ago</small></div>
+      <div><div class="dwhat">Early → late handover</div>
+        <div class="dwho">Signed by F. Adebayo, never countersigned</div></div>
+      <div><span class="chip late">Half complete<small>nobody recorded receiving it</small></span></div>
+      <div><button class="btn">Open handover</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sect"><h2>Nobody has written these residents up today</h2>
+      <p>7 of 28. Not a record that nothing happened — a record that nobody said.</p></div>
+    <div class="drow">
+      <div class="dtime">—<small>last note 21/08</small></div>
+      <div><div class="dwhat">Beryl Hutchinson · Room 214</div>
+        <div class="dwho">No care note recorded — 2 days 9 hours</div></div>
+      <div><span class="chip gap">Nothing today<small>last note N. Eze, 21/08 10:20</small></span></div>
+      <div><button class="btn">Write a note</button></div>
+    </div>
+    <div class="drow">
+      <div class="dtime">—<small>never</small></div>
+      <div><div class="dwhat">Ismail Sowande · Room 4</div>
+        <div class="dwho">No care note has ever been recorded · admitted 22/08</div></div>
+      <div><span class="chip gap">Never written up<small>not once, since admission</small></span></div>
+      <div><button class="btn">Write a note</button></div>
+    </div>
+  </div>`;
+}
+
+const KQ = [
+  { n:'Safe', ask:'Are people protected from abuse and avoidable harm?', r:'a', rl:'Amber',
+    rs:'worst of 9 usable checks', ok:9, ie:2, nh:1,
+    note:'2 checks have too little data to support a figure. Staff training is not recorded in diGi-Care.' },
+  { n:'Effective', ask:'Does their care achieve good outcomes?', r:'ie', rl:'Insufficient evidence',
+    rs:'4 of 8 checks usable', ok:4, ie:4, nh:1,
+    note:'Below the 60% threshold — fewer than three in five checks can support a figure, so the panel cannot either. Supervision and appraisal are not recorded in diGi-Care.' },
+  { n:'Caring', ask:'Do staff treat people with compassion and respect?', r:'a', rl:'Amber',
+    rs:'worst of 6 usable checks', ok:6, ie:1, nh:2,
+    note:'Dignity observations and resident surveys are not recorded in diGi-Care.' },
+  { n:'Responsive', ask:'Is their care organised around their needs?', r:'r', rl:'Red',
+    rs:'worst of 7 usable checks', ok:7, ie:1, nh:1,
+    note:'Complaints exist only as document titles, not as records. 9 goals passed their date with nothing said.' },
+  { n:'Well-led', ask:'Does leadership assure good quality care?', r:'ie', rl:'Insufficient evidence',
+    rs:'3 of 7 checks usable', ok:3, ie:4, nh:2,
+    note:'Audits and the policy review cycle are not recorded in diGi-Care.' },
+];
+
+function comp(){
+  return `<h1>Compliance</h1>
+  <p class="sub">Rosewood Court · the whole record · five CQC Key Questions</p>
+
+  <div class="banner">This mapping of evidence to Key Questions is not derived from CQC's published
+    framework, and the rating combines checks by taking the worst of them. Both are placeholders. No
+    regulatory conclusion should be drawn from anything on this screen.</div>
+
+  <div class="card">
+    ${KQ.map(k => `<div class="kq">
+      <div><div class="kqName">${k.n}</div><div class="kqAsk">${k.ask}</div></div>
+      <div><span class="rating ${k.r}">${k.rl}<small>${k.rs}</small></span></div>
+      <div>
+        <div class="covBar">
+          <i class="ok" style="width:${(k.ok/(k.ok+k.ie))*100}%"></i>
+          <i class="ie" style="width:${(k.ie/(k.ok+k.ie))*100}%"></i>
+        </div>
+        <div class="covTxt">${k.ok} of ${k.ok+k.ie} checks can support a figure. ${k.note}</div>
+      </div>
+      <div>${k.nh
+        ? `<span class="notHeld">${k.nh} not held here<small>diGi-Care does not record ${
+            k.nh === 1 ? 'it' : 'them'}</small></span>` : ''}</div>
+      <div><button class="btn">Open</button></div>
+    </div>`).join('')}
+  </div>
+
+  <div class="card">
+    <div class="sect"><h2>Safe — every check, findings first</h2>
+      <p>Each names the module it comes from. A figure whose origin is not stated is a figure nobody
+        can check.</p></div>
+
+    <div class="chk">
+      <div><div class="chkName">Doses with no record against them</div>
+        <div class="chkFrom">Medications · last 7 days</div></div>
+      <div><span class="chip late">20 of 1,219<small>1.6% · 18 escalated</span></div>
+      <div class="figure">Red<small>above the threshold</small></div>
+    </div>
+
+    <div class="chk">
+      <div><div class="chkName">Risks never assessed</div>
+        <div class="chkFrom">Risk assessments · all residents</div></div>
+      <div><span class="chip gap">81 of 252<small>across 28 residents and 9 templates</small></span></div>
+      <div class="figure">Amber<small>32% never assessed</small></div>
+    </div>
+
+    <div class="chk">
+      <div><div class="chkName">Fire risk assessment</div>
+        <div class="chkFrom">Documents · site level</div></div>
+      <div><span class="chip soon">Document on file<small>expires 12/11/2026</small></span></div>
+      <div class="figure" style="color:var(--ink-500)">Weak evidence<small>a document exists; no
+        assessment record does</small></div>
+    </div>
+
+    <div class="chk">
+      <div><div class="chkName">Controlled drug balances reconcile</div>
+        <div class="chkFrom">Medications · register</div></div>
+      <div><span class="chip gap">1 of 18<small>too few to support a rate</small></span></div>
+      <div class="figure" style="color:var(--unrecorded-ink)">Insufficient evidence<small>below the
+        population floor of 8</small></div>
+    </div>
+
+    <div class="chk">
+      <div><div class="chkName">Staff training and competency</div>
+        <div class="chkFrom">Not held in diGi-Care</div></div>
+      <div><span class="notHeld">Not held here<small>no module records it</small></span></div>
+      <div class="figure" style="color:var(--ink-500)">Not counted<small>toward coverage or rating</small></div>
+    </div>
+  </div>`;
+}
+
+function pack(){
+  return `<h1>Inspection pack</h1>
+  <p class="sub">Rosewood Court · what an inspector would be given, and what they would not</p>
+
+  <div class="banner">This is a contents list, not a document. The mapping of evidence to Key Questions
+    is a placeholder and no regulatory conclusion should be drawn from it.</div>
+
+  <div class="card">
+    <div class="packSec">
+      <h3>What the pack would contain</h3>
+      <p>Evidence that exists in the record, per Key Question, with where it lives.</p>
+      <ul class="packList">
+        <li>Medication administration records, 90 days<span class="c">16,200 cells</span></li>
+        <li>Controlled drug register with every count and both signatures<span class="c">84 entries</span></li>
+        <li>Incident reports with manager review and notification decisions<span class="c">40</span></li>
+        <li>Risk assessments with scores, bands and interventions<span class="c">171 of 252</span></li>
+        <li>Care plans with version history and signatures<span class="c">233 of 320 domains</span></li>
+        <li>Consent records with capacity assessments<span class="c">168 of 224</span></li>
+        <li>Care notes with authorship and the flag-then-review trail<span class="c">12,139</span></li>
+      </ul>
+    </div>
+
+    <div class="packSec">
+      <h3>What it cannot contain, because the home has not recorded it</h3>
+      <p>These are gaps somebody can close. Each links to the screen that closes it.</p>
+      <ul class="packList cant">
+        <li>81 risk assessments never completed<span class="c">of 252</span></li>
+        <li>87 care plan domains never written<span class="c">of 320</span></li>
+        <li>56 consents never sought<span class="c">of 224</span></li>
+        <li>8 incidents with no notification decision<span class="c">of 40</span></li>
+        <li>29 documents referenced by a record and never uploaded<span class="c">across 18 residents</span></li>
+        <li>89 documents with no expiry decision<span class="c">of 291</span></li>
+      </ul>
+    </div>
+
+    <div class="packSec">
+      <h3>What it cannot contain, because diGi-Care does not hold it</h3>
+      <p>Nothing on any screen in this product can close these. They are gaps in the system, not in the
+        home, and an inspector will ask for them from somewhere else.</p>
+      <ul class="packList absent">
+        <li>Staff training and competency records<span class="c">Safe</span></li>
+        <li>Staff supervision and appraisal<span class="c">Effective</span></li>
+        <li>Dignity observations and resident surveys<span class="c">Caring</span></li>
+        <li>Complaints as records rather than document titles<span class="c">Responsive</span></li>
+        <li>Audits and the policy review cycle<span class="c">Well-led</span></li>
+      </ul>
+    </div>
+
+    <div class="noFile">
+      No file can be produced here.
+      <small>This build has no backend and no file storage, so there is nothing to download and nothing
+        has been generated. What is above is the manifest — the list of what a real pack would hold, what
+        it would be missing, and why. There is no download control on this screen because there is no
+        file; a disabled one would imply that there could be.</small>
+    </div>
+  </div>`;
+}
+
+let view='dash';
+function go(v,btn){
+  view=v;
+  document.querySelectorAll('.viewNav button').forEach(b=>b.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true'); render(); window.scrollTo(0,0);
+}
+function render(){
+  document.getElementById('view').innerHTML = view==='dash'?dash():view==='comp'?comp():pack();
+}
+render();
+</script>
+</body>
+</html>

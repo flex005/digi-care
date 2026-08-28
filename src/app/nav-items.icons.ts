@@ -53,10 +53,13 @@ export const navSections: NavSection[] = [
 export const navItems: NavItem[] = [
   {
     label: 'Dashboard',
-    path: '/dashboard',
+    // The front door, not a screen beside it. The index route *is* the
+    // Dashboard, so the item points at `/` rather than at a second URL for
+    // the same screen.
+    path: '/',
     icon: 'dashboard/dashboard-square-01',
     phase: 12,
-    enabled: false,
+    enabled: true,
     section: 'overview',
   },
   {
@@ -72,7 +75,7 @@ export const navItems: NavItem[] = [
     path: '/care-notes',
     icon: 'note-task/note-01',
     phase: 2,
-    enabled: false,
+    enabled: true,
     section: 'delivery',
   },
   {
@@ -80,7 +83,7 @@ export const navItems: NavItem[] = [
     path: '/handover',
     icon: 'users/user-switch',
     phase: 2,
-    enabled: false,
+    enabled: true,
     section: 'delivery',
   },
   {
@@ -88,7 +91,7 @@ export const navItems: NavItem[] = [
     path: '/medications',
     icon: 'medical/medicine-01',
     phase: 3,
-    enabled: false,
+    enabled: true,
     section: 'delivery',
   },
   {
@@ -96,7 +99,7 @@ export const navItems: NavItem[] = [
     path: '/incidents',
     icon: 'alert-notification/alert-02',
     phase: 4,
-    enabled: false,
+    enabled: true,
     section: 'planning',
   },
   {
@@ -104,15 +107,15 @@ export const navItems: NavItem[] = [
     path: '/risk-assessments',
     icon: 'alert-notification/alert-diamond',
     phase: 5,
-    enabled: false,
+    enabled: true,
     section: 'planning',
   },
   {
     label: 'Care Plans',
     path: '/care-plans',
     icon: 'education/clipboard',
-    phase: 6,
-    enabled: false,
+    phase: 7,
+    enabled: true,
     section: 'planning',
   },
   {
@@ -120,7 +123,7 @@ export const navItems: NavItem[] = [
     path: '/reviews',
     icon: 'date-and-time/calendar-01',
     phase: 7,
-    enabled: false,
+    enabled: true,
     section: 'planning',
   },
   {
@@ -128,7 +131,7 @@ export const navItems: NavItem[] = [
     path: '/goals',
     icon: 'business-and-finance/target-01',
     phase: 8,
-    enabled: false,
+    enabled: true,
     section: 'planning',
   },
   {
@@ -136,7 +139,7 @@ export const navItems: NavItem[] = [
     path: '/activities',
     icon: 'game-sports/puzzle',
     phase: 9,
-    enabled: false,
+    enabled: true,
     section: 'planning',
   },
   {
@@ -144,7 +147,7 @@ export const navItems: NavItem[] = [
     path: '/consent',
     icon: 'legal/agreement-02',
     phase: 10,
-    enabled: false,
+    enabled: true,
     section: 'governance',
   },
   {
@@ -152,7 +155,7 @@ export const navItems: NavItem[] = [
     path: '/documents',
     icon: 'legal/legal-document-01',
     phase: 11,
-    enabled: false,
+    enabled: true,
     section: 'governance',
   },
   {
@@ -160,7 +163,7 @@ export const navItems: NavItem[] = [
     path: '/compliance',
     icon: 'check-validation/checkmark-badge-01',
     phase: 12,
-    enabled: false,
+    enabled: true,
     section: 'governance',
   },
   {
@@ -168,31 +171,36 @@ export const navItems: NavItem[] = [
     path: '/reports',
     icon: 'business-and-finance/analytics-01',
     phase: 13,
-    enabled: false,
+    enabled: true,
     section: 'governance',
   },
-  {
-    label: 'Team',
-    path: '/team',
-    icon: 'users/user-group',
-    phase: 14,
-    enabled: false,
-    section: 'admin',
-  },
+  /*
+   * **One entry for the whole administrative area.** Team, homes and the
+   * figures this build runs on were three sidebar items and are three tabs
+   * under this one: they are all things a manager configures rather than
+   * things a manager does during a shift, and the sidebar's job is the second
+   * list. Nothing was removed — each screen keeps its route under /settings.
+   */
   {
     label: 'Settings',
     path: '/settings',
     icon: 'settings/setting-02',
     phase: 15,
-    enabled: false,
+    enabled: true,
     section: 'admin',
   },
 ]
 
 /** Icons the shell itself uses, outside the nav list. */
 export const shellIcons = {
-  /** The logo mark, in its own block at the top of the sidebar. */
-  logo: 'medical/healtcare',
+  /*
+   * The product mark is not here. It was `medical/healtcare` — a stethoscope
+   * standing in until there was a real one — and a stand-in that outlives the
+   * thing it stood in for is indistinguishable from a decision. The mark is
+   * now `src/assets/brand/`, rendered by `<Logo />`, and it is not an icon:
+   * the registry is single-colour and normalised to `currentColor`, which
+   * would flatten a two-tone lockup.
+   */
   search: 'search/search',
   alerts: 'alert-notification/notification-02',
   siteSwitcher: 'arrows-sharp/arrow-down-01-sharp',

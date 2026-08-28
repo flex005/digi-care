@@ -1,0 +1,1109 @@
+/**
+ * Incidents. Built to docs/incident-report.html.
+ *
+ * Same mapping discipline as the rest of the build: the type scale is closed
+ * and spacing is the 4px scale, so the reference's 14px, 13px, 12.5px, 11.5px
+ * and its 20px/10px/6px/1.5px values each take the nearest step, named where
+ * the substitution matters.
+ */
+
+/*
+ * One content width for every module.
+ *
+ * This carried `max-width: 960px` — the reference measure for the report
+ * *form* — and the incident log shares the class, so the whole module stopped
+ * two thirds across with a dead band beside it while every other queue filled
+ * the container. The detail screen had a third width of its own, 1080px, which
+ * is the drift: once one module has its own width the others acquire one to
+ * match.
+ *
+ * The shell owns the width (`--layout-max-width`). A form that wants a narrow
+ * measure constrains its own fields, never the page.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.lede {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-20) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sectionTitle {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ---- Fields ---- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.label {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/*
+ * The same metrics as the Select trigger, because they sit side by side.
+ *
+ * A 1px border against the trigger's 1.5px, a different radius and no minimum
+ * height meant a select and a date field in the same two-up row were different
+ * shapes and different heights — which reads as a misalignment even when the
+ * grid is perfectly aligned.
+ */
+.input,
+.textarea {
+  width: 100%;
+  min-height: var(--space-40);
+  box-sizing: border-box;
+  padding: var(--space-8) var(--space-12);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/*
+ * A native date field sizes to its own internal line box, so `min-height`
+ * left it two pixels shorter than the Select trigger beside it — which reads
+ * as a misalignment however well the grid lines up.
+ */
+.input {
+  height: var(--space-40);
+}
+
+.textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.hint {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.threeUp {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.twoUp {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-16);
+  align-items: start;
+}
+
+/* ---- Choice cards ---- */
+
+/**
+ * Used for the subject and for injury, and both are the same idea: a closed
+ * set of answers where none of them is a default and a blank is not one of the
+ * options.
+ */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/*
+ * A choice card carries a mark, because border colour alone is not a state.
+ *
+ * These are `role="radio"`, and a chosen one was saying so with a tinted
+ * border and nothing else — colour as the sole carrier of meaning, which §7
+ * forbids. The mark is an empty ring until it is chosen and a filled tick
+ * after, so the control says what it is before anybody clicks it as well as
+ * after.
+ */
+.choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-4) var(--space-12);
+  align-items: center;
+  padding: var(--space-12) var(--space-16);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.choiceMark {
+  display: grid;
+  grid-row: span 2;
+  flex: 0 0 auto;
+  place-items: center;
+  width: var(--space-20);
+  height: var(--space-20);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-surface);
+  color: transparent;
+}
+
+.choiceMark[data-selected] {
+  border-color: var(--purple-600);
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+}
+
+.choice:hover {
+  border-color: var(--purple-400);
+}
+
+.choiceSelected {
+  border-color: var(--purple-600);
+  background-color: var(--purple-50);
+}
+
+/**
+ * Offered but not available, rather than hidden.
+ *
+ * "No resident was involved" only applies to an equipment failure or a near
+ * miss. Hiding it would make the option appear and disappear as the type
+ * changes; showing it disabled says the choice exists and what unlocks it.
+ */
+.choiceUnavailable {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.choiceTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.choiceNote {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* ---- The subject card ---- */
+
+.subjectCard {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  margin-top: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-sunken);
+}
+
+.subjectWho {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.subjectName {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.subjectMeta {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.subjectAllergy {
+  margin-left: auto;
+}
+
+/* ---- Severity ---- */
+
+.severities {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-8);
+}
+
+.severity {
+  /* Same shape as a choice card — a mark, then the words beside it. */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-4) var(--space-8);
+  align-items: center;
+  padding: var(--space-12) var(--space-12);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.severity:hover {
+  border-color: var(--purple-400);
+}
+
+.severityName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.severityGloss {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/**
+ * Each tier takes its own tint when chosen.
+ *
+ * The words carry the meaning and the tint reinforces it — "No harm" and
+ * "Severe harm" are different sentences before they are different colours, so
+ * the scale survives greyscale (§7).
+ *
+ * `.severitySelected` is declared on its own as well as inside the compounds,
+ * because a class that only ever appears in a compound selector is not
+ * exported — `styles.severitySelected` would be undefined and join as nothing.
+ */
+.severitySelected {
+  font-weight: var(--weight-bold);
+}
+
+.severityNoHarm.severitySelected {
+  border-color: var(--status-positive);
+  background-color: var(--status-positive-tint);
+}
+
+.severityLowHarm.severitySelected {
+  border-color: var(--status-info);
+  background-color: var(--status-info-tint);
+}
+
+.severityModerateHarm.severitySelected {
+  border-color: var(--status-caution);
+  background-color: var(--status-caution-tint);
+}
+
+.severitySevereHarm.severitySelected {
+  border-color: var(--status-critical);
+  background-color: var(--status-critical-tint);
+}
+
+/* ---- The body map ---- */
+
+.mapArea {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 17rem;
+  gap: var(--space-24);
+  align-items: start;
+}
+
+.maps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-16);
+}
+
+.mapBox {
+  padding: var(--space-12);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-sunken);
+}
+
+.mapCaption {
+  margin-bottom: var(--space-8);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.markedPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.markedList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  list-style: none;
+}
+
+/**
+ * A marked site, in the critical treatment.
+ *
+ * The list is the record, so it carries the same state the map does — and it
+ * carries it as words, which is the half a screen reader and a greyscale
+ * printout can read.
+ */
+.markedRow {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--status-critical);
+  border-radius: var(--radius-sm);
+  background-color: var(--status-critical-tint);
+}
+
+.markedName {
+  color: var(--status-critical-ink);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.mapHint {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* ---- Footer ---- */
+
+.foot {
+  display: flex;
+  gap: var(--space-20);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: var(--space-20) var(--space-24);
+}
+
+.footState {
+  flex: 1 1 20rem;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.prototypeNote {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* ==========================================================================
+   One incident — /incidents/:incidentId
+   Built to docs/incident-detail.html.
+   ========================================================================== */
+
+.backLink {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  align-self: flex-start;
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+/* The incident TYPE. A manager recognises "Unwitnessed fall"; nobody
+   recognises INC-2026-0341, which goes on the reference line beneath. */
+.detailTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.detailRef {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/**
+ * The one fact this screen exists for, and it sits above the facts.
+ *
+ * The hatch, because every item in it is something nobody has done. When there
+ * is nothing outstanding the block does not render at all — an empty version
+ * would be a claim drawn in the treatment reserved for gaps.
+ */
+.outstanding {
+  composes: unrecordedPanel from '../../styles/unrecorded.module.css';
+  gap: var(--space-12);
+  padding: var(--space-16) var(--space-20);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.outstandingHeading {
+  color: var(--status-unrecorded-ink);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-extrabold);
+}
+
+.outstandingList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  list-style: none;
+}
+
+/* White cards inside the hatch, so each item reads as its own piece of work
+   rather than as more of the same texture. */
+.outstandingItem {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+}
+
+.outstandingBody {
+  min-width: 0;
+}
+
+.outstandingName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.outstandingDetail {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-regular);
+}
+
+/* ---- Facts strip ---- */
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background-color: var(--border-subtle);
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-20);
+  background-color: var(--bg-surface);
+}
+
+.factLabel {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.factBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.factValue {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.factQualifier {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.detailSubject {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  padding: var(--space-16) var(--space-20);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ---- Accounts ---- */
+
+/**
+ * The reporter's words, and the manager's, in separate sections with separate
+ * bylines. Putting one under the other's heading attributes it to the wrong
+ * person, which is the whole reason `immediateAction` is not
+ * `ManagerReview.actionsTaken`.
+ */
+.account {
+  max-width: 78ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+}
+
+.byline {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.byline strong {
+  color: var(--ink-700);
+  font-weight: var(--weight-semibold);
+}
+
+.fieldValue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.fieldMain {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.fieldNote {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.reviewField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.settledNote {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.loading {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.errorTitle {
+  color: var(--status-critical-ink);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.errorBody {
+  margin: var(--space-8) 0 var(--space-16);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+/* ---- Injury, read-only ---- */
+
+.injuryWrap {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: var(--space-24);
+  align-items: start;
+}
+
+.siteChips {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  list-style: none;
+}
+
+.siteChip {
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid var(--status-critical);
+  border-radius: var(--radius-pill);
+  background-color: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+/* ---- Notification ---- */
+
+.notificationGap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  align-items: flex-start;
+}
+
+.notificationActions {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
+/* ---- Review flags ---- */
+
+.flags {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.flag {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-md);
+}
+
+/* Open and in time: work somebody owes and can still do. The hatch. */
+.flagOpen {
+  composes: unrecordedChip from '../../styles/unrecorded.module.css';
+  flex-direction: row;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-md);
+}
+
+/* Open and past its 48 hours: a finding, not a gap. */
+.flagOverdue {
+  border: 1px solid var(--status-critical);
+  background-color: var(--status-critical-tint);
+  background-image: none;
+  color: var(--status-critical-ink);
+}
+
+/* Done. Settled and quiet — sunken surface and ink, never a green pill (§3b),
+   because a column of green would drown the two that are not. */
+.flagDone {
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-sunken);
+  color: var(--ink-700);
+}
+
+.flagName {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.flagDetail {
+  margin-top: var(--space-4);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-regular);
+}
+
+.flagWhen {
+  flex-shrink: 0;
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  text-align: right;
+}
+
+/* ==========================================================================
+   The incident log — /incidents
+   Built to docs/incident-log.html.
+
+   The fourth queue in the shape /care-notes, omissions and handover share, so
+   the filter pills, the result line and the row rhythm are the same by
+   composition rather than by copy. Somebody who has learned one has learned
+   all of them.
+   ========================================================================== */
+
+.logHead {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+/* A link that navigates, styled as the primary action it is. */
+.reportAction {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-12) var(--space-20);
+  border: 1px solid var(--purple-600);
+  border-radius: var(--radius-md);
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.reportAction:hover {
+  background-color: var(--purple-900);
+  border-color: var(--purple-900);
+}
+
+/**
+ * Two findings, and the one difference from the other three queues.
+ *
+ * `1.5fr 1fr`: the lead is unacknowledged incidents, hatched, because it is the
+ * thing still fixable by whoever is looking. The secondary is undecided
+ * notifications on a plain surface — graver but older, and not what this screen
+ * is for.
+ *
+ * **Never summed and never one card.** An incident can be in both, so a total
+ * would double-count; and they are different failures, which is the reason
+ * that matters.
+ */
+.findings {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: var(--space-16);
+
+  /*
+   * Equal height, because they render as one comparison.
+   *
+   * `align-items: start` let the shorter card float with a void beneath it,
+   * which reads as two unrelated cards rather than two halves of one finding.
+   * The row decides the height; each card lays its own content out from the
+   * top.
+   */
+  align-items: stretch;
+}
+
+.findingLead {
+  /*
+   * Composes the hatch **treatment** rather than the panel box.
+   *
+   * `unrecordedPanel` is a flex column, and this card is a figure beside a
+   * body — so composing it meant the local `flex-direction: row` was fighting
+   * the composed rule and losing. The card rendered stacked, which is where
+   * the extra height came from: not padding, and not the content.
+   *
+   * `unrecorded` is the treatment on its own — dashed border, hatch, ink. The
+   * box belongs to whoever is drawing the box.
+   */
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-16);
+  align-items: flex-start;
+  padding: var(--space-16) var(--space-20);
+  border-left-width: var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.findingSecondary {
+  display: flex;
+  gap: var(--space-16);
+  align-items: flex-start;
+  padding: var(--space-16) var(--space-20);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-surface);
+  color: var(--ink-700);
+}
+
+.findingFigure {
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: -0.02em;
+}
+
+.findingBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.findingTitle {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.findingDetail {
+  max-width: 52ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-regular);
+}
+
+/* ---- Filters ---- */
+
+.filters {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  flex-wrap: wrap;
+  padding: var(--space-12) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Pill means filter. A twelve-item type list is not a pill row, so it is a
+   select — a different control because it is a different amount of choice,
+   not a different meaning. */
+.filterTab {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-surface);
+  color: var(--ink-500);
+  font-family: var(--font-family);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.filterTabActive {
+  border-color: var(--purple-600);
+  background-color: var(--purple-600);
+  color: var(--bg-surface);
+}
+
+.filterSelects {
+  display: flex;
+  gap: var(--space-8);
+  margin-left: auto;
+}
+
+.resultLine {
+  padding: var(--space-12) var(--space-24);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/* ---- Rows ---- */
+
+.logList {
+  list-style: none;
+}
+
+.logRow {
+  display: grid;
+
+  /*
+   * Same fix as the risk queue: the flexible track was in the middle, so the
+   * severity pill and its notification line sat marooned with a wide gap
+   * before Open. The content columns sit close to their content; the slack
+   * goes to the last track and the action is right-aligned in it.
+   */
+
+  /*
+   * Flexible content tracks, so the row spans the card.
+   *
+   * Every track was a fixed rem width, which made the row as wide as its
+   * columns and no wider: on a 1,990px card the content stopped at about 800px
+   * and the last third was dead. An earlier pass fixed the *action* by giving
+   * it a named width, which was the wrong end of the problem, and the comment
+   * that used to sit here described a middle 1fr absorbing all the slack and
+   * stranding the chip. Both readings were about where the slack went; there
+   * should not be that much slack. Each column now has a floor and a share of
+   * the width, and the action sits at the right edge of a row that reaches it.
+   */
+  grid-template-columns:
+    minmax(10rem, 1fr) minmax(10rem, 1fr) minmax(16rem, 2fr)
+    minmax(9rem, 1fr) 10rem;
+  gap: var(--space-20);
+  align-items: start;
+  width: 100%;
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--ink-900);
+  text-decoration: none;
+}
+
+.logRow:hover {
+  background-color: var(--purple-50);
+}
+
+.logList > li:first-child .logRow {
+  border-top: 0;
+}
+
+.rowWho,
+.rowWhat,
+.rowState,
+.rowSeverity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.rowName {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+/* A claim, never an empty column. */
+.rowNoResident {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.rowMeta {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/* Recorded and unremarkable renders quietly (§3b). A column of closed pills
+   would drown the rows that are the reason to open this screen. */
+.rowClosed {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/**
+ * What is owed on this row.
+ *
+ * The only place the secondary finding appears per row, and the way a reader
+ * gets from that card to the incidents it counts — the figure is not a dead
+ * number.
+ */
+.rowOwed {
+  color: var(--status-unrecorded-ink);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+}
+
+.rowOpen {
+  /*
+   * Fills its column rather than hugging its label.
+   *
+   * The track was `auto`, so the action sized itself to the word "Open" and
+   * sat against the right edge of a wide row with the gap between it and the
+   * last column doing nothing. A named track and a full-width control give the
+   * row the same left-to-right rhythm as every other list in the product.
+   */
+  justify-self: stretch;
+  justify-content: center;
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  color: var(--purple-600);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+ * The notification decision
+ * ------------------------------------------------------------------------ */
+
+.decideField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.decideLabel {
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+}
+
+.decideField textarea,
+.decideField input {
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+}
+
+.decideField textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.decideHint {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}

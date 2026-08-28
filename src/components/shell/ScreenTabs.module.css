@@ -1,0 +1,52 @@
+/**
+ * The tab strip that sits under a screen title and moves between the screens
+ * of one module.
+ *
+ * **One definition, in one file.** The resident profile had this treatment
+ * first; Medications now has two screens under a single sidebar item and needs
+ * the same one. Copying the rules would have put one concept on the screen in
+ * two treatments that drift apart at the first change — the failure shape the
+ * audit named. `profile.module.css` composes from here, so there is a single
+ * place a tab's height, underline or active colour is decided.
+ */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.tab {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  min-height: var(--space-40);
+
+  /* Pulls the tab's own 2px underline down over the row's 1px rule, so the
+     active one replaces that line rather than stacking a second one above it.
+     Off the 4px scale on purpose: this is cancelling a border width, not
+     spacing anything. */
+  margin-bottom: -1px;
+  padding: var(--space-8) var(--space-16);
+  border-bottom: 2px solid transparent;
+  color: var(--ink-400);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  cursor: not-allowed;
+}
+
+.tabBuilt {
+  color: var(--ink-500);
+  cursor: pointer;
+}
+
+.tabBuilt:hover {
+  color: var(--purple-900);
+}
+
+.tabActive {
+  border-bottom-color: var(--purple-600);
+  color: var(--purple-900);
+}

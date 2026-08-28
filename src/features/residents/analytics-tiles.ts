@@ -1,10 +1,11 @@
 import type { Aggregate } from '@/data/types'
 import type { ResidentSummary } from '@/data/access/client'
-import { INSUFFICIENT_EVIDENCE_THRESHOLD, coverageRatio } from '@/data/types'
+import { coverageRatio } from '@/data/types'
 import type { IconName } from '@/components/icon/registry.names.generated'
 import { hadCriticalGapAt, recordCompleteness } from '@/data/completeness'
 import { tileIcons, type TileId } from './analytics-tiles.icons'
 import { STALE_NOTE_HOURS, hasNoNoteWithinWindow } from './use-resident-filters'
+import { insufficientEvidenceThreshold } from '@/data/access/settings-store'
 
 /**
  * The analytics tiles above the residents list — declared, not assembled in a
@@ -209,7 +210,7 @@ export function buildAnalyticsTiles(
     }
 
     const thin =
-      coverage.total === 0 || coverageRatio(coverage) < INSUFFICIENT_EVIDENCE_THRESHOLD
+      coverage.total === 0 || coverageRatio(coverage) < insufficientEvidenceThreshold()
 
     if (thin) {
       return {

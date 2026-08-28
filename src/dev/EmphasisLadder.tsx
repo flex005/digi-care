@@ -25,16 +25,16 @@ export function EmphasisLadder() {
       <h2 className={styles.sectionTitle}>Three weights, in order of demand</h2>
       <p className={styles.sectionNote}>
         Quiet is not hidden. Every row below states its fact in full, with author and
-        timestamp where there is one — the difference is how hard each one pulls.
-        Nothing that is missing is ever quiet: the hatch is the loudest thing here and
-        stays that way.
+        timestamp where there is one. The difference is how hard each one pulls. Nothing
+        that is missing is ever quiet: the hatch is the loudest thing here and stays
+        that way.
       </p>
 
       <div className={styles.compare}>
         <div className={styles.compareCell}>
-          <span className={styles.compareLabel}>1 — nobody has looked · loudest</span>
+          <span className={styles.compareLabel}>1. Nobody has looked · loudest</span>
           <div className={styles.row}>
-            <Unrecorded label="Falls risk — not assessed" />
+            <Unrecorded label="Falls risk not assessed" />
           </div>
           <div className={styles.row}>
             <Unrecorded label="Never scheduled" />
@@ -42,9 +42,9 @@ export function EmphasisLadder() {
         </div>
 
         <div className={styles.compareCell}>
-          <span className={styles.compareLabel}>2 — recorded, needs action</span>
+          <span className={styles.compareLabel}>2. Recorded, needs action</span>
           <div className={styles.row}>
-            <StatusPill tone="critical" label="Falls — HIGH" />
+            <StatusPill tone="critical" label="Falls · HIGH" />
           </div>
           <div className={styles.row}>
             <StatusPill
@@ -57,10 +57,10 @@ export function EmphasisLadder() {
 
         <div className={styles.compareCell}>
           <span className={styles.compareLabel}>
-            3 — recorded, nothing to do · quietest
+            3. Recorded, nothing to do · quietest
           </span>
           <div className={styles.row}>
-            <Settled label="All assessed — no flags" />
+            <Settled label="All assessed, no flags" />
           </div>
           <div className={styles.row}>
             <Settled

@@ -2,6 +2,7 @@ import type { RiskLevel, RiskStatus } from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
 import { useSiteFormat } from '@/app/session/use-session'
 import { StatusPill } from './StatusPill'
+import { scoreText } from '@/features/risk/score'
 import { Unrecorded } from './Unrecorded'
 
 /**
@@ -40,14 +41,14 @@ export function RiskBadge({ name, status }: RiskBadgeProps) {
 
   switch (status.kind) {
     case 'not_assessed':
-      return <Unrecorded label={`${name} — not assessed`} />
+      return <Unrecorded label={`${name} not assessed`} />
 
     case 'assessed':
       return (
         <StatusPill
           tone={LEVEL_TONE[status.level]}
-          label={`${name} — ${LEVEL_LABEL[status.level]}`}
-          detail={`score ${status.score} · ${status.assessedBy.displayName}, ${format.instantDate(
+          label={`${name} · ${LEVEL_LABEL[status.level]}`}
+          detail={`${scoreText(status.score)} · ${status.assessedBy.displayName}, ${format.instantDate(
             status.assessedAt,
           )}`}
         />

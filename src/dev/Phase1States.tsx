@@ -41,7 +41,7 @@ export function Phase1States() {
   return (
     <>
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>AllergyStatus — three states</h2>
+        <h2 className={styles.sectionTitle}>AllergyStatus: three states</h2>
         <p className={styles.sectionNote}>
           The sharpest case in the product. Three members rather than{' '}
           <code>Recorded&lt;Allergy[]&gt;</code>, because an empty array meaning
@@ -62,7 +62,7 @@ export function Phase1States() {
         <h2 className={styles.sectionTitle}>EolcStatus</h2>
         <p className={styles.sectionNote}>
           Rendered in <strong>info blue</strong>, deliberately departing from source PRD
-          §16.3’s grey — grey is reserved system-wide for unrecorded, so a recorded EOLC
+          §16.3’s grey. Grey is reserved system-wide for unrecorded, so a recorded EOLC
           decision in grey would read as “nobody has looked”. Check it against DNAR and
           ISOLATION with greyscale on: the three recorded states must stay mutually
           distinguishable, and none of them may read as the hatch.
@@ -128,7 +128,7 @@ export function Phase1States() {
         <h2 className={styles.sectionTitle}>MoodRecord</h2>
         <p className={styles.sectionNote}>
           Always a word, never a face alone. A note without a mood recorded is hatched,
-          not neutral — a care worker who did not record how somebody seemed has not
+          not neutral: a care worker who did not record how somebody seemed has not
           recorded that they seemed fine.
         </p>
         {Object.entries(moodStates).map(([kind, moods]) => (
@@ -141,14 +141,14 @@ export function Phase1States() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>RecordedList&lt;T&gt; — three states</h2>
+        <h2 className={styles.sectionTitle}>RecordedList&lt;T&gt;: three states</h2>
         <p className={styles.sectionNote}>
           A bare <code>T[]</code> cannot tell “nobody recorded who is involved” from
           “somebody asked and there is nobody”. That is the same ambiguity{' '}
           <code>AllergyStatus</code> was split into three members to remove, and it came
           back through the arrays after being driven out of the scalars.{' '}
-          <code>Recorded&lt;T[]&gt;</code> does not fix it either — an empty array
-          inside a <code>recorded</code> wrapper reintroduces it one level down, so{' '}
+          <code>Recorded&lt;T[]&gt;</code> does not fix it either: an empty array inside
+          a <code>recorded</code> wrapper reintroduces it one level down, so{' '}
           <code>items</code> is typed non-empty.
           <strong> none_involved carries an author</strong>, because “we asked, there is
           no LPA” is a positive claim somebody made.
@@ -173,7 +173,7 @@ export function Phase1States() {
         <h2 className={styles.sectionTitle}>PhotoStatus</h2>
         <p className={styles.sectionNote}>
           No resident in the fixtures has a photograph on file, so all 32 render an
-          initials monogram — which is what the system genuinely shows in the absence of
+          initials monogram, which is what the system genuinely shows in the absence of
           a photograph, not a stand-in for one. The <code>on_file</code> branch is
           exercised here against a synthetic sample so it is not dead code; that sample
           is dev-only and never appears on a real screen. When real photographs arrive
@@ -181,7 +181,7 @@ export function Phase1States() {
         </p>
         <div className={styles.row}>
           <div className={styles.stack}>
-            <span className={styles.groupTitle}>not_on_file — initials monogram</span>
+            <span className={styles.groupTitle}>not_on_file: initials monogram</span>
             <Avatar
               photo={photoStates.not_on_file[0]}
               name="Emmanuel Okafor"
@@ -189,7 +189,7 @@ export function Phase1States() {
             />
           </div>
           <div className={styles.stack}>
-            <span className={styles.groupTitle}>on_file — synthetic sample</span>
+            <span className={styles.groupTitle}>on_file: synthetic sample</span>
             <Avatar
               photo={photoStates.on_file[0]}
               name="Emmanuel Okafor"

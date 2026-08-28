@@ -14,7 +14,17 @@
 import type {
   Allergy,
   AllergyStatus,
+  CarePlanDomainId,
   CarePlanDomainRecord,
+  DocumentId,
+  DownstreamEffect,
+  CapacityAssessmentId,
+  DecisionAuthority,
+  ConsentRecord,
+  CapacityFinding,
+  CapacityAssessment,
+  CarePlanReviewState,
+  CarePlanVersion,
   ConsentStatus,
   ConsentTypeId,
   EolcStatus,
@@ -35,6 +45,8 @@ import type {
   SupportLevel,
 } from '../types'
 import { CARE_PLAN_DOMAINS, CONSENT_TYPES, RISK_ASSESSMENT_TEMPLATES } from '../types'
+import { SCORED_TEMPLATES } from '@/features/risk/instrument'
+import { pronounise } from './pronouns'
 import {
   NOW,
   daysAgo,
@@ -237,12 +249,12 @@ const DIETS = [
 const LANGUAGES = ['English', 'English', 'English', 'Igbo', 'Yoruba', 'Polish', 'Welsh']
 
 const COMMUNICATION_NEEDS = [
-  'Hard of hearing on the left. Sit on his right and speak clearly, do not shout.',
+  'Hard of hearing on the left. Sit on {their} right and speak clearly, do not shout.',
   'Wears reading glasses, kept in the bedside drawer. Large print preferred.',
-  'Understands more than she can say. Give time and use short sentences.',
+  'Understands more than {they} can say. Give time and use short sentences.',
   'Uses a communication board for meals and personal care choices.',
   'Speaks English and Igbo; reverts to Igbo when tired or distressed.',
-  'Prefers written notes for anything important — hearing aid whistles.',
+  'Prefers written notes for anything important; the hearing aid whistles.',
 ]
 
 const RELIGIONS = [
@@ -257,8 +269,8 @@ const RELIGIONS = [
 
 const CULTURES = [
   'British',
-  'Nigerian — Igbo',
-  'Nigerian — Yoruba',
+  'Nigerian, Igbo',
+  'Nigerian, Yoruba',
   'Irish',
   'British Caribbean',
   'Polish',
@@ -323,21 +335,51 @@ const FAMILY_FORENAMES = [
 
 type Rng = ReturnType<typeof makeRandom>
 
+/**
+ * A review's scheduling state.
+ *
+ * **`never_scheduled` is reachable from a record that exists**, and it was
+ * not. The old shape returned it only where the thing had never been done at
+ * all, so of 180 assessed risks not one had "assessed, and nobody set a date
+ * to look again" — the branch `AssessmentListTab` renders for exactly that
+ * case had no fixture reaching it, which is §8's first standing check with a
+ * screen already written against it.
+ *
+ * It is the gap Phase 5 found and the one the review queue leads on: somebody
+ * looked once, formed a judgement, and nothing says when anybody will look
+ * again. A small band rather than a large one — it is a real failure, not the
+ * ordinary case.
+ */
 function makeReviewState(rng: Rng, hasBeenDone: boolean): ReviewState {
   if (!hasBeenDone) return { kind: 'never_scheduled' }
   const roll = rng.int(1, 100)
-  if (roll <= 55) {
+  // Done, and nobody set a date to look again.
+  if (roll <= 6) return { kind: 'never_scheduled' }
+  if (roll <= 58) {
     const completedOn = daysAgo(rng.int(5, 60))
+    /*
+     * The date it had been due, so lateness survives the completion.
+     *
+     * Most reviews land on or before their date; a minority land after it, and
+     * those must still read as late afterwards. Nothing records "this was
+     * late" — it is `completedOn > dueOn` at the point of reading, so there is
+     * nothing for a later write to overwrite.
+     */
+    const dueOn =
+      rng.int(1, 100) <= 18
+        ? daysAgo(rng.int(1, 30), completedOn)
+        : daysAhead(rng.int(0, 10), completedOn)
     return {
       kind: 'completed',
       completedOn: toIsoDate(completedOn),
       completedBy: rng.pick(managers),
+      against: { kind: 'due_on', dueOn: toIsoDate(dueOn) },
       // Next review dated from completion and comfortably ahead, which is
       // what a home that is keeping up looks like.
       nextDueOn: toIsoDate(daysAhead(rng.int(90, 240), completedOn)),
     }
   }
-  if (roll <= 85)
+  if (roll <= 86)
     return { kind: 'scheduled', dueOn: toIsoDate(daysAhead(rng.int(7, 90))) }
   if (roll <= 95) return { kind: 'due', dueOn: toIsoDate(daysAhead(rng.int(0, 3))) }
   const dueOn = daysAgo(rng.int(4, 95))
@@ -348,19 +390,76 @@ function makeReviewState(rng: Rng, hasBeenDone: boolean): ReviewState {
   }
 }
 
-function makeRiskStatus(rng: Rng, assessedChance: number): RiskStatus {
+/**
+ * The whole-plan review, which carries what was outstanding when it was signed.
+ *
+ * Derived from the plan rather than drawn, because that is the property that
+ * matters: **18 of 32 residents had a care plan review reading `completed` or
+ * `scheduled` while a domain of that plan was unwritten or past its date.**
+ * Grace Adeyemi's read *completed* over a mobility domain two months overdue.
+ * A queue built on that field would have reported all eighteen as reviewed.
+ */
+function makeCarePlanReview(
+  rng: Rng,
+  hasBeenDone: boolean,
+  carePlan: CarePlanDomainRecord[],
+): CarePlanReviewState {
+  const state = makeReviewState(rng, hasBeenDone)
+  if (state.kind !== 'completed') return state
+
+  const gaps = carePlan
+    .filter(
+      (domain) =>
+        domain.status.kind === 'not_started' || domain.status.kind === 'review_due',
+    )
+    .map((domain) => domain.domainId)
+
+  return {
+    ...state,
+    outstanding:
+      gaps.length === 0
+        ? { kind: 'none_outstanding' }
+        : {
+            kind: 'outstanding',
+            domains: gaps as [CarePlanDomainId, ...CarePlanDomainId[]],
+          },
+  }
+}
+
+function makeRiskStatus(
+  rng: Rng,
+  assessedChance: number,
+  templateId: RiskTemplateId,
+): RiskStatus {
   if (!rng.chance(assessedChance)) return { kind: 'not_assessed' }
   const level = rng.pick(['low', 'low', 'moderate', 'moderate', 'high'] as const)
   const assessedAt = daysAgo(rng.int(5, 200))
+  /*
+   * Drawn before the instrument is consulted, and discarded for the unscored
+   * ones.
+   *
+   * **The draw has to happen either way**, because skipping it for four of the
+   * nine templates shifts every later value in the stream — every resident's
+   * remaining assessments, and then everything generated after them. Two
+   * unrelated tests went red the first time, in a file about LPA holders.
+   * Same discipline as the pronoun substitution: decide after the draw, never
+   * instead of it.
+   */
+  const value =
+    level === 'low'
+      ? rng.int(0, 24)
+      : level === 'moderate'
+        ? rng.int(25, 49)
+        : rng.int(50, 90)
+
   return {
     kind: 'assessed',
     level,
-    score:
-      level === 'low'
-        ? rng.int(0, 24)
-        : level === 'moderate'
-          ? rng.int(25, 44)
-          : rng.int(45, 90),
+    // An unscored instrument still reaches a level — somebody looked and
+    // formed a judgement. What it does not produce is a number.
+    score: SCORED_TEMPLATES.has(templateId)
+      ? { kind: 'scored', value }
+      : { kind: 'unscored' },
     assessedAt: toIsoDateTime(assessedAt),
     assessedBy: rng.pick(managers),
     reviewState: makeReviewState(rng, true),
@@ -381,7 +480,7 @@ function makeRisks(
     )
       ? assessedChance
       : assessedChance * 0.55
-    risks[template.id] = makeRiskStatus(rng, weight)
+    risks[template.id] = makeRiskStatus(rng, weight, template.id)
   }
   return risks
 }
@@ -485,7 +584,62 @@ function makeSupportLevel(rng: Rng, assessed: boolean): SupportLevel {
   ] as const)
 }
 
-const DOMAIN_SUMMARIES: Record<string, string[]> = {
+/**
+ * The second field, and it needed its own pool.
+ *
+ * Preferences were drawn from `DOMAIN_SUMMARIES` — so a plan's needs and its
+ * preferences came out as **the same sentence**, and the editor's second box
+ * repeated the first. A field that always echoes another is not a second fact
+ * about somebody; it is one fact rendered twice, which is the diff screen's
+ * failure mode arriving early.
+ *
+ * Same voice as the summaries: first person, what they say, not what a nurse
+ * would write about them.
+ */
+const DOMAIN_PREFERENCES: Record<CarePlanDomainId, string[]> = {
+  personal_care: [
+    'I like to be washed and dressed before breakfast, not after.',
+    'I would rather one person helped me than two, if it can be done that way.',
+  ],
+  nutrition: [
+    'I take my tea strong with two sugars and I like it in my own cup.',
+    'I would rather eat in my room than in the dining room.',
+  ],
+  mobility: [
+    'I would rather walk than be pushed, even if it takes a while.',
+    'Do not take my arm without asking me first.',
+  ],
+  continence: [
+    'Ask me quietly, and not in front of anybody else.',
+    'I would rather use the toilet than a commode, however long it takes.',
+  ],
+  communication: [
+    'Give me time to find the word. Do not finish it for me.',
+    'Write it down for me if I have not understood.',
+  ],
+  cognitive: [
+    'Do not argue with me about where I am. Sit down with me instead.',
+    'I like the radio on in the afternoon, not the television.',
+  ],
+  social_emotional: [
+    'Ask me before you bring anybody into my room.',
+    'I would rather be asked twice than left out.',
+  ],
+  end_of_life: [
+    'I want my own clothes on and the window open.',
+    'I would rather have quiet than a room full of people.',
+  ],
+  physical_health: [
+    'Tell me what you are checking before you check it.',
+    'I would rather see the doctor in the morning.',
+  ],
+  medication: [
+    'Bring them to me one at a time, not all together in the pot.',
+    'I like to take them sitting up, never lying down.',
+  ],
+}
+
+const DOMAIN_SUMMARIES: Record<CarePlanDomainId, string[]> = {
   personal_care: [
     'I like to wash at the sink in the morning and prefer a shower on Tuesdays and Fridays.',
     'I need support with my back and feet but I can manage my face and hands myself.',
@@ -528,54 +682,260 @@ const DOMAIN_SUMMARIES: Record<string, string[]> = {
   ],
 }
 
+/**
+ * What staff will do about it — the third field, and the only one written in
+ * the second person about staff rather than the first person about the
+ * resident.
+ */
+const AGREED_ACTIONS: Record<CarePlanDomainId, string[]> = {
+  personal_care: [
+    'Offer a wash at the basin before breakfast. Lay out clothes and let them choose.',
+    'Two staff for the shower on Tuesdays and Fridays. Do not rush the drying.',
+  ],
+  nutrition: [
+    'Sit with them at lunch. Offer a second helping rather than asking if they want one.',
+    'Fortified milk at breakfast and supper. Weigh weekly and record it.',
+  ],
+  mobility: [
+    'Frame within reach whenever they are in the chair. Two staff for transfers.',
+    'Walk beside them to the dining room at every meal.',
+  ],
+  continence: [
+    'Offer the toilet every two hours during the day and on every night check.',
+    'Continence products in the wardrobe. Check discreetly, never in front of others.',
+  ],
+  communication: [
+    'Approach from their right. Give them time to find the word: do not finish it.',
+    'Use their first name. Face them when you speak.',
+  ],
+  cognitive: [
+    'From mid-afternoon, keep the same carer with them where the rota allows.',
+    'Do not correct them about where they are. Redirect with a cup of tea.',
+  ],
+  social_emotional: [
+    'Invite them to the gardening group each week. Accept a no without pressing.',
+    'Talk about their partner when they raise it. Do not change the subject.',
+  ],
+  end_of_life: [
+    'Do not call an ambulance without speaking to the GP first, except in an emergency.',
+    'Call the family first, then the pastor. Numbers are in the front of the file.',
+  ],
+  physical_health: [
+    'Inhaler before they get up on cold mornings. Report any change in the chest.',
+    'Blood sugar twice daily. Show them the reading each time.',
+  ],
+  medication: [
+    'Tablets with yoghurt, never with water alone.',
+    'Say what each tablet is for before offering it.',
+  ],
+}
+
+/**
+ * The care plan, and the reason its history has a shape.
+ *
+ * The volume is aimed at the spread PRD §5.2 asks for across 32 residents and
+ * ten domains: most complete and in date, a band approaching review, a smaller
+ * band past it, a few part-written, and the rest never written down at all.
+ *
+ * **Never written down is this module's "never assessed."** It needs a
+ * resident carrying it, not only a scattering of domains.
+ */
 function makeCarePlan(rng: Rng, completeness: number): CarePlanDomainRecord[] {
   return CARE_PLAN_DOMAINS.map((domain) => {
     const roll = rng.int(1, 100)
     const started = roll <= completeness
+    /*
+     * All three pools are complete records over the domain constant, so a
+     * domain added later is a compile error rather than a plan with a blank
+     * field in it.
+     */
+    const summaries = DOMAIN_SUMMARIES[domain.id]
+    const preferences = DOMAIN_PREFERENCES[domain.id]
+    const actions = AGREED_ACTIONS[domain.id]
+
     if (!started) {
       return {
         domainId: domain.id,
         status: { kind: 'not_started' },
         supportLevel: { kind: 'not_assessed' },
         summary: '',
+        versions: { kind: 'never_finalised' },
+        draft: { kind: 'none' },
       }
     }
+
+    /*
+     * A part-written domain: somebody started and has not signed.
+     *
+     * Its draft is deliberately **not** in the history. An abandoned or
+     * unsigned edit leaves no trace there, because nobody followed it — the
+     * history is what staff were told to do, not what somebody intended.
+     */
+    if (rng.chance(0.05)) {
+      const updatedAt = daysAgo(rng.int(1, 40))
+      return {
+        domainId: domain.id,
+        status: {
+          kind: 'in_progress',
+          updatedBy: rng.pick(managers),
+          updatedAt: toIsoDateTime(updatedAt),
+        },
+        supportLevel: makeSupportLevel(rng, true),
+        summary: '',
+        versions: { kind: 'never_finalised' },
+        draft: {
+          kind: 'draft',
+          currentNeeds: rng.pick(summaries),
+          preferences: '',
+          agreedActions: '',
+          updatedBy: rng.pick(managers),
+          updatedAt: toIsoDateTime(updatedAt),
+        },
+      }
+    }
+
     const finalisedOn = daysAgo(rng.int(20, 300))
-    // 4% of domains are genuinely past their review date. Higher than that and
-    // "Review Due" stops meaning anything, which is the failure mode the Stale
-    // state exists to catch.
-    const nextReviewOn = rng.chance(0.04)
-      ? daysAgo(rng.int(3, 90))
-      : daysAhead(rng.int(20, 240))
+    // A band approaching review, a smaller band past it, the rest in date.
+    const timing = rng.int(1, 100)
+    const nextReviewOn =
+      timing <= 7
+        ? daysAgo(rng.int(3, 90))
+        : timing <= 17
+          ? daysAhead(rng.int(1, 30))
+          : daysAhead(rng.int(31, 240))
     const overdue = nextReviewOn < NOW
-    const summaries = DOMAIN_SUMMARIES[domain.id] ?? []
+
+    // One or two finalised versions, current last. A second version is a
+    // revision — the previous one becomes history rather than a correction.
+    const revised = rng.chance(0.35)
+    const previousOn = daysAgo(rng.int(320, 700))
+    const current: CarePlanVersion = {
+      currentNeeds: rng.pick(summaries),
+      preferences: rng.pick(preferences),
+      agreedActions: rng.pick(actions),
+      finalisedBy: rng.pick(managers),
+      finalisedOn: toIsoDate(finalisedOn),
+    }
+    /*
+     * A previous version fills all three fields, like any other.
+     *
+     * Its `preferences` used to be the empty string, which said a manager had
+     * signed a plan with a blank in it — and the editor refuses to finalise on
+     * exactly that. A fixture that holds a record the product will not let
+     * anybody create is wrong on the facts, not merely thin, and this one
+     * would have rendered as an empty box in the middle of the diff: a blank
+     * that reads as "she had no preferences" rather than "nobody wrote them".
+     */
+    const history: [CarePlanVersion, ...CarePlanVersion[]] = revised
+      ? [
+          {
+            currentNeeds: rng.pick(summaries),
+            preferences: rng.pick(preferences),
+            agreedActions: rng.pick(actions),
+            finalisedBy: rng.pick(managers),
+            finalisedOn: toIsoDate(previousOn),
+          },
+          current,
+        ]
+      : [current]
+
     return {
       domainId: domain.id,
       status: overdue
         ? {
             kind: 'review_due',
-            finalisedBy: rng.pick(managers),
-            finalisedOn: toIsoDate(finalisedOn),
+            finalisedBy: current.finalisedBy,
+            finalisedOn: current.finalisedOn,
             dueOn: toIsoDate(nextReviewOn),
             daysOverdue: daysBetween(nextReviewOn, NOW),
           }
         : {
             kind: 'complete',
-            finalisedBy: rng.pick(managers),
-            finalisedOn: toIsoDate(finalisedOn),
+            finalisedBy: current.finalisedBy,
+            finalisedOn: current.finalisedOn,
             nextReviewOn: toIsoDate(nextReviewOn),
           },
       supportLevel: makeSupportLevel(rng, true),
-      summary: summaries.length > 0 ? rng.pick(summaries) : '',
+      summary: current.currentNeeds,
+      versions: { kind: 'finalised', history },
+      draft: { kind: 'none' },
     }
   })
 }
 
+/**
+ * The eight consents, and the capacity assessments that authorise them.
+ *
+ * **Every recorded decision names an assessment, and every assessment names
+ * the decisions it covers.** One conversation can produce one assessment
+ * covering several consents — which is what a manager sitting down with
+ * somebody actually does — and the compiler refuses a consent recorded against
+ * an assessment that does not name its type.
+ *
+ * `not_sought` and `pending` carry no authority. Nothing has been decided, so
+ * there is nobody who decided it.
+ */
 function makeConsents(
   rng: Rng,
   soughtChance: number,
-): Record<ConsentTypeId, ConsentStatus> {
-  const consents = {} as Record<ConsentTypeId, ConsentStatus>
+  residentId: ResidentId,
+  hasHealthLpa: boolean,
+): ConsentRecord {
+  const consents = {} as Record<string, unknown>
+
+  /*
+   * One sitting, one assessment.
+   *
+   * The assessment covers everything decided that day, which is why it is
+   * drawn once rather than per type — and the fixtures then look like a
+   * conversation rather than like eight unrelated events.
+   */
+  const assessedOn = toIsoDate(daysAgo(rng.int(20, 500)))
+  const assessedBy = rng.pick(managers)
+  const lacks = rng.chance(0.22)
+  const finding: CapacityFinding = lacks
+    ? {
+        kind: 'lacks_capacity',
+        diagnosticTest: rng.pick(DIAGNOSTIC_FINDINGS),
+        functionalTest: rng.pick(FUNCTIONAL_FINDINGS),
+      }
+    : { kind: 'has_capacity' }
+
+  const assessment: CapacityAssessment = {
+    id: `cap-${residentId.replace('res-', '')}` as CapacityAssessmentId,
+    residentId,
+    finding,
+    covers: Object.fromEntries(
+      CONSENT_TYPES.map((type) => [type.id, true]),
+    ) as CapacityAssessment['covers'],
+    assessedOn,
+    assessedBy,
+    note: lacks
+      ? 'Went through it twice with a break. Daughter present for the second conversation.'
+      : 'Explained it, asked her to tell me back what it meant, and she did.',
+  }
+
+  const authority = (): DecisionAuthority => {
+    if (lacks && hasHealthLpa && rng.chance(0.4)) {
+      return {
+        kind: 'lpa_holder',
+        assessment,
+        who: 'Health and welfare attorney on file',
+        documentId: 'doc-lpa-0001' as DocumentId,
+      }
+    }
+    if (lacks) {
+      return {
+        kind: 'best_interests',
+        assessment,
+        consulted: ['Dr S. Achebe', 'Next of kin', 'Senior carer on duty'],
+        rationale:
+          'Agreed as being in their best interests after talking it through with the family.',
+      }
+    }
+    return { kind: 'the_resident', assessment }
+  }
+
   for (const type of CONSENT_TYPES) {
     if (!rng.chance(soughtChance)) {
       consents[type.id] = { kind: 'not_sought' }
@@ -585,10 +945,11 @@ function makeConsents(
     const on = toIsoDate(daysAgo(rng.int(20, 500)))
     if (roll <= 60) {
       consents[type.id] = {
-        kind: 'consented',
+        kind: 'given',
         method: rng.pick(['written', 'verbal', 'digital_signature'] as const),
         on,
-        by: rng.pick(managers),
+        recordedBy: assessedBy,
+        by: authority(),
       }
     } else if (roll <= 72) {
       consents[type.id] = {
@@ -596,26 +957,58 @@ function makeConsents(
         requestedOn: toIsoDate(daysAgo(rng.int(2, 30))),
         requestedBy: rng.pick(managers),
       }
-    } else if (roll <= 82) {
+    } else if (roll <= 84) {
       consents[type.id] = {
         kind: 'refused',
         on,
-        note: 'Declined after discussion with family.',
-        recordedBy: rng.pick(managers),
+        note: rng.pick(REFUSAL_NOTES),
+        recordedBy: assessedBy,
+        by: authority(),
       }
     } else {
+      /*
+       * A best-interests decision that concludes **no**.
+       *
+       * The shape the old union could not express: `best_interest` implied a
+       * positive by omission, so a process that decided against something had
+       * nowhere to go.
+       */
       consents[type.id] = {
-        kind: 'best_interest',
-        decidedOn: on,
-        consulted: ['Dr S. Achebe', 'Next of kin', 'Senior carer on duty'],
-        rationale:
-          'Lacks capacity for this decision; agreed as being in their best interests.',
-        decidedBy: staffOkonkwo,
+        kind: 'refused',
+        on,
+        note: 'Decided against on their behalf after consulting the family and the GP.',
+        recordedBy: assessedBy,
+        by: {
+          kind: 'best_interests',
+          assessment,
+          consulted: ['Dr S. Achebe', 'Next of kin', 'Senior carer on duty'],
+          rationale:
+            'Weighed up and agreed that it would not be in their best interests.',
+        },
       }
     }
   }
-  return consents
+
+  return consents as ConsentRecord
 }
+
+const DIAGNOSTIC_FINDINGS = [
+  'Moderate vascular dementia, diagnosed 2023.',
+  'Alzheimer\u2019s disease, diagnosed 2021, moderate stage.',
+  'Delirium following a chest infection, not yet resolved.',
+]
+
+const FUNCTIONAL_FINDINGS = [
+  'Could repeat the options back but could not hold them together long enough to compare.',
+  'Understood the question but could not weigh the risks against the benefits.',
+  'Could not retain the explanation long enough to reach a decision.',
+]
+
+const REFUSAL_NOTES = [
+  'Said no, and said why: she does not want her picture anywhere.',
+  'Declined after talking it over with her son.',
+  'Said he would rather not, and did not want to discuss it further.',
+]
 
 function makeImportantPeople(rng: Rng, richness: number): ImportantPeople {
   const person = (isPrimary: boolean) => ({
@@ -793,7 +1186,25 @@ function makeResident(person: Person, siteId: SiteId, index: number): Resident {
   const resuscitation = makeResuscitation(rng)
   const gp = rng.pick(GP_PRACTICES)
 
-  return {
+  /*
+   * Only a health-and-welfare LPA can consent to care.
+   *
+   * `LpaType` already distinguishes it from a financial one, and a financial
+   * attorney consenting to photography is a real-world error worth being
+   * unable to represent — so the authority is not offered where there is no
+   * health-and-welfare LPA on record.
+   */
+  const hasHealthLpa = rng.chance(richness * 0.35)
+
+  /*
+   * The plan is drawn inside the literal and the review after it, in that
+   * order, because the review has to be told what was outstanding.
+   *
+   * Not hoisted: `makeCarePlan` draws from the same stream, and moving the
+   * draw earlier would shift every fixture after it. The review was already
+   * the last field drawn, so building it one line later costs nothing.
+   */
+  const built: Omit<Resident, 'carePlanReview'> = {
     id: `res-${person.id}` as ResidentId,
     siteId,
     fullLegalName: person.full,
@@ -810,7 +1221,28 @@ function makeResident(person: Person, siteId: SiteId, index: number): Resident {
       : UNRECORDED,
     nhsNumber: rng.chance(richness)
       ? recorded(
-          `${rng.int(400, 799)} ${rng.int(100, 999)} ${rng.int(1000, 9999)}`,
+          /*
+           * **The 999 range, which NHS Digital reserves for test data and will
+           * never issue.** These were drawn at random in the real 400–799
+           * shape, and roughly one in eleven random numbers satisfies the
+           * Modulus 11 check digit a real NHS number carries — two of the
+           * twenty-nine here did, which made them indistinguishable from
+           * numbers belonging to somebody. A fixture is not allowed to collide
+           * with a real person's identifier, however unlikely the collision.
+           */
+          /*
+           * **Three draws, because the first version took two and reshuffled
+           * every fixture after it.** The generator shares one seeded stream,
+           * so the *count* of calls is load-bearing even when the values are
+           * not: dropping one moved every later draw up a place, repaired the
+           * NHS numbers and silently re-paired residents with communication
+           * needs — a resident whose pronouns are they/them acquired a need
+           * saying "sit on her right". One guard caught it.
+           */
+          `999 ${`${rng.int(0, 999)}`.padStart(3, '0')} ${`${rng.int(0, 99)}`.padStart(
+            2,
+            '0',
+          )}${`${rng.int(0, 99)}`.padStart(2, '0')}`,
           rng.pick(managers),
           admittedOn,
         )
@@ -824,7 +1256,7 @@ function makeResident(person: Person, siteId: SiteId, index: number): Resident {
       ? recorded(
           rng.pick([
             'Permanent placement',
-            'Respite — 4 weeks',
+            'Respite, 4 weeks',
             'Permanent, under review at 6 months',
           ]),
           rng.pick(managers),
@@ -923,7 +1355,7 @@ function makeResident(person: Person, siteId: SiteId, index: number): Resident {
       : UNRECORDED,
     communicationNeeds: rng.chance(richness * 0.75)
       ? recorded(
-          rng.pick(COMMUNICATION_NEEDS),
+          pronounise(rng.pick(COMMUNICATION_NEEDS), person.pronouns),
           rng.pick(carersAndSeniors),
           daysAgo(rng.int(10, 200)),
         )
@@ -941,8 +1373,24 @@ function makeResident(person: Person, siteId: SiteId, index: number): Resident {
     importantPeople: makeImportantPeople(rng, richness),
     futurePlans: makeFuturePlans(rng, resuscitation, richness),
     carePlan: makeCarePlan(rng, thin ? 45 : 82),
-    consents: makeConsents(rng, thin ? 0.4 : 0.85),
-    carePlanReview: makeReviewState(rng, rng.chance(richness)),
+    consents: makeConsents(
+      rng,
+      thin ? 0.4 : 0.85,
+      `res-${person.id}` as ResidentId,
+      hasHealthLpa,
+    ),
+  }
+
+  /*
+   * Built from the plan, not beside it.
+   *
+   * Drawing them independently is how eighteen residents ended up with a care
+   * plan review reading "completed" over domains nobody had written — Grace
+   * Adeyemi's read completed over a mobility domain two months overdue.
+   */
+  return {
+    ...built,
+    carePlanReview: makeCarePlanReview(rng, rng.chance(richness), built.carePlan),
   }
 }
 
@@ -1057,11 +1505,20 @@ patch('sowande', (resident) => ({
       { kind: 'not_assessed' },
     ]),
   ) as Record<RiskTemplateId, RiskStatus>,
+  /*
+   * Not one domain written, and that is the pinned case.
+   *
+   * **"Never written down" is this module's "never assessed"** — and it needs
+   * a resident carrying all ten rather than a scattering across the home,
+   * because the screen's own finding is a person nobody has planned for.
+   */
   carePlan: CARE_PLAN_DOMAINS.map((domain) => ({
     domainId: domain.id,
     status: { kind: 'not_started' } as const,
     supportLevel: { kind: 'not_assessed' } as const,
     summary: '',
+    versions: { kind: 'never_finalised' } as const,
+    draft: { kind: 'none' } as const,
   })),
   consents: Object.fromEntries(
     CONSENT_TYPES.map((type) => [type.id, { kind: 'not_sought' }]),
@@ -1080,19 +1537,65 @@ patch('sowande', (resident) => ({
 /** Gap 6 — withdrawn photography consent with existing photos still on file.
  *  The downstream-effects case: withdrawing consent does not retroactively
  *  delete what was taken while it was given. */
-patch('brennan', (resident) => ({
-  ...resident,
-  consents: {
-    ...resident.consents,
-    photography: {
-      kind: 'withdrawn',
-      on: toIsoDate(daysAgo(28)),
-      note: 'Family requested removal. 14 photographs remain on file and in the Family Portal.',
-      previouslyConsentedOn: toIsoDate(daysAgo(420)),
-      recordedBy: staffOkonkwo,
+patch('brennan', (resident) => {
+  /*
+   * The effects are **data with counts**, not a sentence.
+   *
+   * This used to be prose in a `note`, and a sentence cannot be asserted
+   * against: a withdrawal that forgot to mention the photographs would have
+   * looked identical to one that did — the product's own failure inside the
+   * record written to prevent it.
+   *
+   * One count is unknown on purpose. Nobody has counted the prints on the
+   * corridor noticeboards, and **nobody knowing how many is not the same as
+   * none** — a zero there would be a figure nobody measured.
+   */
+  const remains: DownstreamEffect[] = [
+    {
+      name: 'Photographs on file',
+      explanation:
+        'Taken while consent stood. Still in his record and still visible to his daughter in the Family Portal.',
+      count: { kind: 'counted', value: 14 },
     },
-  },
-}))
+    {
+      name: "Photographs on the home's noticeboards",
+      explanation: 'Physical prints in the corridors and the lounge.',
+      count: { kind: 'not_counted' },
+    },
+    {
+      name: 'Family Portal access is still given',
+      explanation:
+        'A separate consent, unaffected by this one. His daughter keeps access unless that is withdrawn too.',
+      count: { kind: 'unchanged' },
+    },
+  ]
+
+  const assessment: CapacityAssessment<'photography'> = {
+    id: 'cap-brennan-photography' as CapacityAssessmentId,
+    residentId: resident.id,
+    finding: { kind: 'has_capacity' },
+    covers: { photography: true },
+    assessedOn: toIsoDate(daysAgo(28)),
+    assessedBy: staffOkonkwo,
+    note: 'Asked him directly. He was clear, and repeated it back unprompted.',
+  }
+
+  return {
+    ...resident,
+    consents: {
+      ...resident.consents,
+      photography: {
+        kind: 'withdrawn',
+        on: toIsoDate(daysAgo(28)),
+        note: 'Asked for his photographs to stop being taken.',
+        previouslyGivenOn: toIsoDate(daysAgo(420)),
+        recordedBy: staffOkonkwo,
+        by: { kind: 'the_resident', assessment },
+        remains,
+      },
+    },
+  }
+})
 
 /** Gap 7 — a care plan domain finalised 14 months ago and never reviewed.
  *  The Stale state: complete, signed, and long out of date. */
@@ -1113,10 +1616,75 @@ patch('adeyemi', (resident) => ({
           },
           supportLevel: { kind: 'partial_assistance' as const },
           summary: 'I can walk to the dining room if someone walks beside me.',
+          /*
+           * The version the status is talking about, moved with it.
+           *
+           * This patch used to rewrite the status alone, leaving the history
+           * saying the plan was signed in February by whoever the generator
+           * picked while the row above it said June of the year before. The
+           * defect only appears once a screen renders both — which is this
+           * phase — and it is the shape of a stale record: two halves of the
+           * same fact, edited apart.
+           */
+          versions: {
+            kind: 'finalised' as const,
+            history: [
+              {
+                currentNeeds:
+                  'I can walk to the dining room if someone walks beside me.',
+                preferences:
+                  'I would rather walk than be pushed, even if it takes a while.',
+                agreedActions: 'Walk beside them to the dining room at every meal.',
+                finalisedBy: staffHalloran,
+                finalisedOn: toIsoDate(fourteenMonthsAgo),
+              },
+            ] as [CarePlanVersion, ...CarePlanVersion[]],
+          },
         }
       : domain,
   ),
 }))
+
+/**
+ * A signed plan with an unsigned draft on top of it — the state a care plan
+ * *review* is, and the one the generator never produced.
+ *
+ * It is two facts, not one: there is a current instruction staff are following
+ * today, **and** somebody has started rewriting it and has not signed. A row
+ * that renders only the draft says nothing is in force; a row that renders
+ * only the signature hides that it is being changed. Both are wrong in the
+ * direction that matters.
+ *
+ * Pinned rather than generated, and derived by property rather than by index,
+ * so it survives a change to the draw order.
+ */
+patch('gallagher', (resident) => {
+  const target = resident.carePlan.find(
+    (domain) =>
+      domain.status.kind === 'complete' && domain.versions.kind === 'finalised',
+  )
+  if (!target) throw new Error('No finalised domain to hold the draft-on-signed case')
+
+  return {
+    ...resident,
+    carePlan: resident.carePlan.map((domain) =>
+      domain.domainId === target.domainId
+        ? {
+            ...domain,
+            draft: {
+              kind: 'draft' as const,
+              currentNeeds:
+                'I get more tired than I did. I can still manage but it takes me longer.',
+              preferences: '',
+              agreedActions: '',
+              updatedBy: staffOkonkwo,
+              updatedAt: toIsoDateTime(daysAgo(2)),
+            },
+          }
+        : domain,
+    ),
+  }
+})
 
 /** Gap 9 — Ashgrove thin enough that Key Questions render Insufficient
  *  Evidence. Enforced by the `thin` branch in makeResident and asserted by
@@ -1181,7 +1749,7 @@ patch('okafor', (resident) => ({
         name: 'Dr I. Farooq',
         role: 'Consultant geriatrician',
         organisation: 'Thornfield General Hospital',
-        contact: { phone: '0161 413 3366', email: 'secretary@example.invalid' },
+        contact: { phone: '0161 496 0233', email: 'secretary@example.invalid' },
       },
     ],
     recordedBy: listCoverageAuthor,
@@ -1195,7 +1763,7 @@ patch('okafor', (resident) => ({
         {
           name: 'Grace Adeyemi',
           relationship: 'Daughter',
-          contact: { phone: '07678 478100', email: 'family@example.invalid' },
+          contact: { phone: '07700 900814', email: 'family@example.invalid' },
           address: '12 Chapel Road, Thornfield',
           isPrimaryContact: false,
           communicationPreference: {
@@ -1216,7 +1784,7 @@ patch('okafor', (resident) => ({
           name: 'Helen Rowntree',
           role: 'Speech and language therapist',
           organisation: 'Thornfield Community Health',
-          contact: { phone: '0161 204 7781', email: 'chs@example.invalid' },
+          contact: { phone: '0161 496 0177', email: 'chs@example.invalid' },
         },
       ],
       recordedBy: listCoverageAuthor,
@@ -1247,7 +1815,7 @@ patch('broadbent', (resident) => ({
     falls: {
       kind: 'assessed',
       level: 'low',
-      score: 10,
+      score: { kind: 'scored', value: 10 },
       assessedAt: toIsoDateTime(daysAgo(40)),
       assessedBy: staffOkonkwo,
       reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(140)) },
@@ -1255,7 +1823,8 @@ patch('broadbent', (resident) => ({
     choking: {
       kind: 'assessed',
       level: 'low',
-      score: 5,
+      // Choking is an unscored instrument: findings recorded, level reached.
+      score: { kind: 'unscored' },
       assessedAt: toIsoDateTime(daysAgo(40)),
       assessedBy: staffOkonkwo,
       reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(140)) },

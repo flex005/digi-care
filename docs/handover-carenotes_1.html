@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Handover &amp; Care Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+  --shadow-overlay:0 8px 32px rgba(30,0,89,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px;border-radius:4px}
+
+/* ============ shell ============ */
+.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.side{background:var(--bg-surface);border-right:1px solid var(--border-subtle);padding:20px 14px;
+  position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;gap:10px;align-items:center;padding:0 8px 20px;font-weight:800;font-size:19px}
+.mark{width:32px;height:32px;border-radius:10px;background:var(--purple-600);color:#fff;
+  display:grid;place-items:center;font-size:15px}
+.navGroup{margin-top:18px;padding:0 8px 6px;font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-400)}
+.navItem{display:flex;gap:10px;align-items:center;width:100%;padding:9px 12px;border:0;border-radius:var(--r-md);
+  background:none;color:var(--ink-700);font-size:14px;font-weight:600;text-align:left}
+.navItem:hover:not(:disabled){background:var(--purple-50)}
+.navItem[aria-current="page"]{background:var(--purple-600);color:#fff}
+.navItem:disabled{color:var(--ink-400);cursor:not-allowed}
+.phase{margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:var(--r-pill);
+  background:var(--purple-50);color:var(--purple-600)}
+.navItem[aria-current="page"] .phase{background:rgba(255,255,255,.2);color:#fff}
+.dot{width:18px;height:18px;flex:0 0 18px;border-radius:5px;background:var(--purple-200)}
+.navItem[aria-current="page"] .dot{background:rgba(255,255,255,.35)}
+
+.top{display:flex;gap:16px;align-items:center;padding:14px 28px;background:var(--bg-surface);
+  border-bottom:1px solid var(--border-subtle);position:sticky;top:0;z-index:30}
+.site{display:flex;gap:8px;align-items:center;padding:7px 14px;border:1px solid var(--border-strong);
+  border-radius:var(--r-pill);font-size:14px;font-weight:600}
+.search{flex:1;max-width:520px;padding:9px 16px;border:1px solid var(--border-strong);
+  border-radius:var(--r-pill);color:var(--ink-400);font-size:14px}
+.me{display:flex;gap:9px;align-items:center;margin-left:auto;font-size:14px;font-weight:600}
+.av{width:32px;height:32px;border-radius:var(--r-pill);background:var(--purple-600);color:#fff;
+  display:grid;place-items:center;font-size:12px;font-weight:700}
+main{padding:28px}
+
+/* ============ common ============ */
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.sub{margin-top:5px;font-size:13px;color:var(--ink-500);max-width:80ch}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:14px;overflow:hidden}
+.cardHead{padding:18px 24px;border-bottom:1px solid var(--border-subtle)}
+.cardHead h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
+.cardHead p{margin-top:3px;font-size:13px;color:var(--ink-500)}
+.hatch{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border:1px solid transparent;
+  border-radius:var(--r-sm);font-size:11px;font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+.pill.urgent{border-color:var(--critical);background:var(--critical-tint);color:var(--critical-ink)}
+.pill.attention{border-color:var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.pill.info{border-color:var(--info);background:var(--info-tint);color:var(--info-ink)}
+.pill.ok{border-color:var(--positive);background:var(--positive-tint);color:var(--positive-ink)}
+.quiet{font-size:13px;color:var(--ink-700);font-weight:500}
+.quiet small{display:block;font-size:11px;color:var(--ink-500);font-weight:400;margin-top:2px}
+.gapBadge{display:inline-flex;flex-direction:column;gap:1px;padding:6px 10px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:600;max-width:230px}
+.gapBadge small{font-size:11px;font-weight:400;line-height:1.35}
+.btn{padding:7px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn:hover{border-color:var(--purple-400);background:var(--purple-50)}
+.btn.done{color:var(--ink-400);border-color:var(--border-subtle);cursor:default}
+.btn.done:hover{background:var(--bg-surface);border-color:var(--border-subtle)}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.btn.primary:hover{background:var(--purple-900);border-color:var(--purple-900)}
+.btn.danger{background:var(--critical);border-color:var(--critical);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.avatar{width:38px;height:38px;flex:0 0 38px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-size:12px;font-weight:700}
+
+/* ============ handover ============ */
+/* Each part of the screen is its own titled section with air between, rather
+   than a stack of equally-weighted cards the eye has to separate for itself. */
+.sect{margin-top:34px}
+.sect:first-of-type{margin-top:26px}
+.sectHead{margin-bottom:12px}
+.sectHead h2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.sectHead p{margin-top:2px;font-size:13px;color:var(--ink-500)}
+
+.covGrid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:14px}
+.covCard{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);padding:18px 20px}
+.covCard .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.covCard .v{font-size:32px;font-weight:800;margin-top:3px;letter-spacing:-.02em;line-height:1.05}
+.covCard .d{font-size:12px;color:var(--ink-500);margin-top:3px}
+.covCard .why{margin-top:9px;padding-top:9px;border-top:1px solid var(--border-subtle);
+  font-size:12px;color:var(--unrecorded-ink);font-weight:600;line-height:1.4}
+.covCard.lead{border-color:var(--unrecorded);background:var(--unrecorded-tint)}
+.covCard.lead .v{color:var(--unrecorded-ink)}
+.covCard.u .v{color:var(--critical-ink)}
+.covCard.a .v{color:var(--caution-ink)}
+.covCard.w .v{color:var(--ink-700)}
+.staleLine{display:flex;gap:10px;align-items:flex-start;margin:0;padding:14px 18px;
+  border-radius:var(--r-lg);border-left-width:4px;font-size:13px;line-height:1.5}
+.staleLine b{display:block;font-size:13px;font-weight:700}
+
+.grpHead{display:flex;gap:10px;align-items:baseline;padding:16px 24px 8px}
+.grpHead h3{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-500)}
+.grpHead span{font-size:12px;color:var(--ink-400)}
+.hrow{display:grid;grid-template-columns:230px 240px minmax(0,1fr) auto;gap:18px;align-items:start;
+  padding:13px 24px;border-top:1px solid var(--border-subtle)}
+.hrow .who{display:flex;gap:11px;align-items:center;min-width:0}
+.hrow .n{font-weight:600;font-size:14px}
+.hrow .r{font-size:12px;color:var(--ink-500);margin-top:1px}
+.hrow .body{font-size:13px;color:var(--ink-700);line-height:1.5}
+.hrow .body .meta{display:block;font-size:11px;color:var(--ink-500);margin-top:3px}
+.signBar{display:flex;gap:24px;align-items:center;justify-content:space-between;padding:20px 24px}
+.signBar .warn{font-size:13px;max-width:66ch;line-height:1.5}
+.signBar .warn.bad{color:var(--critical-ink)}
+.signBar .warn b{font-weight:700}
+.signedNote{padding:18px 24px;font-size:13px;color:var(--ink-700);line-height:1.6}
+.signedNote b{color:var(--ink-900)}
+
+/* ============ care notes ============ */
+.tabs{display:flex;gap:4px;flex-wrap:wrap;padding:14px 24px;border-bottom:1px solid var(--border-subtle)}
+.tab{padding:7px 14px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.tab[aria-pressed="true"]{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.resultLine{padding:12px 24px;font-size:13px;color:var(--ink-500);border-bottom:1px solid var(--border-subtle)}
+.filterWarn{margin:0 24px 14px;padding:11px 15px;border-radius:var(--r-md);border:1px solid var(--info);
+  border-left-width:4px;background:var(--info-tint);color:var(--info-ink);font-size:12.5px;line-height:1.5}
+.nrow{display:grid;grid-template-columns:210px 150px minmax(0,1fr) auto;gap:18px;align-items:start;
+  padding:14px 24px;border-top:1px solid var(--border-subtle)}
+.nrow .n{font-weight:600;font-size:14px}
+.nrow .r{font-size:12px;color:var(--ink-500);margin-top:1px}
+.nrow .body{font-size:13.5px;color:var(--ink-700);line-height:1.5}
+.nrow .meta{display:block;font-size:11px;color:var(--ink-500);margin-top:4px}
+.linkish{background:none;border:0;padding:0;color:var(--purple-600);font-weight:600;font-size:14px;text-align:left}
+.linkish:hover{text-decoration:underline}
+
+/* timeline */
+.tl{padding:6px 24px 22px}
+.tlItem{display:grid;grid-template-columns:104px minmax(0,1fr);gap:18px;padding:14px 0;
+  border-top:1px solid var(--border-subtle)}
+.tlTime{font-size:12px;color:var(--ink-500);font-weight:600}
+.tlTime small{display:block;font-weight:400;color:var(--ink-400);margin-top:2px}
+.tlBody{font-size:14px;color:var(--ink-700);line-height:1.55}
+.tlMeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:11px;color:var(--ink-500)}
+.tlGap{display:flex;flex-direction:column;gap:2px;margin:12px 0;padding:12px 16px;border-radius:var(--r-md);
+  font-size:13px;font-weight:600}
+.tlGap small{font-size:11.5px;font-weight:400}
+.tlGap.night{opacity:.72}
+.tag{padding:1px 8px;border-radius:var(--r-pill);background:var(--purple-50);color:var(--purple-600);
+  font-weight:600}
+.tag.warnTag{background:var(--caution-tint);color:var(--caution-ink)}
+.corr{margin-top:8px;padding:10px 14px;border-left:3px solid var(--purple-400);background:var(--purple-50);
+  border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:12.5px;color:var(--ink-700)}
+.superseded{opacity:.72}
+.supTag{padding:1px 8px;border-radius:var(--r-pill);background:var(--unrecorded-tint);
+  color:var(--unrecorded-ink);font-weight:600}
+
+/* ============ dialog ============ */
+.scrim{position:fixed;inset:0;background:rgba(30,0,89,.36);display:none;place-items:center;z-index:60;padding:24px}
+.scrim.open{display:grid}
+.dlg{width:100%;max-width:600px;max-height:88vh;overflow:auto;background:var(--bg-surface);
+  border-radius:var(--r-lg);box-shadow:var(--shadow-overlay);padding:24px}
+.dlg h2{font-size:20px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
+.dlg p{margin-top:11px;font-size:14px;color:var(--ink-700);line-height:1.55}
+.dlg .danger{margin-top:14px;padding:12px 16px;border-radius:var(--r-md);border:1px solid var(--critical);
+  border-left-width:4px;background:var(--critical-tint);color:var(--critical-ink);font-size:13px;
+  font-weight:600;line-height:1.5}
+.dlg .acts{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.field{margin-top:16px}
+.field label{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:6px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border:1px solid var(--border-strong);
+  border-radius:var(--r-md);cursor:pointer;font-size:14px}
+.opt:hover{border-color:var(--purple-400)}
+.opt input{margin-top:3px}
+.opt.sel{border-color:var(--purple-600);background:var(--purple-50)}
+.opt b{display:block;font-weight:600}
+.opt span{font-size:12px;color:var(--ink-500)}
+textarea,select,input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--border-strong);
+  border-radius:var(--r-md);font:inherit;font-size:14px;color:var(--ink-900);background:var(--bg-surface)}
+textarea{min-height:82px;resize:vertical}
+.hint{margin-top:6px;font-size:12px;color:var(--ink-500)}
+.hint.req{color:var(--caution-ink);font-weight:600}
+.immutable{margin-top:14px;padding:12px 16px;border-radius:var(--r-md);border:1px solid var(--border-strong);
+  background:var(--bg-sunken);font-size:13px;color:var(--ink-700);line-height:1.55}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:80;padding:13px 20px;
+  border-radius:var(--r-md);background:var(--purple-900);color:#fff;font-size:13.5px;font-weight:600;
+  box-shadow:var(--shadow-overlay);display:none;max-width:min(620px,90vw)}
+.toast.show{display:block}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ============ sidebar ============ -->
+  <nav class="side" aria-label="Modules">
+    <div class="brand"><span class="mark">d</span> diGi-Care</div>
+    <button class="navItem" disabled>Dashboard <span class="phase">P12</span></button>
+
+    <div class="navGroup">Care delivery</div>
+    <button class="navItem" disabled><span class="dot"></span>Residents <span class="phase">P1</span></button>
+    <button class="navItem" data-go="notes"><span class="dot"></span>Care Notes</button>
+    <button class="navItem" data-go="handover" aria-current="page"><span class="dot"></span>Handover</button>
+    <button class="navItem" disabled><span class="dot"></span>Medications <span class="phase">P3</span></button>
+
+    <div class="navGroup">Planning and risk</div>
+    <button class="navItem" disabled><span class="dot"></span>Incidents <span class="phase">P4</span></button>
+    <button class="navItem" disabled><span class="dot"></span>Risk Assessments <span class="phase">P5</span></button>
+    <button class="navItem" disabled><span class="dot"></span>Care Plans <span class="phase">P6</span></button>
+    <button class="navItem" disabled><span class="dot"></span>Reviews <span class="phase">P7</span></button>
+
+    <div class="navGroup">Governance</div>
+    <button class="navItem" disabled><span class="dot"></span>Consent <span class="phase">P10</span></button>
+    <button class="navItem" disabled><span class="dot"></span>Documents <span class="phase">P11</span></button>
+    <button class="navItem" disabled><span class="dot"></span>Compliance <span class="phase">P12</span></button>
+  </nav>
+
+  <div>
+    <header class="top">
+      <span class="site">Rosewood Court ▾</span>
+      <span class="search">Search residents, notes, incidents</span>
+      <span class="me"><span class="av">AO</span> A. Okonkwo</span>
+    </header>
+    <main id="view"></main>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" role="dialog" aria-modal="true"><div class="dlg" id="dlg"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============================================================
+   Fixtures. NOW is fixed so the screen is the same every load.
+   ============================================================ */
+const NOW = new Date('2026-08-21T20:45:00');
+const WAKING = { start: 7, end: 22 };   // INVENTED — needs a care manager
+const GAP_THRESHOLD_MIN = 4 * 60;       // 4 waking hours, PRD §6.3
+
+const RES = [
+  { id:'ada',      first:'Ada',      full:'Ada Nwachukwu',      room:'109' },
+  { id:'arthur',   first:'Arthur',   full:'Arthur Pemberton',   room:'315' },
+  { id:'beryl',    first:'Beryl',    full:'Beryl Hutchinson',   room:'214' },
+  { id:'emmanuel', first:'Emmanuel', full:'Emmanuel Okafor',    room:'14'  },
+  { id:'grace',    first:'Grace',    full:'Grace Adeyemi',      room:'302' },
+  { id:'doris',    first:'Doris',    full:'Doris Kavanagh',     room:'311' },
+  { id:'emeka',    first:'Emeka',    full:'Chukwuemeka Obi',    room:'206' },
+  { id:'bimbo',    first:'Bimbo',    full:'Abimbola Ogundipe',  room:'306' },
+  { id:'wilfred',  first:'Wilfred',  full:'Wilfred Merrivale',  room:'118' },
+  { id:'ismail',   first:'Ismail',   full:'Ismail Sowande',     room:'4'   },
+];
+const byId = id => RES.find(r => r.id === id);
+const initials = full => full.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+
+/* handover state — the fourth state is the default, not an exception */
+let handover = {
+  ada:      { kind:'not_reviewed' },
+  arthur:   { kind:'not_reviewed' },
+  beryl:    { kind:'not_reviewed' },
+  ismail:   { kind:'not_reviewed' },
+  emmanuel: { kind:'reviewed', status:'urgent', by:'T. Akinyemi', at:'19:14',
+              note:'Refused both evening medications and has not eaten since breakfast. GP called at 18:10, awaiting call back — chase overnight.' },
+  grace:    { kind:'reviewed', status:'urgent', by:'N. Eze', at:'18:02',
+              note:'Unwitnessed fall at 17:40. No injury found, neuro observations started, next due 21:40 then four-hourly.' },
+  doris:    { kind:'reviewed', status:'attention', by:'K. Osei', at:'19:20',
+              note:'Unsettled since the afternoon, asking for her sister repeatedly. Settles with company — check early on the night round.' },
+  emeka:    { kind:'reviewed', status:'attention', by:'Y. Ibrahim', at:'18:45',
+              note:'Pressure area on left heel redder than yesterday. Repositioning chart started, district nurse to review tomorrow.' },
+  bimbo:    { kind:'reviewed', status:'well', by:'S. Patel', at:'19:02',
+              note:'Settled evening, ate well, no concerns.' },
+  wilfred:  { kind:'reviewed', status:'well', by:'S. Patel', at:'19:05',
+              note:'Watched television in the lounge until 18:30, went to bed unaided.' },
+};
+let signature = null;   // { at, counts }
+
+/* care notes */
+const CATS = ['Personal care','Nutrition and hydration','Mobility','Medication',
+              'Social and emotional','Health observation','Behaviour','General'];
+const d = (day,h,m) => new Date(2026,7,day,h,m);
+let NOTES = [
+  { id:'n1', res:'ada', cat:'Social and emotional', at:d(21,19,22), by:'D. Morrison', shift:{kind:'auto',value:'late'},
+    body:'Tearful this afternoon, talking about her late husband. Sat with her and she settled after about twenty minutes.',
+    flag:'flagged_not_reviewed' },
+  { id:'n2', res:'ada', cat:'Nutrition and hydration', at:d(21,12,40), by:'K. Osei', shift:{kind:'auto',value:'early'},
+    body:'Ate most of her lunch and drank two glasses of squash. No prompting needed today.', flag:'not_flagged' },
+  { id:'n3', res:'ada', cat:'Mobility', at:d(21,8,15), by:'K. Osei', shift:{kind:'auto',value:'early'},
+    body:'Walked to the dining room with her frame, no unsteadiness. Encouraged a short walk after lunch, which she managed.',
+    flag:'not_flagged' },
+  { id:'n4', res:'ada', cat:'Personal care', at:d(20,21,30), by:'F. Adebayo',
+    shift:{kind:'overridden',value:'late',clockSaid:'night',reason:'handover overran, written up on the late shift'},
+    body:'Assisted with a wash and change before bed. Skin intact, no marking.', flag:'not_flagged' },
+
+  { id:'n5', res:'beryl', cat:'Nutrition and hydration', at:d(21,10,20), by:'N. Eze', shift:{kind:'auto',value:'early'},
+    body:'Refused breakfast, took half a cup of tea. Said she was not hungry.', flag:'flagged_not_reviewed' },
+
+  { id:'n6', res:'emmanuel', cat:'Medication', at:d(21,19,14), by:'T. Akinyemi', shift:{kind:'auto',value:'late'},
+    body:'Refused both evening medications. GP called at 18:10, awaiting call back.', flag:'flagged_not_reviewed' },
+  { id:'n7', res:'emmanuel', cat:'Health observation', at:d(21,14,5), by:'F. Adebayo', shift:{kind:'auto',value:'late'},
+    body:'Correction to the 09:40 note: fluid intake was 400ml, not 900ml. The earlier figure was a transcription error.',
+    flag:'not_flagged', corrects:'n8' },
+  { id:'n8', res:'emmanuel', cat:'Health observation', at:d(21,9,40), by:'F. Adebayo', shift:{kind:'auto',value:'early'},
+    body:'Fluid intake 900ml so far this morning. Encouraged to keep drinking.', flag:'not_flagged', supersededBy:'n7' },
+
+  { id:'n9', res:'grace', cat:'Behaviour', at:d(21,18,2), by:'N. Eze', shift:{kind:'auto',value:'late'},
+    body:'Unwitnessed fall at 17:40 in her room. No injury found on examination, neuro observations started.',
+    flag:'flagged_not_reviewed' },
+  { id:'n10', res:'doris', cat:'Behaviour', at:d(21,19,14), by:'T. Akinyemi', shift:{kind:'auto',value:'late'},
+    body:'Unsettled since mid-afternoon, asking repeatedly for her sister. Company settles her.', flag:'reviewed' },
+  { id:'n11', res:'emeka', cat:'Health observation', at:d(21,18,45), by:'Y. Ibrahim', shift:{kind:'auto',value:'late'},
+    body:'Pressure area on the left heel redder than yesterday. Repositioning chart started.', flag:'reviewed' },
+  { id:'n12', res:'bimbo', cat:'General', at:d(21,19,2), by:'S. Patel', shift:{kind:'auto',value:'late'},
+    body:'Settled evening in the lounge, no concerns raised.', flag:'not_flagged' },
+  { id:'n13', res:'wilfred', cat:'General', at:d(21,19,5), by:'S. Patel', shift:{kind:'auto',value:'late'},
+    body:'Watched television until 18:30, went to bed unaided.', flag:'not_flagged' },
+  { id:'n14', res:'arthur', cat:'Mobility', at:d(20,23,7), by:'D. Morrison', shift:{kind:'auto',value:'night'},
+    body:'Assisted to the bathroom twice overnight. Steady with his frame both times.', flag:'not_flagged' },
+];
+/* Ismail Sowande: admitted yesterday, no notes at all. A real state, not an oversight. */
+
+/* ============================================================
+   Waking-hours gap maths. §6.3 — only minutes inside the waking
+   window count toward the threshold, but night stretches still
+   render, quietly. Quiet is not hidden.
+   ============================================================ */
+function wakingMinutes(a, b){
+  let mins = 0;
+  const cur = new Date(a);
+  while (cur < b){
+    const h = cur.getHours();
+    if (h >= WAKING.start && h < WAKING.end) mins++;
+    cur.setMinutes(cur.getMinutes() + 1);
+  }
+  return mins;
+}
+const spansNight = (a,b) => (b - a) / 36e5 > 4 && wakingMinutes(a,b) < (b - a) / 6e4 * 0.75;
+function dur(ms){
+  const m = Math.round(ms / 6e4), h = Math.floor(m / 60), r = m % 60;
+  if (h === 0) return `${r} minutes`;
+  return `${h} hour${h===1?'':'s'} ${r} minute${r===1?'':'s'}`;
+}
+const fmtT = dt => `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+const fmtD = dt => `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
+function ago(dt){
+  const m = Math.round((NOW - dt)/6e4);
+  if (m < 60) return `${m} minutes ago`;
+  const h = Math.floor(m/60);
+  if (h < 24) return `${h} hour${h===1?'':'s'} ago`;
+  return `${Math.floor(h/24)} day${Math.floor(h/24)===1?'':'s'} ago`;
+}
+
+/* ============================================================
+   Handover
+   ============================================================ */
+const H_STATUS = {
+  urgent:    { label:'Urgent',          cls:'urgent'    },
+  attention: { label:'Needs attention', cls:'attention' },
+  well:      { label:'All well',        cls:'ok'        },
+};
+const counts = () => {
+  const c = { total:RES.length, notReviewed:0, urgent:0, attention:0, well:0 };
+  RES.forEach(r => {
+    const h = handover[r.id];
+    if (h.kind === 'not_reviewed') c.notReviewed++;
+    else c[h.status === 'well' ? 'well' : h.status]++;
+  });
+  c.reviewed = c.total - c.notReviewed;
+  return c;
+};
+
+function lastNoteFor(id){
+  const ns = NOTES.filter(n => n.res === id).sort((a,b) => b.at - a.at);
+  return ns[0] || null;
+}
+
+function handoverView(){
+  const c = counts();
+  const groups = [
+    { key:'not_reviewed', title:'Not reviewed',
+      note:`${c.notReviewed} of ${c.total} — the only group still fixable before you sign`,
+      ids: RES.filter(r => handover[r.id].kind === 'not_reviewed').map(r => r.id) },
+    { key:'urgent', title:'Urgent', note:`${c.urgent} of ${c.reviewed} reviewed`,
+      ids: RES.filter(r => handover[r.id].status === 'urgent').map(r => r.id) },
+    { key:'attention', title:'Needs attention', note:`${c.attention} of ${c.reviewed} reviewed`,
+      ids: RES.filter(r => handover[r.id].status === 'attention').map(r => r.id) },
+    { key:'well', title:'All well', note:`${c.well} of ${c.reviewed} reviewed — recorded, nothing to do`,
+      ids: RES.filter(r => handover[r.id].status === 'well').map(r => r.id) },
+  ];
+
+  return `
+  <h1>Handover</h1>
+  <p class="sub">Late shift → night shift · Rosewood Court · ${fmtD(NOW)}, ${fmtT(NOW)} BST</p>
+
+  <section class="sect">
+    <div class="sectHead">
+      <h2>This shift at a glance</h2>
+      <p>Every resident at this site, whether or not anybody has got to them yet.</p>
+    </div>
+    <div class="covGrid">
+      <div class="covCard lead">
+        <div class="k">Not reviewed</div><div class="v">${c.notReviewed}</div>
+        <div class="d">of ${c.total} residents at this site</div>
+        <div class="why">The only figure here you can still change before signing.</div>
+      </div>
+      <div class="covCard u"><div class="k">Urgent</div><div class="v">${c.urgent}</div>
+        <div class="d">of ${c.reviewed} reviewed</div></div>
+      <div class="covCard a"><div class="k">Needs attention</div><div class="v">${c.attention}</div>
+        <div class="d">of ${c.reviewed} reviewed</div></div>
+      <div class="covCard w"><div class="k">All well</div><div class="v">${c.well}</div>
+        <div class="d">of ${c.reviewed} reviewed</div></div>
+    </div>
+  </section>
+
+  <section class="sect">
+    <div class="sectHead">
+      <h2>Earlier handovers</h2>
+      <p>A handover is only complete when both shifts have signed it.</p>
+    </div>
+    <div class="card" style="margin-top:0">
+      <div class="staleLine hatch">
+        <div><b>20/08/2026, late → night — never countersigned</b>
+        Signed by F. Adebayo at 21:58 and never accepted by the incoming shift.
+        Somebody handed over; nobody recorded receiving it.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sect">
+    <div class="sectHead">
+      <h2>Residents</h2>
+      <p>Not reviewed first — it is the only group still fixable. Then urgent, then the rest.</p>
+    </div>
+    ${groups.filter(g => g.ids.length).map(g => `
+      <div class="card">
+        <div class="grpHead"><h3>${g.title}</h3><span>${g.note}</span></div>
+        ${g.ids.map(id => hrow(id)).join('')}
+      </div>`).join('')}
+  </section>
+
+  <section class="sect">
+    <div class="sectHead">
+      <h2>Signature</h2>
+      <p>Outgoing and incoming sign separately. What the signature covers is stored with it.</p>
+    </div>
+    <div class="card" style="margin-top:0">
+    ${signature ? `
+      <div class="signedNote">
+        <b>Signed by A. Okonkwo at ${signature.at}, ${fmtD(NOW)}.</b><br>
+        Recorded with this signature: ${signature.counts.reviewed} of ${signature.counts.total} residents reviewed,
+        ${signature.counts.notReviewed} not reviewed, ${signature.counts.urgent} urgent,
+        ${signature.counts.attention} needing attention, ${signature.counts.well} all well.<br>
+        <span style="color:var(--ink-500)">The counts are stored as they were at the moment of signing, so this
+        handover can never later be read as covering more than it did. Awaiting the incoming shift's signature.</span>
+      </div>` : `
+      <div class="signBar">
+        <p class="warn ${c.notReviewed ? 'bad' : ''}">
+          ${c.notReviewed
+            ? `<b>${c.notReviewed} of ${c.total} residents have not been reviewed this shift.</b>
+               You can still sign — but your signature will record that those ${c.notReviewed} were not looked at,
+               not that they were well.`
+            : `<b>All ${c.total} residents have been reviewed this shift.</b>
+               Your signature will record the counts as they stand.`}
+        </p>
+        <button class="btn ${c.notReviewed ? 'danger' : 'primary'}" onclick="askSign()">Sign as handing over</button>
+      </div>`}
+    </div>
+  </section>`;
+}
+
+function hrow(id){
+  const r = byId(id), h = handover[id], last = lastNoteFor(id);
+  const lastTxt = last
+    ? `Last note ${fmtT(last.at)} · ${last.cat} · ${last.by}<span class="meta">${ago(last.at)}</span>`
+    : `<span style="color:var(--unrecorded-ink);font-weight:600">No care note has ever been recorded</span>
+       <span class="meta">admitted ${fmtD(d(20,0,0))}</span>`;
+
+  const statusCell = h.kind === 'not_reviewed'
+    ? `<span class="gapBadge hatch">Not reviewed<small>nobody has looked at this resident this handover</small></span>`
+    : (h.status === 'well'
+        ? `<span class="quiet">All well<small>${h.by}, ${h.at} BST</small></span>`
+        : `<span class="pill ${H_STATUS[h.status].cls}">${H_STATUS[h.status].label}</span>
+           <div style="font-size:11px;color:var(--ink-500);margin-top:4px">${h.by}, ${h.at} BST</div>`);
+
+  const body = h.kind === 'not_reviewed'
+    ? `<div class="body">${lastTxt}</div>`
+    : `<div class="body">${h.note}</div>`;
+
+  return `<div class="hrow">
+    <div class="who"><span class="avatar">${initials(r.full)}</span>
+      <div><div class="n">${r.first}</div><div class="r">${r.full} · Room ${r.room}</div></div></div>
+    <div>${statusCell}</div>
+    ${body}
+    <div>${signature
+      ? '<button class="btn done" disabled>Signed</button>'
+      : (h.kind === 'not_reviewed'
+          ? `<button class="btn" onclick="review('${id}')">Review</button>`
+          : `<button class="btn" onclick="review('${id}')">Change</button>`)}</div>
+  </div>`;
+}
+
+/* review dialog — the status has no default, and a note is required */
+function review(id){
+  const r = byId(id), h = handover[id];
+  openDlg(`
+    <h2>Review ${r.full} for this handover</h2>
+    <p>Room ${r.room}. What does the night shift need to know about this person?</p>
+    <div class="field">
+      <label>Status</label>
+      <div class="opts" id="opts">
+        ${[['urgent','Urgent','Needs acting on tonight.'],
+           ['attention','Needs attention','Watch, check, or follow up.'],
+           ['well','All well','Nothing the night shift needs to do.']].map(([v,t,s]) => `
+          <label class="opt ${h.status===v?'sel':''}">
+            <input type="radio" name="st" value="${v}" ${h.status===v?'checked':''}
+                   onchange="markSel(this)"><span><b>${t}</b><span>${s}</span></span>
+          </label>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label>What to hand over</label>
+      <textarea id="hnote" oninput="checkReview()" placeholder="Written for the person coming on shift.">${h.note || ''}</textarea>
+      <p class="hint req" id="hhint">A status without a handover note is a status nobody can act on. Both are required.</p>
+    </div>
+    <div class="acts">
+      <button class="btn" onclick="closeDlg()">Cancel</button>
+      <button class="btn primary" id="hsave" disabled onclick="saveReview('${id}')">Save review</button>
+    </div>`);
+  checkReview();
+}
+function markSel(inp){
+  document.querySelectorAll('#opts .opt').forEach(o => o.classList.remove('sel'));
+  inp.closest('.opt').classList.add('sel');
+  checkReview();
+}
+function checkReview(){
+  const st = document.querySelector('input[name=st]:checked');
+  const tx = document.getElementById('hnote').value.trim();
+  const ok = !!st && tx.length > 0;
+  document.getElementById('hsave').disabled = !ok;
+  document.getElementById('hhint').className = ok ? 'hint' : 'hint req';
+}
+function saveReview(id){
+  const st = document.querySelector('input[name=st]:checked').value;
+  handover[id] = { kind:'reviewed', status:st, by:'A. Okonkwo', at:fmtT(NOW), note:document.getElementById('hnote').value.trim() };
+  closeDlg(); render();
+  toast(`${byId(id).full} recorded as ${H_STATUS[st].label.toLowerCase()} for this handover.`);
+}
+
+/* signing — permitted with gaps, loudly */
+function askSign(){
+  const c = counts();
+  openDlg(`
+    <h2>Sign the late → night handover for Rosewood Court?</h2>
+    <p>You are signing as the outgoing shift at ${fmtT(NOW)} on ${fmtD(NOW)}. The incoming shift signs
+       separately; until they do, this handover is half complete.</p>
+    ${c.notReviewed ? `<div class="danger">
+      ${c.notReviewed} of ${c.total} residents have not been reviewed this shift. Signing records that
+      nobody looked at them. It does not record that they are well.</div>` : ''}
+    <p>The counts as they stand — ${c.reviewed} reviewed, ${c.urgent} urgent, ${c.attention} needing
+       attention, ${c.well} all well — are stored with your signature, so this handover can never later
+       be read as covering more than it did.</p>
+    <div class="acts">
+      <button class="btn" onclick="closeDlg()">Go back and review</button>
+      <button class="btn ${c.notReviewed?'danger':'primary'}" onclick="doSign()">
+        ${c.notReviewed ? `Sign with ${c.notReviewed} unreviewed` : 'Sign handover'}</button>
+    </div>`);
+}
+function doSign(){
+  signature = { at:fmtT(NOW), counts:counts() };
+  closeDlg(); render();
+  toast('Handover signed. Nothing was saved to a server — this is a prototype.');
+}
+
+/* ============================================================
+   Care Notes — the cross-resident view
+   ============================================================ */
+let noteFilter = 'flagged';
+let openResident = null;
+
+const FILTERS = [
+  { id:'flagged',  label:'Flagged, not yet reviewed' },
+  { id:'nonote',   label:'No note today' },
+  { id:'author',   label:'By author' },
+  { id:'shift',    label:'By shift' },
+  { id:'all',      label:'All notes' },
+];
+let authorPick = 'D. Morrison', shiftPick = 'night';
+const AUTHORS = [...new Set(NOTES.map(n => n.by))].sort();
+
+function notesView(){
+  if (openResident) return timelineView(openResident);
+
+  const today = NOTES.filter(n => n.at.getDate() === NOW.getDate());
+  let rows = [], resultLine = '', warn = '';
+
+  if (noteFilter === 'flagged'){
+    rows = NOTES.filter(n => n.flag === 'flagged_not_reviewed').sort((a,b)=>b.at-a.at);
+    resultLine = `${rows.length} of ${NOTES.length} notes flagged and not yet reviewed, across ${new Set(rows.map(r=>r.res)).size} of ${RES.length} residents.`;
+  } else if (noteFilter === 'nonote'){
+    const without = RES.filter(r => !today.some(n => n.res === r.id));
+    resultLine = `${without.length} of ${RES.length} residents have no care note today.`;
+    return shell(`
+      <div class="card">
+        ${tabsHtml()}
+        <div class="resultLine">${resultLine}</div>
+        ${without.map(r => {
+          const last = lastNoteFor(r.id);
+          return `<div class="nrow">
+            <div><button class="linkish" onclick="openRes('${r.id}')">${r.first}</button>
+                 <div class="r">${r.full} · Room ${r.room}</div></div>
+            <div><span class="gapBadge hatch">No note today<small>nobody has written this person up</small></span></div>
+            <div class="body">${last
+              ? `Last note ${fmtD(last.at)} ${fmtT(last.at)} · ${last.by}<span class="meta">${ago(last.at)}</span>`
+              : `<span style="color:var(--unrecorded-ink);font-weight:600">No care note has ever been recorded</span>`}</div>
+            <div><button class="btn" onclick="openRes('${r.id}')">Open timeline</button></div>
+          </div>`;
+        }).join('')}
+      </div>`);
+  } else if (noteFilter === 'author'){
+    rows = NOTES.filter(n => n.by === authorPick).sort((a,b)=>b.at-a.at);
+    resultLine = `${rows.length} of ${NOTES.length} notes by ${authorPick}.`;
+    warn = 'Gap markers are hidden while a filter is active. A gap in one author\'s notes is a gap in the filter, not in the record.';
+  } else if (noteFilter === 'shift'){
+    rows = NOTES.filter(n => n.shift.value === shiftPick).sort((a,b)=>b.at-a.at);
+    resultLine = `${rows.length} of ${NOTES.length} notes recorded on the ${shiftPick} shift.`;
+    warn = 'Gap markers are hidden while a filter is active. A gap on one shift is a gap in the filter, not in the record.';
+  } else {
+    rows = [...NOTES].sort((a,b)=>b.at-a.at);
+    resultLine = `${rows.length} notes across ${new Set(rows.map(r=>r.res)).size} of ${RES.length} residents.`;
+  }
+
+  return shell(`
+    <div class="card">
+      ${tabsHtml()}
+      ${noteFilter === 'author' ? picker('author', AUTHORS, authorPick) : ''}
+      ${noteFilter === 'shift'  ? picker('shift', ['early','late','night'], shiftPick) : ''}
+      <div class="resultLine">${resultLine}</div>
+      ${warn ? `<div class="filterWarn" style="margin-top:14px">${warn}</div>` : ''}
+      ${rows.length ? rows.map(noteRow).join('')
+        : `<div class="nrow"><div class="body" style="grid-column:1/-1;color:var(--ink-500)">
+             Nothing matches this filter. That is a statement about the filter, not about the record.</div></div>`}
+    </div>`);
+}
+const shell = inner => `
+  <h1>Care Notes</h1>
+  <p class="sub">Every note at Rosewood Court. The per-resident timeline answers what happened to one person;
+     this answers what is happening in the home — so it opens on the notes somebody still has to act on,
+     not on everything newest first.</p>${inner}`;
+
+const tabsHtml = () => `<div class="tabs">${FILTERS.map(f =>
+  `<button class="tab" aria-pressed="${noteFilter===f.id}" onclick="setFilter('${f.id}')">${f.label}</button>`).join('')}</div>`;
+
+const picker = (kind, opts, cur) => `
+  <div style="padding:14px 24px 0"><select onchange="setPick('${kind}',this.value)">
+    ${opts.map(o => `<option ${o===cur?'selected':''}>${o}</option>`).join('')}
+  </select></div>`;
+
+function noteRow(n){
+  const r = byId(n.res);
+  return `<div class="nrow ${n.supersededBy?'superseded':''}">
+    <div><button class="linkish" onclick="openRes('${n.res}')">${r.first}</button>
+         <div class="r">${r.full} · Room ${r.room}</div></div>
+    <div>${n.flag === 'flagged_not_reviewed'
+      ? `<span class="gapBadge hatch">Flagged, not reviewed<small>waiting on a senior</small></span>`
+      : n.flag === 'reviewed'
+        ? `<span class="quiet">Reviewed<small>M. Halloran</small></span>`
+        : `<span class="quiet">Not flagged</span>`}</div>
+    <div class="body">${n.body}
+      <span class="meta">${n.cat} · ${fmtD(n.at)} ${fmtT(n.at)} BST · ${n.by} · ${shiftText(n)}
+      ${n.supersededBy ? ' · <span class="supTag">superseded by a correction</span>' : ''}</span></div>
+    <div><button class="btn" onclick="openNote('${n.id}')">Open</button></div>
+  </div>`;
+}
+const shiftText = n => n.shift.kind === 'auto'
+  ? `${n.shift.value} shift`
+  : `${n.shift.value} shift (clock said ${n.shift.clockSaid})`;
+
+function setFilter(f){ noteFilter = f; render(); }
+function setPick(kind, v){ if (kind === 'author') authorPick = v; else shiftPick = v; render(); }
+function openRes(id){ openResident = id; render(); window.scrollTo(0,0); }
+function closeRes(){ openResident = null; render(); }
+
+/* ---- per-resident timeline, with gap markers ---- */
+function timelineView(id){
+  const r = byId(id);
+  const ns = NOTES.filter(n => n.res === id).sort((a,b) => b.at - a.at);
+  let html = '';
+
+  if (!ns.length){
+    html = `<div class="tl"><div class="tlGap hatch" style="margin-top:16px">
+      No care note has ever been recorded for ${r.full}
+      <small>Admitted ${fmtD(d(20,0,0))}. This is an empty record, not a quiet one.</small></div></div>`;
+  } else {
+    const open = wakingMinutes(ns[0].at, NOW);
+    let items = '';
+    if (open > GAP_THRESHOLD_MIN){
+      items += gapMarker(ns[0].at, NOW, true);
+    }
+    ns.forEach((n, i) => {
+      items += tlItem(n);
+      const next = ns[i+1];
+      if (next){
+        const w = wakingMinutes(next.at, n.at);
+        if (w > GAP_THRESHOLD_MIN) items += gapMarker(next.at, n.at, false);
+        else if (spansNight(next.at, n.at)) items += gapMarker(next.at, n.at, false, true);
+      }
+    });
+    html = `<div class="tl">${items}</div>`;
+  }
+
+  return `
+    <button class="linkish" style="margin-bottom:12px" onclick="closeRes()">← All care notes</button>
+    <h1>${r.full}</h1>
+    <p class="sub">Room ${r.room} · care note timeline. Gaps of more than four waking hours are rendered as
+      objects, not as an absence of rows — the record has to say when nobody wrote anything.</p>
+    <div class="card">
+      <div class="cardHead" style="display:flex;justify-content:space-between;align-items:center">
+        <div><h2>Timeline</h2><p>${ns.length} note${ns.length===1?'':'s'} · newest first</p></div>
+        <button class="btn primary" onclick="composer('${id}')">Write a care note</button>
+      </div>
+      ${html}
+    </div>`;
+}
+function gapMarker(from, to, isOpen, night){
+  const wm = wakingMinutes(from, to);
+  return `<div class="tlGap hatch ${night?'night':''}">
+    ${isOpen ? 'No care note recorded since' : 'No care note recorded'} — ${dur(to - from)}
+    <small>${fmtD(from)} ${fmtT(from)} → ${isOpen ? 'now' : fmtT(to)}${
+      night ? ' · overnight, so it does not count toward the four-hour threshold' :
+              ` · ${Math.floor(wm/60)} hours ${wm%60} minutes of it inside waking hours`}</small>
+  </div>`;
+}
+function tlItem(n){
+  return `<div class="tlItem ${n.supersededBy?'superseded':''}">
+    <div class="tlTime">${fmtT(n.at)} BST<small>${fmtD(n.at)}</small></div>
+    <div>
+      <div class="tlBody">${n.body}</div>
+      <div class="tlMeta">
+        <span class="tag">${n.cat}</span>
+        <span>${n.by}</span>
+        <span class="tag ${n.shift.kind==='overridden'?'warnTag':''}">${shiftText(n)}</span>
+        ${n.flag==='flagged_not_reviewed' ? '<span class="tag warnTag">flagged, not reviewed</span>' : ''}
+        ${n.supersededBy ? '<span class="supTag">superseded</span>' : ''}
+        <button class="linkish" style="font-size:11px" onclick="openNote('${n.id}')">Open</button>
+      </div>
+      ${n.shift.kind === 'overridden'
+        ? `<div class="corr">Shift changed from ${n.shift.clockSaid} to ${n.shift.value} — ${n.shift.reason}</div>` : ''}
+      ${n.corrects ? `<div class="corr">This is a correction of the ${fmtT(NOTES.find(x=>x.id===n.corrects).at)} note, which stays visible above.</div>` : ''}
+    </div>
+  </div>`;
+}
+
+/* ---- note detail: no edit, ever ---- */
+function openNote(id){
+  const n = NOTES.find(x => x.id === id), r = byId(n.res);
+  openDlg(`
+    <h2>${r.full} · ${fmtD(n.at)} ${fmtT(n.at)} BST</h2>
+    <p style="font-size:12px;color:var(--ink-500)">${n.cat} · ${n.by} · ${shiftText(n)}</p>
+    <p>${n.body}</p>
+    ${n.shift.kind==='overridden' ? `<div class="corr">Shift changed from ${n.shift.clockSaid} to ${n.shift.value} — ${n.shift.reason}</div>`:''}
+    <div class="immutable">
+      <b>This note cannot be edited.</b> A submitted care note is a clinical record; changing it would
+      change what somebody signed. A correction is a new note that links back to this one, and this one
+      stays visible.
+    </div>
+    <div class="acts">
+      <button class="btn" onclick="closeDlg()">Close</button>
+      <button class="btn primary" onclick="composer('${n.res}','${n.id}')">Add correction note</button>
+    </div>`);
+}
+
+/* ---- composer ---- */
+function composer(resId, correctsId){
+  const r = byId(resId);
+  const clock = NOW.getHours() >= 22 || NOW.getHours() < 7 ? 'night' : NOW.getHours() < 14 ? 'early' : 'late';
+  openDlg(`
+    <h2>${correctsId ? 'Correction note' : 'Write a care note'} for ${r.full}</h2>
+    <p>Room ${r.room} · ${fmtD(NOW)} ${fmtT(NOW)} BST · A. Okonkwo</p>
+    ${correctsId ? `<div class="corr">Correcting the ${fmtT(NOTES.find(x=>x.id===correctsId).at)} note.
+      That note stays visible and is marked superseded.</div>` : ''}
+    <div class="field"><label>Category</label>
+      <select id="ccat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+    <div class="field"><label>Shift</label>
+      <select id="cshift" onchange="checkShift('${clock}')">
+        ${['early','late','night'].map(s=>`<option ${s===clock?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <p class="hint" id="shifthint">Taken from the clock: ${clock} shift.</p>
+      <div id="reasonWrap" style="display:none;margin-top:10px">
+        <input type="text" id="creason" oninput="checkNote()" placeholder="Why is this note on a different shift?">
+        <p class="hint req">Changing the shift needs a reason, and the reason is stored with the note.
+          Both what the clock said and what you chose are kept.</p>
+      </div>
+    </div>
+    <div class="field"><label>Note</label>
+      <textarea id="cbody" oninput="checkNote()" placeholder="What happened, in plain language."></textarea></div>
+    <div class="field">
+      <label class="opt" style="border:0;padding:0"><input type="checkbox" id="cflag">
+        <span><b>Flag for senior review</b><span>Appears in “Flagged, not yet reviewed” until a senior signs it off.</span></span></label>
+    </div>
+    <div class="acts">
+      <button class="btn" onclick="closeDlg()">Cancel</button>
+      <button class="btn primary" id="csave" disabled onclick="saveNote('${resId}','${correctsId||''}','${clock}')">
+        ${correctsId ? 'Save correction' : 'Save note'}</button>
+    </div>`);
+  checkNote();
+}
+function checkShift(clock){
+  const v = document.getElementById('cshift').value;
+  const wrap = document.getElementById('reasonWrap');
+  wrap.style.display = v === clock ? 'none' : 'block';
+  document.getElementById('shifthint').textContent = v === clock
+    ? `Taken from the clock: ${clock} shift.`
+    : `The clock says ${clock}. You have chosen ${v}.`;
+  checkNote();
+}
+function checkNote(){
+  const body = document.getElementById('cbody').value.trim();
+  const wrap = document.getElementById('reasonWrap');
+  const needsReason = wrap.style.display !== 'none';
+  const reason = document.getElementById('creason').value.trim();
+  document.getElementById('csave').disabled = !(body.length > 0 && (!needsReason || reason.length > 0));
+}
+function saveNote(resId, correctsId, clock){
+  const v = document.getElementById('cshift').value;
+  const reason = document.getElementById('creason').value.trim();
+  const n = {
+    id:'n' + (NOTES.length + 1), res:resId, cat:document.getElementById('ccat').value,
+    at:new Date(NOW), by:'A. Okonkwo',
+    shift: v === clock ? { kind:'auto', value:v } : { kind:'overridden', value:v, clockSaid:clock, reason },
+    body: document.getElementById('cbody').value.trim(),
+    flag: document.getElementById('cflag').checked ? 'flagged_not_reviewed' : 'not_flagged',
+  };
+  if (correctsId){
+    n.corrects = correctsId;
+    NOTES.find(x => x.id === correctsId).supersededBy = n.id;
+  }
+  NOTES.push(n);
+  closeDlg(); openResident = resId; render();
+  toast('Note added to this session only. Nothing was saved to a server — this is a prototype.');
+}
+
+/* ============================================================
+   Plumbing
+   ============================================================ */
+let route = 'handover';
+function render(){
+  document.getElementById('view').innerHTML = route === 'handover' ? handoverView() : notesView();
+  document.querySelectorAll('[data-go]').forEach(b => {
+    if (b.dataset.go === route) b.setAttribute('aria-current','page');
+    else b.removeAttribute('aria-current');
+  });
+}
+document.querySelectorAll('[data-go]').forEach(b =>
+  b.onclick = () => { route = b.dataset.go; openResident = null; render(); window.scrollTo(0,0); });
+
+function openDlg(html){
+  document.getElementById('dlg').innerHTML = html;
+  document.getElementById('scrim').classList.add('open');
+}
+function closeDlg(){ document.getElementById('scrim').classList.remove('open'); }
+document.getElementById('scrim').onclick = e => { if (e.target.id === 'scrim') closeDlg(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDlg(); });
+
+let toastT;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 4200);
+}
+
+render();
+</script>
+</body>
+</html>

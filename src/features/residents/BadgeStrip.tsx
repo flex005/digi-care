@@ -35,7 +35,7 @@ export function BadgeStrip({ resident }: { resident: Resident }) {
         switch (state.kind) {
           case 'unrecorded':
             return (
-              <li key={source.id} className={styles.flagItem}>
+              <li key={source.id} className={styles.flagItem} data-badge={source.id}>
                 <Unrecorded
                   variant="flag"
                   caption={source.name}
@@ -47,7 +47,7 @@ export function BadgeStrip({ resident }: { resident: Resident }) {
 
           case 'recorded':
             return (
-              <li key={source.id} className={styles.flagItem}>
+              <li key={source.id} className={styles.flagItem} data-badge={source.id}>
                 <div
                   className={[styles.flag, TONE_CLASS[state.tone]].join(' ')}
                   data-state="recorded"

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Incident detail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+.back{background:none;border:0;padding:0;color:var(--purple-600);font-weight:600;font-size:14px}
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em;margin-top:10px}
+.ref{font-size:13px;color:var(--ink-500);margin-top:3px}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:16px}
+.sec{padding:20px 24px;border-bottom:1px solid var(--border-subtle)}
+.sec:last-child{border-bottom:0}
+.sec > h2{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:12px}
+
+/* OUTSTANDING — the one fact the screen exists for */
+.outstanding{margin-top:20px;border-radius:var(--r-lg);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);padding:18px 22px;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.outstanding .t{font-size:15px;font-weight:800}
+.outstanding ul{list-style:none;margin-top:11px;display:flex;flex-direction:column;gap:9px}
+.outstanding li{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border-radius:var(--r-md);
+  background:var(--bg-surface);border:1px solid var(--border-strong)}
+.outstanding li .n{font-size:13.5px;font-weight:700;color:var(--ink-900)}
+.outstanding li .d{font-size:12px;color:var(--ink-500);margin-top:2px;line-height:1.45}
+.outstanding li .go{margin-left:auto;flex:0 0 auto}
+.btnSm{padding:7px 13px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:12.5px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+
+/* facts strip */
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border-subtle)}
+.fact{background:var(--bg-surface);padding:14px 20px}
+.fact .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.fact .v{font-size:15px;font-weight:700;margin-top:3px}
+.fact .u{font-size:11.5px;color:var(--ink-500);margin-top:2px}
+.pill{display:inline-flex;padding:3px 10px;border-radius:var(--r-sm);font-size:11.5px;font-weight:700;
+  border:1px solid transparent}
+.pill.crit{border-color:var(--critical);background:var(--critical-tint);color:var(--critical-ink)}
+.pill.caut{border-color:var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.pill.info{border-color:var(--info);background:var(--info-tint);color:var(--info-ink)}
+.pill.ok{border-color:var(--positive);background:var(--positive-tint);color:var(--positive-ink)}
+.hatchPill{display:inline-flex;flex-direction:column;gap:1px;padding:6px 10px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700;border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.hatchPill small{font-size:11px;font-weight:400}
+
+/* subject */
+.subj{display:flex;gap:14px;align-items:center;padding:16px 24px}
+.av{width:44px;height:44px;flex:0 0 44px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:700;font-size:13px}
+.subj .nm{font-size:17px;font-weight:700}
+.subj .meta{font-size:12px;color:var(--ink-500);margin-top:2px}
+.allergy{margin-left:auto;padding:8px 13px;border-radius:var(--r-sm);border:1px solid var(--critical);
+  border-left-width:4px;background:var(--critical-tint);color:var(--critical-ink);font-size:12px;
+  font-weight:700}
+.allergy small{display:block;font-weight:400;font-size:11px}
+
+/* account */
+.account{font-size:14.5px;color:var(--ink-700);line-height:1.6;max-width:78ch}
+.byline{font-size:11.5px;color:var(--ink-500);margin-top:8px}
+.byline b{color:var(--ink-700);font-weight:600}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 24px;margin-top:16px}
+.f .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin-bottom:4px}
+.f .v{font-size:14px}
+.f .v small{display:block;font-size:12px;color:var(--ink-500);margin-top:2px}
+
+/* injury */
+.injWrap{display:grid;grid-template-columns:15rem minmax(0,1fr);gap:24px;align-items:start}
+.maps{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mapBox{border:1px solid var(--border-subtle);border-radius:var(--r-md);background:var(--bg-sunken);
+  padding:10px}
+.mapBox h3{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);text-align:center;margin-bottom:4px}
+svg.body{width:100%;height:auto;display:block}
+svg.body .rg{fill:var(--bg-surface);stroke:var(--border-strong);stroke-width:1.2}
+svg.body .rg[data-on="1"]{fill:var(--critical-tint);stroke:var(--critical);stroke-width:2}
+.sites{list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+.sites li{padding:7px 12px;border-radius:var(--r-sm);border:1px solid var(--critical);
+  background:var(--critical-tint);color:var(--critical-ink);font-size:13px;font-weight:600}
+
+/* review */
+.review .f + .f{margin-top:16px}
+.review .v{font-size:14px;color:var(--ink-700);line-height:1.55;max-width:78ch}
+.notif{margin-top:4px;padding:14px 18px;border-radius:var(--r-md);border:1.5px dashed var(--unrecorded);
+  border-left-width:4px;color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.notif .t{font-size:14px;font-weight:700}
+.notif .d{font-size:12.5px;margin-top:4px;line-height:1.5;max-width:70ch}
+.notif .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+/* flags */
+.flags{display:flex;flex-direction:column;gap:10px}
+.flag{display:flex;gap:14px;align-items:flex-start;padding:13px 16px;border-radius:var(--r-md)}
+.flag.open{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.flag.late{border:1px solid var(--critical);background:var(--critical-tint);color:var(--critical-ink)}
+.flag.done{border:1px solid var(--border-subtle);background:var(--bg-sunken);color:var(--ink-700)}
+.flag .n{font-size:13.5px;font-weight:700}
+.flag .d{font-size:12px;margin-top:3px;line-height:1.45;max-width:62ch}
+.flag .when{margin-left:auto;font-size:11.5px;font-weight:700;white-space:nowrap;text-align:right}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<button class="back">&larr; All incidents</button>
+<h1>Unwitnessed fall</h1>
+<p class="ref">INC-2026-0341 · Grace Adeyemi, Room 302 · 21/08/2026 17:40 BST · Rosewood Court</p>
+
+<!-- THE ONE FACT THIS SCREEN EXISTS FOR -->
+<div class="outstanding">
+  <div class="t">Three decisions have not been made about this incident</div>
+  <ul>
+    <li><div><div class="n">Whether the CQC must be told</div>
+      <div class="d">A fall with moderate harm may be notifiable. Nobody has recorded a decision either
+        way, and the incident cannot be closed without one.</div></div>
+      <span class="go"><button class="btnSm">Decide</button></span></li>
+    <li><div><div class="n">Falls risk assessment has not been reviewed</div>
+      <div class="d">Flagged when this incident was acknowledged. Due 23/08, 2 days late.</div></div>
+      <span class="go"><button class="btnSm">Re-score — Phase 5</button></span></li>
+    <li><div><div class="n">Mobility care plan domain has not been reviewed</div>
+      <div class="d">Flagged when this incident was acknowledged. Due 23/08, 2 days late.</div></div>
+      <span class="go"><button class="btnSm">Review — Phase 6</button></span></li>
+  </ul>
+</div>
+
+<!-- facts -->
+<div class="card">
+  <div class="facts">
+    <div class="fact"><div class="k">Status</div>
+      <div class="v"><span class="pill info">Under review</span></div>
+      <div class="u">acknowledged 21/08 18:20 by A. Okonkwo</div></div>
+    <div class="fact"><div class="k">Severity</div>
+      <div class="v"><span class="pill caut">Moderate harm</span></div>
+      <div class="u">treatment needed, recovery expected</div></div>
+    <div class="fact"><div class="k">CQC notification</div>
+      <div class="v"><span class="hatchPill">Not yet decided<small>nobody has decided either way</small></span></div></div>
+    <div class="fact"><div class="k">Reported</div>
+      <div class="v">21/08 18:02 BST</div>
+      <div class="u">22 minutes after it happened · N. Eze</div></div>
+  </div>
+
+  <div class="subj" style="border-top:1px solid var(--border-subtle)">
+    <span class="av">GA</span>
+    <div><div class="nm">Grace Adeyemi</div>
+      <div class="meta">Room 302 · Born 14/02/1939 (87) · Rosewood Court</div></div>
+    <div class="allergy">NO KNOWN ALLERGIES<small>recorded 04/04/2026 · A. Okonkwo</small></div>
+  </div>
+</div>
+
+<!-- what happened -->
+<div class="card">
+  <div class="sec">
+    <h2>What the reporter recorded</h2>
+    <p class="account">Found on the floor beside her bed at 17:40, lying on her right side. She said she
+      had tried to reach the bathroom on her own and did not remember falling. No obvious deformity.
+      She was able to bear weight with two of us assisting. Complained of pain in her right hip.</p>
+    <p class="byline">Recorded by <b>N. Eze</b> · 21/08/2026 18:02 BST · late shift</p>
+
+    <div class="grid3">
+      <div class="f"><div class="k">Where</div><div class="v">Resident's own room</div></div>
+      <div class="f"><div class="k">Witnesses</div>
+        <div class="v">Nobody witnessed it <small>recorded by N. Eze — a claim, not a blank</small></div></div>
+      <div class="f"><div class="k">Type</div><div class="v">Fall — unwitnessed</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>Injury</h2>
+    <div class="injWrap">
+      <div class="maps">
+        <div class="mapBox"><h3>Front</h3><div id="frontSvg"></div></div>
+        <div class="mapBox"><h3>Back</h3><div id="backSvg"></div></div>
+      </div>
+      <div>
+        <ul class="sites"><li>Right hip</li><li>Right elbow</li></ul>
+        <p class="byline" style="margin-top:12px">Checked by <b>N. Eze</b> · 21/08/2026 17:52 BST.
+          Left and right are the resident's own.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>What was done at the time</h2>
+    <p class="account">Assisted to her chair, neurological observations started at 17:55 and continuing
+      four-hourly. Paracetamol given for the hip pain at 18:10.</p>
+    <p class="byline">Recorded by <b>N. Eze</b> · 21/08/2026 18:02 BST</p>
+    <div class="grid3">
+      <div class="f"><div class="k">GP</div><div class="v">Contacted 18:15
+        <small>Dr H. Whitfield · advised observation, review tomorrow</small></div></div>
+      <div class="f"><div class="k">Family</div><div class="v">Contacted 18:40
+        <small>daughter, by phone · N. Eze</small></div></div>
+      <div class="f"><div class="k">Emergency services</div><div class="v">Not called</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- manager review -->
+<div class="card review">
+  <div class="sec">
+    <h2>Manager review</h2>
+    <div class="f"><div class="k">Root cause</div>
+      <div class="v">Attempted to mobilise unaided at night. Call bell was on the bedside table and
+        within reach; she has said before that she does not like to trouble staff at night.</div></div>
+    <div class="f"><div class="k">Actions taken</div>
+      <div class="v">Falls sensor mat placed. Night staff to check hourly and offer the toilet on each
+        check rather than waiting to be called.</div></div>
+    <div class="f"><div class="k">Preventive measures</div>
+      <div class="v"><span class="hatchPill">Not recorded<small>nobody has written what would stop this
+        happening again</small></span></div></div>
+    <p class="byline">Reviewed by <b>A. Okonkwo</b> · 21/08/2026 18:20 BST</p>
+  </div>
+
+  <div class="sec">
+    <h2>CQC notification</h2>
+    <div class="notif">
+      <div class="t">Not yet decided</div>
+      <div class="d">Nobody has recorded whether this must be notified. A decision is required either
+        way — "not required" is a recorded judgement with a name against it, and this incident cannot
+        be closed until one exists.</div>
+      <div class="acts">
+        <button class="btnSm">Notification is required</button>
+        <button class="btnSm">Not notifiable — record why</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>Post-incident review</h2>
+    <div class="flags">
+      <div class="flag late">
+        <div><div class="n">Falls risk assessment</div>
+          <div class="d">Flagged for review when this incident was acknowledged. Cleared by re-scoring
+            the assessment, which arrives in Phase 5.</div></div>
+        <span class="when">2 days late<br>due 23/08</span></div>
+      <div class="flag late">
+        <div><div class="n">Mobility care plan domain</div>
+          <div class="d">Flagged for review when this incident was acknowledged. Cleared by a care plan
+            review, which arrives in Phase 6.</div></div>
+        <span class="when">2 days late<br>due 23/08</span></div>
+      <div class="flag done">
+        <div><div class="n">Moving and handling assessment</div>
+          <div class="d">Reviewed and re-scored — no change to the risk level.</div></div>
+        <span class="when">done 22/08<br>M. Halloran</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ measurements ============ -->
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>Page</h3>
+  Max width <code>1080px</code>. Back link, then title <code>24px/700</code> — the incident TYPE, not a
+  reference number. Reference line beneath at <code>13px</code> ink-500 carrying reference, resident,
+  when and site.
+
+  <h3>Outstanding decisions — the one fact this screen exists for</h3>
+  Directly beneath the title, before any facts. <code>20px</code> above, padding <code>18px 22px</code>,
+  radius <code>16px</code>, <code>1.5px dashed</code> unrecorded with a <code>5px</code> left border and
+  the hatch. Heading <code>15px/800</code>.
+  Each item a white card inside it — padding <code>11px 14px</code>, 1px border-strong, radius
+  <code>12px</code>, <code>9px</code> apart. Name <code>13.5px/700</code> ink-900, explanation
+  <code>12px</code> ink-500, action button right-aligned.
+  Where the action lands in a later phase the button says so and is disabled, exactly as the export stub.
+  When nothing is outstanding this block does not render at all — and the absence is safe here only
+  because everything it would have listed is also stated in full below.
+
+  <h3>Facts strip</h3>
+  Four equal cells, <code>1px</code> gap on border-subtle so they read as one strip.
+  Cell padding <code>14px 20px</code>. Label <code>11px/600</code> uppercase ink-500,
+  value <code>15px/700</code>, qualifier <code>11.5px</code> ink-500.
+  Status and severity are pills; an undecided notification is the hatched pill with its second line.
+
+  <h3>Subject</h3>
+  Beneath the facts, same card, 1px top border. Avatar <code>44px</code>, name <code>17px/700</code>,
+  meta <code>12px</code> ink-500, allergy right-aligned at <code>12px/700</code> with a
+  <code>4px</code> left border. Rendered in all three allergy states — an allergy is an attribute of
+  the person, not an alert on a task, so it never appears conditionally.
+  Where no resident was involved this reads "No resident was involved" with the name of whoever
+  recorded that, never an empty strip.
+
+  <h3>Account sections</h3>
+  Body <code>14.5px</code> ink-700, line-height <code>1.6</code>, max <code>78ch</code>.
+  Byline beneath at <code>11.5px</code> ink-500 with the name at <code>600</code> in ink-700.
+  Three-up field grids gap <code>16px 24px</code>, label <code>11px/600</code> uppercase, value
+  <code>14px</code> with its qualifier <code>12px</code> ink-500 on its own line.
+  The reporter's account and the manager's account are separate sections with separate bylines. Putting
+  the reporter's words under the manager's heading attributes them to the wrong person.
+
+  <h3>Injury</h3>
+  <code>grid-template-columns: 15rem minmax(0,1fr)</code>, gap <code>24px</code>.
+  Maps read-only — no hover, no cursor change, not focusable. Marked regions keep the critical fill and
+  <code>2px</code> stroke.
+  Sites listed as chips beside the map at <code>13px/600</code> in the critical treatment, with the
+  line saying left and right are the resident's own.
+  Where injury was never checked, no map renders and the hatch says so; where it was checked and none
+  found, no map renders and the recorded negative shows settled with its author.
+
+  <h3>Notification</h3>
+  Its own section. Undecided renders as the hatched block, <code>14px 18px</code>, with the two actions
+  beneath at <code>7px 13px</code>.
+  "Required" renders hatched too until evidence follows it — an obligation with nothing against it is
+  the same shape as a PRN with no 24-hour maximum. Only "notified" and "not required" render settled,
+  and both carry a name, a date and a reason or reference.
+
+  <h3>Review flags</h3>
+  Stacked, gap <code>10px</code>, padding <code>13px 16px</code>, radius <code>12px</code>.
+  Three treatments: open and in time takes the hatch; open and overdue takes the critical border and
+  tint; completed takes bg-surface-sunken with a plain border and ink-700 — settled, quiet, not green.
+  Name <code>13.5px/700</code>, explanation <code>12px</code> naming what would clear it and the phase
+  that builds it. Timing right-aligned at <code>11.5px/700</code>.
+  There is no "mark as reviewed" control. Clearing a flag means doing the work.
+</div>
+
+</div>
+
+<script>
+const MARKED = new Set(['hip-r','el-r']);
+const FRONT = [
+  ['head','<ellipse cx="100" cy="30" rx="21" ry="25"/>'],
+  ['face','<ellipse cx="100" cy="36" rx="13" ry="15"/>'],
+  ['neck','<rect x="90" y="53" width="20" height="13" rx="4"/>'],
+  ['sh-r','<ellipse cx="70" cy="76" rx="15" ry="11"/>'],
+  ['sh-l','<ellipse cx="130" cy="76" rx="15" ry="11"/>'],
+  ['chest','<rect x="76" y="68" width="48" height="46" rx="8"/>'],
+  ['abd','<rect x="78" y="116" width="44" height="44" rx="8"/>'],
+  ['ua-r','<rect x="50" y="82" width="18" height="46" rx="8"/>'],
+  ['ua-l','<rect x="132" y="82" width="18" height="46" rx="8"/>'],
+  ['el-r','<rect x="49" y="128" width="18" height="15" rx="6"/>'],
+  ['el-l','<rect x="133" y="128" width="18" height="15" rx="6"/>'],
+  ['fa-r','<rect x="47" y="143" width="18" height="42" rx="8"/>'],
+  ['fa-l','<rect x="135" y="143" width="18" height="42" rx="8"/>'],
+  ['hd-r','<ellipse cx="56" cy="196" rx="11" ry="13"/>'],
+  ['hd-l','<ellipse cx="144" cy="196" rx="11" ry="13"/>'],
+  ['hip-r','<ellipse cx="84" cy="168" rx="14" ry="11"/>'],
+  ['hip-l','<ellipse cx="116" cy="168" rx="14" ry="11"/>'],
+  ['th-r','<rect x="76" y="176" width="21" height="58" rx="9"/>'],
+  ['th-l','<rect x="103" y="176" width="21" height="58" rx="9"/>'],
+  ['kn-r','<rect x="76" y="234" width="21" height="17" rx="7"/>'],
+  ['kn-l','<rect x="103" y="234" width="21" height="17" rx="7"/>'],
+  ['sh2-r','<rect x="77" y="251" width="19" height="52" rx="8"/>'],
+  ['sh2-l','<rect x="104" y="251" width="19" height="52" rx="8"/>'],
+  ['an-r','<rect x="78" y="303" width="17" height="13" rx="5"/>'],
+  ['an-l','<rect x="105" y="303" width="17" height="13" rx="5"/>'],
+  ['ft-r','<ellipse cx="86" cy="325" rx="12" ry="9"/>'],
+  ['ft-l','<ellipse cx="114" cy="325" rx="12" ry="9"/>'],
+];
+const BACK = [
+  ['b-head','<ellipse cx="100" cy="30" rx="21" ry="25"/>'],
+  ['b-neck','<rect x="90" y="53" width="20" height="13" rx="4"/>'],
+  ['b-sh-l','<ellipse cx="70" cy="76" rx="15" ry="11"/>'],
+  ['b-sh-r','<ellipse cx="130" cy="76" rx="15" ry="11"/>'],
+  ['b-up','<rect x="76" y="68" width="48" height="46" rx="8"/>'],
+  ['b-low','<rect x="78" y="116" width="44" height="38" rx="8"/>'],
+  ['sacrum','<ellipse cx="100" cy="163" rx="17" ry="12"/>'],
+  ['bu-l','<ellipse cx="84" cy="182" rx="16" ry="14"/>'],
+  ['bu-r','<ellipse cx="116" cy="182" rx="16" ry="14"/>'],
+  ['b-ua-l','<rect x="50" y="82" width="18" height="46" rx="8"/>'],
+  ['b-ua-r','<rect x="132" y="82" width="18" height="46" rx="8"/>'],
+  ['b-el-l','<rect x="49" y="128" width="18" height="15" rx="6"/>'],
+  ['b-el-r','<rect x="133" y="128" width="18" height="15" rx="6"/>'],
+  ['b-fa-l','<rect x="47" y="143" width="18" height="42" rx="8"/>'],
+  ['b-fa-r','<rect x="135" y="143" width="18" height="42" rx="8"/>'],
+  ['b-hd-l','<ellipse cx="56" cy="196" rx="11" ry="13"/>'],
+  ['b-hd-r','<ellipse cx="144" cy="196" rx="11" ry="13"/>'],
+  ['b-th-l','<rect x="76" y="196" width="21" height="46" rx="9"/>'],
+  ['b-th-r','<rect x="103" y="196" width="21" height="46" rx="9"/>'],
+  ['b-kn-l','<rect x="76" y="242" width="21" height="15" rx="7"/>'],
+  ['b-kn-r','<rect x="103" y="242" width="21" height="15" rx="7"/>'],
+  ['cf-l','<rect x="77" y="257" width="19" height="48" rx="8"/>'],
+  ['cf-r','<rect x="104" y="257" width="19" height="48" rx="8"/>'],
+  ['b-an-l','<rect x="78" y="305" width="17" height="12" rx="5"/>'],
+  ['b-an-r','<rect x="105" y="305" width="17" height="12" rx="5"/>'],
+  ['he-l','<ellipse cx="86" cy="325" rx="11" ry="9"/>'],
+  ['he-r','<ellipse cx="114" cy="325" rx="11" ry="9"/>'],
+];
+function draw(list, into, label){
+  document.getElementById(into).innerHTML =
+    `<svg class="body" viewBox="0 0 200 345" role="img" aria-label="${label}">` +
+    list.map(([id, s]) => `<g class="rg" data-on="${MARKED.has(id)?1:0}">${s}</g>`).join('') + '</svg>';
+}
+draw(FRONT, 'frontSvg', 'Front of body — right hip and right elbow marked');
+draw(BACK, 'backSvg', 'Back of body — nothing marked');
+</script>
+</body>
+</html>

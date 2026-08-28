@@ -2,27 +2,35 @@ import type { DueMedication, ResidentProfile } from '@/data/access/client'
 import type { CareNote } from '@/data/types'
 import { CARE_NOTE_CATEGORIES, MOOD_LABELS } from '@/data/types'
 import { Avatar } from '@/components/primitives'
-import { ReviewBadge, StatusPill, Unrecorded } from '@/components/status'
+import {
+  NeverWrittenUp,
+  ReviewBadge,
+  StatusPill,
+  Unrecorded,
+} from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSiteFormat } from '@/app/session/use-session'
-import { formatDate, ageFrom } from '@/lib/format'
+import { formatDate, ageFrom, pluralise } from '@/lib/format'
+import { MEDICATION_LOOKAHEAD_HOURS } from '@/lib/shift'
 import { telHref } from '@/lib/phone'
 import { BadgeStrip } from './BadgeStrip'
 import styles from './profile.module.css'
+import { staffLabel } from '@/data/access/team-store'
 
 /**
- * The persistent subject header. PRD §2.4, §6.2, §16.3.
+ * The subject header. PRD §2.4, §6.2, §16.3.
  *
- * Sticky, not collapsible, does not scroll away — because it is the structural
- * mitigation against the second-worst failure available: a record written
- * against the wrong resident. Whoever is writing must be able to see who they
- * are writing about without scrolling, at any point on any tab.
+ * Present on every tab, not collapsible, and **not sticky**. See the note on
+ * `.header` in profile.module.css for why §2.4 was amended rather than
+ * contradicted: the rule binds write surfaces, this screen has none, and 410px
+ * of permanently pinned header is a poor trade against four tabs of dense
+ * record. Phase 2's note composer is a write surface and needs its own.
  *
- * It carries the site for the same reason. §2.4 requires the active site to be
- * permanently visible; the app top bar scrolls away on a long profile, and
- * this does not.
+ * It stays mounted across the tabs because they are children of a layout
+ * route, which is a different property from staying on screen while you
+ * scroll, and the one §6.2 asks for.
  *
- * Subject identity comes from the route parameter and nothing else — never
+ * Subject identity comes from the route parameter and nothing else: never
  * navigation history, never "last viewed", never component state.
  */
 
@@ -30,13 +38,7 @@ function LastNoteSummary({ note }: { note: CareNote | 'none' }) {
   const format = useSiteFormat()
 
   if (note === 'none') {
-    return (
-      <Unrecorded
-        variant="chip"
-        label="No care note recorded"
-        detail="nobody has written this resident up, not once"
-      />
-    )
+    return <NeverWrittenUp variant="chip" />
   }
 
   const category = CARE_NOTE_CATEGORIES.find((entry) => entry.id === note.category)
@@ -51,15 +53,18 @@ function LastNoteSummary({ note }: { note: CareNote | 'none' }) {
         <span data-numeric>
           {format.dateTime(note.recordedAt)} · {format.relative(note.recordedAt)}
         </span>
-        <span>
-          {note.recordedBy.isActive
-            ? note.recordedBy.displayName
-            : `${note.recordedBy.displayName} (deactivated)`}
-        </span>
+        <span>{staffLabel(note.recordedBy)}</span>
         {/* Mood as a word in the meta line rather than a green pill. It is a
             recorded observation, not a finding to act on, and a filled pill
-            made it the loudest thing in the band. MoodBadge still exists for
-            Phase 2's care note surfaces, where the mood IS the subject.
+            made it the loudest thing in the band.
+
+            `MoodBadge` reaches the same conclusion for the care note surfaces
+            and is quiet there too, so this is no longer the exception it was
+            written as. The two still differ in one way: this one tints the
+            word by score and MoodBadge does not. The word carries the meaning
+            in both, so the tint is reinforcement rather than the sole carrier
+            — but it is one concept in two treatments, and worth collapsing to
+            one the next time either is touched.
 
             An unrecorded mood keeps the hatch. A care worker who did not
             record how someone seemed has not recorded that they seemed fine,
@@ -111,7 +116,7 @@ function DueMedications({ due }: { due: DueMedication[] }) {
               label={`${medication.name} ${medication.dose}`}
               detail={
                 record.state.kind === 'due'
-                  ? `${format.time(record.state.windowOpensAt)}–${format.time(record.state.windowClosesAt)} · ${medication.route}${medication.isControlledDrug ? ' · controlled drug' : ''}`
+                  ? `${format.time(record.state.windowOpensAt)} to ${format.time(record.state.windowClosesAt)} · ${medication.route}${medication.isControlledDrug ? ' · controlled drug' : ''}`
                   : medication.route
               }
             />
@@ -218,7 +223,7 @@ export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
 
       <div className={styles.band}>
         <p className={styles.eyebrow}>
-          Risk flags <span>— all five statuses, always shown</span>
+          Risk flags <span>all five statuses, always shown</span>
         </p>
         <BadgeStrip resident={resident} />
       </div>
@@ -226,9 +231,11 @@ export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
       <div className={[styles.band, styles.routine].join(' ')}>
         <section
           className={styles.panel}
-          aria-label="Medication due in the next 2 hours"
+          aria-label={`Medication due in the next ${pluralise(MEDICATION_LOOKAHEAD_HOURS, 'hour')}`}
         >
-          <h2 className={styles.panelTitle}>Medication due · next 2 hours</h2>
+          <h2 className={styles.panelTitle}>
+            Medication due · next {pluralise(MEDICATION_LOOKAHEAD_HOURS, 'hour')}
+          </h2>
           <DueMedications due={dueSoon} />
         </section>
 

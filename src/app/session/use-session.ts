@@ -3,6 +3,7 @@ import { SessionContext, TimeZoneContext } from './context'
 import type { Session } from './context'
 import {
   formatAttribution,
+  formatAttributionOn,
   formatDate,
   formatDateTime,
   formatInstantDate,
@@ -56,8 +57,17 @@ export function useSiteFormat() {
         withZone(formatDateTime(value, timeZone), value),
       /** Elapsed time. Correctly viewer-relative — it is about now. */
       relative: (value: IsoDateTime) => formatRelative(value),
-      attribution: (displayName: string, at: IsoDateTime, isActive = true) =>
-        withZone(formatAttribution(displayName, at, timeZone, isActive), at),
+      /** Who and when, time only — for a record being read on its own day. */
+      attribution: (displayName: string, at: IsoDateTime) =>
+        withZone(formatAttribution(displayName, at, timeZone), at),
+      /**
+       * Who and when, date and time — for a record that may be days old.
+       *
+       * An unsigned draft rendered as "11:29" reads as this morning however
+       * long ago somebody wrote it.
+       */
+      attributionOn: (displayName: string, at: IsoDateTime) =>
+        withZone(formatAttributionOn(displayName, at, timeZone), at),
     }
   }, [timeZone])
 }

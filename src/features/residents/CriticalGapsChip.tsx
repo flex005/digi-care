@@ -47,7 +47,7 @@ export function CriticalGapsChip({ resident }: { resident: Resident }) {
         // is named is critical, what is counted is not.
         detail={
           standardCount > 0
-            ? `${critical.map((gap) => gap.shortLabel).join(' · ')} — plus ${standardLabel}`
+            ? `${critical.map((gap) => gap.shortLabel).join(' · ')}, plus ${standardLabel}`
             : critical.map((gap) => gap.shortLabel).join(' · ')
         }
       />

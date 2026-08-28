@@ -1,9 +1,10 @@
 import type { CarePlanDomainStatus } from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatLateness } from '@/lib/format'
 import { useSiteFormat } from '@/app/session/use-session'
 import { StatusPill } from './StatusPill'
 import { Unrecorded } from './Unrecorded'
+import { staffLabel } from '@/data/access/team-store'
 
 /**
  * A care plan domain's progress. Source PRD §3, PRD §6.7:
@@ -26,11 +27,7 @@ export function DomainStatusBadge({ status }: { status: CarePlanDomainStatus }) 
         <StatusPill
           tone="info"
           label="In progress"
-          detail={format.attribution(
-            status.updatedBy.displayName,
-            status.updatedAt,
-            status.updatedBy.isActive,
-          )}
+          detail={format.attribution(staffLabel(status.updatedBy), status.updatedAt)}
         />
       )
 
@@ -48,9 +45,7 @@ export function DomainStatusBadge({ status }: { status: CarePlanDomainStatus }) 
         <StatusPill
           tone="critical"
           label="Review due"
-          detail={`due ${formatDate(status.dueOn)} · ${status.daysOverdue} day${
-            status.daysOverdue === 1 ? '' : 's'
-          } overdue · finalised ${formatDate(status.finalisedOn)}`}
+          detail={`due ${formatDate(status.dueOn)} · ${formatLateness(status.daysOverdue)} overdue · finalised ${formatDate(status.finalisedOn)}`}
         />
       )
 

@@ -24,11 +24,11 @@ function Pair({ what, recorded, unrecorded }: PairProps) {
   return (
     <>
       <div className={styles.compareCell}>
-        <span className={styles.compareLabel}>{what} — recorded</span>
+        <span className={styles.compareLabel}>{what}: recorded</span>
         <div className={styles.row}>{recorded}</div>
       </div>
       <div className={styles.compareCell}>
-        <span className={styles.compareLabel}>{what} — unrecorded</span>
+        <span className={styles.compareLabel}>{what}: unrecorded</span>
         <div className={styles.row}>{unrecorded}</div>
       </div>
     </>
@@ -39,13 +39,19 @@ export function RuleThreeComparison() {
   return (
     <section className={styles.section}>
       <h2 className={styles.sectionTitle}>
-        Rule 3 — a recorded negative is not an unrecorded value
+        Rule 3: a recorded negative is not an unrecorded value
       </h2>
       <p className={styles.sectionNote}>
         Every pair below is a complete clinical record on the left and a hole in the
         record on the right. They must never look alike. Turn on greyscale above and
-        check they are still distinguishable — on the MAR chart this distinction is
+        check they are still distinguishable. On the MAR chart this distinction is
         clinical, not cosmetic.
+      </p>
+      <p className={styles.sectionNote}>
+        The consultants pair is the recorded negative in its second flavour. Green says
+        “recorded, complete, and fine”, which a confirmed “no known allergies” genuinely
+        claims; blue says “recorded, complete, and neutral”, which is all “nobody is
+        involved” claims. Both are settled records with an author. Neither is a gap.
       </p>
 
       <div className={styles.compare}>
@@ -59,6 +65,18 @@ export function RuleThreeComparison() {
             />
           }
           unrecorded={<Unrecorded label="Allergies not recorded" />}
+        />
+
+        <Pair
+          what="Consultants and specialists"
+          recorded={
+            <StatusPill
+              tone="info"
+              label="No consultants or specialists involved"
+              detail="T. Akinyemi, 20/08/2026"
+            />
+          }
+          unrecorded={<Unrecorded label="Consultants and specialists not recorded" />}
         />
 
         <Pair
@@ -80,11 +98,11 @@ export function RuleThreeComparison() {
           recorded={
             <StatusPill
               tone="positive"
-              label="Falls risk — LOW"
+              label="Falls risk · LOW"
               detail="score 15 · C. Nwosu, 02/07/2026"
             />
           }
-          unrecorded={<Unrecorded label="Falls risk — not assessed" />}
+          unrecorded={<Unrecorded label="Falls risk not assessed" />}
         />
 
         <Pair

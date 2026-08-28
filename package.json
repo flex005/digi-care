@@ -12,7 +12,7 @@
     "icons": "node scripts/icons/build-icons.mjs",
     "icons:check": "node scripts/icons/build-icons.mjs --check",
     "typecheck": "tsc -b",
-    "lint": "npm run lint:es && npm run lint:css && npm run lint:hatch && npm run lint:tel",
+    "lint": "npm run lint:es && npm run lint:css && npm run lint:hatch && npm run lint:tel && npm run lint:plurals && npm run lint:selectors && npm run lint:instants && npm run lint:dashes && npm run lint:losses && npm run lint:svg",
     "lint:es": "eslint .",
     "lint:css": "stylelint \"src/**/*.css\"",
     "lint:hatch": "node scripts/check-hatch.mjs",
@@ -22,7 +22,14 @@
     "format:check": "prettier --check .",
     "verify": "npm run icons:check && npm run typecheck && npm run lint && npm run format:check && npm run test",
     "prepare": "husky",
-    "lint:tel": "node scripts/check-tel-links.mjs"
+    "lint:tel": "node scripts/check-tel-links.mjs",
+    "lint:plurals": "node scripts/check-plurals.mjs",
+    "lint:selectors": "node scripts/check-selector-specificity.mjs",
+    "lint:instants": "node scripts/check-instant-kinds.mjs",
+    "lint:dashes": "node scripts/check-em-dashes.mjs",
+    "lint:losses": "node scripts/check-session-losses.mjs",
+    "lint:svg": "node scripts/check-svg-portable.mjs",
+    "export:figma": "npm run build && node scripts/export/export-figma.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --fix",
@@ -68,6 +75,7 @@
     "husky": "^9.1.7",
     "jsdom": "^30.0.1",
     "lint-staged": "^17.3.0",
+    "playwright": "^1.62.1",
     "prettier": "^3.9.6",
     "stylelint": "^17.14.1",
     "stylelint-config-standard": "^40.0.0",

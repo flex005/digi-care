@@ -60,11 +60,38 @@ describe('every care plan domain is on the screen', () => {
     const other = NEEDS_SECTIONS.find((section) => section.id === 'other')
     expect(other?.domainIds).toContain('end_of_life')
     // The catch-all explains itself rather than appearing unlabelled.
-    expect(other?.note).toMatch(/Future Plans/)
+    expect(other?.description).toMatch(/Future Plans/)
+  })
+
+  /**
+   * A description is optional now, and that is the rule under test: one
+   * belongs on a section only where a reader would misread it without one.
+   * The five need groups do not — "Cognitive and mental health needs" over a
+   * list of its own domains explains itself, and a sentence restating it is a
+   * line between the reader and the record.
+   *
+   * The catch-all still has one, asserted separately above, because a domain
+   * sitting under "Other" with nothing in it reads as unrecorded when it is
+   * actually recorded on another tab.
+   */
+  it('keeps any section description in words, never as a count of its own rows', () => {
+    for (const section of NEEDS_SECTIONS) {
+      if (section.description === undefined) continue
+      expect(
+        section.description.trim(),
+        `${section.name} has an empty description`,
+      ).not.toBe('')
+      // "4 care plan domains" told the reader nothing they could not see, and
+      // a bare figure is the one thing forbidden everywhere (CLAUDE.md §1).
+      expect(
+        section.description,
+        `${section.name} describes itself with a bare count`,
+      ).not.toMatch(/^\d+ /)
+    }
   })
 
   it.each(residents.map((resident) => [resident.fullLegalName, resident.id] as const))(
-    '%s — all ten domains rendered',
+    '%s: all ten domains rendered',
     async (name, id) => {
       const { container } = renderNeeds(id)
       await waitFor(() =>
@@ -98,6 +125,21 @@ describe('a domain with no content says so', () => {
     }
   })
 
+  it('gives support level its own labelled answer on every domain', async () => {
+    // Never folded into the status badge beside it, and never a blank —
+    // "Independent" and "nobody has assessed them" are opposite claims.
+    const { container } = renderNeeds('res-okafor')
+    await waitFor(() =>
+      expect(container.querySelector('[data-domain]')).toBeInTheDocument(),
+    )
+    for (const domain of CARE_PLAN_DOMAINS) {
+      const row = container.querySelector(`[data-domain="${domain.id}"]`)
+      expect(row?.textContent, `${domain.name} has no support level`).toMatch(
+        /Support level/,
+      )
+    }
+  })
+
   it('never lets "not assessed" and "Independent" look alike', async () => {
     const { container } = renderNeeds('res-sowande')
     await waitFor(() =>
@@ -109,13 +151,28 @@ describe('a domain with no content says so', () => {
     expect(row?.textContent).not.toMatch(/Independent/)
   })
 
-  it('offers the write affordance disabled, since the editor is Phase 6', async () => {
-    renderNeeds('res-sowande')
-    const links = await screen.findAllByRole('link', { name: /coming in Phase 6/i })
+  it('opens the editor from the domain, without the gap giving way to it', async () => {
+    // Beside the hatch, never instead of it. The affordance arriving is
+    // exactly when a gap quietly stops reading as one, so the row is checked
+    // for both — the link, and the sentence saying nothing is written.
+    const { container } = renderNeeds('res-sowande')
+    await waitFor(() =>
+      expect(container.querySelector('[data-domain]')).toBeInTheDocument(),
+    )
+
+    const links = container.querySelectorAll('[data-domain-editor]')
     expect(links.length).toBe(CARE_PLAN_DOMAINS.length)
-    for (const link of links) {
-      expect(link).toHaveAttribute('aria-disabled', 'true')
+
+    for (const domain of CARE_PLAN_DOMAINS) {
+      const link = container.querySelector(`[data-domain-editor="${domain.id}"]`)
+      expect(link, domain.id).toHaveAttribute(
+        'href',
+        `/residents/res-sowande/care-plan/${domain.id}`,
+      )
     }
+
+    const row = container.querySelector('[data-domain="mobility"]')
+    expect(row?.textContent).toMatch(/No care plan content/)
   })
 })
 
@@ -130,7 +187,16 @@ describe('the Stale state', () => {
     )
     const row = container.querySelector('[data-domain="mobility"]')
     expect(row?.textContent).toMatch(/Review due/)
-    expect(row?.textContent).toMatch(/days overdue/)
+    /*
+     * How long, in whatever unit reads best — not "days" specifically.
+     *
+     * This asserted `/days overdue/` and broke when the lateness gained an
+     * owner that renders long overdue periods in months. It was pinning the
+     * unit in order to check that a duration is stated at all, so a legitimate
+     * change to the rendering had to relax it (§8). The property is that the
+     * row says *how long*, and a bare "Review due" with no figure fails this.
+     */
+    expect(row?.textContent).toMatch(/\b\d+ (day|week|month|year)s? overdue/)
   })
 })
 
@@ -146,7 +212,110 @@ describe('the tab within the profile', () => {
     await waitFor(() =>
       expect(container.querySelector('[data-domain]')).toBeInTheDocument(),
     )
-    const results = await axe(container)
+    /**
+     * Scoped to the panel under test, not the whole rendered page.
+     *
+     * These tests mount the profile route, so `container` also holds the
+     * subject header, the tab strip and the shell — dragged through axe on
+     * every pass by every tab. `profile.test.tsx` axes that shell once,
+     * because it is the test that is about it; this one is about this tab.
+     */
+    const panel = container.querySelector('[class*="tabPanel"]') ?? container
+    const results = await axe(panel)
     expect(results).toHaveNoViolations()
   }, 30000)
+})
+
+describe('a revision in progress', () => {
+  /*
+   * The domain that carries a signed version and an unsigned rewrite, found
+   * by property rather than pinned — it is a fixture case today and a thing
+   * anybody can create with the editor, and either should satisfy this.
+   */
+  const revised = residents.flatMap((resident) =>
+    resident.carePlan
+      .filter(
+        (domain) =>
+          domain.versions.kind === 'finalised' && domain.draft.kind === 'draft',
+      )
+      .map((domain) => ({ resident, domain })),
+  )[0]
+
+  it('has a fixture reaching it at all', () => {
+    expect(
+      revised,
+      'no resident has a signed domain with a draft over it',
+    ).toBeDefined()
+  })
+
+  it('says a revision is being written, quietly and without a treatment', async () => {
+    /*
+     * Nothing this tab claimed was false while it said nothing — but
+     * "somebody is rewriting this" is a fact about the current plan, and a
+     * reader who does not know it may act on a version about to be
+     * superseded.
+     */
+    const { container } = renderNeeds(revised!.resident.id)
+    await waitFor(() =>
+      expect(
+        container.querySelector(`[data-domain="${revised!.domain.domainId}"]`),
+      ).toBeInTheDocument(),
+    )
+
+    const row = container.querySelector(`[data-domain="${revised!.domain.domainId}"]`)
+    const line = row?.querySelector('[data-revision]')
+    expect(line?.textContent).toMatch(/revision is in progress, not yet signed/)
+    if (revised!.domain.draft.kind !== 'draft') throw new Error('expected a draft')
+    expect(line?.textContent).toContain(revised!.domain.draft.updatedBy.displayName)
+
+    // Quiet: plain text at the weight the settled facts sit at. No pill, no
+    // hatch — this tab is read-only and the revision is context, not a call
+    // to action.
+    expect(line?.tagName).toBe('P')
+    expect(
+      line?.querySelector('[class*="statusPill"], [class*="unrecorded"]'),
+    ).toBeNull()
+  })
+
+  it('does not move the status: only a signature does that', async () => {
+    // The signed version is still in force and still what staff follow. A
+    // revision that changed the status would say the plan had stopped being
+    // the plan because somebody started typing.
+    const { container } = renderNeeds(revised!.resident.id)
+    await waitFor(() =>
+      expect(
+        container.querySelector(`[data-domain="${revised!.domain.domainId}"]`),
+      ).toBeInTheDocument(),
+    )
+
+    const row = container.querySelector(`[data-domain="${revised!.domain.domainId}"]`)
+    expect(revised!.domain.status.kind).toBe('complete')
+    expect(row?.textContent).toMatch(/Complete/)
+    expect(row?.textContent).not.toMatch(/In progress/)
+    expect(row?.textContent).not.toMatch(/Not started/)
+  })
+
+  it('says nothing extra where the draft is the only thing there', async () => {
+    // `in_progress` already says a draft exists and who is writing it.
+    // Saying it twice in one cell is volume drowning a distinction.
+    const partWritten = residents.flatMap((resident) =>
+      resident.carePlan
+        .filter((domain) => domain.status.kind === 'in_progress')
+        .map((domain) => ({ resident, domain })),
+    )[0]
+    expect(partWritten).toBeDefined()
+
+    const { container } = renderNeeds(partWritten!.resident.id)
+    await waitFor(() =>
+      expect(
+        container.querySelector(`[data-domain="${partWritten!.domain.domainId}"]`),
+      ).toBeInTheDocument(),
+    )
+
+    const row = container.querySelector(
+      `[data-domain="${partWritten!.domain.domainId}"]`,
+    )
+    expect(row?.textContent).toMatch(/In progress/)
+    expect(row?.querySelector('[data-revision]')).toBeNull()
+  })
 })

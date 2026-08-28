@@ -1,0 +1,38 @@
+/**
+ * The product mark.
+ *
+ * Colour reaches the artwork through these rules and not through the file: a
+ * CSS `fill` beats the `fill` attribute the export baked in, so the same two
+ * SVGs serve a white rail and a deep purple panel. PRD §4.7, CLAUDE.md §4.
+ */
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  height: var(--space-32);
+}
+
+.logo svg {
+  display: block;
+  width: auto;
+  height: 100%;
+}
+
+/* As supplied: the mark in brand purple, the wordmark in the deep ink. */
+.ink [data-part='mark'] {
+  fill: var(--purple-600);
+}
+
+.ink [data-part='word'] {
+  fill: var(--purple-900);
+}
+
+/*
+ * One colour, taken from whatever is around it. A two-tone mark on a dark
+ * ground loses the darker half of itself, so on the sign-in panel the whole
+ * lockup goes light rather than the wordmark alone.
+ */
+.light [data-part='mark'],
+.light [data-part='word'] {
+  fill: currentColor;
+}

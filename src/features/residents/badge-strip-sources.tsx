@@ -1,6 +1,7 @@
 import type { Resident } from '@/data/types'
 import type { StatusTone } from '@/components/status'
 import { assertNever } from '@/lib/assert-never'
+import { scoreTextCapitalised } from '@/features/risk/score'
 import { formatDate, formatInstantDate } from '@/lib/format'
 import type { TimeZone } from '@/lib/format'
 
@@ -75,7 +76,7 @@ export const BADGE_STRIP_SOURCES: BadgeStripSource[] = [
                   ? 'caution'
                   : 'positive',
             answer: LEVEL_LABEL[falls.level],
-            attribution: `Score ${falls.score} · ${falls.assessedBy.displayName}, ${formatInstantDate(falls.assessedAt, timeZone)}`,
+            attribution: `${scoreTextCapitalised(falls.score)} · ${falls.assessedBy.displayName}, ${formatInstantDate(falls.assessedAt, timeZone)}`,
           }
         default:
           return assertNever(falls)
@@ -112,10 +113,11 @@ export const BADGE_STRIP_SOURCES: BadgeStripSource[] = [
             // line somebody reads before giving a drug.
             answer: allergies.items.map((allergy) => allergy.substance).join(', '),
             attribution: allergies.items
-              .map(
-                (allergy) => `${allergy.severity} · ${allergy.reaction.toLowerCase()}`,
-              )
-              .join(' — '),
+              // The reaction as it was written. It is free text on a clinical
+              // record, so it can carry a device or a drug name, and lowercasing
+              // it to fit a line would take that out.
+              .map((allergy) => `${allergy.severity} · ${allergy.reaction}`)
+              .join('; '),
           }
         default:
           return assertNever(allergies)
@@ -212,7 +214,7 @@ export const BADGE_STRIP_SOURCES: BadgeStripSource[] = [
           return {
             kind: 'recorded',
             tone: 'caution',
-            answer: `Isolating — ${isolation.reason}`,
+            answer: `Isolating · ${isolation.reason}`,
             attribution: `Since ${formatDate(isolation.since)} · ${isolation.recordedBy.displayName}`,
           }
         default:

@@ -1,0 +1,227 @@
+/**
+ * The medication cycle.
+ *
+ * Nothing here is green. Accepting a change is the ordinary state and not an
+ * achievement; the one tally that carries a treatment is the fourth, which is
+ * a gap and takes the hatch.
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.title {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.subtitle {
+  margin-top: var(--space-4);
+  max-width: 88ch;
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.tallies {
+  display: grid;
+  gap: var(--space-12);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.tally,
+.tallyGap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-lg);
+}
+
+.tally {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--ink-700);
+}
+
+/* Neither list mentions these. A hatch, because nobody has decided anything. */
+.tallyGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-radius: var(--radius-lg);
+}
+
+.tallyLabel {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tallyValue {
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.tallyNote {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.tally .tallyLabel,
+.tally .tallyNote {
+  color: var(--ink-500);
+}
+
+.rows {
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  gap: var(--space-16);
+  align-items: start;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  grid-template-columns: minmax(0, 1fr) 13rem minmax(0, 1.2fr) 12rem;
+}
+
+.rows > li:first-child .row {
+  border-top: 0;
+}
+
+.drug {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.form,
+.who {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.who {
+  margin-top: var(--space-4);
+  color: var(--ink-700);
+  font-weight: var(--weight-semibold);
+}
+
+.kindNew,
+.kindChanged,
+.kindStopped {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-bold);
+}
+
+.kindNew {
+  border: 1px solid var(--status-info);
+  background: var(--status-info-tint);
+  color: var(--status-info-ink);
+}
+
+.kindChanged {
+  border: 1px solid var(--status-caution);
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+/* Stopped is a decision somebody took, and an unremarkable one. */
+.kindStopped {
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-700);
+}
+
+.kindNew small,
+.kindChanged small,
+.kindStopped small {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-regular);
+}
+
+/* Old and new on one line. Two rows to compare is how a change gets read as
+   two medications. */
+.was {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.was b {
+  color: var(--ink-900);
+  font-weight: var(--weight-bold);
+}
+
+.arrow {
+  color: var(--status-caution-ink);
+  font-weight: var(--weight-extrabold);
+}
+
+.acts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.done {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.foot {
+  display: flex;
+  gap: var(--space-20);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.footState {
+  max-width: 78ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.noteField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.noteLabel {
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+}
+
+.noteField textarea {
+  min-height: 84px;
+  padding: var(--space-8) var(--space-12);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+  resize: vertical;
+}

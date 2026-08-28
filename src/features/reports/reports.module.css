@@ -1,0 +1,715 @@
+/**
+ * Reports. Built to docs/reports.html.
+ *
+ * The reference's 36px, 15px, 13.5px, 12.5px, 11.5px and 11px steps each take
+ * the nearest on the closed type scale, and its 20px, 14px, 11px and 10px
+ * spacings the nearest on the 4px one (CLAUDE.md §4).
+ *
+ * **No rating colours in this file.** Green, amber and red belong to the
+ * compliance panel; a report shows figures and coverage. The one place a
+ * positive token appears is a change that got better, where the direction is
+ * also stated in words.
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.pageSubtitle {
+  margin-top: var(--space-4);
+  max-width: 88ch;
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.loading {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.errorTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.errorBody {
+  margin: var(--space-4) 0 var(--space-12);
+  max-width: 62ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.backLink,
+.openLink {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--purple-600);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.backLink {
+  align-self: flex-start;
+}
+
+/* ---------------------------------------------------------------------------
+ * The analytical layout — varied tiles carrying the hierarchy
+ *
+ * Same treatment as the compliance panel, and deliberately not the same
+ * vocabulary: there are no rating dots here, because there are no ratings here.
+ * ------------------------------------------------------------------------ */
+
+.analysisGrid {
+  display: grid;
+  gap: var(--space-16);
+  align-items: stretch;
+  grid-template-columns: 1.15fr 1fr 1.5fr;
+}
+
+.viewGrid {
+  display: grid;
+  gap: var(--space-16);
+  align-items: stretch;
+  grid-template-columns: 2fr 1fr;
+}
+
+.hero,
+.miniPlain,
+.miniGap,
+.chartPanel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+}
+
+.hero {
+  padding: var(--space-24);
+  background: var(--purple-900);
+  color: var(--bg-surface);
+}
+
+.heroLabel {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.heroValue {
+  margin-top: var(--space-8);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.heroBody {
+  margin-top: var(--space-8);
+  max-width: 36ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+  opacity: 0.86;
+}
+
+.heroSplit {
+  display: grid;
+  gap: var(--space-12);
+  margin-top: var(--space-20);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--border-unrecorded);
+  grid-template-columns: 1fr 1fr;
+}
+
+.heroSplitValue {
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.heroSplitLabel {
+  margin-top: var(--space-4);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  opacity: 0.72;
+}
+
+.pair {
+  display: grid;
+  gap: var(--space-16);
+  grid-template-rows: 1fr 1fr;
+}
+
+.miniPlain,
+.miniGap {
+  justify-content: center;
+  padding: var(--space-16) var(--space-20);
+}
+
+.miniPlain {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--ink-700);
+  box-shadow: var(--shadow-card);
+}
+
+/* The hatch, unchanged — pattern rather than a lighter hue. */
+.miniGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-radius: var(--radius-xl);
+}
+
+.miniLabel {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.miniValue {
+  margin-top: var(--space-4);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.miniBody {
+  margin-top: var(--space-4);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+/* ---------------------------------------------------------------------------
+ * The chart — one bar per report, and the hatch survives into it
+ *
+ * Horizontal rather than the compliance panel's columns, because eight report
+ * names will not fit under eight columns and an abbreviation nobody agreed is
+ * a second name for the same thing.
+ * ------------------------------------------------------------------------ */
+
+.chartPanel {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.chartHead {
+  padding: var(--space-16) var(--space-20) 0;
+}
+
+.chartTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.chartNote {
+  margin-top: var(--space-4);
+  max-width: 62ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.legend {
+  display: flex;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+  margin-top: var(--space-12);
+}
+
+.legendItem {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-semibold);
+}
+
+.swatchRecorded,
+.swatchGap {
+  width: var(--space-12);
+  height: var(--space-12);
+  border-radius: var(--radius-sm);
+}
+
+.swatchRecorded {
+  background: var(--purple-600);
+}
+
+.swatchGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-width: 1px;
+}
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  flex: 1;
+  justify-content: center;
+  padding: var(--space-16) var(--space-20);
+  list-style: none;
+}
+
+.chartRow {
+  display: grid;
+  gap: var(--space-12);
+  align-items: center;
+  grid-template-columns: 16rem minmax(0, 1fr) 6rem;
+}
+
+.chartRowLabel {
+  color: var(--ink-700);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+}
+
+.chartTrack {
+  display: flex;
+  overflow: hidden;
+  height: var(--space-16);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface-sunken);
+}
+
+.chartRowFigure {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.barRecorded,
+.barGap {
+  display: block;
+  height: 100%;
+}
+
+.barRecorded {
+  background: var(--purple-600);
+}
+
+/*
+ * A pattern rather than a lighter shade of the recorded colour, so the
+ * distinction survives greyscale exactly as it does everywhere else.
+ */
+.barGap {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-width: 0;
+  border-radius: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Index tables
+ * ------------------------------------------------------------------------ */
+
+.tableCard,
+.drillCard {
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.groupTitle {
+  padding: var(--space-16) var(--space-24) var(--space-8);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-bold);
+}
+
+.drillCard .groupTitle,
+.tableCard > div:first-child .groupTitle {
+  border-top: 0;
+}
+
+.visuallyHidden {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.reportName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.reportAnswers {
+  margin-top: var(--space-4);
+  max-width: 62ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.readiness {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-caption-line);
+}
+
+.readinessFigure {
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+}
+
+.drillDowns {
+  padding: 0 var(--space-24) var(--space-20);
+}
+
+.drillIntro {
+  max-width: 80ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.drillList {
+  display: flex;
+  gap: var(--space-8);
+  list-style: none;
+  flex-wrap: wrap;
+  margin-top: var(--space-12);
+}
+
+.drillLink {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: baseline;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-900);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.drillWhere {
+  color: var(--purple-600);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-bold);
+}
+
+/* ---------------------------------------------------------------------------
+ * The finding — above the filters and above the table, always
+ * ------------------------------------------------------------------------ */
+
+.finding,
+.findingThin {
+  display: flex;
+  gap: var(--space-20);
+  align-items: flex-start;
+  padding: var(--space-24);
+  border-radius: var(--radius-xl);
+}
+
+.finding {
+  border: 1px solid var(--status-critical);
+  border-left-width: 5px;
+  background: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+.findingThin {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  border-left-width: 5px;
+}
+
+.findingFigure {
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.findingTitle {
+  display: block;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.findingDetail {
+  display: block;
+  margin-top: var(--space-4);
+  max-width: 78ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+/* ---------------------------------------------------------------------------
+ * Filters and the restatement
+ * ------------------------------------------------------------------------ */
+
+.staffNote {
+  margin: var(--space-16) var(--space-24) 0;
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--purple-200);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  max-width: 88ch;
+  background: var(--purple-50);
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.staffNote b {
+  color: var(--purple-600);
+  font-weight: var(--weight-bold);
+}
+
+.filters {
+  display: flex;
+  gap: var(--space-12);
+  flex-wrap: wrap;
+  align-items: flex-end;
+  padding: var(--space-12) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.segmented {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.segmented button {
+  padding: var(--space-8) var(--space-16);
+  border: 0;
+  background: var(--bg-surface);
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--purple-600);
+  color: var(--bg-surface);
+}
+
+.filterLabel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.filterLabelText {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.filters select {
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+}
+
+.stateNote {
+  max-width: 62ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.restated {
+  padding: var(--space-12) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+  max-width: 100ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+/* ---------------------------------------------------------------------------
+ * Table
+ * ------------------------------------------------------------------------ */
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: separate;
+  font-size: var(--text-body-sm-size);
+}
+
+.table th,
+.table td {
+  padding: var(--space-8) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+  vertical-align: top;
+}
+
+/* Composed on the row itself: CSS Modules allows `composes` only on a single
+   local class, and the hatch is a background the cells sit on rather than a
+   treatment each cell repeats. */
+.thinRow {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+}
+
+.thinRow td,
+.thinRow th {
+  background: transparent;
+  color: var(--status-unrecorded-ink);
+}
+
+.table thead th {
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table tbody tr:hover td,
+.table tbody tr:hover th {
+  background: var(--bg-surface-sunken);
+}
+
+/* The hatch is the row's own background, and it survives the hover. */
+.table tbody tr.thinRow:hover td,
+.table tbody tr.thinRow:hover th {
+  background: transparent;
+}
+
+.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table tbody td.numeric {
+  font-weight: var(--weight-bold);
+}
+
+.rowHead {
+  font-weight: var(--weight-regular);
+}
+
+.rowName {
+  display: block;
+  color: var(--ink-900);
+  font-weight: var(--weight-semibold);
+}
+
+.rowNote {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+.deactivated {
+  color: var(--ink-500);
+  font-weight: var(--weight-regular);
+}
+
+/* A row below the population floor keeps its counts and loses only its rate.
+   It stays in the table — removing it would make the table look complete. */
+.change {
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-bold);
+  white-space: nowrap;
+}
+
+.change[data-change='worse'] {
+  color: var(--status-critical-ink);
+}
+
+.change[data-change='better'] {
+  color: var(--status-positive-ink);
+}
+
+.change[data-change='unchanged'] {
+  color: var(--ink-500);
+}
+
+.noComparison {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
+.noFile {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  margin: var(--space-16) var(--space-24) var(--space-24);
+  padding: var(--space-16) var(--space-20);
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+}
+
+.noFileTitle {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-bold);
+}
+
+.noFileBody {
+  margin-top: var(--space-4);
+  max-width: 88ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}

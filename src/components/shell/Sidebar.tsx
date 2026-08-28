@@ -1,7 +1,8 @@
 import { NavLink, useMatch } from 'react-router-dom'
 import { Icon } from '@/components/icon/Icon'
 import { Tooltip } from '@/components/primitives'
-import { devStatesItem, navItems, navSections, shellIcons } from '@/app/nav-items.icons'
+import { navItems, navSections, shellIcons } from '@/app/nav-items.icons'
+import { Logo } from '@/components/brand/Logo'
 import type { NavItem } from '@/app/nav-items.icons'
 import { NavBadge, type NavCount } from './NavBadge'
 import styles from './Sidebar.module.css'
@@ -34,7 +35,7 @@ export interface SidebarProps {
 }
 
 function itemAccessibleName(item: NavItem, count: NavCount | undefined): string {
-  const base = item.enabled ? item.label : `${item.label} — coming in a later phase`
+  const base = item.enabled ? item.label : `${item.label} (coming in a later phase)`
   return count ? `${base}. ${count.description}` : base
 }
 
@@ -61,10 +62,18 @@ function SidebarItem({
   count: NavCount | undefined
   collapsed: boolean
 }) {
-  // Matched here rather than via NavLink's render prop, so the class list is
-  // a plain string in every branch. `end: false` keeps the parent item active
-  // on a child route — /residents stays lit on /residents/:id.
-  const match = useMatch({ path: item.path, end: false })
+  /*
+   * Matched here rather than via NavLink's render prop, so the class list is a
+   * plain string in every branch.
+   *
+   * **The root is matched exactly and everything else by prefix.** `end: false`
+   * keeps a parent lit on its children, which is what /residents needs on
+   * /residents/:id — but the Dashboard's path is `/`, and every URL in the
+   * product is prefixed by `/`, so it matched all of them and the front door
+   * stayed lit on every screen. A nav item is active when you are looking at
+   * it, and only then.
+   */
+  const match = useMatch({ path: item.path, end: item.path === '/' })
   const isActive = item.enabled && match !== null
   const name = itemAccessibleName(item, count)
 
@@ -133,10 +142,22 @@ export function Sidebar({ collapsed, onToggleCollapsed, counts }: SidebarProps) 
           with the thing it acts on, and it stays in the same place in both
           states rather than moving between the top and the foot of the rail. */}
       <div className={styles.brand}>
-        <span className={styles.mark} aria-hidden="true">
-          <Icon name={shellIcons.logo} size={20} />
-        </span>
-        <span className={styles.wordmark}>diGi-Care</span>
+        {/*
+         * The mark alone when the rail is collapsed: the wordmark does not
+         * fit in 72px and scaling the lockup down to make it fit would make
+         * the word unreadable while still taking the space.
+         */}
+        {/*
+         * The name announced is the name on the artwork. The mark reads
+         * "Radiant digicare" and the product's copy says diGi-Care; a screen
+         * reader hearing the second for an image showing the first is being
+         * told about a different thing from the one on screen.
+         */}
+        <Logo
+          variant={collapsed ? 'mark' : 'lockup'}
+          height={collapsed ? 28 : 32}
+          title="Radiant digicare"
+        />
         <Tooltip
           side="right"
           content={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -177,16 +198,15 @@ export function Sidebar({ collapsed, onToggleCollapsed, counts }: SidebarProps) 
           )
         })}
 
-        <div className={styles.section}>
-          <p className={styles.sectionLabel}>Review</p>
-          <ul className={styles.items}>
-            <SidebarItem
-              item={devStatesItem}
-              count={counts[devStatesItem.path]}
-              collapsed={collapsed}
-            />
-          </ul>
-        </div>
+        {/*
+         * **`/dev/states` is still routed and is no longer in the rail.** It
+         * is the kitchen sink the Evidence Invariant is checked against at
+         * the end of every phase, and it was never a product module — it sat
+         * under a "Review" heading of its own, which put a developer's tool
+         * in a care manager's navigation. It is reached by typing the URL,
+         * and the reachability guard names it as the one route that is
+         * deliberately not linked rather than counting it as a failure.
+         */}
       </div>
     </nav>
   )

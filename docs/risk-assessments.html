@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Risk assessments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:16px}
+.sec{padding:20px 24px;border-bottom:1px solid var(--border-subtle)}
+.sec:last-child{border-bottom:0}
+.sec > h2{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:12px}
+
+.viewNav{display:flex;gap:4px;margin-bottom:6px}
+.viewNav button{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.viewNav button[aria-pressed="true"]{background:var(--purple-900);border-color:var(--purple-900);color:#fff}
+
+/* placeholder warning */
+.placeholder{margin-top:16px;padding:14px 18px;border-radius:var(--r-md);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);font-size:12.5px;line-height:1.55;font-weight:600;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+
+/* subject */
+.subj{display:flex;gap:14px;align-items:center;padding:14px 22px}
+.av{width:42px;height:42px;flex:0 0 42px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:700;font-size:13px}
+.subj .nm{font-size:17px;font-weight:700}
+.subj .meta{font-size:12px;color:var(--ink-500);margin-top:2px}
+.subj .flagNote{margin-left:auto;padding:8px 13px;border-radius:var(--r-sm);border:1px solid var(--critical);
+  border-left-width:4px;background:var(--critical-tint);color:var(--critical-ink);font-size:12px;
+  font-weight:700;max-width:34ch;line-height:1.4}
+
+/* list */
+.lead{margin-top:20px;padding:18px 22px;border-radius:var(--r-lg);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);display:flex;gap:16px;align-items:flex-start;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.lead .n{font-size:32px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.lead .t{font-size:14px;font-weight:700}
+.lead .d{font-size:12.5px;margin-top:3px;line-height:1.45;max-width:56ch}
+
+.arow{display:grid;grid-template-columns:minmax(0,1fr) 13rem 11rem auto;gap:20px;align-items:center;
+  padding:14px 24px;border-top:1px solid var(--border-subtle)}
+.arow:first-of-type{border-top:0}
+.arow .t{font-size:14.5px;font-weight:600}
+.arow .i{font-size:12px;color:var(--ink-500);margin-top:2px}
+.state{display:inline-flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700;max-width:200px}
+.state small{font-size:11px;font-weight:400;line-height:1.35}
+.state.never{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.state.over{border:1px solid var(--critical);background:var(--critical-tint);color:var(--critical-ink)}
+.state.due{border:1px solid var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.state.ok{color:var(--ink-700);font-weight:500;padding-left:0}
+.state.ok small{color:var(--ink-500)}
+.lvl{font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-sm);border:1px solid transparent;
+  display:inline-block}
+.lvl.low{border-color:var(--positive);background:var(--positive-tint);color:var(--positive-ink)}
+.lvl.mod{border-color:var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.lvl.high{border-color:var(--critical);background:var(--critical-tint);color:var(--critical-ink)}
+.lvl.none{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 5px,transparent 5px 10px)}
+.btn{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* form */
+.itemRow{display:grid;grid-template-columns:minmax(0,1fr) 22rem;gap:24px;align-items:start;
+  padding:16px 24px;border-top:1px solid var(--border-subtle)}
+.itemRow .q{font-size:14.5px;font-weight:600}
+.itemRow .h{font-size:12px;color:var(--ink-500);margin-top:3px;max-width:56ch;line-height:1.45}
+.choices{display:flex;flex-direction:column;gap:7px}
+.choice{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1.5px solid var(--border-strong);
+  border-radius:var(--r-md);font-size:13.5px;cursor:pointer}
+.choice:hover{border-color:var(--purple-400)}
+.choice.sel{border-color:var(--purple-600);background:var(--purple-50)}
+.choice .pts{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--ink-500)}
+.choice.sel .pts{color:var(--purple-600)}
+.unanswered{padding:8px 12px;border-radius:var(--r-sm);font-size:11.5px;font-weight:600;
+  border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);margin-top:8px;display:inline-block;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+
+/* running score */
+.score{position:sticky;top:16px;display:flex;gap:22px;align-items:center;padding:16px 24px;
+  border-radius:var(--r-lg);background:var(--bg-surface);border:1px solid var(--border-subtle);
+  box-shadow:var(--shadow-card);margin-top:16px;z-index:5}
+.score .v{font-size:38px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.score .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.score .band{margin-left:auto;text-align:right}
+.score .prog{flex:1;max-width:320px}
+.bar{height:7px;border-radius:var(--r-pill);background:var(--border-subtle);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--purple-600)}
+.progTxt{font-size:11.5px;color:var(--ink-500);margin-top:6px}
+
+/* interventions */
+.iv{display:grid;grid-template-columns:minmax(0,1fr) 12rem 9rem auto;gap:14px;align-items:center;
+  padding:12px 0;border-top:1px solid var(--border-subtle)}
+.iv:first-of-type{border-top:0}
+input[type=text],select,input[type=date]{width:100%;padding:9px 11px;border:1px solid var(--border-strong);
+  border-radius:var(--r-md);font:inherit;font-size:13.5px;background:var(--bg-surface);color:var(--ink-900)}
+.rm{background:none;border:0;color:var(--critical-ink);font-size:11.5px;font-weight:700;
+  text-decoration:underline}
+
+/* compare */
+.cmp{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;padding:22px 24px}
+.side{padding:18px 20px;border-radius:var(--r-md);border:1px solid var(--border-subtle);
+  background:var(--bg-sunken);text-align:center}
+.side .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.side .v{font-size:40px;font-weight:800;line-height:1.05;margin-top:4px;letter-spacing:-.02em}
+.side .b{margin-top:8px}
+.side .w{font-size:11.5px;color:var(--ink-500);margin-top:8px}
+.arrow{text-align:center}
+.arrow .word{font-size:15px;font-weight:800;margin-top:4px}
+.arrow.worse{color:var(--critical-ink)} .arrow.better{color:var(--positive-ink)}
+.arrow.same{color:var(--ink-500)}
+.changes{margin:0 24px 22px;padding:16px 20px;border-radius:var(--r-md);border:1px solid var(--critical);
+  border-left-width:4px;background:var(--critical-tint);color:var(--critical-ink)}
+.changes .t{font-size:13.5px;font-weight:800}
+.changes ul{list-style:none;margin-top:10px;display:flex;flex-direction:column;gap:7px}
+.changes li{font-size:13px;font-weight:600;padding-left:16px;position:relative;line-height:1.45}
+.changes li::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;
+  background:var(--critical)}
+.notifNote{margin:0 24px 22px;padding:13px 18px;border-radius:var(--r-md);border:1.5px dashed var(--unrecorded);
+  border-left-width:4px;color:var(--unrecorded-ink);font-size:12.5px;font-weight:600;line-height:1.5;
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+
+.foot{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:18px 24px}
+.foot .state2{font-size:13px;color:var(--ink-700);max-width:66ch}
+.foot .state2 b{font-weight:700}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="viewNav">
+  <button aria-pressed="true" onclick="go('list',this)">1 · Assessment list</button>
+  <button aria-pressed="false" onclick="go('form',this)">2 · The assessment</button>
+  <button aria-pressed="false" onclick="go('cmp',this)">3 · Re-score and compare</button>
+</div>
+
+<div id="view"></div>
+
+<!-- ============ measurements ============ -->
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>Placeholder banner — on every screen in this module</h3>
+  <code>1.5px dashed</code> unrecorded with a <code>5px</code> left border and the hatch,
+  padding <code>14px 18px</code>, <code>12.5px/600</code>.
+  It says the instrument is not a validated clinical scale and no clinical decision should be made from
+  a score it produces. Same treatment as the export stub, for the same reason: a control or a figure
+  that does not do what it appears to must say so where it appears.
+
+  <h3>1 · Assessment list</h3>
+  Seventh profile tab. Lead card at the top, hatched, <code>18px 22px</code>, <code>5px</code> left
+  border, figure <code>32px/800</code> — "4 of 9 risks have never been assessed for this person".
+  Row: <code>minmax(0,1fr) 13rem 11rem auto</code>, gap <code>20px</code>, padding <code>14px 24px</code>.
+  Template name <code>14.5px/600</code> over its instrument at <code>12px</code> ink-500.
+  State chip <code>7px 11px</code>, <code>12px/700</code> over <code>11px/400</code>: never assessed
+  takes the hatch, overdue takes critical, due takes caution, in-date is plain text with no chip.
+  Risk level pill <code>12px/700</code> tinted by level; where never assessed it is the hatched
+  "No level" — never blank, never "low" by default.
+  Action column: "Score now" beside the hatch, never instead of it. The row must still read as a gap
+  after the affordance is added.
+  <b>All nine rows always render</b>, iterated from the template constant and never from the resident's
+  record. Completing one cannot remove a row.
+
+  <h3>2 · The assessment</h3>
+  Running score sticky at <code>top:16px</code>, <code>16px 24px</code>, figure <code>38px/800</code>,
+  band right-aligned, progress bar <code>7px</code> with its "4 of 6 answered" line at <code>11.5px</code>.
+  It is sticky because the score is the thing the reader is watching change.
+  Item row: <code>minmax(0,1fr) 22rem</code>, gap <code>24px</code>, padding <code>16px 24px</code>,
+  1px top border. Question <code>14.5px/600</code>, guidance <code>12px</code> ink-500 max <code>56ch</code>.
+  Choices stacked, gap <code>7px</code>, padding <code>9px 12px</code>, <code>1.5px</code> border,
+  selected takes purple-600 and purple-50. Point value right-aligned at <code>11.5px/700</code> —
+  always visible, because a scorer who cannot see the weighting cannot tell whether the instrument is
+  behaving.
+  An unanswered item shows the hatched chip beneath its choices. No item has a default.
+  Interventions: <code>minmax(0,1fr) 12rem 9rem auto</code>, gap <code>14px</code>.
+  Description, responsible person as a StaffRef select, due date, remove.
+  <b>An intervention with no responsible person cannot be saved.</b> A plan nobody owns is not a plan.
+  Footer names exactly what is outstanding, as the round does.
+
+  <h3>3 · Re-score and compare</h3>
+  <code>1fr auto 1fr</code>, gap <code>20px</code>, padding <code>22px 24px</code>.
+  Each side <code>18px 20px</code>, radius <code>12px</code>, bg-surface-sunken, centred.
+  Figure <code>40px/800</code>, band pill beneath, then who and when at <code>11.5px</code> ink-500.
+  Centre column carries an arrow AND the word — improved, unchanged, deteriorated. Never the arrow alone:
+  direction by shape is not readable in greyscale and means nothing to a screen reader.
+  Where the level changed, the consequences block renders beneath in the critical treatment,
+  <code>16px 20px</code>: what changes on the profile, and every post-incident review this closes,
+  named and counted.
+  Beneath that, the hatched note saying staff on shift would be notified and that this build does not
+  send it — the export stub's treatment.
+  <b>The confirmation is raised only when the level changes.</b> Raising it on every re-score is volume
+  drowning the distinction.
+  <b>Clearing a flag never erases that it was late.</b> An incident closed late still reads as closed late.
+</div>
+
+</div>
+
+<script>
+const TEMPLATES = [
+  { id:'falls', name:'Falls risk', inst:'Placeholder scored instrument', state:'never' },
+  { id:'pressure', name:'Pressure ulcer risk', inst:'Placeholder scored instrument',
+    state:'over', level:'high', score:19, days:34, by:'A. Okonkwo', on:'12/02/2026' },
+  { id:'nutrition', name:'Nutritional risk', inst:'Placeholder scored instrument',
+    state:'due', level:'mod', score:12, by:'M. Halloran', on:'24/02/2026' },
+  { id:'moving', name:'Moving and handling', inst:'Placeholder scored instrument',
+    state:'ok', level:'mod', score:14, by:'A. Okonkwo', on:'02/07/2026', next:'02/01/2027' },
+  { id:'skin', name:'Skin integrity', inst:'Placeholder scored instrument',
+    state:'ok', level:'low', score:6, by:'M. Halloran', on:'18/06/2026', next:'18/12/2026' },
+  { id:'choking', name:'Choking and dysphagia', inst:'Unscored — findings recorded',
+    state:'ok', level:'high', by:'M. Halloran', on:'20/05/2026', next:'20/11/2026' },
+  { id:'behaviour', name:'Behaviour support', inst:'Unscored — findings recorded', state:'never' },
+  { id:'environmental', name:'Environmental risk', inst:'Unscored — findings recorded', state:'never' },
+  { id:'coshh', name:'COSHH', inst:'Unscored — findings recorded', state:'never' },
+];
+
+const ITEMS = [
+  { q:'Assessment factor 1 — recent history', h:'Placeholder item. A real instrument states exactly what is being asked and how to judge it.',
+    opts:[['Not present',0],['Present in the last 3 months',15],['Present in the last month',25]] },
+  { q:'Assessment factor 2 — mobility', h:'Placeholder item.',
+    opts:[['Independent',0],['Uses an aid',10],['Requires assistance',20]] },
+  { q:'Assessment factor 3 — orientation', h:'Placeholder item.',
+    opts:[['Oriented',0],['Intermittently disoriented',15]] },
+  { q:'Assessment factor 4 — medication', h:'Placeholder item.',
+    opts:[['No relevant medication',0],['One relevant medication',5],['Two or more',10]] },
+  { q:'Assessment factor 5 — continence', h:'Placeholder item.',
+    opts:[['Continent',0],['Occasional assistance',5],['Dependent',10]] },
+  { q:'Assessment factor 6 — environment', h:'Placeholder item.',
+    opts:[['No hazards identified',0],['Hazards identified and mitigated',5],['Hazards identified, not mitigated',20]] },
+];
+const BANDS = [[0,24,'Low','low'],[25,49,'Moderate','mod'],[50,999,'High','high']];
+let answers = { 0:25, 1:20, 2:15, 3:5 };
+
+const SUBJ = `
+<div class="card"><div class="subj">
+  <span class="av">BH</span>
+  <div><div class="nm">Beryl</div>
+    <div class="meta">Beryl Hutchinson · Room 214 · Born 09/07/1946 (80) · Rosewood Court</div></div>
+  <div class="flagNote">Unwitnessed fall, 21/08 — reported and not yet acknowledged. Falls risk has
+    never been assessed.</div>
+</div></div>`;
+
+const PLACEHOLDER = `<div class="placeholder">
+  This instrument is a placeholder. It is not a validated clinical scale, its items and weightings are
+  invented, and no clinical decision should be made from a score it produces. A real instrument has to be
+  sourced before this module is used with real residents.</div>`;
+
+function bandFor(t){ const b = BANDS.find(([lo,hi]) => t >= lo && t <= hi); return { label:b[2], cls:b[3] }; }
+const total = () => Object.values(answers).reduce((a,b)=>a+b,0);
+
+function listView(){
+  const never = TEMPLATES.filter(t => t.state === 'never').length;
+  return `<h1>Risk assessments</h1>${SUBJ}${PLACEHOLDER}
+  <div class="lead">
+    <div class="n">${never}</div>
+    <div><div class="t">of ${TEMPLATES.length} risks have never been assessed for this person</div>
+      <div class="d">Never assessed is not low risk. Every template is listed whether or not anybody has
+        completed it, because a list of only the completed ones would read as a complete picture.</div></div>
+  </div>
+  <div class="card">
+    ${TEMPLATES.map(t => `<div class="arow">
+      <div><div class="t">${t.name}</div><div class="i">${t.inst}</div></div>
+      <div>${
+        t.state === 'never' ? `<span class="state never">Never assessed<small>nobody has looked at this risk</small></span>`
+        : t.state === 'over' ? `<span class="state over">Review overdue<small>${t.days} days late · last ${t.on}</small></span>`
+        : t.state === 'due' ? `<span class="state due">Review due<small>due this week · last ${t.on}</small></span>`
+        : `<span class="state ok">Assessed ${t.on}<small>${t.by} · next ${t.next}</small></span>`}</div>
+      <div>${t.state === 'never' ? '<span class="lvl none">No level</span>'
+        : `<span class="lvl ${t.level}">${{low:'Low',mod:'Moderate',high:'High'}[t.level]}${
+            t.score !== undefined ? ` · ${t.score}` : ''}</span>`}</div>
+      <div><button class="btn ${t.state==='never'?'primary':''}">${
+        t.state === 'never' ? 'Score now' : 'Re-score'}</button></div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function formView(){
+  const t = total(), b = bandFor(t), answered = Object.keys(answers).length;
+  return `<h1>Falls risk — Beryl Hutchinson</h1>${SUBJ}${PLACEHOLDER}
+  <div class="score">
+    <div><div class="k">Running score</div><div class="v">${t}</div></div>
+    <div class="prog"><div class="bar"><i style="width:${(answered/ITEMS.length)*100}%"></i></div>
+      <div class="progTxt">${answered} of ${ITEMS.length} items answered${
+        answered < ITEMS.length ? ' — the score is not final until every item has an answer' : ''}</div></div>
+    <div class="band"><div class="k">Band</div>
+      <div style="margin-top:5px"><span class="lvl ${b.cls}" style="font-size:14px;padding:5px 14px">${b.label}</span></div></div>
+  </div>
+  <div class="card">
+    ${ITEMS.map((it,i) => `<div class="itemRow">
+      <div><div class="q">${it.q}</div><div class="h">${it.h}</div>
+        ${answers[i] === undefined ? '<span class="unanswered">Not answered — the score is incomplete</span>' : ''}</div>
+      <div class="choices">${it.opts.map(([lab,pts]) => `
+        <label class="choice ${answers[i]===pts?'sel':''}">
+          <input type="radio" name="i${i}" ${answers[i]===pts?'checked':''} onchange="setA(${i},${pts})">
+          <span>${lab}</span><span class="pts">${pts} pts</span></label>`).join('')}</div>
+    </div>`).join('')}
+  </div>
+  <div class="card"><div class="sec">
+    <h2>Interventions</h2>
+    <div class="iv">
+      <input type="text" value="Falls sensor mat at the bedside, checked on every night round">
+      <select><option>N. Eze</option><option>A. Okonkwo</option><option>K. Osei</option></select>
+      <input type="date" value="2026-08-25">
+      <button class="rm">remove</button>
+    </div>
+    <div class="iv">
+      <input type="text" placeholder="What will be done about this risk">
+      <select><option value="">Who is responsible</option><option>N. Eze</option><option>A. Okonkwo</option></select>
+      <input type="date">
+      <button class="rm">remove</button>
+    </div>
+    <p style="font-size:12px;color:var(--ink-500);margin-top:12px">An intervention with no responsible
+      person cannot be saved. A plan nobody owns is not a plan.</p>
+  </div>
+  <div class="foot">
+    <p class="state2">${answered < ITEMS.length
+      ? `<b>Waiting on:</b> ${ITEMS.length - answered} unanswered item${ITEMS.length-answered===1?'':'s'} · one intervention has no responsible person`
+      : `<b>Every item is answered.</b> This records a falls risk of ${b.label} for Beryl Hutchinson.`}</p>
+    <button class="btn primary" ${answered < ITEMS.length ? 'disabled' : ''}>Record assessment</button>
+  </div></div>`;
+}
+
+function cmpView(){
+  return `<h1>Re-score — falls risk</h1>${SUBJ}${PLACEHOLDER}
+  <div class="card">
+    <div class="cmp">
+      <div class="side"><div class="k">Previous</div><div class="v">28</div>
+        <div class="b"><span class="lvl mod">Moderate</span></div>
+        <div class="w">M. Halloran · 02/03/2026</div></div>
+      <div class="arrow worse"><div style="font-size:26px">&darr;</div><div class="word">Deteriorated</div>
+        <div style="font-size:11.5px;color:var(--ink-500);margin-top:4px">+27 points</div></div>
+      <div class="side"><div class="k">New</div><div class="v">55</div>
+        <div class="b"><span class="lvl high">High</span></div>
+        <div class="w">A. Okonkwo · 23/08/2026</div></div>
+    </div>
+
+    <div class="changes">
+      <div class="t">The risk level has changed, and these change with it</div>
+      <ul>
+        <li>The profile badge strip changes from FALLS RISK — MODERATE to FALLS RISK — HIGH, on every
+          screen it appears.</li>
+        <li>This closes 2 post-incident reviews flagged on falls risk — from the unwitnessed fall of
+          21/08, and the witnessed fall of 04/08. Both were overdue, and both will still read as closed
+          late.</li>
+        <li>The next review moves from 02/09/2026 to 23/02/2027.</li>
+      </ul>
+    </div>
+
+    <div class="notifNote">
+      Recording this would notify every member of staff on shift that Beryl Hutchinson's falls risk has
+      risen to High. This build has no notification system and will not send it.
+    </div>
+
+    <div class="foot">
+      <p class="state2"><b>Confirming records a falls risk of High for Beryl Hutchinson.</b>
+        The previous score stays on the record; a re-score adds to the history rather than replacing it.</p>
+      <button class="btn primary">Record and close 2 reviews</button>
+    </div>
+  </div>`;
+}
+
+function setA(i,p){ answers[i] = p; render(); }
+let view = 'list';
+function go(v, btn){
+  view = v;
+  document.querySelectorAll('.viewNav button').forEach(b => b.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true');
+  render(); window.scrollTo(0,0);
+}
+function render(){
+  document.getElementById('view').innerHTML =
+    view === 'list' ? listView() : view === 'form' ? formView() : cmpView();
+}
+render();
+</script>
+</body>
+</html>

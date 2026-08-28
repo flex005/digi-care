@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import type { ResidentSummary } from '@/data/access/client'
 import { getResidentSummaries } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
@@ -11,7 +11,6 @@ import {
   Table,
   TableCell,
   TableRow,
-  Tooltip,
 } from '@/components/primitives'
 import { ReviewBadge, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
@@ -68,11 +67,12 @@ function columnsFor(sortKey: SortKey, showSite: boolean): TableColumn<SortKey>[]
       // read this. Frank's original instruction offered exactly this
       // alternative — "a persistent legend OR a Risk flags header tooltip" —
       // and the header control is focusable, so it is not hover-only.
-      note: `${RISK_FLAG_SOURCES.map((source) => source.name).join(', ')}. A hatched badge means nobody has looked — a gap, not a reassurance. A coloured badge is recorded and needs attention. Nothing shown means recorded and unremarkable, never "nobody looked", because every gap above is drawn. EOLC and isolation are on each resident's profile, where every state is shown.`,
+      note: `${RISK_FLAG_SOURCES.map((source) => source.name).join(', ')}. Hatched means nobody has looked. Coloured means recorded and needs attention. Nothing shown means recorded and unremarkable.`,
     },
     { label: 'Review status', width: '15%' },
     {
-      label: sortKey === 'oldestNote' ? 'Last care note — oldest' : 'Last care note',
+      label:
+        sortKey === 'oldestNote' ? 'Last care note, oldest first' : 'Last care note',
       sortKey: sortKey === 'oldestNote' ? 'oldestNote' : 'newestNote',
       width: '16%',
     },
@@ -97,6 +97,7 @@ function useSimulation(): Simulation {
 
 export function ResidentsRoute() {
   const { sites, activeSite, accessMode } = useSession()
+  const navigate = useNavigate()
   const simulation = useSimulation()
 
   const load = useCallback(() => getResidentSummaries('all'), [])
@@ -108,6 +109,7 @@ export function ResidentsRoute() {
     setRisk,
     setReview,
     setRecords,
+    setQuery,
     sortKey,
     sortDirection,
     toggleSort,
@@ -140,27 +142,25 @@ export function ResidentsRoute() {
             Sort by oldest care note to find the residents nobody has written up.
           </p>
         </div>
-        {/* Resident admission is not built by any phase in the PRD. Present
-            but disabled, matching the sidebar, so the screen does not change
-            shape when admission is assigned a phase. Under read-only it is not
-            rendered at all — an auditor has zero write (PRD §1), and a
-            disabled button implies a capability they will never have. */}
+        {/* Live from Phase 16. Still absent under read-only rather than
+            disabled — an auditor has zero write (PRD §1), and a disabled
+            button implies a capability they will never have. */}
         {accessMode === 'read_write' ? (
-          <Tooltip content="Add resident — coming in a later phase">
-            <span>
-              <Button variant="primary" disabled aria-disabled="true">
-                <Icon name="add-remove-delete/add-01" size={16} />
-                Add resident
-              </Button>
-            </span>
-          </Tooltip>
+          <Button
+            variant="primary"
+            onClick={() => navigate('/residents/new')}
+            data-admit-link
+          >
+            <Icon name="add-remove-delete/add-01" size={16} />
+            Add resident
+          </Button>
         ) : null}
       </header>
 
       {simulation !== 'none' ? (
         <p className={styles.simBanner} role="status">
           <Icon name="alert-notification/alert-02" size={16} />
-          Simulated “{simulation}” state — this is a review aid, not real data. Remove{' '}
+          Simulated “{simulation}” state. This is a review aid, not real data. Remove{' '}
           <code>?sim={simulation}</code> from the address to see the real list.
         </p>
       ) : null}
@@ -175,6 +175,7 @@ export function ResidentsRoute() {
           onRiskChange={setRisk}
           onReviewChange={setReview}
           onRecordsChange={setRecords}
+          onQueryChange={setQuery}
           period={period}
           onPeriodChange={setPeriod}
         />
@@ -183,9 +184,8 @@ export function ResidentsRoute() {
           <div className={styles.errorPanel}>
             <p className={styles.errorTitle}>The resident list could not be loaded</p>
             <p className={styles.errorBody}>
-              Nothing has been lost — this is a read. Until it loads, this screen is
-              showing you nothing rather than something incomplete, because a partial
-              resident list is worse than none: you cannot tell who is missing from it.
+              Nothing has been lost; this is a read. A partial list is not shown,
+              because you cannot tell who is missing from it.
             </p>
             <Button
               variant="secondary"
@@ -206,23 +206,19 @@ export function ResidentsRoute() {
           // Evidence Invariant failing at the level of a result set.
           <EmptyState
             title={`No residents at ${siteLabel} yet`}
-            body="Nobody has been admitted here. This is not a filter result — the site is empty."
+            body="Nobody has been admitted here. This is not a filter result. The site is empty."
             actions={
               accessMode === 'read_write' ? (
-                <Tooltip content="Add resident — coming in a later phase">
-                  <span>
-                    <Button disabled aria-disabled="true">
-                      Add resident
-                    </Button>
-                  </span>
-                </Tooltip>
+                <Button onClick={() => navigate('/residents/new')} data-admit-link>
+                  Add resident
+                </Button>
               ) : undefined
             }
           />
         ) : visible.length === 0 ? (
           <EmptyState
             title="No residents match these filters"
-            body={`There are ${atSite.length} residents at ${siteLabel}, but none of them match the filters you have set. They are still here — this view is narrowed.`}
+            body={`There are ${atSite.length} residents at ${siteLabel}, but none of them match the filters you have set. They are still here; this view is narrowed.`}
             actions={
               hasNarrowingFilters ? (
                 <Button variant="secondary" onClick={clearFilters}>

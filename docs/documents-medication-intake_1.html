@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Document viewer and medication intake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1250px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.sub{margin-top:4px;font-size:13px;color:var(--ink-500);max-width:86ch;line-height:1.55}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-xl);
+  box-shadow:var(--shadow-card);margin-top:16px;overflow:hidden}
+.viewNav{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+.viewNav button{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.viewNav button[aria-pressed="true"]{background:var(--purple-900);border-color:var(--purple-900);color:#fff}
+.btn{padding:9px 16px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.btn.ghost{color:var(--ink-700)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.viewer{display:grid;grid-template-columns:minmax(0,1fr) 21rem;min-height:640px}
+.stage{background:#2A2140;padding:26px;display:flex;flex-direction:column;align-items:center;gap:16px;
+  overflow:auto}
+.stageBar{width:100%;max-width:640px;display:flex;justify-content:space-between;align-items:center;
+  gap:16px;color:#fff}
+.stageBar .n{font-size:13px;font-weight:700}
+.stageBar .m{font-size:11.5px;opacity:.7;margin-top:1px}
+.zoom{display:flex;gap:6px;align-items:center}
+.zoom button{width:30px;height:30px;border-radius:var(--r-sm);border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.08);color:#fff;font-size:15px;font-weight:700;line-height:1}
+.zoom span{font-size:12px;font-weight:700;opacity:.8;min-width:44px;text-align:center}
+
+.doc{width:100%;max-width:640px;background:#fff;border-radius:6px;padding:44px 46px;
+  box-shadow:0 10px 40px rgba(0,0,0,.35);font-size:13px;line-height:1.6;color:#1a1a1a}
+.doc .crest{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
+  padding-bottom:16px;border-bottom:2px solid #1a1a1a}
+.doc .crest .org{font-size:15px;font-weight:800;letter-spacing:-.01em}
+.doc .crest .orgSub{font-size:11px;color:#555;margin-top:2px}
+.doc .crest .ref{font-size:10.5px;color:#555;text-align:right;line-height:1.5}
+.doc h2{font-size:19px;font-weight:800;margin:22px 0 4px;letter-spacing:-.01em}
+.doc .strap{font-size:11.5px;color:#555;margin-bottom:20px}
+.doc .fieldRow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:9px 0;
+  border-bottom:1px solid #e4e4e4}
+.doc .fieldRow .l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#555}
+.doc .fieldRow .v{font-size:13px;font-weight:600}
+.doc .block{margin-top:20px;padding:14px 16px;border:1.5px solid #1a1a1a;border-radius:4px}
+.doc .block .t{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.doc .block .b{font-size:13px;margin-top:6px;line-height:1.6}
+.doc .sigRow{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:26px}
+.doc .sig{border-top:1px solid #1a1a1a;padding-top:7px}
+.doc .sig .who{font-size:14px;font-weight:700;font-family:Georgia,serif;font-style:italic}
+.doc .sig .role{font-size:10.5px;color:#555;margin-top:3px}
+.doc .foot{margin-top:26px;padding-top:12px;border-top:1px solid #e4e4e4;font-size:10px;color:#777;
+  display:flex;justify-content:space-between;gap:16px}
+
+.sample{width:100%;max-width:640px;padding:12px 16px;border-radius:var(--r-md);
+  border:1.5px dashed rgba(255,255,255,.4);color:#fff;font-size:12px;line-height:1.55;
+  background:rgba(255,255,255,.07)}
+.sample b{font-weight:800}
+
+.rail{background:var(--bg-surface);border-left:1px solid var(--border-subtle);display:flex;
+  flex-direction:column}
+.railSec{padding:18px 20px;border-bottom:1px solid var(--border-subtle)}
+.railSec h3{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:10px}
+.f{margin-bottom:12px}
+.f:last-child{margin-bottom:0}
+.f .k{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-500)}
+.f .v{font-size:13.5px;margin-top:3px;line-height:1.45}
+.expChip{display:inline-flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700;border:1px solid var(--critical);background:var(--critical-tint);
+  color:var(--critical-ink)}
+.expChip small{font-size:11px;font-weight:400;line-height:1.35}
+.usedBy{display:flex;flex-direction:column;gap:7px}
+.ub{display:flex;gap:9px;align-items:baseline;padding:9px 11px;border-radius:var(--r-sm);
+  background:var(--bg-sunken);border:1px solid var(--border-subtle);font-size:12.5px}
+.ub .go{margin-left:auto;color:var(--purple-600);font-weight:700;font-size:11.5px;white-space:nowrap}
+.hint{margin-top:8px;font-size:12px;color:var(--ink-500);line-height:1.45}
+.railFoot{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border-subtle);
+  display:flex;gap:8px;flex-wrap:wrap}
+
+.cycHead{padding:20px 24px;border-bottom:1px solid var(--border-subtle);display:flex;
+  justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
+.cycHead h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
+.cycHead .m{font-size:12.5px;color:var(--ink-500);margin-top:3px}
+.tally{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border-subtle)}
+.tal{background:var(--bg-surface);padding:14px 20px}
+.tal .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500)}
+.tal .v{font-size:26px;font-weight:800;margin-top:3px;letter-spacing:-.02em}
+.tal .d{font-size:11.5px;color:var(--ink-500);margin-top:2px}
+.tal.newT .v{color:var(--info-ink)} .tal.chg .v{color:var(--caution-ink)}
+.tal.stop .v{color:var(--ink-700)}
+.tal.gapT{background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.tal.gapT .v,.tal.gapT .k,.tal.gapT .d{color:var(--unrecorded-ink)}
+
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) 13rem 16rem auto;gap:18px;align-items:start;
+  padding:15px 24px;border-top:1px solid var(--border-subtle)}
+.mrow .dn{font-size:14.5px;font-weight:700}
+.mrow .df{font-size:12px;color:var(--ink-500);margin-top:2px}
+.mrow .res{font-size:12.5px;color:var(--ink-700);margin-top:6px;font-weight:600}
+.kind{display:inline-flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700}
+.kind small{font-size:11px;font-weight:400;line-height:1.35}
+.kind.newK{border:1px solid var(--info);background:var(--info-tint);color:var(--info-ink)}
+.kind.chgK{border:1px solid var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.kind.stopK{border:1px solid var(--border-strong);background:var(--bg-sunken);color:var(--ink-700)}
+.kind.gapK{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.was{font-size:12px;color:var(--ink-500);line-height:1.5}
+.was b{color:var(--ink-900);font-weight:700}
+.was .arrow{color:var(--caution-ink);font-weight:800}
+.acts{display:flex;flex-direction:column;gap:7px}
+.acts .btn{padding:7px 12px;font-size:12.5px;text-align:center}
+
+.sec{padding:20px 24px;border-bottom:1px solid var(--border-subtle)}
+.sec:last-child{border-bottom:0}
+.sec > h2{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:14px}
+label.k2{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:6px}
+input[type=text],input[type=date],select{width:100%;padding:10px 12px;border:1px solid var(--border-strong);
+  border-radius:var(--r-md);font:inherit;font-size:14px;background:var(--bg-surface);color:var(--ink-900)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.fld + .fld{margin-top:16px}
+.srcBox{padding:16px 19px;border-radius:var(--r-md);border:1px solid var(--purple-200);
+  border-left-width:4px;background:var(--purple-50)}
+.srcBox .t{font-size:14px;font-weight:700;color:var(--purple-600)}
+.srcBox .d{font-size:12.5px;color:var(--ink-700);margin-top:5px;line-height:1.55;max-width:78ch}
+.opts{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.opt{display:flex;gap:11px;align-items:flex-start;padding:11px 14px;border:1.5px solid var(--border-strong);
+  border-radius:var(--r-md);background:var(--bg-surface);cursor:pointer;font-size:13.5px}
+.opt.sel{border-color:var(--purple-600);background:#fff}
+.opt b{display:block;font-weight:600}
+.opt span.h{display:block;font-size:12px;color:var(--ink-500);margin-top:3px;line-height:1.5}
+.warnBox{margin-top:12px;padding:12px 15px;border-radius:var(--r-sm);border:1px solid var(--caution);
+  border-left-width:4px;background:var(--caution-tint);color:var(--caution-ink);font-size:12.5px;
+  font-weight:600;line-height:1.55}
+.allergyMini{padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--critical);
+  border-left-width:4px;background:var(--critical-tint);color:var(--critical-ink);font-size:13px;
+  font-weight:700}
+.foot{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:18px 24px}
+.foot .st{font-size:13px;color:var(--ink-700);max-width:66ch;line-height:1.55}
+.foot .st b{font-weight:700}
+
+.meas{margin-top:32px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="viewNav">
+  <button aria-pressed="true" onclick="go('doc',this)">1 · Document viewer</button>
+  <button aria-pressed="false" onclick="go('cycle',this)">2 · Medication cycle from the pharmacy</button>
+  <button aria-pressed="false" onclick="go('manual',this)">3 · Add an interim medication</button>
+</div>
+
+<div id="view"></div>
+
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>1 · Document viewer</h3>
+  <code>minmax(0,1fr) 21rem</code>, full height, no gap — stage and rail are one surface.
+  Stage background <code>#2A2140</code>: a dark neutral rather than brand purple, so the page it holds
+  reads as paper. Document <code>640px</code> max width, <code>6px</code> radius, padding
+  <code>44px 46px</code>, <code>0 10px 40px rgba(0,0,0,.35)</code>.
+  Zoom top right, page count top left.
+  <b>The sample banner sits above the document, not across it.</b> A watermark would make the sample
+  unreadable and would be the second thing in this build to obscure its own content. It says plainly:
+  representative sample, not this resident's real document, and this build stores no files.
+  Rail carries the metadata the library row shows plus <b>what points at this document</b> — every module
+  referencing it, each linked. That is the broken-reference relationship seen from the other end, and it
+  is what makes the viewer worth opening rather than a picture.
+
+  <h3>2 · Medication cycle</h3>
+  The honest intake path. A cycle arrives from the pharmacy and the home checks it against what it holds.
+  <b>Nothing here creates a prescription</b> — every row is a change a prescriber already made.
+  Four tallies: new, changed, stopped, and <b>on the MAR but not in the cycle</b>, which takes the hatch.
+  That last one is the finding. A drug the home is still giving that the pharmacy has stopped supplying
+  cannot be seen from either side alone, and it is the reason this screen is a comparison rather than a
+  list.
+  Row <code>minmax(0,1fr) 13rem 16rem auto</code>. A change shows old and new on one line with an arrow,
+  never two rows to compare.
+  <b>Each row is accepted on its own. No "accept all"</b> — one click asserting nineteen medication
+  changes nobody read is the handover failure with prescriptions in it.
+
+  <h3>3 · Add an interim medication</h3>
+  For what arrives between cycles — a hospital discharge, a GP visit.
+  <b>The source is the first question and it is required.</b> This screen records a prescription that
+  exists elsewhere, and a medication with no source is a drug nobody can trace to a prescriber. Every
+  route leaves a document or a name behind it.
+  A verbal order is the one path with a follow-up obligation: a second member of staff witnesses the call
+  and it must be confirmed in writing within 24 hours. That is real practice and the form carries it.
+  <b>A controlled drug cannot be added by this route at all</b>, and the screen says why rather than
+  failing on submit — a CD needs a written prescription meeting legal requirements, and no interim path
+  substitutes for one.
+  Allergies render beside the resident field, because a prescription is where an allergy is most likely
+  to be checked and most costly to miss.
+  Directions are copied from the source document rather than paraphrased — the MAR chart shows that
+  wording to whoever gives the dose.
+
+  <h3>What none of these do</h3>
+  No file is stored, no pharmacy is connected, nothing is sent anywhere. Each screen says so where the
+  action is, not afterwards in a toast.
+</div>
+
+</div>
+
+<script>
+function docView(){
+  return `<h1>Documents</h1>
+  <p class="sub">Opening a document from Emmanuel Okafor's library. This build stores no files, so the
+    page shown is a representative sample of the document type — it is what the viewer looks like, not
+    what this resident's DNAR says.</p>
+
+  <div class="card"><div class="viewer">
+    <div class="stage">
+      <div class="stageBar">
+        <div><div class="n">DNAR form — Emmanuel Okafor</div>
+          <div class="m">Page 1 of 1 · filed 17/05/2025 by A. Okonkwo</div></div>
+        <div class="zoom"><button>&minus;</button><span>100%</span><button>+</button></div>
+      </div>
+
+      <div class="sample"><b>This is a sample document.</b> diGi-Care has no file storage, so nothing real
+        is held behind this record. What you are looking at is a representative DNACPR form, showing how a
+        document of this type renders in the viewer.</div>
+
+      <div class="doc">
+        <div class="crest">
+          <div><div class="org">Greater Manchester Integrated Care</div>
+            <div class="orgSub">Do Not Attempt Cardiopulmonary Resuscitation</div></div>
+          <div class="ref">Form ref DNACPR/GM/2019<br>Page 1 of 1<br>Retain in the patient record</div>
+        </div>
+
+        <h2>Do not attempt cardiopulmonary resuscitation</h2>
+        <p class="strap">This form records a decision about CPR only. It does not affect any other
+          treatment or care.</p>
+
+        <div class="fieldRow"><div class="l">Full name</div><div class="v">Emmanuel Adebayo Okafor</div></div>
+        <div class="fieldRow"><div class="l">Date of birth</div><div class="v">07 July 1948</div></div>
+        <div class="fieldRow"><div class="l">NHS number</div><div class="v">704 987 2420</div></div>
+        <div class="fieldRow"><div class="l">Address</div>
+          <div class="v">Rosewood Court, Room 14, Didsbury, Manchester M20</div></div>
+
+        <div class="block">
+          <div class="t">Decision</div>
+          <div class="b">In the event of cardiac or respiratory arrest, <b>no attempt at cardiopulmonary
+            resuscitation is to be made.</b> All other appropriate treatment and care will be
+            provided.</div>
+        </div>
+
+        <div class="fieldRow" style="margin-top:20px"><div class="l">Reason</div>
+          <div class="v">CPR is unlikely to be successful given advanced frailty and comorbidity.</div></div>
+        <div class="fieldRow"><div class="l">Discussed with</div>
+          <div class="v">Mr Okafor and his daughter, 16/05/2025</div></div>
+        <div class="fieldRow"><div class="l">Review</div>
+          <div class="v">Indefinite unless clinical circumstances change</div></div>
+
+        <div class="sigRow">
+          <div class="sig"><div class="who">O. Balogun</div>
+            <div class="role">Dr Olumide Balogun · GP · GMC 6142893 · 17/05/2025</div></div>
+          <div class="sig"><div class="who">A. Okonkwo</div>
+            <div class="role">Adaeze Okonkwo · Registered manager · countersigned 17/05/2025</div></div>
+        </div>
+
+        <div class="foot"><span>DNACPR/GM/2019 · v4</span><span>Original held with the patient</span></div>
+      </div>
+    </div>
+
+    <div class="rail">
+      <div class="railSec">
+        <h3>This document</h3>
+        <div class="f"><div class="k">Category</div><div class="v">Legal and authority</div></div>
+        <div class="f"><div class="k">Filed</div><div class="v">17/05/2025 by A. Okonkwo</div></div>
+        <div class="f"><div class="k">Format</div><div class="v">PDF · 1 page · 340 KB</div></div>
+        <div class="f"><div class="k">Expiry</div>
+          <div class="v"><span class="expChip">Expired 17/05/2026<small>15 months ago, though the form
+            itself says review is indefinite</small></span></div></div>
+      </div>
+
+      <div class="railSec">
+        <h3>What points at this document</h3>
+        <div class="usedBy">
+          <div class="ub">Future plans — resuscitation<span class="go">Open &rarr;</span></div>
+          <div class="ub">Profile header — DNAR badge<span class="go">Open &rarr;</span></div>
+          <div class="ub">Inspection pack — Safe<span class="go">Open &rarr;</span></div>
+        </div>
+        <p class="hint">Three records rely on this document. If it were removed, all three would render
+          as broken references rather than quietly losing their evidence.</p>
+      </div>
+
+      <div class="railFoot">
+        <button class="btn ghost">Close</button>
+        <button class="btn">Replace document</button>
+      </div>
+    </div>
+  </div></div>`;
+}
+
+const CYCLE = [
+  { d:'Amlodipine', f:'5mg · tablets · oral', res:'Emmanuel Okafor · Room 14', k:'chgK', kl:'Dose changed',
+    ks:'by Dr P. Ramanathan, 20/08',
+    was:'<b>5mg</b> once daily <span class="arrow">&rarr;</span> <b>10mg</b> once daily' },
+  { d:'Sertraline', f:'50mg · tablets · oral', res:'Grace Adeyemi · Room 302', k:'newK', kl:'New',
+    ks:'started 21/08 by Dr H. Whitfield', was:'Not currently on the MAR chart' },
+  { d:'Furosemide', f:'20mg · tablets · oral', res:'Beryl Hutchinson · Room 214', k:'stopK', kl:'Stopped',
+    ks:'stopped 18/08 by Dr P. Ramanathan', was:'On the MAR since 12/03/2026 · 08:00 and 12:00' },
+  { d:'Lactulose', f:'15ml · oral solution', res:'Doris Kavanagh · Room 311', k:'gapK',
+    kl:'On the MAR, not in this cycle', ks:'the pharmacy has not supplied it',
+    was:'Still being given at 08:00 and 18:00. Nobody has stopped it here.' },
+];
+
+function cycle(){
+  return `<h1>Medication cycle — September 2026</h1>
+  <p class="sub">Ashworth Pharmacy, received 22/08/2026. Nothing on this screen creates a prescription —
+    every row is a change a prescriber already made, and the home is recording that it received it.</p>
+
+  <div class="card">
+    <div class="cycHead">
+      <div><h2>Ashworth Pharmacy · September cycle</h2>
+        <div class="m">Covers 01/09/2026 to 30/09/2026 · 28 residents · 96 medications</div></div>
+      <button class="btn">View the cycle document</button>
+    </div>
+
+    <div class="tally">
+      <div class="tal newT"><div class="k">New</div><div class="v">4</div>
+        <div class="d">not currently on a MAR chart</div></div>
+      <div class="tal chg"><div class="k">Changed</div><div class="v">9</div>
+        <div class="d">dose, timing or directions</div></div>
+      <div class="tal stop"><div class="k">Stopped</div><div class="v">6</div>
+        <div class="d">no longer supplied</div></div>
+      <div class="tal gapT"><div class="k">On the MAR, not in the cycle</div><div class="v">2</div>
+        <div class="d">still being given, not supplied</div></div>
+    </div>
+
+    ${CYCLE.map(m => `<div class="mrow">
+      <div><div class="dn">${m.d}</div><div class="df">${m.f}</div><div class="res">${m.res}</div></div>
+      <div><span class="kind ${m.k}">${m.kl}<small>${m.ks}</small></span></div>
+      <div class="was">${m.was}</div>
+      <div class="acts">${m.k === 'gapK'
+        ? `<button class="btn">Query the pharmacy</button><button class="btn">Stop it here</button>`
+        : `<button class="btn primary">Accept</button><button class="btn">Query</button>`}</div>
+    </div>`).join('')}
+
+    <div class="foot">
+      <p class="st"><b>Each row is accepted on its own.</b> There is no "accept all" — one click asserting
+        nineteen medication changes nobody read is the same failure as signing a handover for residents
+        nobody looked at. 0 of 19 accepted so far.</p>
+      <button class="btn primary" disabled>Close the cycle</button>
+    </div>
+  </div>`;
+}
+
+function manual(){
+  return `<h1>Add an interim medication</h1>
+  <p class="sub">For what arrives between cycles — a hospital discharge, a GP visit. This screen records a
+    prescription that exists somewhere else; it does not create one.</p>
+
+  <div class="card">
+    <div class="sec">
+      <h2>Where this prescription came from</h2>
+      <div class="srcBox">
+        <div class="t">The source is answered first, and it is required</div>
+        <div class="d">A medication with no source is a drug nobody can trace to a prescriber. Every route
+          below leaves a document or a name behind it, and the MAR chart shows which.</div>
+        <div class="opts">
+          <label class="opt sel"><input type="radio" name="src" checked><span>
+            <b>Hospital discharge letter</b>
+            <span class="h">The letter is filed in Health and clinical, and this medication links to
+              it.</span></span></label>
+          <label class="opt"><input type="radio" name="src"><span>
+            <b>Written GP order</b>
+            <span class="h">A prescription or signed note from the practice, filed alongside.</span></span></label>
+          <label class="opt"><input type="radio" name="src"><span>
+            <b>Verbal order from a prescriber</b>
+            <span class="h">Requires a second member of staff to witness the call, and must be confirmed
+              in writing within 24 hours.</span></span></label>
+          <label class="opt"><input type="radio" name="src"><span>
+            <b>Pharmacy interim supply</b>
+            <span class="h">Sent between cycles, with the pharmacy's own reference.</span></span></label>
+        </div>
+        <div class="warnBox">A controlled drug cannot be added by this route. It needs a written
+          prescription meeting the legal requirements, and no interim path substitutes for one.</div>
+      </div>
+
+      <div class="fld two" style="margin-top:16px">
+        <div><label class="k2">Prescriber</label>
+          <input type="text" value="Dr H. Whitfield, Manchester Royal Infirmary"></div>
+        <div><label class="k2">Supporting document</label>
+          <select><option value="">Choose a filed document</option>
+            <option selected>Hospital discharge summary — 04/08/2026</option>
+            <option>Upload one now</option></select>
+          <p class="hint">If it is not filed yet, upload it here — the medication and the document are
+            recorded together or not at all.</p></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>Who it is for</h2>
+      <div class="two">
+        <div><label class="k2">Resident</label>
+          <select><option selected>Emmanuel Okafor · Room 14</option>
+            <option>Grace Adeyemi · Room 302</option></select></div>
+        <div><label class="k2">Allergies on record</label>
+          <div class="allergyMini">PENICILLIN — anaphylaxis</div>
+          <p class="hint">Shown here because a prescription is where an allergy is most likely to be
+            checked and most costly to miss.</p></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>The medication</h2>
+      <div class="three">
+        <div><label class="k2">Name</label><input type="text" value="Sertraline"></div>
+        <div><label class="k2">Strength and form</label><input type="text" value="50mg tablets"></div>
+        <div><label class="k2">Route</label>
+          <select><option selected>Oral</option><option>Topical</option><option>Transdermal</option>
+            <option>Inhaled</option></select></div>
+      </div>
+      <div class="fld three">
+        <div><label class="k2">Dose</label><input type="text" value="50mg — one tablet"></div>
+        <div><label class="k2">Counted in</label>
+          <select><option selected>tablets</option><option>ml</option><option>patches</option></select></div>
+        <div><label class="k2">Every</label>
+          <select><option selected>day</option><option>2 days</option><option>3 days</option></select></div>
+      </div>
+      <div class="fld two">
+        <div><label class="k2">Rounds</label>
+          <select><option selected>08:00</option><option>08:00 and 20:00</option>
+            <option>As required</option></select></div>
+        <div><label class="k2">Starts</label><input type="date" value="2026-08-25"></div>
+      </div>
+      <div class="fld">
+        <label class="k2">Directions, as written by the prescriber</label>
+        <input type="text" value="One tablet each morning. Review in four weeks.">
+        <p class="hint">Copied from the source document rather than paraphrased — the MAR chart shows
+          this wording to whoever gives the dose.</p>
+      </div>
+    </div>
+
+    <div class="foot">
+      <p class="st"><b>This adds Sertraline to Emmanuel Okafor's MAR chart from 25/08/2026, linked to his
+        hospital discharge summary of 04/08.</b> Held in memory for this session only — nothing is sent to
+        a pharmacy and nothing is saved to a server.</p>
+      <button class="btn primary">Add to the MAR chart</button>
+    </div>
+  </div>`;
+}
+
+let view='doc';
+function go(v,btn){
+  view=v;
+  document.querySelectorAll('.viewNav button').forEach(b=>b.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true');
+  document.getElementById('view').innerHTML = v==='doc'?docView():v==='cycle'?cycle():manual();
+  window.scrollTo(0,0);
+}
+document.getElementById('view').innerHTML = docView();
+</script>
+</body>
+</html>

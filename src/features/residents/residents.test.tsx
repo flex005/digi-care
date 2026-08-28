@@ -8,7 +8,7 @@ import { TooltipProvider } from '@/components/primitives'
 import { residents } from '@/data/fixtures/residents'
 import { recordCompleteness } from '@/data/completeness'
 import { ResidentsRoute } from './ResidentsRoute'
-import { RiskFlagsCell } from './RiskFlagsCell'
+import { RiskFlagsCell, hasNoRiskFlags } from './RiskFlagsCell'
 import { RISK_FLAG_SOURCES } from './risk-flag-sources'
 import { CriticalGapsChip } from './CriticalGapsChip'
 import { ANALYTICS_PERIODS, ANALYTICS_TILE_SOURCES } from './analytics-tiles'
@@ -57,32 +57,27 @@ describe('the risk flags column never renders a blank', () => {
   })
 
   it('states "all assessed" rather than leaving the cell empty', () => {
-    // A resident with nothing notable still gets a claim, not a blank.
-    const settled = residents.find((resident) => {
-      const { risks, allergies, resuscitation, eolc, isolation } = resident
-      return (
-        risks.falls.kind === 'assessed' &&
-        risks.falls.level === 'low' &&
-        risks.choking.kind === 'assessed' &&
-        risks.choking.level !== 'high' &&
-        allergies.kind === 'none_known' &&
-        // for_resuscitation is the settled value and folds into the claim.
-        resuscitation.kind === 'for_resuscitation' &&
-        eolc.kind !== 'in_place' &&
-        isolation.kind !== 'isolating'
-      )
-    })
-    expect(settled, 'no resident has an entirely settled risk picture').toBeDefined()
+    /*
+     * A resident with nothing notable still gets a claim, not a blank.
+     *
+     * **This asked a hand-written approximation of the cell's condition** —
+     * falls low, choking not high, no allergies, for resuscitation, no EOLC,
+     * not isolating — and the approximation stopped being satisfiable while
+     * the real condition still was. The test failed on a screen that was
+     * working. A proxy for a rule is a second rule, and the two drift.
+     */
+    const settled = residents.find(hasNoRiskFlags)
+    expect(settled, 'no resident reaches the "all assessed" branch').toBeDefined()
     if (!settled) return
     render(atSite(<RiskFlagsCell resident={settled} />))
-    expect(screen.getByText('All assessed — no flags')).toBeVisible()
+    expect(screen.getByText('All assessed, no flags')).toBeVisible()
   })
 
   it('hatches an unassessed falls risk rather than omitting it', () => {
     const beryl = residents.find((r) => r.id === 'res-hutchinson')!
     expect(beryl.risks.falls.kind).toBe('not_assessed')
     const { container } = render(atSite(<RiskFlagsCell resident={beryl} />))
-    expect(screen.getByText('Falls — not assessed')).toBeVisible()
+    expect(screen.getByText('Falls not assessed')).toBeVisible()
     expect(container.querySelector('[data-state="unrecorded"]')).toBeInTheDocument()
   })
 })
@@ -178,7 +173,7 @@ describe('the two empty states are different answers', () => {
       await screen.findByRole('option', { name: 'Review never scheduled' }),
     )
     await user.click(screen.getByRole('combobox', { name: 'Falls risk level' }))
-    await user.click(await screen.findByRole('option', { name: 'Falls risk — low' }))
+    await user.click(await screen.findByRole('option', { name: 'Falls risk: low' }))
 
     const narrowed = screen.queryByText('No residents match these filters')
     if (narrowed) {
@@ -197,10 +192,10 @@ describe('the two empty states are different answers', () => {
 })
 
 describe('read-only', () => {
-  it('offers Add resident to a manager, disabled until admission is built', async () => {
+  it('offers Add resident to a manager, and it is live from Phase 16', async () => {
     renderList()
     const add = await screen.findByRole('button', { name: /Add resident/i })
-    expect(add).toBeDisabled()
+    expect(add).toBeEnabled()
   })
 })
 
@@ -229,7 +224,7 @@ describe('accessibility', () => {
   })
 })
 
-describe('the Risk flags precondition — structural guard', () => {
+describe('the Risk flags precondition: structural guard', () => {
   /**
    * The column runs on one rule: *anything not shown has been recorded and is
    * unremarkable*. That rule is a lie the moment any contributing status can
@@ -291,7 +286,7 @@ describe('the Risk flags precondition — structural guard', () => {
         atSite(<RiskFlagsCell resident={resident} />),
       )
       const claimsAllAssessed = (container.textContent ?? '').includes(
-        'All assessed — no flags',
+        'All assessed, no flags',
       )
       const anyUnrecorded = RISK_FLAG_SOURCES.some((source) =>
         source.isUnrecorded(resident),
@@ -351,7 +346,7 @@ describe('the risk flags convention stays on screen', () => {
 })
 
 describe('analytics figures', () => {
-  it('is read-only — the cards are not controls', async () => {
+  it('is read-only: the cards are not controls', async () => {
     renderList()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
     const figures = screen.getByRole('region', { name: /^Figures for/ })
@@ -391,7 +386,7 @@ describe('analytics figures', () => {
     expect(figures.textContent).toContain('Rosewood Court')
   })
 
-  it('is never green — no card carries a positive treatment', async () => {
+  it('is never green: no card carries a positive treatment', async () => {
     const { container } = renderList()
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
     expect(container.querySelectorAll('[data-tone="positive"]')).toHaveLength(0)
@@ -447,7 +442,7 @@ describe('analytics figures', () => {
 })
 
 describe('the name column', () => {
-  it('renders one line — preferred first name and surname', () => {
+  it('renders one line: preferred first name and surname', () => {
     const ada = residents.find((resident) => resident.preferredName === 'Ada')
     expect(ada).toBeDefined()
     expect(listName(ada!)).toBe('Ada Nwachukwu')
@@ -466,7 +461,7 @@ describe('the name column', () => {
     for (const resident of residents) {
       expect(
         resident.fullLegalName.trim().split(/\s+/).length,
-        `${resident.fullLegalName} is not two tokens — listName() derives the surname by splitting, so this needs a real surname field now`,
+        `${resident.fullLegalName} is not two tokens: listName() derives the surname by splitting, so this needs a real surname field now`,
       ).toBe(2)
     }
   })

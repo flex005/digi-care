@@ -77,7 +77,7 @@ export function AnalyticsTiles({ atSite, siteLabel, period }: AnalyticsTilesProp
             footer = change === null ? '' : changeLabel(change, period.phrase)
             // Spoken, not shown: the denominator lives here now. See above.
             spoken =
-              `${source.label} — ${aggregate.value} ${
+              `${source.label}: ${aggregate.value} ${
                 source.kind === 'census'
                   ? 'residents'
                   : `of ${aggregate.coverage.covered} ${source.denominatorNoun}`
@@ -95,7 +95,7 @@ export function AnalyticsTiles({ atSite, siteLabel, period }: AnalyticsTilesProp
               />
             )
             footer = `${aggregate.coverage.covered} of ${aggregate.coverage.total} ${source.denominatorNoun}`
-            spoken = `${source.label} — insufficient evidence. ${aggregate.missingDescription} ${footer} at ${siteLabel}.`
+            spoken = `${source.label}: insufficient evidence. ${aggregate.missingDescription} ${footer} at ${siteLabel}.`
             break
 
           default:

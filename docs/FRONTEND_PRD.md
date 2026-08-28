@@ -62,8 +62,19 @@ Not empty space, not neutral grey, not the same as a recorded negative. In this 
 **Rule 3a — A compound state renders as separate facts, not a merged one.**
 Where a record is partly complete, each part keeps its own treatment. A dose that was given but whose required second signature was never recorded shows a solid green "Given" pill *and* a hatched "Second signature not recorded" beneath it — two facts, two treatments. Never one pill with the gap in small print, and never a single treatment averaging the two.
 
+**Rule 3b — Recorded and unremarkable renders quietly.**
+The corollary of Rule 2. If unrecorded must be conspicuous, then everything recorded and fine must not compete with it — a completed in-date review, a scheduled one, "nothing due", "all assessed". These render as plain text, never as a filled pill. **Quiet is not hidden**: the full record still shows, author and timestamp included, always visible and never hover-only. It is simply not shouted. Reaching for the quiet treatment to calm down an inconvenient *gap* is the bug the product exists to prevent.
+
+**Rule 3c — A claim made over a filtered set carries the filter, or it is false.**
+Absence within a filter is not absence. A gap marker on a timeline filtered to "Medication notes only" would assert that nobody wrote anything for six hours when somebody may have written four notes in other categories — a confident false claim about a person's care. So derived claims (gap markers, coverage figures, "all assessed", RAG states) are either suppressed while a filter is active or restated to name the filter. This is Rule 2 in the opposite direction: never let absence read as fine, and never assert an absence that is an artefact of the view.
+
+**Rule 5 — Every screen names the one fact it exists to surface.**
+Before a screen is built, state in one sentence the single thing it exists to tell somebody. That fact gets the largest type, the strongest weight and the top position; everything else is context and renders quieter (Rule 3b). If the sentence cannot be written, the screen is doing two jobs and should be two screens. Examples from this build: the handover is *"these residents have not been looked at, and you are about to sign"*; the MAR chart is *"these doses have no record against them, and the window has closed"*; the round is *"these doses are due now, for this person, and you are about to sign for them"*. Note that none of them is "here is the data" — a month grid renders ~900 cells and most of them say "given"; the screen exists for the handful that say nothing.
+
 **Rule 4 — Every aggregate carries its denominator.**
 No bare counts, no bare percentages, anywhere in the product. Not "3 incidents" but "3 incidents across 32 residents". Not "92% compliance" but "92% — 46 of 50 expected notes; 12 residents have no expected frequency set". Where coverage is too thin to support a judgement, the aggregate shows **Insufficient Evidence** rather than a figure.
+
+**Rendering the denominator is necessary and not sufficient.** "100% — 2 of 2" is true, and still invites a judgement two records cannot support. Every rate therefore has a minimum population below which it does not render as a figure at all — it renders Insufficient Evidence with its coverage. That is §2.3 used outside the compliance dashboard it was designed for, and it belongs there for the same reason: what is missing is evidence, not performance.
 
 ### 2.3 Insufficient Evidence (approved departure from source PRD)
 
@@ -284,6 +295,16 @@ Spacing scale, 4px base: `4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64
 
 Layout: 12-column fluid grid, 24px gutters, max content width 1440px, app shell min-width 1280px. Desktop only in this build — below 1280px the app shows a message directing the user to a wider screen rather than degrading into a broken layout.
 
+### 4.6a Navigation shapes
+
+One shape, one meaning, across the whole product:
+
+- **Underline strip** = navigation. Profile tabs, module tabs, sub-tabs. Moving between screens.
+- **Pill** = filter. Narrowing what a list shows without leaving it.
+- **Segmented control** = one of a small set of mutually exclusive presentations of the same data. Week / month on the MAR chart is an instance of that, not the definition — calendar / list on the activities week is another. Widened deliberately rather than inventing a fourth shape that would then need distinguishing from the three that exist.
+
+Two concepts in one treatment is the same defect as one concept in two, arrived at from the other side. A reader learns the shape, not the screen it appeared on, so "they never appear together" is not a defence.
+
 ### 4.7 App shell
 
 diGi-Care gets **its own navigation**, carrying the diGiLog visual language (deep purple bar, white cards on pale lavender, pill controls, generous radii) but not its information architecture.
@@ -367,6 +388,16 @@ export type ConsentStatus =
   | { kind: 'best_interest'; decidedOn: IsoDate; consulted: string[]; rationale: string;
       decidedBy: StaffRef };
 
+// A care note's shift. The union rather than two fields, so a shift cannot be
+// recorded without its provenance: with `shift` and `shiftReason` side by side,
+// an overridden note looks identical to one nobody touched. `clockSaid` is what
+// makes the reason legible — "recorded on the late shift, though the clock said
+// night, because handover overran" is the whole fact.
+export type Shift = 'early' | 'late' | 'night';
+export type ShiftRecord =
+  | { kind: 'auto'; value: Shift }
+  | { kind: 'overridden'; value: Shift; clockSaid: Shift; reason: string };
+
 // Every aggregate carries its denominator. `unit` disambiguates the two
 // shapes Rule 4 needs: a rate derived from coverage ("92% — 46 of 50") and a
 // count where coverage is the population it was measured across
@@ -383,7 +414,7 @@ export type Aggregate =
 
 - 1 organisation, **2 sites** — "Rosewood Court" (28 residents) and "Ashgrove Lodge" (4 residents). The second site is deliberately small so every dashboard and report is exercised against a thin dataset.
 - 32 residents total. Names are clearly fictional and distinctly Nigerian, British and mixed, reflecting the actual market.
-- 14 staff across the seven roles.
+- 15 staff across the seven roles, including two with open invitations — one live, one lapsed — so both invitation states render from a fresh load.
 - 90 days of history: care notes, MAR records, incidents, activities, reviews.
 
 ### 5.3 Deliberate gaps — the fixtures are not tidy
@@ -424,7 +455,7 @@ No user-facing screens. Deliverables: token stylesheet, icon pipeline and regist
 **Residents list** (`/residents`)
 Table: photo, preferred name, full name, room, site, risk flags, review status, last care note. Filters by site, risk level, review status, "records incomplete". Sort by name, room, most recent note, oldest note.
 - Empty: "No residents at this site yet" with an Add Resident action.
-- Partial: residents with **critical** gaps carry a hatched "Critical records missing" chip naming them. Gaps are severity-classified — critical is allergies, resuscitation decision, falls risk, GP, next of kin, and care-and-support consent; everything else is non-critical. The chip fires on critical only, because a chip that fires on every resident discriminates nothing and the point of this column is finding neglected records. Non-critical gaps are not hidden: the profile lists every gap, and the list filter offers both "critical gaps only" (default) and "any incomplete record".
+- Partial: residents with **critical** gaps carry a hatched "Critical records missing" chip naming them. Gaps are severity-classified — critical is allergies, resuscitation decision, falls risk, choking and dysphagia risk, GP, next of kin, and care-and-support consent — seven; everything else is non-critical. The chip fires on critical only, because a chip that fires on every resident discriminates nothing and the point of this column is finding neglected records. Non-critical gaps are not hidden: the profile lists every gap, and the list filter offers both "critical gaps only" (default) and "any incomplete record".
 - The "oldest care note" sort exists specifically so a manager can find neglected records; it is not decoration.
 
 **Profile header** (persistent across all resident tabs)
@@ -440,23 +471,53 @@ The badge strip is the sharpest expression of the core risk in this phase:
 **Needs tab** — read-only, generated from care plan domains, with support level per domain. A domain with no care plan content shows the unrecorded treatment and links to create it.
 **Important People tab** — next of kin, emergency contact, LPA holder with document link, social worker, professionals. Each with communication preference. Primary contact toggle.
 **Future Plans tab** — DNAR, ADRT, advance care plan, preferred place of care and death, funeral and religious preferences. Every entry date-stamped, signed, version-controlled. Changing a DNAR or ADRT raises a confirmation naming the resident and warning that all staff on shift are notified.
+**Care Notes tab** — the note timeline, specified in §6.3. Built in Phase 2, but it belongs to the profile's tab strip: care notes are the most-read record in the product and must not be harder to reach than Future Plans. Five tabs, therefore, not four.
+
+**Write controls on these tabs.** Two are named in this section — the primary-contact toggle and the DNAR/ADRT change confirmation. Both are built as *affordance plus confirmation, no write*: the control is present and live, pressing it raises the real subject-naming confirmation, and confirming closes with a message stating plainly that nothing was saved and the write lands in a later phase. The confirmation is the §2.4 mitigation demonstrated, which is worth having early; the write would mean inventing a clinical record shape (clinician signature, document reference) that neither document specifies. No message anywhere says "Recorded" for something that was not.
 
 ### 6.3 Phase 2 — Care Notes
 
-**Note timeline** (`/residents/:id/notes`) — reverse chronological, filterable by category, date range, shift, author, flagged status. Gaps of more than 4 waking hours render as an explicit hatched gap marker in the timeline: *"No care note recorded — 6 hours 20 minutes"*. The gap is a rendered object, not an absence of rows. This is the invariant applied to time itself.
+**Note timeline** (`/residents/:id/notes`) — reverse chronological, filterable by category, date range, shift, author, flagged status. Gaps of more than 4 waking hours render as an explicit hatched gap marker: *"No care note recorded — 6 hours 20 minutes"*. The gap is a rendered object, not an absence of rows. This is the invariant applied to time itself.
+
+*Waking hours* is defined as 07:00–22:00, in one named constant. **This value is invented** — neither document defines it — and is flagged in `PROGRESS.md` as needing a real answer from a care manager. Only minutes inside that window count toward the threshold, so a resident not written up overnight is not flagged as an omission; but an overnight stretch still renders a marker in the quiet treatment, stating its duration and that it is overnight, so the record visibly continues through the night rather than jumping from 21:00 to 07:00. Quiet, not hidden.
+
+Gap markers are **suppressed entirely while a filter is active** — Rule 3c. A hole in "Medication notes only" is a hole in the filter, not in the record.
 **Note composer** — category, shift (auto from diGi-Time fixture, editable with reason), note body with category-based suggested phrases, mood indicator (5 faces, each with a text label — never icon-only), flag for review.
 **Note detail** — author, timestamp, shift, immutability notice. There is **no edit control**, ever, for a submitted note. Only "Add correction note", which creates a new linked note and marks the original as superseded while leaving it visible.
+**Care Notes** (`/care-notes`) — the cross-resident view. Same records as the profile timeline, different question: *what is happening in this home* rather than *what happened to this person*. It earns its place through what the per-resident timeline cannot answer, so it is built around those queries rather than around a feed:
+- **Flagged and not yet reviewed, across every resident** — a supervisory duty with nowhere else in the product to discharge it.
+- **Residents with no note today** — the neglect question asked across the home. Rendered as named residents, never a count alone.
+- **By author** — one worker's records, for supervision or investigation.
+- **By shift** — whether the night team wrote anything at all.
+Default view is flagged-and-unreviewed, not "everything newest first", which is a screen nobody opens twice. Every figure on it is an `Aggregate`, and Rule 3c applies throughout: no claim about absence survives a filter without naming it.
+
 **Handover** (`/handover`) — all residents with status All Well / Needs Attention / Urgent, plus **Not Reviewed** as a fourth, hatched state, because a resident nobody looked at is not "All Well". Dual signature, outgoing and incoming.
+
+**Signing with unreviewed residents is permitted, loudly.** The confirmation names the site, states how many residents have not been looked at, and says in the confirming sentence that the signature does not mean they are well; it renders destructive while that count is above zero. Blocking the signature is not this build's authority to decide, and it would push the pressure onto marking people All Well to unlock the button — manufacturing exactly the false record the fourth state exists to prevent. Instead **the signature stores the counts at the moment it was given**, so it can never later be read as meaning more than it did.
+
+The Stale state here is a previous shift's handover the outgoing staff signed and the incoming staff never did — a state a three-status model with a single signature cannot represent.
 
 ### 6.4 Phase 3 — Medication and MAR
 
 The highest-consequence module in the build.
 
-**MAR chart** (`/residents/:id/medications`) — month grid, medications down, days and administration rounds across. Every cell is one of the five `MarCellState` values, each visually distinct, each with an accessible name read by screen readers as a full sentence ("08:00, 5 April, Amlodipine 5mg — given by C. Nwosu at 08:04"). A legend is permanently visible above the grid, not hidden behind a tooltip.
-**Administration flow** — due-now panel, per-medication Given / Not Given / PRN. Not Given requires a reason before it can be submitted. PRN requires reason, symptom, and outcome. PIN confirmation dialog names the resident and the medications. Controlled drugs require a second signature and a stock count before and after, and a mismatch blocks submission and raises an incident.
-**Medication setup** — all fields from source PRD §5.3, including controlled drug flag, PRN flag with 24-hour maximum, storage instructions, prescription photo.
-**Omissions view** — everything unrecorded past its window, by resident and by round, with escalation state.
-**Export** — MAR PDF export is stubbed in this build (button present, produces a fixture PDF or a clear "not available in prototype" state — never a silent no-op).
+This module is built and closed. What follows is what exists, not what was proposed.
+
+**On the resident** — the Medications tab, with two sub-tabs.
+
+*Chart* — week grid by default, month reachable as a range control. Medications down, days across with rounds nested beneath them. Sticky medication column and header. Every cell is one of the five `MarCellState` values with three independent carriers — fill, glyph and a full-sentence accessible name — so any one can be removed and the state survives. Given and not-given differ by glyph (tick against bar) rather than by tint, so they hold apart in greyscale; the omitted cell is the only patterned one in the grid, which is what makes it survive desaturation by construction. An escalated omission carries a glyph, not a hue. A dose given without its required second signature carries a dashed underline on the same cell — two facts, two treatments (Rule 3a). Legend permanently visible, never a tooltip. The omissions figure sits above the grid with its denominator: the grid proves it, the banner states it.
+
+*Prescriptions* — what was ordered, as against what was recorded. Every field from source PRD §5.3, plus `form`, `stockUnit`, `doseQuantity`, `intervalDays`, `startedOn`, prescriber, storage, instructions and prescription document. Each drug carries a **"What this requires of you"** block, derived from the drug rather than stored: two signatures on a controlled drug, a cabinet count in the right unit, a rotated patch site, a reason and outcome on a PRN. Where a requirement cannot be met because something is unrecorded, that block goes critical — a PRN with no recorded 24-hour maximum means the system cannot warn anyone that a further dose would exceed it. That is the invariant applied to a rule rather than to a record: the gap is not only missing data, it is a safety check that cannot run.
+
+**Across the home** — `/medications`, three screens under one tab strip.
+
+*Omissions* — every dose with no record, last 7 days, oldest first because the wait is the finding. Filters for escalated and not escalated. Every row names its resident; a dose never renders without the person it belongs to. The figure follows the active filter (Rule 3c) — a count of 20 above a list of 3 is a claim about a set the reader is not looking at.
+
+*Round* — the administration flow. Resident by resident in room order, matching the physical order of the trolley; never drug by drug and never alphabetical. Residents already done stay in the list, marked. The round derives from the clock with a selector that shows which rounds are already complete. Large permanent subject strip with the allergy block beside it in all three states. No dose can be left blank: an unanswered dose renders the hatch, and submit stays disabled until every dose has an answer, every Not Given has a reason, and every controlled drug has a witness and a reconciling count — with the footer naming exactly what it is waiting on. `recordRound` refuses an incomplete round beyond the disabled button, because a disabled button is a courtesy and this is the rule. A dose already recorded by somebody else renders as the record, never as an empty control — inviting a second signature over another person's name is the failure this screen exists to prevent. PRN sits in its own section beneath the due list, never in it: a PRN dose has no due time, therefore no cell to occupy and no omission it could ever be. PIN per submission, checked against a staff fixture, because the trolley is shared and the record must say who gave the dose rather than who unlocked the device.
+
+*Controlled drug register* — running balance per drug, every entry with both signatures, and every movement that the balance moves on: opening count, routine count, administration, receipt, disposal. A register showing two counts a week apart with nothing between asserts that nothing happened, and doses were given. Two findings are rendered side by side and never summed: a count that does not reconcile (critical) and a drug never counted (hatched). No balance renders as the hatch — never a zero, never a dash. A drug with no entries renders no table at all, because an empty table with headers suggests the register exists and happens to be empty. Administration is never blocked by a missing balance: the next person to give the drug counts the cabinet and records that count as the opening balance with two signatures, which is a new record honestly made rather than a figure invented from a fallback. A stock count field never shows the expected figure as a placeholder — that turns an independent check into a confirmation prompt, and the case the count exists to catch is exactly the case where the discrepancy would be typed over.
+
+**Export** — stubbed. The button sits beside the range control, because the range is what it would export, and the dialog names what the document would contain rather than only that it is unavailable. A disabled control that does not say what it does is a control nobody can plan around.
 
 ### 6.5 Phase 4 — Incidents
 
@@ -465,6 +526,8 @@ The highest-consequence module in the build.
 **Incident detail and manager review** — root cause, actions taken, preventive measures, CQC notification decision. The notification decision is a **three-state** field: notification required / not required / **not yet decided**, and "not yet decided" is the default and is hatched. It never silently defaults to "not required".
 **Post-incident review flags** — closing an incident auto-flags related care plan domains and risk assessments for 48-hour review, shown on the resident profile.
 
+**Phase 4 as built.** The log leads on unacknowledged incidents with undecided notifications as a secondary figure — never summed, because an incident can be both. No acknowledge control on a row: acknowledging without reading is the failure the state exists to make visible. The report form is single column with no wizard; subject is a union (a resident, or a recorded claim that no resident was involved) and witnesses likewise, because "leave blank if nobody saw it" makes a blank mean two things. Injury is three states and the body map is the input method while the text list is the record. The detail screen leads with what is owed — undecided notification, unreviewed flags, and a closed incident with no root cause — above the facts, and renders nothing when nothing is owed. "Notification required" stays unsettled until evidence follows it. Review flags name what would clear them and the phase that builds it; there is no mark-as-reviewed control, because clearing a clinical obligation without the work records a review that did not happen.
+
 ### 6.6 Phase 5 — Risk Assessments
 
 **Assessment list per resident** — all ten built-in templates always listed, each showing Not Assessed (hatched), Completed with score and level, or Review Due / Overdue. A template that has never been used is *listed*, not omitted — absence from a list is the same failure as a blank cell.
@@ -472,24 +535,257 @@ The highest-consequence module in the build.
 **Re-score and compare** — previous versus new score with Improved / Same / Deteriorated indicator, each carrying an arrow *and* a word. A risk level change raises a confirmation warning that all staff on shift are notified and the profile header will change.
 **Custom template builder** — fields, scoring rules, review frequency.
 
-### 6.7 Later modules — screen and state level
 
-Expanded to full detail at the start of their phase.
+**Phase 5 as built.** Nine templates, not ten — **Mental Capacity moved to Consent (Phase 10)**, because a two-stage capacity test produces "has capacity" or "lacks capacity, and here is the best-interests process", not a risk level. Forcing it into a union whose job is producing low/moderate/high would make it say something it does not. Recorded as a departure from the source PRD alongside EOLC.
 
-| Module | Screens | Core-risk notes |
-| --- | --- | --- |
-| **Care Planning** | Domain list, domain editor (current needs / preferences / agreed actions), version history and diff, finalise-and-sign | Domain status must distinguish Not Started from Complete from Review Due. Version history renders "no previous version" explicitly. |
-| **Reviews** | Review dashboard (upcoming / overdue / completed), care plan review session with side-by-side versions, risk assessment re-score session | Review compliance rate is an `Aggregate`; never shows 100% off a denominator of two. "Never scheduled" is its own row, not an omission from the list. |
-| **Goals** | Goals tab, goal form, progress note timeline, status update | "No goals set" is a rendered state with a 30-day alert, not an empty list. |
-| **Activities** | Week calendar, activity list, plan drawer with preferences panel, completion recording | Attendance is per-invited-resident three-state: attended / did not attend / **not recorded**. |
-| **Consent** | Consent tab, add consent with capacity gate, withdrawal flow, consent dashboard | Capacity gate is mandatory and has no default selection. Withdrawal must show downstream effects before confirming. |
-| **Documents** | Resident library (7 categories), organisation library, upload, expiry tracking | An empty category is listed with "No documents"; expiry with no date set is hatched, not treated as "does not expire". |
-| **CQC Compliance** | Five Key Question panels, gap drill-down, inspection pack generator, statutory notifications | Where Insufficient Evidence lives. Every panel shows coverage. |
-| **Reports** | Report index, 15 report views, filters, export controls | Every figure is an `Aggregate`. Reports over thin data say so at the top, before the table. |
-| **Team Management** | Staff list, staff detail, permission matrix, activity log | Deactivated staff remain visible on historic records. |
-| **Multi-site** | Site switcher, group overview, per-site drill-down, site settings | Site is always labelled, never inferred. Group figures aggregate coverage, not just values. |
+`RiskStatus.assessed` always yields a level — that is what the badge strip and the risk column consume, and it is a real clinical judgement in every case. Only four of the nine produce a number, so `score` is `{ kind: 'scored'; value } | { kind: 'unscored' }`: an unscored assessment reaches a level; what it lacks is arithmetic.
+
+**The instrument is a placeholder and every screen in the module says so** — invented items and weightings, no clinical decision to be made from a score it produces. Same treatment as the export stub. Review frequency is a single six-month constant, also a placeholder. Both block real use; see §9.
+
+*Assessment list* — all nine rows always render, iterated from the template constant and never from the resident's record. Never assessed carries "No level" in the hatch: never blank, never low by default. "Score now" sits in its own column after the hatched cells rather than inside them — **the property is separation, not proximity**. Inside the hatched cell an action reads as an answer to the gap; in its own column after it, as a response to one.
+
+*Scored form* — running score sticky with its denominator, stating that it is not final until every item is answered: a partial score read as a total is a wrong clinical figure, and on a running total the partial state is the normal one. Point values visible beside every choice, because a scorer who cannot see the weighting cannot tell whether the instrument is behaving. No default on any item — a pre-selected answer is an answer nobody gave, and on a scored instrument it is also points nobody chose. An intervention with a description and no responsible person cannot be saved; an empty row is ignored rather than held, because a form that refuses to save over a row nobody filled in teaches people to route around the rule.
+
+*Re-score* — confirmation raised only on a level change, naming every consequence before it is recorded: the badge strip changing wherever it appears, each post-incident review it closes **named individually rather than counted**, and the next review date moving. Clearing is automatic on completion and never has its own button. **Lateness survives by being derived, not stored** — `wasClearedLate` is `completed.at > dueBy`, so there is nothing to overwrite. A session store makes the clearing real so the incident detail screen sees it; undo is a persistent control rather than a toast action, because this closed a clinical obligation somebody else raised.
+
+*Cross-resident queue* — never assessed leads, not overdue. An overdue review is a risk somebody looked at and has not looked at recently; a never-assessed one is a risk nobody has looked at at all. Different claims, side by side, never summed — and a risk nobody has assessed has no wait to measure, which is why it sorts above the ones that do rather than among them. The denominator is residents × templates, not assessments on record: counting what exists would make a home that has assessed nothing look complete.
+
+### 6.6a Phase 6 — Care Planning
+
+*(Numbered 6.6a rather than 6.7 because §6.7 "Later modules" is referenced by name in code comments and would break if renumbered.)*
+
+**A versioned record is a different model from an immutable one, and the difference is the point.** A care note is immutable and corrected by a linked note: it is somebody's account of a moment, and editing it rewrites what they saw, so the original stays wrong on the record and the correction points at it. A care plan is *revised*: it is a current instruction staff follow today, so there is exactly one current version and the old one becomes history rather than a correction.
+
+`CarePlanDomainRecord` carries a non-empty version list with the current version last; `not_started` carries none, so the compiler holds "complete implies at least one version". **A draft is not a version** — an unfinalised edit becomes history only on signing, because a diff showing changes nobody agreed to is a history of intentions rather than of instructions. An abandoned draft leaves no trace, which is correct: nobody followed it.
+
+**Three fields — current needs · preferences · agreed actions.** The first two are the resident's own words ("I like to…", not "resident prefers…"); the third is written to staff about what they will do. **The editor never pre-fills from an assessment**: a score cannot be turned into "I need help to walk" without putting words in somebody's mouth. The previous version renders beneath each field while writing, visible but never pre-filled into the box.
+
+Finalising requires all three fields — an agreed action with no words is an intervention with no owner. A draft holds anything.
+
+**Due soon is derived, not a union member.** "Due soon" is not a recorded fact: nobody wrote it down and it changes on its own as the clock moves. A union member asserts something about the record; this is arithmetic on a date the record already holds. That `ReviewState` *does* carry `due` and `overdue` as members is not an inconsistency — a review has a scheduling lifecycle of its own, where a domain's status is about the plan rather than the review of it. Both declarations say so, to stop the next reader "fixing" them into agreement.
+
+**A signed plan with a draft over it renders both facts, not one** (Rule 3a). "Staff are following this today" and "somebody is rewriting it, unsigned" are opposite valences; collapsed into one chip the row reads as nothing being in force — the collapse this build exists to prevent, with an active care plan as the thing that vanishes. A single info chip is correct only where the draft is the only thing there. The Needs tab carries the revision quietly, in plain text at the settled weight, and **never lets a draft move the status** — only a signature does that.
+
+**Finalise is two writes and one undo.** It creates the version and clears the post-incident flags together, because half an undo leaves the record holding a version nobody signed, or an obligation met by work that no longer exists. Atomicity as a property of the record rather than of the code. Flag clearing reuses the Phase 5 store rather than a second mechanism, and this is the phase where the empty outstanding block becomes reachable by doing the work rather than only by fixture.
+
+**Version history** — a first finalise is not a diff against nothing; version 1 renders the hatched "no previous version" note. An unchanged field renders once, full width, labelled unchanged: twice in two columns reads as a change that happens to match. Drafts never appear.
+
+**Six values now have an owner rather than a call site**, all the same shape — a value whose correct rendering depends on where it appears cannot be rendered by whoever happens to be appending it: `quantityWithUnit`, `pluralise`, `scoreText`, `INCIDENT_TYPES.phrase` (a label that reads correctly in a column and wrongly in a sentence), `formatLateness`, and `formatAttributionOn` (time alone is correct for a record read on the day it was made, and wrong for one written last Tuesday). The last two were each found by a test having to be relaxed to let a correct change land.
+
+### 6.6b Phase 7 — Reviews
+
+**What the module adds beyond surfacing what exists.** A completed review was invisible: `ReviewState.completed` carried its dates and no screen rendered them, so evidence that a review happened existed in the data and appeared nowhere. `never_scheduled` had no home — it lived merged with overdue inside one residents-list tile, which is the merge that tile's own note warns against. And nothing aggregated review coverage across carriers: each module answered for itself, and "is this home reviewing its records?" had no screen.
+
+**It routes rather than building a third session.** The care plan review session is the domain editor — finalising *is* the review. The risk re-score session is the assessment form. Two ways to do one act is one too many, and the flag-clearing store assumes exactly one.
+
+**The denominator is records that could carry a review date** — assessed risks, written domains, and whole-plan reviews. Never-assessed risks and never-written domains are excluded, and both exclusions are named on screen pointing at the queue that leads on each. The property is reviewability, not record-hood: a never-written domain has nothing to review exactly as a never-assessed risk does, and counting one but not the other inflates the denominator with things that cannot be reviewed while making this screen a partial duplicate of two others. The lead sharpens as a result — "nobody scheduled a review for a record that exists" no longer competes with records that do not.
+
+A consequence worth recording: with both populations excluded, `no_record_to_review` left `ReviewStanding` entirely. It is a sentinel from the projection helper rather than a union member, because it is not a standing — it is the reason a record is outside the population. As a member it would be a row on a review queue saying a review cannot exist.
+
+**The completed filter is the one genuinely new treatment.** A queue of completed records has no gap to lead on, so the lead becomes an `Aggregate` rather than a finding: coverage over the range with its denominator, and how much was completed late. That is why completed is a filter rather than a second screen. Rows render the completed review as a settled record — plain text, author and both dates always visible. Quiet is not hidden.
+
+**Lateness was not derivable at all.** `completed` carried the date it was done and the date it falls due next, but not the date it had been due — the comparison has two inputs and one was missing. It now carries what it was completed against, **as a union rather than a date**, because a review nobody scheduled can still be done and had no deadline to beat; inventing one produces a lateness nobody can check. Same shape as a stock count with no opening balance.
+
+**The whole-plan review can be completed while domains are gaps, and the record stores which ones were.** Same pattern as the handover signature: refusing would mean the meeting happened and the system holds no evidence of it — a review meeting happens *because* there are gaps — and permitting it silently would let "care plan reviewed" sit over three domains nobody has written. Each outstanding domain is named individually rather than counted.
+
+`/care-plans` is built here rather than in Phase 6, leading on domains never written. A nav item tagged with a closed phase is worse than a disabled one: it is a claim that has stopped being true.
+
+### 6.6c Phase 8 — Goals
+
+**A goal is the only record in this build whose subject is the resident's own intention.** Everything else is somebody's account of a resident; this is their account of what they want. So the statement is the largest thing on every screen it appears, in their words, never a clinical paraphrase.
+
+**A goal is not a care plan action**, in three ways. An action is standing and a goal is finite — "offer an arm on the corridor" happens every shift forever, "walk to the dining room by Christmas" happens once or not at all. An action is the home's method; a goal is the resident's intention. And **an action cannot fail where a goal can**: whether an action was followed is a compliance question about the home, whether a goal was achieved is a question about a person, and the answer may be no for reasons that are nobody's failure. A goal reading "staff will offer an arm" is a mis-filed care plan action. It links to a domain rather than restating it — the goal is the outcome, the domain holds the method — with an explicit unlinked member, because a goal nobody filed under a domain is a real state.
+
+**`in_progress` is derived, not recorded.** As a stored status it is the stalest possible claim: set once, never revisited, and a goal nobody has touched in eight months still says somebody is working on it. Derived from the progress timeline it cannot go stale, and the union collapses to what somebody actually decided — `open · achieved · not_achieved · withdrawn_by_resident · stopped_by_service`.
+
+**"Abandoned" split in two.** The resident changed their mind and the service stopped working on it are opposite in the way that matters to the person: the first is them exercising a right, the second is something that happened to them. Merged, a family cannot be told which it was — the collapse this build exists to prevent, applied to somebody's own life rather than to a clinical record.
+
+**Every closure records what the resident said** — agreed · disagreed · not asked — with **not asked as the default, rendered as the gap it is**. Staff marking a goal achieved over somebody who does not think they did is the invariant failing in the one place where the subject is the person themselves. `withdrawn_by_resident` carries no view at all: the withdrawal is the resident's view, and asking what they thought of their own decision is incoherent whichever value it takes. Narrowed in the type rather than guarded in the fixture.
+
+**Not achieved is not a failure treatment** — plain border on `bg-surface-sunken`. Critical and caution are for things somebody must act on; a goal that was not reached is a thing that happened to a person, and treating it as an alarm turns the record into a judgement about them.
+
+The target date is its own union — a goal with no date can never be late, and "no date" must never read as "not yet due". Progress notes are their own record rather than filtered care notes, so a gap in the timeline is a gap in goal progress and makes no claim about the care record; Rule 3c therefore does not apply and a gap marker is honest.
+
+A resident with no goals at all gets the whole card as the lead and no list beneath it — nothing to list — naming how long they have been here, because "no goals set" means nothing on somebody admitted yesterday and a great deal on somebody here five months.
+
+### 6.6d Phase 9 — Activities
+
+**Attendance is the MAR cell.** `attended · did_not_attend(reason) · not_recorded`, mapping onto the precedent exactly: a recorded non-attendance is settled and carries its reason — declined, unwell, off-site — and `not_recorded` takes the hatch. Choosing "did not attend" asks why and cannot be saved without an answer, because a negative with no reason is indistinguishable from nobody having looked.
+
+**The denominator is the invitation list.** "12 attended" is not a fact; "12 of 18 invited, 4 not recorded" is. And an activity nobody wrote up renders eighteen hatched rows, never "0 attended" — zero attended says nobody came, nothing recorded says nobody wrote it down.
+
+**§2.4 moves from the screen to the row.** This is the first module whose subject is a group, and the failure changes shape with it: on a grid you do not pick the wrong person from a list, you slip a row, and Doris is marked present while Beryl is marked absent. So every row carries its own resident identity — avatar, preferred name, full legal name, room — and every answer control names the person in its accessible label. The row is the write, so the row carries the subject.
+
+**No bulk "mark all attended."** One click asserting twelve facts nobody checked is the handover "sign for everybody" failure with twelve people in it. If it is ever added, it follows the handover: permitted loudly, and the record stores that it was set in bulk.
+
+**Somebody who joined without being invited is recorded outside the invitation list.** Folding them in retroactively would rewrite the plan to say they were always expected — a record editing itself to look tidier. Three facts, all true: 12 of 18 invited attended, 4 not recorded, 2 joined uninvited.
+
+**Four session states on the calendar, and only one is a gap.** Happened-and-unrecorded is hatched and is the lead finding; partly recorded takes caution; fully recorded is quiet; **a future session takes a dashed purple border, because nothing has happened and nobody has failed to record anything** — the hatch would say "this should have been written up" about an afternoon that has not arrived.
+
+**Activity preferences are read from the care plan** — the social and emotional wellbeing domain, in the resident's own voice — and duplicated nowhere. Where that domain is unwritten the drawer renders "never asked what they like", because an unwritten domain *is* nobody having asked, and it links to the screen that fixes it rather than offering a field that would drift.
+
+**§3.6 arrived on a diary rather than a timestamp.** The calendar highlighted Monday when it was Tuesday: `new Date().toISOString()` is UTC, and at ten past midnight BST that is still yesterday. The site's zone decides which square is today, because the sessions in it happened there. No test caught it — the suite pins the clock to the fixture instant, where UTC and the site agree — and it was found only by looking at a picture.
+
+### 6.6e Phase 10 — Consent
+
+**Mental capacity is not a status.** The MCA test is decision-specific and time-specific: does this person have capacity for *this* decision, *now*. That is not a property of a resident and not a property of a consent type — it is a property of the occasion on which somebody decided, so it lives on the decision. `not_assessed · has_capacity · lacks_capacity`, and a lacks-capacity finding carries **both MCA stages, both required**: a conclusion with no impairment recorded and no functional finding is a conclusion without a test.
+
+**`ConsentStatus` split into two axes**, because five of the six original members said what was decided and one said who decided — answers to different questions sharing a union. The gap that exposed is the proof: a best-interests process can conclude *no*, and the old type could not express it, so `best_interest` implied a positive outcome by omission. In the fixtures 41 of 168 recorded decisions are best-interests refusals, a shape that previously had nowhere to live.
+
+- **What was decided** — `not_sought · pending · given · refused · withdrawn`
+- **Who decided it** — the resident, a best-interests process, or a health-and-welfare LPA holder
+
+`not_sought` and `pending` carry no authority, because nothing has been decided and so there is nobody who decided it. The other three always do, which makes the gate structural: a decided consent cannot be constructed without an authority, and an authority cannot be constructed without a capacity assessment.
+
+**One assessment may name several decisions; it may never be general.** A manager going through consents in one sitting is real practice and one assessment genuinely can cover several decisions — but "has capacity" applied to a decision nobody assessed against is the MCA violation, so a consent may only reference an assessment naming its own type. Enforced by the type rather than by a guard: `covers` is a map, so an assessment covering three types is assignable wherever any of those three is expected and a fourth does not compile.
+
+**The gate is a gate, not a field.** The question stands alone before any consent detail exists, and nothing else on the screen — scope, stages, continue — is reachable until it is answered. No default selection.
+
+**Refused is not a failure treatment.** A resident refusing is them exercising a right; caution or critical would make the record disapprove of them. Same treatment as a goal not achieved.
+
+**Downstream effects are data, not prose.** A sentence cannot be asserted against, so a withdrawal that forgot to mention the photographs would look identical to one that did — the product's own failure inside the dialog written to prevent it. Each effect carries its own count, and **an unknown count renders "not counted" rather than zero**: nobody knowing how many is not the same as none. Cross-module effects belong here and are derived rather than remembered — withdrawing photography while Family Portal Access still stands is a real consequence and is checkable from data.
+
+Every consent type carries a plain-English line saying what consenting to it actually permits. A consent nobody can explain is not informed, and that line is the difference between a record of consent and a record of a signature.
+
+Brennan's withdrawn photography consent with photographs still on file — pinned in §5.3 since Phase 0 — reached a screen here, five phases after it was written.
+
+### 6.6f Phase 11 — Documents
+
+**No folder metaphor and no format icons.** The seven categories are sections of one library rather than places a file sits, so nothing renders a folder — which also sidesteps the Phase 0 icon gap, since the shortage was folders and per-format badges rather than document iconography. Format is text: "PDF · 1.2 MB" says more than a glyph, because a glyph tells you nothing about whether the thing opens.
+
+**Category order is fixed and meaningful**, iterated from the constant and never from the data: Legal and authority · Identity and admission · Health and clinical · Assessments and care planning · Consent records · Correspondence · Photographs and media. Legal is first because a DNAR nobody can produce in ninety seconds is a DNAR that gets overridden.
+
+**Expiry is a closed union in which "does not expire" is a recorded decision** — `expires(on)` · `does_not_expire(decidedBy, on)` · `not_recorded`. Somebody has to have said a document is permanent; an empty date field cannot say it, and the value without an author would be indistinguishable from an assumption.
+
+**Three findings, never summed** — expired (critical), expiring within `DUE_SOON_DAYS` (caution), and no expiry recorded at all (hatched). The third is not a milder version of the first two: it is the absence of the fact they are made of.
+
+**An empty category is not always an emptiness.** Where another module's record implies a category should be non-empty, it renders the hatch naming what is missing and where the expectation came from — "DNAR in place since 17/05/2025, and no document in Legal and authority" — rather than "No documents". Cross-module derivation, checkable from data rather than remembered.
+
+That is also where Phase 10's counted withdrawal effect reached a screen it was not written for: Brennan's withdrawal recorded fourteen photographs it could not undo, his Photographs and media category holds nothing, and the library renders the disagreement in his own record's words.
+
+**A broken reference is a finding, not a dead link.** Four phases of document ids that pointed at nothing now resolve or accuse — the lookup is a closed union, and `not_on_file` renders hatched and unlinked, naming the id, the module holding it and what that module says. Never a link that fails on click, never silence.
+
+**Nothing offers to open a file, because no file exists behind any of it.** Every row says which kind of nothing it is: "not retrievable here" for a document whose metadata is real, "cannot open — not on file" for a broken reference. The export stub's discipline applied to the library itself, and a correction to the reference, which had offered an enabled Open.
+
+### 6.6g Phase 12 — CQC Compliance and the Dashboard
+
+**Two floors, and they compose.** `MIN_POPULATION_FOR_A_RATE` is a floor on one rate's denominator — is there enough here for this percentage to mean anything. `INSUFFICIENT_EVIDENCE_THRESHOLD` (60%) is a floor on how much of a panel has any usable figure at all. So a Key Question is built in two passes: each check returns an `Aggregate`, which may already be Insufficient Evidence because its own population is below eight; then the panel asks what fraction of its checks came back usable. **A check that is itself Insufficient Evidence does not count toward the 60%** — a panel assembled from figures none of which can support a claim cannot support one either, and counting them would let five unusable checks make a panel look measured.
+
+**A third kind of absence, with its own treatment.** "Nobody has recorded a supervision" and "nothing in this product records supervision" are opposites: the first is a finding about the home, the second a finding about the system. Rendering them alike would send a manager looking for a screen that does not exist — the Evidence Invariant failing at the top of the screen built to enforce it.
+
+So **Not held here** is solid `bg-surface-sunken` with a plain border and no pattern, because pattern in this system means "a gap you can close" and nothing on any screen can close this one. It is listed, it never counts toward coverage, it never contributes to a rating, and its wording says the product does not record the thing rather than that the home has not done it — enforced by a guard reading every such statement.
+
+**Compliance and the Dashboard share machinery and share no figure.** Compliance is coverage-shaped, over the whole record, ordered by Key Question — *can we evidence this to an inspector*. The Dashboard is deadline-shaped, over today, ordered by urgency — *what needs doing before the end of this shift*. **No compliance percentage appears on the Dashboard, and nothing on it is green**: a tile with nothing wrong renders calm rather than reassuring, because a "92% compliant" figure on the front door would be most reassuring exactly when the record is thinnest.
+
+**The inspection pack is a manifest, not a file.** No backend and no file storage means no PDF, and there is no download control at all — not a disabled one, because a disabled button implies a file could exist. Three sections: what the pack would contain, what it cannot because the home has not recorded it (hatched — closable), and what it cannot because the product does not hold it (inert — not closable). The second and third are longer than the first, on purpose: a manager reading this before an inspection gets more from the gaps than from the list.
+
+**Every check names the module it comes from**, and a check whose evidence is weaker than it looks says so — fire and legionella are evidenced by a document existing rather than by an assessment record, and hiding that behind a tick would be the screen overstating its own evidence.
+
+### 6.6h Phase 13 — Reports
+
+**Eight reports, not fifteen.** A screen whose only distinction is a name is a screen somebody has to learn for nothing, so the seven questions that would have been a compliance check with a table under it are drill-downs from that check — which is also where a reader already is when the question occurs to them. The index lists them as drill-downs so nobody concludes the product cannot answer them.
+
+**What a report gives that a queue and a panel cannot** is a figure over a *period*, cut by something other than resident. A queue is a worklist ordered by urgency; a panel is coverage over the whole record; a report compares this month with last, by unit, by drug, by staff member. This is the first period in the build.
+
+**Comparison is a field, not a derivation.** Two of the eight measure states rather than flows and carry no comparison control at all, with a sentence saying why — a toggle that changes nothing is worse than no toggle. And comparison is on rates rather than counts: eleven omissions against 420 doses and six against 180 move the same way on counts and opposite ways on rates.
+
+**The finding renders above the filters and above the table**, and where the data is too thin the finding *is* that — with the table still rendering beneath it. Refusing to render hides data somebody may still need; the finding above is what stops the table being read as a conclusion. Rows below the population floor stay in the table, hatched, with Insufficient Evidence in the figure cell rather than a percentage: removing them would make the table look complete.
+
+**Thin reports are marked on the index, before opening.** Opening a report to discover it cannot say anything is a wasted trip, and the index is where that is cheapest to prevent.
+
+**No ratings anywhere.** Figures and coverage on a report; judgement stays on the compliance panel. A green rating here would reintroduce the reassurance the Dashboard refuses.
+
+**Per-staff reports carry a constraint the others do not.** Workload and coverage, never a league table — ordered by name, with a guard failing any ordering by a figure, and every denominator in the same cell as its figure. Deactivated staff stay, marked, because records outlive access.
+
+Two columns in the reference could not honestly exist and were removed rather than filled. **A dose with no record carries nobody's name** — attributing an omission to whoever else was on shift would invent the accusation the screen's own note warns against. And **a rate on a zero numerator is not the same as a rate on a small one**: a staff member who recorded nothing has 0 of 28 residents, a denominator that supports a rate perfectly well, and "0.0%" against somebody who did not work is an accusation dressed as a measurement. `rate()` takes the population that decides supportability separately from the denominator.
+
+This is the first module whose subject is a member of staff, and the invariant cuts the same way it does for residents: a figure about a person that does not carry what it is out of is an accusation rather than a measurement.
+
+### 6.6i Phase 14 — Team Management
+
+**Phase 13's constraint is the whole module, not one screen.** Every screen here has a person as its subject, so the rule stops being a special case: ordered by name and never by anything anybody did, every figure carrying what it is out of, and no figure attributing an absence to somebody, because an absence has no author.
+
+**No counts at all on the staff detail.** There is no rota and no shift record, so a count of what somebody recorded has no honest denominator — and a bare count beside another person's bare count is a ranking whether or not anybody sorted it. Not ordering the list only stops us doing it for the reader. The figures are not wrong; they are wrong without the framing the report gives them, so the detail shows recent activity as a list and links to the coverage report where the period and denominators are stated.
+
+**The "Not held here" block sits above the activity, not below it.** A page of what somebody recorded reads as the beginning of a performance record unless it is told otherwise first. It reuses the Phase 12 component exactly — supervision, appraisal, training and induction are not in this product, and the absence is a gap in the system rather than anything about the person.
+
+**`StaffMember` carries the minimum**: name, role, site, standing. No start date, no contract type, no employment fields — a field nobody has asked for is a field nobody has decided how to protect, and inventing an employment record is how a care system starts holding HR data it was not built to hold.
+
+**Standing is a union with four members and one of them is a gap.** Has access renders plain; no-longer and suspended render settled with when, why and who; **never-given-access takes the hatch**, because nobody chose it. Every member carries an author, including the gap.
+
+**Standing is derived at render time, never snapshotted into the attribution.** The `StaffRef` answers how somebody appeared on a record; standing answers whether they can still get in, and only one of those changes. A reactivated person whose historic notes still said deactivated would be a fact about now stored in a record about then. `formatAttribution` lost its `isActive` argument entirely — whether an author still has access is not a formatter's business.
+
+That change touched twenty-three files and **not one test failed**, which is the finding: the label rendered in six modules and nothing asserted it anywhere except a single unit test on the formatter. Rendering everywhere is not coverage.
+
+**The permission matrix describes this product, not the source PRD's.** Sixteen modules and four levels — no access · read · record · approve — rather than 54 flags inherited from a product with a permission model. Nothing is enforced, there is no authentication, and the statement saying so renders before the first cell.
+
+**The activity log is a write log for this session, and says what it is not.** Its use is showing a reviewer exactly what a demonstration session changed; a read log would be surveillance with nothing behind it, since there is no auth and no reads to log. It is fed from the data access layer rather than per screen, and it stamps its own entries from the clock — the log is about this session in order, not about the records, and taking each record's own timestamp widened a care plan's date into an invented midnight.
+
+### 6.6j Phase 15 — Multi-site
+
+**What the phase adds is the comparison.** The switcher already existed, every module already scoped to the active site, and every record already rendered in its own site's zone. What did not exist was any screen whose subject is the organisation — to compare two homes you switched, read, switched back and remembered. Same argument period comparison had in Phase 13: the one thing that cannot be got any other way.
+
+**No group rating, and that dissolves the threshold question.** `INSUFFICIENT_EVIDENCE_THRESHOLD` exists to gate a rating; with no group rating there is nothing to transpose, and the two-site arithmetic problem disappears rather than needing a rule. A single figure for the organisation would be the most reassuring thing this product could render, and it would be most reassuring exactly when one home is thinnest.
+
+**Every group figure carries its spread in the same sentence as the number** — how many homes are inside it and how many could not support a figure of their own. Each site keeps its own column and its own standing: a Key Question that is Insufficient Evidence at one home and Amber at the other renders as exactly that, never as a third figure that is neither. Where both are unusable the group has none, because a figure assembled from two unusable ones is not usable.
+
+Care plan domains is the case that makes the argument: across the group the coverage figure is true, and it hides four fifths of Ashgrove's plan being unwritten inside Rosewood's population.
+
+**Site cards side by side, not a table.** Two homes read as two homes; a table reads as a league — Phase 13's constraint applied to sites rather than people. The cards carry counts rather than rates, because a count needs no population floor and counts are what a manager acts on.
+
+**The cross-site banner offers the switch and does not perform it**, and says which home governs the timestamps: the record's own. Navigating somebody away from a record they are reading is the app deciding they made a mistake, and a manager covering both homes reads across them all day. The defect it fixes was two visible site names disagreeing with nothing saying which governed what.
+
+**Settings is settable if and only if the figure is read at render.** Five of the six §9 2b figures are — only `MEDICATION_LOOKAHEAD_HOURS` is consumed by fixture generation — so five are live controls and one renders read-only with the reason. `setFigure` throws on the fixed one rather than accepting a value and ignoring it: a setter that discards its argument is a control that does nothing, one layer down.
+
+A changed figure is marked as changed-this-session in the app shell, naming which moved and what it was. Deliberately not a mapping of figures to affected screens — that would be a second rule beside the first, and two rules drift.
+
+**The custom template builder was dropped rather than carried forward.** The instrument is a flagged placeholder, and a template somebody authored themselves reads as theirs rather than as a placeholder — without the banner. Building a factory for a thing whose specification is unresolved produces unresolved things faster. It is blocked on §9 2a, not on a phase.
+
+### 6.6k Phase 16 — Resident admission and record editing
+
+**Admission produces Ismail Sowande**, and the guard says so by name — field by field against the resident who has been that shape since Phase 0. If admission produced anything different, one of the two would be wrong.
+
+That is the phase's finding rather than a disappointment: **admission cannot create anything less than a full set of gaps**, because `consents` is a mapped type over eight keys, `risks` a record over nine templates and `carePlan` an array the screens iterate from a constant. A resident missing any of them does not compile. The type makes forgetting impossible, which is the Phase 10 mapped type doing the job it was given.
+
+**Six fields and one question.** Legal name, preferred name, date of birth, admission date, home, room — anything more asks somebody to guess on the day they know least. Preferred name left blank renders as not recorded rather than defaulting to the legal name; a default there would be the system putting a name in somebody's mouth on their first day.
+
+**Allergies is the one clinical question on the form**, and it is there because the first medication round may happen before anybody asks again. Three states: recorded with what, the reaction and its severity; no known allergies **with a source** — the resident, family, a GP letter, a discharge summary; or not known yet, hatched from the first minute. The source is what stops the field becoming pressure to answer: "no known allergies" with nobody's name on it is a guess wearing a record. Severity is part of the same question rather than a seventh field — "rash and swelling" without saying whether that is mild or anaphylaxis is the half-record this build refuses, on the field where the difference is whether somebody carries an adrenaline pen.
+
+**The form says what starts unrecorded, and where each of those is recorded.** Admission does not create a record; it creates a person and a set of gaps. The footer states plainly what admitting does to every figure in the product — a resident on the list with critical records missing, a compliance figure that just got worse, a group coverage that just fell. All true, and none of it a reason not to admit her. A product that hid it would make admitting somebody look tidier than it is.
+
+**Four editing rules already existed and this phase did not flatten them.** A care note is immutable and corrected by a linked note. A care plan domain is versioned. A consent is superseded. A document is not editable at all. Editing is field by field rather than a form, because a bulk save attributing six changes to one act is the wrong shape for a clinical record.
+
+**Two profile surfaces cannot honestly write, and say so rather than promising a phase.** A resuscitation decision and an ADRT need a clinician's signature and a document reference, and this build captures neither — recording one with the current user as signatory would be inventing a clinical signature. That is the "not held here" distinction rather than a stub.
 
 ---
+
+## 6.8 Where the build stands
+
+Sixteen phases closed at fifty test files and 1,099 tests. With the four surfaces added afterwards (§6.9): **60 test files, 1,203 tests, nine lint scripts.** Both figures are kept — the first is what the phased build order produced, the second is where the build stands today, and conflating them would lose which work belonged to which.
+
+**Stubbed with a reason rather than a promise.** Prescribing — a prescriber's act, and there is no prescriber, no directions model and no interaction checking. The MAR export and the inspection pack, each naming what they would produce. Goals, incidents and activity attendance confirm without writing; they need their own session stores rather than a patch to the resident record. And every "gone on reload", which is true of the whole build.
+
+**Blocked on a care manager, not on a developer.** The risk instrument (§9 2a) — nine invented instruments with a banner on every screen. The CQC mapping and the worst-of rule (§9 2d), where the screen going uselessly red is itself the argument for sourcing a real one. The invented figures (§9 2b), now adjustable on the settings screen, which is as close as this build can come to letting somebody see what a different answer does before committing to it.
+
+None of the three can be closed by building anything. All three are visible on screen, banner-flagged, and blocking real use rather than further work.
+
+
+
+## 6.9 Additions after Phase 16
+
+Four surfaces added once the sixteen phases had closed, each because a decision made early stopped being right for a build that is deliberately front-end only.
+
+**The document viewer.** "Not retrievable here" described a limitation that is never going away, so documents whose metadata is real now open to a representative sample of that document type, on a dark neutral stage with the sample banner **above** the page rather than watermarked across it — a watermark would make the sample unreadable and would be the second thing in this build to obscure its own content. The rail carries **what points at this document**: every module referencing it, each linked. That is the broken-reference relationship seen from the other end, and it is what makes the viewer worth opening rather than a picture. "Cannot open — not on file" stays exactly as it was for genuine broken references: that message is the product working.
+
+**Medication intake, in two paths, and neither creates a prescription.** Prescribing is a clinical act by a prescriber; what a home does is record a prescription that exists elsewhere. So: a **pharmacy cycle** arrives and is checked against what the home holds, row by row, with four tallies — new, changed, stopped, and **on the MAR but not in the cycle**, hatched. That fourth is the finding, and it cannot be seen from either side alone: a drug the home is still giving that the pharmacy has stopped supplying. No "accept all" — one click asserting nineteen medication changes nobody read is the handover failure with prescriptions in it. And an **interim medication** path for what arrives between cycles, where **the source is the first question and is required**, a verbal order carries a witness and a 24-hour written-confirmation obligation, and a controlled drug cannot be added at all, stated before anybody types rather than failing on submit.
+
+**Staff authentication and onboarding, with the notice that there is none.** Sign-in, invitation, and a staff member's own dashboard at `/me`. The prototype banner is on every auth screen and is not a footnote — a sign-in form that silently accepts anything is worse than no sign-in form, because it implies a check that is not happening. Site is chosen at sign-in rather than after, because it decides the timezone every record written that day carries. An invitation states role, home and access level **before** the password fields, and names its expiry: an invitation with no expiry is a permanent open door.
+
+**`/me` has no counts of the reader's own work.** Phase 14's constraint applies with more force when the subject is reading about themselves, not less — a screen showing somebody their own productivity figures is a performance record whatever it is called. And the third tile is "nobody has written up", not "on your list": there is no rota, so nothing allocates a resident to anybody, and "your residents" would put a person's name against a gap they were never given.
+
+**Signing out is the only action in this build that destroys work rather than failing to save it**, because every write is held in memory. The confirmation names what would be lost item by item with counts, each store reporting in its own words — the session log looked like the obvious source and was wrong, with nine of nineteen write paths never reaching it, so a confirmation built on it would have destroyed a shift's medication records under a list that never mentioned them.
+
+**The permission matrix was wrong for fifteen phases and was caught the first time it was shown to its subject.** A care worker read as Record on Dashboard and on Residents; nothing is recorded on a dashboard by anybody. Fixed as a class rather than as two cells — each module declares the acts it actually offers, and a role's level is capped by the module's ceiling. A screen describing a third party is unaudited by construction, and showing it to the person it describes is the cheapest audit available.
 
 ## 7. Accessibility
 
@@ -531,6 +827,8 @@ One module per phase. Each phase ends with a stop for review. Within Phase 1, we
 | 14 | **Team Management** | Staff list, permissions, activity log | |
 | 15 | **Multi-site** | Switcher, group overview, site settings | Last because it re-scopes everything before it |
 
+| 16 | **Resident admission and record editing** | Admit a resident, edit an existing record, the primary-contact and DNAR/ADRT writes stubbed in Phase 1 | Last because an admission that creates a resident with no consent types, no risk assessment templates and no care plan domains would create the very record this product exists to flag. Everything it writes into must exist first. Until this phase, Add Resident and every edit affordance renders present-but-disabled with its phase tag — never absent, never live |
+
 **Deferred to separate builds:** mobile care-worker application, Family Portal.
 
 ---
@@ -541,6 +839,10 @@ Carried from the source PRD's own open questions plus items raised by this docum
 
 1. Remaining ⚠️ values — the three intermediate ink steps (§4.2), type sizes (§4.3), radii and shadows (§4.6). Not blocking; swap into `tokens.css` in one edit once confirmed against a design file.
 2. Insufficient Evidence threshold — 60% is my default, needs a real answer before Phase 12.
+2a. **The risk assessment instrument is a placeholder** — invented items, weightings and band thresholds, with a banner on every screen saying so. Morse, Waterlow, MUST and Braden are published instruments and must be sourced properly rather than reproduced from memory; a threshold wrong by one point puts a resident in the wrong band. Blocks any real use of Phase 5.
+2b. Review frequency is a single six-month constant across all nine templates and all ten care plan domains; `DUE_SOON_DAYS` is 30 and is read by reviews, care plan domains and document expiry alike — a review's due date and an expiry date are the same kind of instant; `MIN_POPULATION_FOR_A_RATE` is 8 and lives beside `Aggregate` itself, because it is a property of rendering a rate rather than of any module; and `NO_GOALS_ALERT_DAYS` is 30 from admission. All are invented and all want the same care manager's answer.
+2d. **The mapping of evidence to CQC Key Questions is not derived from CQC's published framework**, and the rating combines a panel's checks by taking the worst of them. Both are placeholders with a banner on every compliance screen saying so. Worst-of was chosen because it errs toward alarm rather than reassurance, which is the only direction to err in this product — but a real weighting is a domain answer, and a threshold wrong by one check puts a home in the wrong band. Blocks any real use of Phase 12.
+2c. Waking hours are 07:00–22:00, invented. Needs a care manager's answer; affects every gap marker on the care note timeline.
 3. Care worker PIN behaviour on shared devices — affects the MAR confirmation dialog in Phase 3.
 4. Whether activity planning is owned by a dedicated Activities Coordinator — affects the Phase 9 permission model.
 5. Non-UK regulatory frameworks — out of scope for this build, all compliance UI is CQC-shaped.

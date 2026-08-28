@@ -1,60 +1,64 @@
-import type { ConsentMethod, ConsentStatus } from '@/data/types'
+import type { AnyConsent } from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
 import { formatDate } from '@/lib/format'
 import { StatusPill } from './StatusPill'
 import { Unrecorded } from './Unrecorded'
+import styles from './Settled.module.css'
 
 /**
- * Consent. PRD §5.1, §2.1.
+ * What was decided about one consent. PRD §6.7, §2.1.
  *
- * "Pending, Refused, Withdrawn, and Lacks Capacity — Best Interest are
- * legally distinct outcomes. None of them is a blank."
+ * **This badge answers one of two questions.** Who decided it is a separate
+ * fact with a separate treatment — see `ConsentAuthority` — because five of the
+ * old union's six members said what was decided and one said who, and merging
+ * them meant a best-interests decision that concluded *no* could not be
+ * recorded at all.
  *
- * Six outcomes, every one of them carrying its author, because refusal,
- * withdrawal and best-interest decisions are the most legally consequential
- * records in the set (PRD §3.6).
+ * `not_sought` is the hatch. Never sought is not refusal and it is not
+ * permission: care given without either is care given without consent.
  *
- * Best interest uses the brand tone for the same reason DNAR does: it is a
- * formal decision under the Mental Capacity Act, not good news or bad news,
- * and a RAG colour would editorialise it.
+ * **Refused is not a failure treatment.** A resident refusing is them
+ * exercising a right, and caution or critical would make the record disapprove
+ * of them — the same reason a goal that was not achieved renders quietly.
  */
-
-const METHOD: Record<ConsentMethod, string> = {
-  verbal: 'verbal',
-  written: 'written',
-  digital_signature: 'digital signature',
-}
-
-export function ConsentBadge({ status }: { status: ConsentStatus }) {
+export function ConsentBadge({ status }: { status: AnyConsent }) {
   switch (status.kind) {
     case 'not_sought':
-      return <Unrecorded label="Consent not sought" />
+      return (
+        <Unrecorded
+          variant="chip"
+          label="Never sought"
+          detail="nobody has asked, and nobody has decided on their behalf"
+        />
+      )
 
     case 'pending':
       return (
         <StatusPill
           tone="info"
-          label="Pending"
-          detail={`requested ${formatDate(status.requestedOn)} by ${status.requestedBy.displayName}`}
+          label="Awaiting a decision"
+          detail={`asked ${formatDate(status.requestedOn)} by ${status.requestedBy.displayName}`}
         />
       )
 
-    case 'consented':
+    case 'given':
       return (
         <StatusPill
           tone="positive"
-          label="Consented"
-          detail={`${METHOD[status.method]} · ${formatDate(status.on)} · ${status.by.displayName}`}
+          label="Given"
+          detail={`${formatDate(status.on)} · ${METHOD[status.method]}`}
         />
       )
 
     case 'refused':
+      // Plain, on a sunken surface. A record of a choice, not a finding.
       return (
-        <StatusPill
-          tone="caution"
-          label="Refused"
-          detail={`${formatDate(status.on)} · ${status.recordedBy.displayName} · ${status.note}`}
-        />
+        <span className={styles.settled} data-refused>
+          Refused
+          <small>
+            {formatDate(status.on)}, {status.note}
+          </small>
+        </span>
       )
 
     case 'withdrawn':
@@ -62,24 +66,17 @@ export function ConsentBadge({ status }: { status: ConsentStatus }) {
         <StatusPill
           tone="caution"
           label="Withdrawn"
-          detail={`${formatDate(status.on)} · previously consented ${formatDate(
-            status.previouslyConsentedOn,
-          )} · ${status.recordedBy.displayName} · ${status.note}`}
-        />
-      )
-
-    case 'best_interest':
-      return (
-        <StatusPill
-          tone="brand"
-          label="Best interest decision"
-          detail={`${formatDate(status.decidedOn)} · ${status.decidedBy.displayName} · consulted ${status.consulted.join(
-            ', ',
-          )} · ${status.rationale}`}
+          detail={`${formatDate(status.on)} · given ${formatDate(status.previouslyGivenOn)}`}
         />
       )
 
     default:
       return assertNever(status)
   }
+}
+
+const METHOD: Record<string, string> = {
+  verbal: 'verbal',
+  written: 'written',
+  digital: 'digital',
 }

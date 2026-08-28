@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Reviews</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1250px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:16px}
+.viewNav{display:flex;gap:4px;margin-bottom:6px}
+.viewNav button{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.viewNav button[aria-pressed="true"]{background:var(--purple-900);border-color:var(--purple-900);color:#fff}
+
+/* findings */
+.findings{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;margin-top:20px}
+.finding{padding:18px 22px;border-radius:var(--r-lg);display:flex;gap:15px;align-items:flex-start}
+.finding .n{font-size:31px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.finding .t{font-size:13.5px;font-weight:700}
+.finding .d{font-size:12px;margin-top:3px;line-height:1.45}
+.finding.lead{border:1.5px dashed var(--unrecorded);border-left-width:5px;color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.finding.over{border:1px solid var(--critical);border-left-width:5px;background:var(--critical-tint);
+  color:var(--critical-ink)}
+.finding.plain{border:1px solid var(--border-subtle);background:var(--bg-surface);
+  box-shadow:var(--shadow-card);color:var(--ink-700)}
+.finding.plain .t{color:var(--ink-900)}
+
+/* coverage — only on the completed filter */
+.coverage{margin-top:20px;padding:20px 24px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);box-shadow:var(--shadow-card);display:flex;gap:24px;
+  align-items:center}
+.coverage .n{font-size:38px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.coverage .t{font-size:14px;font-weight:700}
+.coverage .d{font-size:12.5px;color:var(--ink-500);margin-top:3px;line-height:1.5;max-width:66ch}
+.covBar{flex:1;max-width:300px}
+.bar{height:8px;border-radius:var(--r-pill);background:var(--border-subtle);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .done{background:var(--purple-600)}
+.bar .late{background:var(--critical)}
+.barKey{font-size:11.5px;color:var(--ink-500);margin-top:7px;line-height:1.5}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px 24px;
+  border-bottom:1px solid var(--border-subtle)}
+.pill{padding:8px 16px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.pill[aria-pressed="true"]{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+select{padding:8px 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);font:inherit;
+  font-size:13px;background:var(--bg-surface);color:var(--ink-900)}
+.sortLine{padding:12px 24px;font-size:13px;color:var(--ink-500);border-bottom:1px solid var(--border-subtle)}
+
+.row{display:grid;grid-template-columns:13rem minmax(0,1fr) 14rem 10rem auto;gap:20px;
+  align-items:center;padding:14px 24px;border-top:1px solid var(--border-subtle)}
+.row:first-of-type{border-top:0}
+.who .n{display:block;font-size:14px;font-weight:600}
+.who .r{display:block;font-size:12px;color:var(--ink-500);margin-top:1px}
+.what .t{display:block;font-size:14px;font-weight:600}
+.what .k{display:block;font-size:11px;color:var(--ink-500);margin-top:2px;letter-spacing:.04em;
+  text-transform:uppercase;font-weight:600}
+.state{display:inline-flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700;max-width:200px}
+.state small{font-size:11px;font-weight:400;line-height:1.35}
+.state.never{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.state.over{border:1px solid var(--critical);background:var(--critical-tint);color:var(--critical-ink)}
+.state.due{border:1px solid var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.state.done{color:var(--ink-700);font-weight:500;padding-left:0}
+.state.done small{color:var(--ink-500)}
+.late{display:inline-block;margin-top:4px;font-size:11px;font-weight:700;color:var(--critical-ink)}
+.btn{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* session */
+.subj{display:flex;gap:14px;align-items:center;padding:16px 24px}
+.av{width:44px;height:44px;flex:0 0 44px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:700;font-size:13px}
+.subj .nm{font-size:17px;font-weight:700}
+.subj .meta{font-size:12px;color:var(--ink-500);margin-top:2px}
+.sec{padding:20px 24px;border-bottom:1px solid var(--border-subtle)}
+.sec:last-child{border-bottom:0}
+.sec > h2{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:12px}
+.drow{display:grid;grid-template-columns:minmax(0,1fr) 14rem auto;gap:18px;align-items:center;
+  padding:11px 0;border-top:1px solid var(--border-subtle)}
+.drow:first-of-type{border-top:0}
+.drow .t{font-size:14px;font-weight:600}
+.drow .q{font-size:11.5px;color:var(--ink-500);margin-top:2px;font-style:italic;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:48ch}
+.willStore{margin:16px 24px 0;padding:15px 19px;border-radius:var(--r-md);border:1.5px dashed var(--unrecorded);
+  border-left-width:5px;color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.willStore .t{font-size:14px;font-weight:800}
+.willStore .d{font-size:12.5px;margin-top:5px;line-height:1.55;max-width:76ch}
+.willStore ul{list-style:none;margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.willStore li{font-size:12.5px;font-weight:600;padding-left:15px;position:relative}
+.willStore li::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;
+  background:currentColor}
+textarea{width:100%;padding:11px 13px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  font:inherit;font-size:14px;line-height:1.55;min-height:88px;resize:vertical;
+  background:var(--bg-surface);color:var(--ink-900)}
+.foot{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:18px 24px}
+.foot .st{font-size:13px;color:var(--ink-700);max-width:64ch}
+.foot .st b{font-weight:700}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="viewNav">
+  <button aria-pressed="true" onclick="go('q',this)">1 · Review queue</button>
+  <button aria-pressed="false" onclick="go('c',this)">2 · Completed filter</button>
+  <button aria-pressed="false" onclick="go('s',this)">3 · Whole-plan review session</button>
+</div>
+
+<div id="view"></div>
+
+<!-- ============ measurements ============ -->
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>Three findings, never summed</h3>
+  <code>1.4fr 1fr 1fr</code>, gap <code>16px</code>, <code>20px</code> below the title.
+  Lead is never scheduled, hatched with a <code>5px</code> left border — a record nobody ever set a
+  review date for is the never-assessed shape applied to review itself.
+  Second is overdue, critical. Third is due soon, plain surface.
+  Figure <code>31px/800</code>, title <code>13.5px/700</code>, description <code>12px</code>.
+  Every one carries its denominator, and the denominator names what it counts: risk assessments, care
+  plan domains and whole-plan reviews are three populations behind one projection, and the screen says so.
+
+  <h3>Row</h3>
+  <code>13rem minmax(0,1fr) 14rem 10rem auto</code>, gap <code>20px</code>, padding <code>14px 24px</code>.
+  Resident, then what is being reviewed with its kind above it at <code>11px/600</code> uppercase —
+  the kind is what stops three populations reading as one list.
+  State chip as everywhere: never scheduled hatched, overdue critical, due soon caution,
+  completed plain text with no chip.
+  Action routes to the module that owns the act — Re-score, Open domain, Start review. **This phase
+  builds no third session for the two that already exist.** Two ways to do one act is one too many, and
+  the flag-clearing store assumes exactly one.
+
+  <h3>Completed filter — the one genuinely new treatment</h3>
+  When the completed filter is active the screen's fact changes, and so does what leads.
+  A queue of completed records has no gap to lead on, so **the lead becomes an Aggregate rather than a
+  finding**: coverage over the range, with its denominator, and how much of it was done late.
+  Coverage block <code>20px 24px</code>, figure <code>38px/800</code>, bar <code>8px</code> split into
+  done and late segments, key beneath at <code>11.5px</code>.
+  Rows render the completed review as a settled record — plain text, no chip, author and both dates
+  always visible. **Quiet is not hidden**: this is the evidence a review happened, and until now it
+  existed in the data and appeared on no screen at all.
+  A review completed late still says so, in one line at <code>11px/700</code> critical ink beneath the
+  settled text. Lateness is derived, not stored, and it survives being completed.
+
+  <h3>Whole-plan review session</h3>
+  Every domain listed with its own state — the same list the care plan tab renders, read-only here.
+  **The session can be completed while domains are gaps**, and the record stores which ones were.
+  Same pattern as the handover signature: refusing would mean the meeting happened and the system holds
+  no evidence of it, and permitting it silently would let "care plan reviewed" sit over three domains
+  nobody has written.
+  The "what this will record" block is hatched, <code>15px 19px</code>, <code>5px</code> left border,
+  and names each outstanding domain individually rather than counting them.
+  Footer: the state line says what completing records, including the gaps it will carry.
+
+  <h3>What must not happen</h3>
+  Do not add a whole-plan review to the profile as a tab. Each module already answers for its own
+  records, and a second place to see the same thing is where the two start disagreeing.
+  Do not queue the social worker review. That is the local authority's review of a placement, not the
+  home's review of a record — different owner, and a queue that mixes them makes the home look
+  accountable for somebody else's diary.
+</div>
+
+</div>
+
+<script>
+const ROWS = [
+  { who:'Grace', full:'Grace Adeyemi', room:'302', kind:'Whole care plan review', what:'All ten domains',
+    st:'never', note:'no review has ever been scheduled' },
+  { who:'Ismail', full:'Ismail Sowande', room:'4', kind:'Whole care plan review', what:'All ten domains',
+    st:'never', note:'no review has ever been scheduled' },
+  { who:'Beryl', full:'Beryl Hutchinson', room:'214', kind:'Risk assessment', what:'Pressure ulcer risk',
+    st:'never', note:'assessed 12/02, no review date set' },
+  { who:'Grace', full:'Grace Adeyemi', room:'302', kind:'Care plan domain', what:'Mobility and moving and handling',
+    st:'over', note:'14 months late · last signed 14/06/2025' },
+  { who:'Emmanuel', full:'Emmanuel Okafor', room:'14', kind:'Risk assessment', what:'Falls risk',
+    st:'over', note:'34 days late · last scored 12/02/2026' },
+  { who:'Doris', full:'Doris Kavanagh', room:'311', kind:'Care plan domain', what:'Continence',
+    st:'due', note:'due in 5 days · signed 28/02/2026' },
+];
+const DONE = [
+  { who:'Arthur', full:'Arthur Pemberton', room:'315', kind:'Risk assessment', what:'Falls risk',
+    on:'02/08/2026', by:'M. Halloran', next:'02/02/2027' },
+  { who:'Grace', full:'Grace Adeyemi', room:'302', kind:'Risk assessment', what:'Moving and handling',
+    on:'22/08/2026', by:'A. Okonkwo', next:'22/02/2027', late:'closed 3 days after it was due' },
+  { who:'Doris', full:'Doris Kavanagh', room:'311', kind:'Care plan domain', what:'Personal care and hygiene',
+    on:'02/06/2026', by:'M. Halloran', next:'02/12/2026' },
+  { who:'Emeka', full:'Chukwuemeka Obi', room:'206', kind:'Care plan domain', what:'Nutrition and hydration',
+    on:'19/07/2026', by:'A. Okonkwo', next:'19/01/2027' },
+];
+
+function chip(r){
+  if (r.st === 'never') return `<span class="state never">Never scheduled<small>${r.note}</small></span>`;
+  if (r.st === 'over')  return `<span class="state over">Overdue<small>${r.note}</small></span>`;
+  return `<span class="state due">Due soon<small>${r.note}</small></span>`;
+}
+const action = k => k === 'Risk assessment' ? 'Re-score'
+  : k === 'Care plan domain' ? 'Open domain' : 'Start review';
+
+function queue(){
+  return `<h1>Reviews</h1>
+  <div class="findings">
+    <div class="finding lead"><div class="n">14</div>
+      <div><div class="t">have no review scheduled at all</div>
+        <div class="d">Nobody ever set a date. Of 532 reviewable records — 180 risk assessments,
+          320 care plan domains and 32 whole-plan reviews.</div></div></div>
+    <div class="finding over"><div class="n">32</div>
+      <div><div class="t">overdue</div><div class="d">Scheduled, and the date has passed. Of 532.</div></div></div>
+    <div class="finding plain"><div class="n">51</div>
+      <div><div class="t">due in the next 30 days</div><div class="d">Of 532.</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="filters">
+      <button class="pill" aria-pressed="true">Never scheduled</button>
+      <button class="pill">Overdue</button>
+      <button class="pill">Due soon</button>
+      <button class="pill">Completed</button>
+      <button class="pill">All</button>
+      <select><option>All record types</option><option>Risk assessments</option>
+        <option>Care plan domains</option><option>Whole care plan reviews</option></select>
+    </div>
+    <p class="sortLine">Never scheduled first &mdash; a record nobody set a date for has no wait to
+      measure, so it sorts above the ones that do rather than among them</p>
+    ${ROWS.map(r => `<div class="row">
+      <span class="who"><span class="n">${r.who}</span><span class="r">${r.full} · Room ${r.room}</span></span>
+      <span class="what"><span class="k">${r.kind}</span><span class="t">${r.what}</span></span>
+      <span>${chip(r)}</span>
+      <span></span>
+      <span><button class="btn ${r.st==='never'?'primary':''}">${action(r.kind)}</button></span>
+    </div>`).join('')}
+  </div>`;
+}
+
+function completed(){
+  return `<h1>Reviews</h1>
+  <div class="coverage">
+    <div><div class="n">61%</div></div>
+    <div><div class="t">of records due a review in the last 90 days were reviewed</div>
+      <div class="d">148 of 243 — of which 27 were completed after their date. The remaining 95 are in
+        the queue: 14 never scheduled, 32 overdue, 49 still in time.</div></div>
+    <div class="covBar">
+      <div class="bar"><i class="done" style="width:50%"></i><i class="late" style="width:11%"></i></div>
+      <div class="barKey">121 on time · 27 late · 95 not reviewed</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="filters">
+      <button class="pill">Never scheduled</button>
+      <button class="pill">Overdue</button>
+      <button class="pill">Due soon</button>
+      <button class="pill" aria-pressed="true">Completed</button>
+      <button class="pill">All</button>
+      <select><option>All record types</option></select>
+    </div>
+    <p class="sortLine">Most recent first &mdash; this is the record that a review happened, not a
+      queue of work</p>
+    ${DONE.map(r => `<div class="row">
+      <span class="who"><span class="n">${r.who}</span><span class="r">${r.full} · Room ${r.room}</span></span>
+      <span class="what"><span class="k">${r.kind}</span><span class="t">${r.what}</span></span>
+      <span><span class="state done">Reviewed ${r.on}<small>${r.by} · next due ${r.next}</small></span>
+        ${r.late ? `<span class="late">${r.late}</span>` : ''}</span>
+      <span></span>
+      <span><button class="btn">Open</button></span>
+    </div>`).join('')}
+  </div>`;
+}
+
+const DOMS = [
+  { n:'Personal care and hygiene', s:'ok', d:'signed 02/06/2026 · version 3' },
+  { n:'Nutrition and hydration', s:'ok', d:'signed 28/02/2026 · version 2' },
+  { n:'Mobility and moving and handling', s:'over', d:'14 months overdue · signed 14/06/2025' },
+  { n:'Continence', s:'ok', d:'signed 11/05/2026 · version 1' },
+  { n:'Communication', s:'ok', d:'signed 03/01/2026 · version 1, draft in progress' },
+  { n:'Cognitive and mental health', s:'ok', d:'signed 19/04/2026 · version 2' },
+  { n:'Social and emotional wellbeing', s:'never', d:'never written' },
+  { n:'End of life', s:'never', d:'never written' },
+  { n:'Physical health', s:'ok', d:'signed 30/06/2026 · version 4' },
+  { n:'Medication', s:'never', d:'never written' },
+];
+
+function session(){
+  const gaps = DOMS.filter(d => d.s !== 'ok');
+  return `<h1>Whole care plan review</h1>
+  <div class="card"><div class="subj">
+    <span class="av">GA</span>
+    <div><div class="nm">Grace</div>
+      <div class="meta">Grace Adeyemi · Room 302 · Born 14/02/1939 (87) · Rosewood Court</div></div>
+  </div></div>
+
+  <div class="card">
+    <div class="sec"><h2>The plan as it stands</h2>
+      ${DOMS.map(d => `<div class="drow">
+        <div><div class="t">${d.n}</div></div>
+        <div>${d.s === 'never' ? `<span class="state never">Never written<small>nobody has written this domain</small></span>`
+          : d.s === 'over' ? `<span class="state over">Review overdue<small>${d.d}</small></span>`
+          : `<span class="state done">${d.d}</span>`}</div>
+        <div><button class="btn">Open</button></div>
+      </div>`).join('')}
+    </div>
+
+    <div class="sec"><h2>What was discussed</h2>
+      <textarea placeholder="Who was there, what was agreed, what changes.">Reviewed with Grace and her daughter. Mobility is the concern since the fall on 21/08 — she is walking less and is more hesitant in the evening. Agreed to rewrite the mobility domain this week.</textarea>
+    </div>
+  </div>
+
+  <div class="willStore">
+    <div class="t">Completing this records that three domains were gaps at the time</div>
+    <div class="d">You can complete this review with parts of the plan unwritten — the meeting happened
+      and it should be on the record. But the record will carry what was outstanding when you signed it,
+      so it can never later read as a review of a complete plan.</div>
+    <ul>
+      ${gaps.map(g => `<li>${g.n} — ${g.d}</li>`).join('')}
+    </ul>
+  </div>
+
+  <div class="card"><div class="foot">
+    <p class="st"><b>Completing records a whole care plan review for Grace Adeyemi on 23/08/2026,
+      carrying 3 outstanding domains.</b> The next review falls due 23/02/2027.</p>
+    <button class="btn primary">Complete review</button>
+  </div></div>`;
+}
+
+let view = 'q';
+function go(v, btn){
+  view = v;
+  document.querySelectorAll('.viewNav button').forEach(b => b.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true');
+  render(); window.scrollTo(0,0);
+}
+function render(){
+  document.getElementById('view').innerHTML =
+    view === 'q' ? queue() : view === 'c' ? completed() : session();
+}
+render();
+</script>
+</body>
+</html>

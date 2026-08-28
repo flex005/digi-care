@@ -1,0 +1,595 @@
+/**
+ * Sign in, accepting an invitation, and signing out. PRD §6.7.
+ *
+ * These three sit outside the app shell: there is no sidebar and no site
+ * switcher on a screen somebody reaches before they have said who they are.
+ */
+
+/*
+ * Top-aligned, like the reference: these screens lead with a heading that says
+ * what the page is, and centring a page that starts with a title pushes the
+ * title into the middle of the screen.
+ */
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  width: 100%;
+  max-width: var(--layout-max-width);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: var(--space-24);
+  background: var(--bg-page);
+}
+
+.title {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.subtitle {
+  margin-top: var(--space-4);
+  max-width: 86ch;
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+/* The hatch, from its one definition. See PrototypeNotice.tsx for why. */
+.proto {
+  composes: unrecorded from '../../styles/unrecorded.module.css';
+  padding: var(--space-16) var(--space-20);
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.proto b {
+  font-weight: var(--weight-extrabold);
+}
+
+/*
+ * Sign-in only: it is a form and nothing else, with no heading above the card,
+ * so a card pinned to the top edge over an empty half-screen reads as a page
+ * that failed to finish loading.
+ */
+.centred {
+  justify-content: center;
+}
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+/* ---------------------------------------------------------------------------
+ * 1 · Sign in
+ * ------------------------------------------------------------------------ */
+
+.authWrap {
+  display: grid;
+  min-height: 620px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.authSide {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-40) var(--space-40);
+  background: var(--purple-900);
+  color: var(--bg-surface);
+}
+
+.brand {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  font-size: var(--text-h2-size);
+  font-weight: var(--weight-extrabold);
+}
+
+.claim {
+  max-width: 22ch;
+  margin-top: auto;
+  font-size: var(--text-display-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-extrabold);
+}
+
+.claimSmall {
+  max-width: 40ch;
+  margin-top: var(--space-16);
+  color: var(--purple-200);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.sideFoot {
+  margin-top: auto;
+  padding-top: var(--space-32);
+  color: var(--purple-400);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-body-sm-line);
+}
+
+/*
+ * The form is centred in its half rather than pinned to the inside edge. It
+ * sat left because a 400px column in a 700px panel leaves 300px of nothing,
+ * and with the heading and the notice gone from above the card that emptiness
+ * became the widest thing on the screen. The fields stay left-aligned inside
+ * the centred column: centring form labels reads as a poster, not a form.
+ */
+.authMain {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-40);
+}
+
+.authMain > * {
+  width: 100%;
+  max-width: 400px;
+}
+
+.authTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-extrabold);
+}
+
+/* Inline, beside the field it is about, and never a paragraph of guidance. */
+.fieldError {
+  margin-top: var(--space-8);
+  color: var(--status-critical-ink);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.dialogBody {
+  margin-top: var(--space-12);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+/* No narrower max-width of its own: inside a centred column a child that is
+   narrower than the column centres itself, which read as a one-word indent
+   under the heading. The column is the measure now. */
+.lede {
+  margin-top: var(--space-8);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.form {
+  margin-top: var(--space-24);
+}
+
+.field + .field {
+  margin-top: var(--space-16);
+}
+
+.k {
+  display: block;
+  margin-bottom: var(--space-8);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.field input {
+  width: 100%;
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-size);
+}
+
+.hint {
+  margin-top: var(--space-8);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.siteChoice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+}
+
+.sc,
+.scOn {
+  display: grid;
+  align-items: center;
+  gap: var(--space-4) var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  grid-template-columns: auto 1fr;
+}
+
+.scOn {
+  border-color: var(--purple-600);
+  background: var(--purple-50);
+}
+
+.scMeta {
+  grid-column: 2;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-regular);
+}
+
+.rowBetween {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-20);
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--purple-600);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2 · Accepting an invitation
+ * ------------------------------------------------------------------------ */
+
+.inv {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.invHead {
+  padding: var(--space-24) var(--space-24) var(--space-20);
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: center;
+}
+
+.who {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-16);
+  border-radius: var(--radius-pill);
+  background: var(--purple-50);
+  color: var(--purple-600);
+  font-size: var(--text-h2-size);
+  font-weight: var(--weight-extrabold);
+  place-items: center;
+}
+
+.invHead h1 {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-extrabold);
+}
+
+.invHead p {
+  margin-top: var(--space-8);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.invSec {
+  padding: var(--space-20) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.invSec:last-child {
+  border-bottom: 0;
+}
+
+.invSec h2 {
+  margin-bottom: var(--space-12);
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.detail {
+  display: grid;
+  gap: var(--space-12);
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  grid-template-columns: 130px minmax(0, 1fr);
+}
+
+.detail:last-child {
+  border-bottom: 0;
+}
+
+.detailKey {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+}
+
+.detailValue {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+/* The checklist sits between two fields, so `.field + .field` cannot space
+   them: the margin is here or "Confirm password" lands on the last rule. */
+.pwRules {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin: var(--space-12) 0 var(--space-20);
+  list-style: none;
+}
+
+.pr,
+.prOk {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.prOk {
+  color: var(--status-positive-ink);
+  font-weight: var(--weight-semibold);
+}
+
+.tick {
+  display: grid;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  color: var(--ink-400);
+  place-items: center;
+}
+
+.prOk .tick {
+  border-color: var(--status-positive);
+  background: var(--status-positive-tint);
+  color: var(--status-positive-ink);
+}
+
+/* An invitation that has run out. Not a form somebody can fill in. */
+.expired {
+  margin: var(--space-20) var(--space-24);
+  padding: var(--space-16) var(--space-20);
+  border: 1px solid var(--status-caution);
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.expired b {
+  font-weight: var(--weight-bold);
+}
+
+/* --------------------------------------------------------------------------
+ * Who has an invitation outstanding
+ * ----------------------------------------------------------------------- */
+
+.inviteList {
+  list-style: none;
+}
+
+.inviteRow {
+  display: grid;
+  gap: var(--space-16);
+  align-items: center;
+  padding: var(--space-16) var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--ink-900);
+  text-decoration: none;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.inviteRow:first-child {
+  border-top: 0;
+}
+
+.inviteRow:hover {
+  background: var(--bg-surface-sunken);
+}
+
+.inviteName {
+  display: block;
+  font-size: var(--text-body-size);
+  font-weight: var(--weight-semibold);
+}
+
+.inviteMeta {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.inviteLive,
+.inviteExpired {
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.inviteLive {
+  background: var(--purple-50);
+  color: var(--purple-600);
+}
+
+/*
+ * A finding, not a neutral fact: somebody was added and nobody followed it up.
+ * It is a recorded state rather than a gap, so it is solid and not the hatch.
+ */
+.inviteExpired {
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-12);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------------------------
+ * 5 · Signing out
+ * ------------------------------------------------------------------------ */
+
+.soWrap {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.soHead {
+  padding: var(--space-24) var(--space-24) var(--space-16);
+}
+
+.soHead h2 {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-extrabold);
+}
+
+.soHead p {
+  margin-top: var(--space-8);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.lossBox {
+  margin: 0 var(--space-24) var(--space-20);
+  padding: var(--space-20);
+  border: 1px solid var(--status-critical);
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+  background: var(--status-critical-tint);
+  color: var(--status-critical-ink);
+}
+
+.lossTitle {
+  font-size: var(--text-body-size);
+  font-weight: var(--weight-extrabold);
+}
+
+.lossBody {
+  max-width: 70ch;
+  margin-top: var(--space-4);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.lossList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  list-style: none;
+}
+
+.lossRow {
+  display: flex;
+  gap: var(--space-12);
+  align-items: baseline;
+  padding: var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+}
+
+.lossCount {
+  margin-left: auto;
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-extrabold);
+  white-space: nowrap;
+}
+
+/* Inside the card's own gutter, not against its edge. */
+.nothingToLose {
+  margin: 0 var(--space-24) var(--space-20);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+/*
+ * The reference's two footer controls: a plain bordered button to stay, and
+ * the destructive one as an outline rather than a solid fill. A solid red
+ * button is the loudest thing on a screen whose loudest thing should be the
+ * list of what would go.
+ */
+.stayButton {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-12) var(--space-20);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.dangerOutline {
+  border: 1px solid var(--status-critical);
+  background: var(--bg-surface);
+  color: var(--status-critical-ink);
+}
+
+.soFoot {
+  display: flex;
+  gap: var(--space-12);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding: 0 var(--space-24) var(--space-24);
+}

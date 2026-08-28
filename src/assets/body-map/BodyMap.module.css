@@ -1,0 +1,72 @@
+/**
+ * The body map. CLAUDE.md §3's named exception.
+ *
+ * Every state has two carriers. A marked region takes the critical tint **and**
+ * a heavier stroke, so it survives greyscale and a colour-blind reader — and
+ * the marked list beside the map carries the same information as words, which
+ * is the record. Colour is never the only carrier here (§7).
+ */
+
+.map {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/**
+ * Reference: fill bg-surface with a 1.2px border-strong stroke.
+ *
+ * Stroke widths are in the viewBox's units rather than pixels, so they scale
+ * with the diagram instead of thickening as it shrinks. Off the 4px scale for
+ * the same reason a hairline is: this is a drawn line, not spacing.
+ */
+.region > ellipse,
+.region > rect {
+  fill: var(--bg-surface);
+  stroke: var(--border-strong);
+  stroke-width: 1.2;
+  cursor: pointer;
+}
+
+.region:hover > ellipse,
+.region:hover > rect {
+  fill: var(--purple-50);
+  stroke: var(--purple-400);
+}
+
+.region:focus-visible {
+  outline: none;
+}
+
+/* The focus ring has to be drawn on the shape, because an outline on a <g>
+   boxes the whole group rather than the region somebody is on. */
+.region:focus-visible > ellipse,
+.region:focus-visible > rect {
+  stroke: var(--purple-600);
+  stroke-width: 3;
+}
+
+.region[data-marked='true'] > ellipse,
+.region[data-marked='true'] > rect {
+  fill: var(--status-critical-tint);
+  stroke: var(--status-critical);
+  stroke-width: 2;
+}
+
+/* Read-only: a diagram, not a control. No pointer, no hover response. */
+.region:not([role]) > ellipse,
+.region:not([role]) > rect {
+  cursor: default;
+}
+
+.region:not([role]):hover > ellipse,
+.region:not([role]):hover > rect {
+  fill: var(--bg-surface);
+  stroke: var(--border-strong);
+}
+
+.region:not([role])[data-marked='true']:hover > ellipse,
+.region:not([role])[data-marked='true']:hover > rect {
+  fill: var(--status-critical-tint);
+  stroke: var(--status-critical);
+}

@@ -128,8 +128,26 @@ export const staffAkinyemi = makeStaff(
   'Tolu Akinyemi',
   'senior_carer',
 )
+/**
+ * Invited this week, and has not accepted yet.
+ *
+ * **Here because a state nobody can reach on a fresh load is not built.**
+ * Laura Bennett has the same standing and was added over a month ago, so her
+ * invitation has lapsed — and with only her in the fixtures the live
+ * invitation existed solely for somebody who first went to Team and added a
+ * person. Two people with the same standing and opposite invitations put both
+ * states one URL away; one person could only ever show whichever the fixture
+ * instant happened to make true.
+ */
+export const staffAdeyinka = makeStaff(
+  'f-adeyinka',
+  'F. Adeyinka',
+  'Funke Adeyinka',
+  'care_worker',
+)
 
 export const staff: StaffRef[] = [
+  staffAdeyinka,
   staffClarke,
   staffOkonkwo,
   staffHalloran,

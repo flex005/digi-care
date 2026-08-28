@@ -1,6 +1,6 @@
 import type { ReviewState } from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatLateness } from '@/lib/format'
 import { Settled } from './Settled'
 import { StatusPill } from './StatusPill'
 import { Unrecorded } from './Unrecorded'
@@ -74,9 +74,7 @@ export function ReviewBadge({
         <StatusPill
           tone="critical"
           label="Overdue"
-          detail={`due ${formatDate(state.dueOn)} · ${state.daysOverdue} day${
-            state.daysOverdue === 1 ? '' : 's'
-          } overdue`}
+          detail={`due ${formatDate(state.dueOn)} · ${formatLateness(state.daysOverdue)} overdue`}
         />
       )
 

@@ -1,0 +1,240 @@
+/**
+ * The Dashboard's charts.
+ *
+ * **Colour reaches an SVG through this file, never through a prop.** A `fill`
+ * or `stroke` attribute in the TSX would be a literal in a component, which is
+ * the one thing CLAUDE.md §4 forbids everywhere else; routing them through
+ * classes keeps stylelint's token rule in force over the charts too.
+ *
+ * Nothing here is green. Not-due-yet takes --border-subtle: it has not
+ * happened, so nobody has succeeded at it.
+ */
+
+/* The hatch, in its second medium. See charts.tsx — one definition each. */
+.hatchGround {
+  fill: var(--bg-surface);
+}
+
+.hatchBand {
+  fill: var(--status-unrecorded);
+}
+
+/* --------------------------------------------------------------------------
+ * Sparklines
+ * ----------------------------------------------------------------------- */
+
+.spark {
+  display: block;
+  width: 100%;
+  height: 34px;
+  margin-top: var(--space-8);
+  overflow: visible;
+}
+
+.sparkLine {
+  fill: none;
+  stroke: var(--ink-500);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.sparkToday {
+  fill: var(--ink-500);
+}
+
+.spark[data-spark='late'] .sparkLine,
+.spark[data-spark='late'] .sparkToday {
+  stroke: var(--status-critical-ink);
+  fill: none;
+}
+
+.spark[data-spark='late'] .sparkToday {
+  fill: var(--status-critical-ink);
+}
+
+.spark[data-spark='soon'] .sparkLine {
+  stroke: var(--status-caution-ink);
+}
+
+.spark[data-spark='soon'] .sparkToday {
+  fill: var(--status-caution-ink);
+}
+
+/* A gap's line is dashed as well as coloured, so the distinction survives
+   greyscale here exactly as the hatch does in the areas. */
+.spark[data-spark='gap'] .sparkLine {
+  stroke: var(--status-unrecorded-ink);
+  stroke-dasharray: 5 3;
+}
+
+.spark[data-spark='gap'] .sparkToday {
+  fill: var(--status-unrecorded-ink);
+}
+
+.spark[data-spark='plain'] .sparkLine {
+  stroke: var(--purple-600);
+}
+
+.spark[data-spark='plain'] .sparkToday {
+  fill: var(--purple-600);
+}
+
+/* --------------------------------------------------------------------------
+ * The area chart
+ * ----------------------------------------------------------------------- */
+
+.area {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.grid line {
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+}
+
+/*
+ * Inside a viewBox this resolves to user units, so the label scales with the
+ * chart — and it still comes off the closed type scale rather than being the
+ * one place a tenth step got in through an SVG attribute.
+ */
+.axis text {
+  fill: var(--ink-400);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-semibold);
+}
+
+.dueLine {
+  fill: none;
+  stroke: var(--status-unrecorded);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  stroke-linejoin: round;
+}
+
+.recordedLine {
+  fill: none;
+  stroke: var(--purple-600);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The gap's own figure, above its bar. */
+.gapLabel {
+  fill: var(--status-unrecorded-ink);
+  font-size: var(--text-micro-size);
+  font-weight: var(--weight-extrabold);
+}
+
+.barRecorded {
+  fill: var(--purple-600);
+}
+
+.baseline {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+/* Today is still running, so its bar is outlined rather than filled in. */
+.barToday {
+  fill: none;
+  stroke: var(--status-critical);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.todayMark {
+  stroke: var(--status-critical);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+}
+
+.todayDot {
+  fill: var(--status-critical);
+}
+
+/* --------------------------------------------------------------------------
+ * The donut and the rings
+ * ----------------------------------------------------------------------- */
+
+.donut {
+  display: block;
+  width: 190px;
+  height: 190px;
+  transform: rotate(-90deg);
+}
+
+.donutTrack {
+  fill: none;
+  stroke: var(--border-subtle);
+  stroke-width: 5.5;
+}
+
+/*
+ * `fill: none` on every arc, and it is load-bearing rather than tidy: an SVG
+ * circle with no fill declared defaults to black, so the one arc that took its
+ * stroke from the pattern instead of a token painted a solid black disc over
+ * the centre figure — the denominator, hidden by the shape that exists to
+ * carry it.
+ */
+.arcRecorded,
+.arcNoRecord,
+.arcDueNow,
+.arcDueSoon,
+.arcNotDue {
+  fill: none;
+  stroke-width: 5.5;
+  stroke-linecap: round;
+}
+
+.arcRecorded {
+  stroke: var(--purple-600);
+}
+
+/*
+ * The hatch, in its second medium. Its `stroke` is a reference to the pattern
+ * rather than a colour, so it is set in the component — stylelint requires a
+ * token here and is right to, and §4 is not the rule to bend for a `url(#…)`.
+ */
+.arcNoRecord {
+  stroke-width: 5.5;
+}
+
+.arcDueNow {
+  stroke: var(--status-critical);
+}
+
+/* Coming up inside the lookahead. Not a finding, and not nothing. */
+.arcDueSoon {
+  stroke: var(--status-caution);
+}
+
+/* Not a success colour. It has not happened yet. */
+.arcNotDue {
+  stroke: var(--border-strong);
+}
+
+.ring {
+  display: block;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  transform: rotate(-90deg);
+}
+
+.ringTrack {
+  fill: none;
+  stroke: var(--border-subtle);
+  stroke-width: 6;
+}
+
+.ringDone {
+  fill: none;
+  stroke: var(--purple-600);
+  stroke-width: 6;
+  stroke-linecap: round;
+}

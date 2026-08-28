@@ -1,0 +1,119 @@
+/**
+ * THE FIGURE CARD — one definition, four modules.
+ *
+ * Lifted out of the residents module so Care notes, Handover and Medications
+ * are the same card rather than four that look alike. A copied card is a
+ * second rule, and two rules drift.
+ *
+ * **Nothing here is tinted by state.** Every card is the plain surface, and a
+ * gap is carried by an <Unrecorded> chip inside it rather than by colouring the
+ * whole tile: the hatch has one owner (§4.5), and a tinted card cannot say
+ * whether the tint is the finding or the card.
+ */
+
+.tiles {
+  display: grid;
+  gap: var(--space-16);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+/* Read-only. No hover, no pointer, no pressed state — nothing that suggests
+   these do something when clicked, because they do not. */
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  align-items: stretch;
+  height: 100%;
+  padding: var(--space-16);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-surface);
+  text-align: left;
+}
+
+/* The lead takes two columns. Same card, more room. */
+.tileLead {
+  composes: tile;
+  grid-column: span 2;
+}
+
+.tileHead {
+  display: flex;
+  gap: var(--space-8);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+/* Two lines' worth whether the label needs them or not, so the figures below
+   sit on one horizontal across the row. A long label wraps; a figure that
+   dropped with it would break the line the eye reads. */
+.tileLabel {
+  min-height: calc(var(--text-body-sm-line) * 2);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-medium);
+}
+
+.tileIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-32);
+  height: var(--space-32);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-page);
+  color: var(--ink-500);
+}
+
+.tileFigure {
+  display: flex;
+  gap: var(--space-8);
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+/* --text-display is the top of the closed scale; nothing above it exists. */
+.tileValue {
+  color: var(--ink-900);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+
+.tileFooter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  margin-top: auto;
+}
+
+/**
+ * The denominator, in the slot the reference design gives a coloured
+ * percentage.
+ *
+ * Neutral, and never green or red. A count in this position is a direction
+ * rather than good news dressed in a hue, and neutral survives greyscale and
+ * colour blindness where a coloured arrow does not.
+ */
+.tileChange {
+  padding: 2px var(--space-8);
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-page);
+  color: var(--ink-700);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tileExcluded {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}

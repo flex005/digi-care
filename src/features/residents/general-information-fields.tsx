@@ -4,7 +4,9 @@ import { FUNDING_SOURCES } from '@/data/types'
 import { Avatar } from '@/components/primitives'
 import { telHref } from '@/lib/phone'
 import { formatDate, ageFrom } from '@/lib/format'
+import type { FieldWidth } from './FieldList'
 import { PlainValue, RecordedListField, RecordedValueField } from './FieldList'
+import { AllergyPanel } from './AllergyPanel'
 import styles from './profile.module.css'
 
 /**
@@ -42,6 +44,17 @@ export interface ProfileField {
    * exception list is exactly this one field.
    */
   whenMissing: 'hatch' | 'plain'
+  /**
+   * `full` gives the field the whole row and puts its label above the value,
+   * instead of squeezing it into the value column. For the two fields whose
+   * answer is paragraphs rather than a phrase — medical history and
+   * communication preferences — a column sized for "she / her" is how a
+   * reader stops reading them.
+   *
+   * Optional where `whenMissing` is not, deliberately: forgetting `whenMissing`
+   * puts a hole in the record, forgetting this makes a line short.
+   */
+  width?: FieldWidth
   /** True when nobody has recorded this. Always false for facts that cannot
    *  be absent — a legal name, a date of birth. */
   isUnrecorded: (resident: Resident) => boolean
@@ -51,8 +64,36 @@ export interface ProfileField {
 export interface ProfileSection {
   id: string
   title: string
-  /** Shown under the section title. Never a bare count. */
-  description: string
+  /**
+   * The one-line, plain-English answer to "what is this section for", shown
+   * under the 20px title and above the divider. In the reader's terms, not
+   * the schema's — and never a bare count, which would be a denominator-less
+   * aggregate on a screen about missing evidence (CLAUDE.md §1).
+   */
+  /**
+   * Only where a reader would misread the section without it. Most headings
+   * do not need one: a description that restates its own heading is a line
+   * between the reader and the record.
+   */
+  description?: string
+  /**
+   * A full-width panel between the section header and its fields.
+   *
+   * Only Clinical has one, and only for allergies. Allergies as row twelve of
+   * sixteen read like any other row; they are the field on this tab most
+   * likely to kill somebody, and the only one whose three states must each
+   * look different from the other two at a glance.
+   */
+  /**
+   * `siteName` because a banner may carry a write affordance, and every
+   * confirmation on a clinical change names the site whose staff would be
+   * notified (PRD §2.4).
+   */
+  /**
+   * `onWrite` is what a banner's affordance calls where it can honestly
+   * write. Threaded from the tab so the section declaration stays data.
+   */
+  banner?: (resident: Resident, siteName: string, onWrite: () => void) => ReactNode
   fields: ProfileField[]
 }
 
@@ -62,7 +103,6 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
   {
     id: 'identity',
     title: 'Identity',
-    description: 'Who this person is, and how they wish to be addressed.',
     fields: [
       {
         id: 'legal-name',
@@ -118,7 +158,7 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
             <p className={styles.photoNote}>
               {resident.photo.kind === 'on_file'
                 ? 'Photograph on file.'
-                : 'No photograph on file — initials shown. A photograph helps staff confirm they are with the right person before writing a record.'}
+                : 'No photograph on file; initials shown. A photograph helps staff confirm they are with the right person before writing a record.'}
             </p>
           </div>
         ),
@@ -142,7 +182,6 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
   {
     id: 'placement',
     title: 'Placement',
-    description: 'Where this person lives in the service, and who funds it.',
     fields: [
       {
         id: 'admitted',
@@ -205,8 +244,14 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
   {
     id: 'clinical',
     title: 'Clinical',
-    description:
-      'Diagnoses and history. Allergies are shown above and on every medication and care screen.',
+    banner: (resident, site, onWrite) => (
+      <AllergyPanel
+        status={resident.allergies}
+        residentName={resident.preferredName}
+        siteName={site}
+        onRecordNoneKnown={onWrite}
+      />
+    ),
     fields: [
       {
         id: 'primary-diagnosis',
@@ -247,6 +292,7 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
         id: 'medical-history',
         label: 'Medical history',
         whenMissing: 'hatch',
+        width: 'full',
         isUnrecorded: (resident) => resident.medicalHistory.kind === 'unrecorded',
         render: (resident) => (
           <RecordedValueField
@@ -262,7 +308,7 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
   {
     id: 'care-team',
     title: 'Care team',
-    description: 'The clinicians and services outside this home.',
+    description: "Who to contact outside the home about this person's health.",
     fields: [
       {
         id: 'gp',
@@ -355,7 +401,7 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
     id: 'person',
     title: 'The person',
     description:
-      'How this person communicates, what matters to them, and what they eat.',
+      'How this person communicates, what matters to them, and how they eat.',
     fields: [
       {
         id: 'language',
@@ -375,6 +421,7 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
         id: 'communication',
         label: 'Communication needs and preferences',
         whenMissing: 'hatch',
+        width: 'full',
         isUnrecorded: (resident) => resident.communicationNeeds.kind === 'unrecorded',
         render: (resident) => (
           <RecordedValueField

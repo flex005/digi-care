@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Report an incident</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:960px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.lede{margin-top:4px;font-size:13px;color:var(--ink-500);max-width:76ch}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:16px}
+.sec{padding:20px 24px;border-bottom:1px solid var(--border-subtle)}
+.sec:last-child{border-bottom:0}
+.sec > h2{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:14px}
+
+label.k{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:6px}
+select,input[type=text],input[type=datetime-local],textarea{width:100%;padding:10px 12px;
+  border:1px solid var(--border-strong);border-radius:var(--r-md);font:inherit;font-size:14px;
+  background:var(--bg-surface);color:var(--ink-900)}
+textarea{min-height:96px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.fld + .fld{margin-top:16px}
+.hint{margin-top:6px;font-size:12px;color:var(--ink-500);line-height:1.45}
+.hint.req{color:var(--caution-ink);font-weight:600}
+
+/* choice cards */
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border:1.5px solid var(--border-strong);
+  border-radius:var(--r-md);cursor:pointer;background:var(--bg-surface)}
+.opt:hover{border-color:var(--purple-400)}
+.opt.sel{border-color:var(--purple-600);background:var(--purple-50)}
+.opt input{margin-top:3px}
+.opt b{display:block;font-size:14px;font-weight:600}
+.opt span{display:block;font-size:12px;color:var(--ink-500);margin-top:2px;line-height:1.4}
+
+/* severity */
+.sev{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sevBtn{padding:12px 10px;border:1.5px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:700;color:var(--ink-700);text-align:center}
+.sevBtn small{display:block;font-size:11px;font-weight:400;color:var(--ink-500);margin-top:3px;
+  line-height:1.35}
+.sevBtn[aria-pressed="true"].s0{border-color:var(--positive);background:var(--positive-tint);color:var(--positive-ink)}
+.sevBtn[aria-pressed="true"].s1{border-color:var(--info);background:var(--info-tint);color:var(--info-ink)}
+.sevBtn[aria-pressed="true"].s2{border-color:var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.sevBtn[aria-pressed="true"].s3{border-color:var(--critical);background:var(--critical-tint);color:var(--critical-ink)}
+.sevBtn[aria-pressed="true"] small{color:inherit}
+
+/* subject */
+.subjCard{display:flex;gap:14px;align-items:center;padding:14px 16px;border-radius:var(--r-md);
+  background:var(--bg-sunken);border:1px solid var(--border-subtle);margin-top:12px}
+.av{width:42px;height:42px;flex:0 0 42px;border-radius:var(--r-pill);background:var(--purple-50);
+  color:var(--purple-600);display:grid;place-items:center;font-weight:700;font-size:13px}
+.subjCard .nm{font-size:16px;font-weight:700}
+.subjCard .meta{font-size:12px;color:var(--ink-500);margin-top:2px}
+.allergy{margin-left:auto;padding:7px 12px;border-radius:var(--r-sm);border:1px solid var(--critical);
+  border-left-width:4px;background:var(--critical-tint);color:var(--critical-ink);font-size:11.5px;
+  font-weight:700}
+
+/* body map */
+.mapWrap{display:grid;grid-template-columns:minmax(0,1fr) 17rem;gap:24px;align-items:start}
+.maps{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mapBox{border:1px solid var(--border-subtle);border-radius:var(--r-md);background:var(--bg-sunken);
+  padding:12px}
+.mapBox h3{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);text-align:center;margin-bottom:6px}
+svg.body{width:100%;height:auto;display:block}
+svg.body .rg{fill:var(--bg-surface);stroke:var(--border-strong);stroke-width:1.2;cursor:pointer}
+svg.body .rg:hover{fill:var(--purple-50);stroke:var(--purple-400)}
+svg.body .rg[data-on="1"]{fill:var(--critical-tint);stroke:var(--critical);stroke-width:2}
+svg.body .rg:focus-visible{outline:2px solid var(--purple-600)}
+
+.marked{border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:14px 16px;
+  background:var(--bg-surface)}
+.marked h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:10px}
+.marked ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+.marked li{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;
+  color:var(--critical-ink);padding:7px 10px;border-radius:var(--r-sm);
+  border:1px solid var(--critical);background:var(--critical-tint)}
+.marked li button{margin-left:auto;background:none;border:0;color:inherit;font-size:11px;
+  font-weight:700;text-decoration:underline}
+.emptyMark{font-size:12.5px;color:var(--unrecorded-ink);font-weight:600;padding:10px 12px;
+  border-radius:var(--r-sm);border:1.5px dashed var(--unrecorded);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+
+.foot{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:20px 24px}
+.foot .state{font-size:13px;color:var(--ink-700);max-width:70ch}
+.foot .state b{font-weight:700}
+.btn{padding:12px 22px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:14px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Report an incident</h1>
+<p class="lede">Single column, no wizard. Everything on one screen because an incident is reported
+  minutes after it happened, by somebody who wants to get back to the resident.</p>
+
+<div class="card">
+
+  <!-- 1. who -->
+  <div class="sec">
+    <h2>Who this happened to</h2>
+    <div class="opts">
+      <label class="opt sel"><input type="radio" name="subj" checked onchange="setSubj('res',this)">
+        <span><b>A resident</b><span>Choose the person this happened to.</span></span></label>
+      <label class="opt"><input type="radio" name="subj" onchange="setSubj('none',this)">
+        <span><b>No resident was involved</b><span>Equipment failures and near misses only. This is a
+          statement that nobody was involved, not a blank.</span></span></label>
+    </div>
+    <div id="subjPick" class="fld">
+      <label class="k" for="res">Resident</label>
+      <select id="res" onchange="pickRes(this.value)">
+        <option value="">Choose a resident</option>
+        <option selected>Emmanuel Okafor · Room 14</option>
+        <option>Grace Adeyemi · Room 302</option>
+        <option>Beryl Hutchinson · Room 214</option>
+      </select>
+      <div class="subjCard">
+        <span class="av">EO</span>
+        <div><div class="nm">Emmanuel Okafor</div>
+          <div class="meta">Room 14 · Born 07/07/1948 (78) · Rosewood Court</div></div>
+        <span class="allergy">ALLERGY: PENICILLIN</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. what -->
+  <div class="sec">
+    <h2>What happened</h2>
+    <div class="two">
+      <div><label class="k" for="type">Type</label>
+        <select id="type" onchange="check()">
+          <option value="">Choose a type</option>
+          <option selected>Fall — unwitnessed</option>
+          <option>Fall — witnessed</option>
+          <option>Medication error</option>
+          <option>Medication stock discrepancy</option>
+          <option>Unexplained injury</option>
+          <option>Behaviour</option>
+          <option>Absconding</option>
+          <option>Choking</option>
+          <option>Pressure ulcer acquired in this home</option>
+          <option>Safeguarding concern</option>
+          <option>Equipment failure</option>
+          <option>Near miss</option>
+        </select></div>
+      <div><label class="k" for="when">When it happened</label>
+        <input type="datetime-local" id="when" value="2026-08-23T17:40" onchange="check()">
+        <p class="hint">Not when you are writing this up.</p></div>
+    </div>
+
+    <div class="fld two">
+      <div><label class="k" for="loc">Where</label>
+        <select id="loc" onchange="check()">
+          <option selected>Resident's own room</option>
+          <option>Main lounge</option><option>Dining room</option><option>Corridor, ground floor</option>
+          <option>Corridor, first floor</option><option>Bathroom, shared</option><option>Garden</option>
+          <option>Stairwell</option><option>Clinic room</option><option>Reception</option>
+        </select></div>
+      <div><label class="k" for="witness">Anyone who saw it</label>
+        <input type="text" id="witness" placeholder="Names, or leave blank if nobody saw it"></div>
+    </div>
+
+    <div class="fld">
+      <label class="k" for="what">In your own words</label>
+      <textarea id="what" oninput="check()" placeholder="What you found, what you saw, what the resident said."></textarea>
+      <p class="hint">Written for whoever reads this next — a manager tonight, an inspector in a year.</p>
+    </div>
+  </div>
+
+  <!-- 3. harm -->
+  <div class="sec">
+    <h2>How much harm was caused</h2>
+    <div class="sev">
+      <button class="sevBtn s0" aria-pressed="false" onclick="setSev(this,0)">No harm
+        <small>nothing came of it</small></button>
+      <button class="sevBtn s1" aria-pressed="true" onclick="setSev(this,1)">Low harm
+        <small>minor treatment, no lasting effect</small></button>
+      <button class="sevBtn s2" aria-pressed="false" onclick="setSev(this,2)">Moderate harm
+        <small>treatment needed, recovery expected</small></button>
+      <button class="sevBtn s3" aria-pressed="false" onclick="setSev(this,3)">Severe harm
+        <small>permanent or long-term effect</small></button>
+    </div>
+  </div>
+
+  <!-- 4. injury -->
+  <div class="sec">
+    <h2>Injury</h2>
+    <div class="opts" style="margin-bottom:16px">
+      <label class="opt" id="oNot"><input type="radio" name="inj" onchange="setInj('not')">
+        <span><b>Not checked yet</b><span>Nobody has examined them. This is a gap, and it will show as one.</span></span></label>
+      <label class="opt" id="oNone"><input type="radio" name="inj" onchange="setInj('none')">
+        <span><b>Checked — no injury found</b><span>Somebody looked. A recorded negative, not a blank.</span></span></label>
+      <label class="opt sel" id="oSome"><input type="radio" name="inj" checked onchange="setInj('some')">
+        <span><b>Checked — injuries found</b><span>Mark each site on the body map.</span></span></label>
+    </div>
+
+    <div id="mapArea" class="mapWrap">
+      <div class="maps">
+        <div class="mapBox"><h3>Front</h3><div id="frontSvg"></div></div>
+        <div class="mapBox"><h3>Back</h3><div id="backSvg"></div></div>
+      </div>
+      <div class="marked">
+        <h3>Sites marked</h3>
+        <div id="markedList"></div>
+        <p class="hint" style="margin-top:12px">The list is the record. The map is only the way of
+          entering it — a diagram alone is unreadable to a screen reader and in greyscale.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. what you did -->
+  <div class="sec">
+    <h2>What you did about it</h2>
+    <div class="fld">
+      <label class="k" for="action">Immediate action taken</label>
+      <textarea id="action" oninput="check()" placeholder="What you did in the minutes after."></textarea>
+    </div>
+    <div class="fld three">
+      <div><label class="k">GP contacted</label>
+        <select><option>Not yet</option><option>Yes — awaiting call back</option><option>Yes — advice given</option></select></div>
+      <div><label class="k">Family contacted</label>
+        <select><option>Not yet</option><option>Yes</option><option>Family asked not to be contacted</option></select></div>
+      <div><label class="k">Emergency services</label>
+        <select><option>Not called</option><option>999 called — ambulance attending</option><option>111 called</option></select></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <p class="state" id="state"></p>
+    <button class="btn primary" id="submit" onclick="alert('Prototype — nothing was saved to a server.')">
+      Report incident</button>
+  </div>
+</div>
+
+<!-- ============ measurements ============ -->
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>Page</h3>
+  Content max-width <code>960px</code>, single column, no wizard and no steps. An incident is reported
+  minutes after it happened by somebody who wants to get back to the resident.
+  Five sections in one card, each padding <code>20px 24px</code>, 1px bottom border between them.
+  Section heading <code>12px/700</code> uppercase letter-spacing <code>.06em</code> ink-500,
+  <code>14px</code> beneath.
+
+  <h3>Fields</h3>
+  Label <code>12px/600</code> uppercase letter-spacing <code>.04em</code> ink-500, <code>6px</code> beneath.
+  Inputs padding <code>10px 12px</code>, 1px border-strong, radius <code>12px</code>, <code>14px</code>.
+  Textareas <code>96px</code> minimum, resizable vertically.
+  Two-up and three-up grids gap <code>16px</code>; <code>16px</code> between stacked fields.
+  Hints <code>12px</code> ink-500 beneath the field, <code>6px</code> gap.
+
+  <h3>Subject</h3>
+  Two choice cards, then the picker. Cards padding <code>12px 14px</code>, <code>1.5px</code> border,
+  radius <code>12px</code>, selected takes purple-600 border and purple-50 fill.
+  Title <code>14px/600</code>, explanation <code>12px</code> ink-500.
+  Once a resident is chosen, the subject card renders beneath — avatar <code>42px</code>, name
+  <code>16px/700</code>, meta <code>12px</code> ink-500, allergy right-aligned at <code>11.5px/700</code>
+  with <code>4px</code> left border. The allergy is on this screen because a fall and an allergy are
+  read together by whoever picks the incident up.
+  "No resident was involved" is selectable only for equipment failure and near miss, and it is a
+  recorded claim, never a blank.
+
+  <h3>Severity</h3>
+  Four equal buttons, gap <code>8px</code>, padding <code>12px 10px</code>, <code>1.5px</code> border,
+  radius <code>12px</code>. Label <code>13px/700</code> over a plain-English gloss at <code>11px/400</code>.
+  Selected takes its own tint and border: positive, info, caution, critical in that order.
+  The words carry the meaning; colour never alone.
+
+  <h3>Injury and the body map</h3>
+  Three choice cards first — not checked (a gap), checked and none found (a recorded negative),
+  checked and injuries found. The map appears only for the third.
+  Map area <code>grid-template-columns: minmax(0,1fr) 17rem</code>, gap <code>24px</code>, aligned to start.
+  Front and back side by side, gap <code>16px</code>, each in a box with <code>12px</code> padding,
+  1px border-subtle, bg-surface-sunken, and an <code>11px/700</code> uppercase caption.
+  Regions: fill bg-surface with a <code>1.2px</code> border-strong stroke; hover purple-50 with a
+  purple-400 stroke; marked critical-tint with a <code>2px</code> critical stroke.
+  Every region is a real button with an accessible name, reachable by keyboard.
+  <b>Left and right are the resident's, not the viewer's</b> — so the resident's left arm appears on
+  the right of the front view and the left of the back view. Every label says which.
+  The marked list sits beside the map, each site a removable row at <code>13px/600</code> in the
+  critical treatment. With nothing marked it shows the hatched state, because "injuries found" with no
+  site marked is an incomplete record rather than an empty one.
+
+  <h3>Footer</h3>
+  Padding <code>20px 24px</code>. State text left at <code>13px</code>, naming exactly what is missing.
+  Submit right, <code>12px 22px</code>, <code>14px/600</code>, disabled until every required answer is
+  present — including at least one marked site when "injuries found" is chosen.
+</div>
+
+</div>
+
+<script>
+/* Regions. Left/right are the RESIDENT'S, which is why the left arm is drawn on the
+   right of the front view and the left of the back view. */
+const FRONT = [
+  { id:'head', label:'Head', s:'<ellipse cx="100" cy="30" rx="21" ry="25"/>' },
+  { id:'face', label:'Face', s:'<ellipse cx="100" cy="36" rx="13" ry="15"/>' },
+  { id:'neck', label:'Neck', s:'<rect x="90" y="53" width="20" height="13" rx="4"/>' },
+  { id:'sh-r', label:'Right shoulder', s:'<ellipse cx="70" cy="76" rx="15" ry="11"/>' },
+  { id:'sh-l', label:'Left shoulder', s:'<ellipse cx="130" cy="76" rx="15" ry="11"/>' },
+  { id:'chest', label:'Chest', s:'<rect x="76" y="68" width="48" height="46" rx="8"/>' },
+  { id:'abd', label:'Abdomen', s:'<rect x="78" y="116" width="44" height="44" rx="8"/>' },
+  { id:'ua-r', label:'Right upper arm', s:'<rect x="50" y="82" width="18" height="46" rx="8"/>' },
+  { id:'ua-l', label:'Left upper arm', s:'<rect x="132" y="82" width="18" height="46" rx="8"/>' },
+  { id:'el-r', label:'Right elbow', s:'<rect x="49" y="128" width="18" height="15" rx="6"/>' },
+  { id:'el-l', label:'Left elbow', s:'<rect x="133" y="128" width="18" height="15" rx="6"/>' },
+  { id:'fa-r', label:'Right forearm', s:'<rect x="47" y="143" width="18" height="42" rx="8"/>' },
+  { id:'fa-l', label:'Left forearm', s:'<rect x="135" y="143" width="18" height="42" rx="8"/>' },
+  { id:'hd-r', label:'Right hand', s:'<ellipse cx="56" cy="196" rx="11" ry="13"/>' },
+  { id:'hd-l', label:'Left hand', s:'<ellipse cx="144" cy="196" rx="11" ry="13"/>' },
+  { id:'hip-r', label:'Right hip', s:'<ellipse cx="84" cy="168" rx="14" ry="11"/>' },
+  { id:'hip-l', label:'Left hip', s:'<ellipse cx="116" cy="168" rx="14" ry="11"/>' },
+  { id:'th-r', label:'Right thigh', s:'<rect x="76" y="176" width="21" height="58" rx="9"/>' },
+  { id:'th-l', label:'Left thigh', s:'<rect x="103" y="176" width="21" height="58" rx="9"/>' },
+  { id:'kn-r', label:'Right knee', s:'<rect x="76" y="234" width="21" height="17" rx="7"/>' },
+  { id:'kn-l', label:'Left knee', s:'<rect x="103" y="234" width="21" height="17" rx="7"/>' },
+  { id:'sh2-r', label:'Right shin', s:'<rect x="77" y="251" width="19" height="52" rx="8"/>' },
+  { id:'sh2-l', label:'Left shin', s:'<rect x="104" y="251" width="19" height="52" rx="8"/>' },
+  { id:'an-r', label:'Right ankle', s:'<rect x="78" y="303" width="17" height="13" rx="5"/>' },
+  { id:'an-l', label:'Left ankle', s:'<rect x="105" y="303" width="17" height="13" rx="5"/>' },
+  { id:'ft-r', label:'Right foot', s:'<ellipse cx="86" cy="325" rx="12" ry="9"/>' },
+  { id:'ft-l', label:'Left foot', s:'<ellipse cx="114" cy="325" rx="12" ry="9"/>' },
+];
+const BACK = [
+  { id:'b-head', label:'Back of head', s:'<ellipse cx="100" cy="30" rx="21" ry="25"/>' },
+  { id:'b-neck', label:'Back of neck', s:'<rect x="90" y="53" width="20" height="13" rx="4"/>' },
+  { id:'b-sh-l', label:'Left shoulder', s:'<ellipse cx="70" cy="76" rx="15" ry="11"/>' },
+  { id:'b-sh-r', label:'Right shoulder', s:'<ellipse cx="130" cy="76" rx="15" ry="11"/>' },
+  { id:'b-up', label:'Upper back', s:'<rect x="76" y="68" width="48" height="46" rx="8"/>' },
+  { id:'b-low', label:'Lower back', s:'<rect x="78" y="116" width="44" height="38" rx="8"/>' },
+  { id:'sacrum', label:'Sacrum', s:'<ellipse cx="100" cy="163" rx="17" ry="12"/>' },
+  { id:'bu-l', label:'Left buttock', s:'<ellipse cx="84" cy="182" rx="16" ry="14"/>' },
+  { id:'bu-r', label:'Right buttock', s:'<ellipse cx="116" cy="182" rx="16" ry="14"/>' },
+  { id:'b-ua-l', label:'Left upper arm', s:'<rect x="50" y="82" width="18" height="46" rx="8"/>' },
+  { id:'b-ua-r', label:'Right upper arm', s:'<rect x="132" y="82" width="18" height="46" rx="8"/>' },
+  { id:'b-el-l', label:'Left elbow', s:'<rect x="49" y="128" width="18" height="15" rx="6"/>' },
+  { id:'b-el-r', label:'Right elbow', s:'<rect x="133" y="128" width="18" height="15" rx="6"/>' },
+  { id:'b-fa-l', label:'Left forearm', s:'<rect x="47" y="143" width="18" height="42" rx="8"/>' },
+  { id:'b-fa-r', label:'Right forearm', s:'<rect x="135" y="143" width="18" height="42" rx="8"/>' },
+  { id:'b-hd-l', label:'Left hand', s:'<ellipse cx="56" cy="196" rx="11" ry="13"/>' },
+  { id:'b-hd-r', label:'Right hand', s:'<ellipse cx="144" cy="196" rx="11" ry="13"/>' },
+  { id:'b-th-l', label:'Left thigh', s:'<rect x="76" y="196" width="21" height="46" rx="9"/>' },
+  { id:'b-th-r', label:'Right thigh', s:'<rect x="103" y="196" width="21" height="46" rx="9"/>' },
+  { id:'b-kn-l', label:'Left knee', s:'<rect x="76" y="242" width="21" height="15" rx="7"/>' },
+  { id:'b-kn-r', label:'Right knee', s:'<rect x="103" y="242" width="21" height="15" rx="7"/>' },
+  { id:'cf-l', label:'Left calf', s:'<rect x="77" y="257" width="19" height="48" rx="8"/>' },
+  { id:'cf-r', label:'Right calf', s:'<rect x="104" y="257" width="19" height="48" rx="8"/>' },
+  { id:'b-an-l', label:'Left ankle', s:'<rect x="78" y="305" width="17" height="12" rx="5"/>' },
+  { id:'b-an-r', label:'Right ankle', s:'<rect x="105" y="305" width="17" height="12" rx="5"/>' },
+  { id:'he-l', label:'Left heel', s:'<ellipse cx="86" cy="325" rx="11" ry="9"/>' },
+  { id:'he-r', label:'Right heel', s:'<ellipse cx="114" cy="325" rx="11" ry="9"/>' },
+];
+
+let marked = new Set(['kn-r']);
+let injury = 'some';
+
+function drawMap(list, into){
+  document.getElementById(into).innerHTML =
+    `<svg class="body" viewBox="0 0 200 345" role="group" aria-label="${into==='frontSvg'?'Front':'Back'} of body">` +
+    list.map(r => `<g class="rg" role="button" tabindex="0" data-id="${r.id}"
+        data-on="${marked.has(r.id)?1:0}" aria-pressed="${marked.has(r.id)}"
+        aria-label="${r.label}" onclick="toggle('${r.id}')"
+        onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggle('${r.id}')}">
+        ${r.s}<title>${r.label}</title></g>`).join('') + '</svg>';
+}
+const labelOf = id => [...FRONT, ...BACK].find(r => r.id === id)?.label ?? id;
+
+function toggle(id){ marked.has(id) ? marked.delete(id) : marked.add(id); renderMap(); }
+
+function renderMap(){
+  drawMap(FRONT, 'frontSvg'); drawMap(BACK, 'backSvg');
+  const l = document.getElementById('markedList');
+  l.innerHTML = marked.size
+    ? `<ul>${[...marked].map(id => `<li>${labelOf(id)}
+        <button onclick="toggle('${id}')">remove</button></li>`).join('')}</ul>`
+    : `<p class="emptyMark">No site marked. "Injuries found" with nothing marked is an incomplete
+        record — mark each site, or say no injury was found.</p>`;
+  check();
+}
+
+function setInj(v){
+  injury = v;
+  ['oNot','oNone','oSome'].forEach(x => document.getElementById(x).classList.remove('sel'));
+  document.getElementById({not:'oNot',none:'oNone',some:'oSome'}[v]).classList.add('sel');
+  document.getElementById('mapArea').style.display = v === 'some' ? 'grid' : 'none';
+  check();
+}
+function setSubj(v, el){
+  document.querySelectorAll('input[name=subj]').forEach(i => i.closest('.opt').classList.remove('sel'));
+  el.closest('.opt').classList.add('sel');
+  document.getElementById('subjPick').style.display = v === 'res' ? 'block' : 'none';
+  check();
+}
+function setSev(btn){
+  document.querySelectorAll('.sevBtn').forEach(b => b.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true'); check();
+}
+function pickRes(){ check(); }
+
+function check(){
+  const missing = [];
+  if (!document.getElementById('type').value) missing.push('a type');
+  if (!document.getElementById('what').value.trim()) missing.push('what happened, in your own words');
+  if (![...document.querySelectorAll('.sevBtn')].some(b => b.getAttribute('aria-pressed') === 'true'))
+    missing.push('how much harm');
+  if (injury === 'some' && marked.size === 0) missing.push('at least one injury site');
+  if (!document.getElementById('action').value.trim()) missing.push('what you did about it');
+
+  document.getElementById('submit').disabled = missing.length > 0;
+  document.getElementById('state').innerHTML = missing.length
+    ? `<b>Waiting on:</b> ${missing.join(' · ')}`
+    : `<b>Everything needed is here.</b> This will be reported as unacknowledged until a manager picks it up.`;
+}
+
+renderMap(); setInj('some');
+</script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Incidents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1400px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+.head{display:flex;align-items:center;justify-content:space-between;gap:20px}
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.btn{padding:10px 18px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600)}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+
+/* two findings — lead and secondary, never summed */
+.findings{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-top:20px}
+.finding{padding:18px 22px;border-radius:var(--r-lg);display:flex;gap:16px;align-items:flex-start}
+.finding .n{font-size:32px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.finding .t{font-size:14px;font-weight:700}
+.finding .d{font-size:12.5px;margin-top:3px;line-height:1.45;max-width:52ch}
+.finding.lead{border:1.5px dashed var(--unrecorded);border-left-width:5px;color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.finding.second{border:1px solid var(--border-subtle);background:var(--bg-surface);
+  box-shadow:var(--shadow-card);color:var(--ink-700)}
+.finding.second .n{color:var(--unrecorded-ink)}
+.finding.second .t{color:var(--ink-900)}
+
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:20px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px 24px;
+  border-bottom:1px solid var(--border-subtle)}
+.pill{padding:8px 16px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.pill[aria-pressed="true"]{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+select{padding:8px 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);font:inherit;
+  font-size:13px;background:var(--bg-surface);color:var(--ink-900)}
+.sortLine{padding:12px 24px;font-size:13px;color:var(--ink-500);border-bottom:1px solid var(--border-subtle)}
+
+.row{display:grid;grid-template-columns:15rem 13rem minmax(0,1fr) 9rem auto;gap:20px;
+  align-items:start;padding:14px 24px;border:0;border-top:1px solid var(--border-subtle);width:100%;
+  background:none;text-align:left}
+.row:first-of-type{border-top:0}
+.row:hover{background:var(--purple-50)}
+.who .n{display:block;font-size:14px;font-weight:600}
+.who .r{display:block;font-size:12px;color:var(--ink-500);margin-top:1px}
+.who .none{display:block;font-size:13px;font-weight:600;color:var(--ink-700)}
+.state{display:inline-flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700;max-width:200px}
+.state small{font-size:11px;font-weight:400;line-height:1.35}
+.state.unack{border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.state.open{border:1px solid var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.state.review{border:1px solid var(--info);background:var(--info-tint);color:var(--info-ink)}
+.state.closed{color:var(--ink-700);font-weight:500;padding-left:0}
+.state.closed small{color:var(--ink-500)}
+.what .t{display:block;font-size:14px;font-weight:600}
+.what .m{display:block;font-size:11px;color:var(--ink-500);margin-top:3px}
+.sev{font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-sm);
+  border:1px solid transparent;display:inline-block}
+.sev.s0{border-color:var(--positive);background:var(--positive-tint);color:var(--positive-ink)}
+.sev.s1{border-color:var(--info);background:var(--info-tint);color:var(--info-ink)}
+.sev.s2{border-color:var(--caution);background:var(--caution-tint);color:var(--caution-ink)}
+.sev.s3{border-color:var(--critical);background:var(--critical-tint);color:var(--critical-ink)}
+.owed{display:block;font-size:11px;font-weight:700;color:var(--unrecorded-ink);margin-top:5px}
+.chev{color:var(--purple-600);font-weight:700;font-size:13px;white-space:nowrap}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="head">
+  <h1>Incidents</h1>
+  <button class="btn primary">Report an incident</button>
+</div>
+
+<div class="findings">
+  <div class="finding lead">
+    <div class="n">4</div>
+    <div><div class="t">reported and not yet acknowledged</div>
+      <div class="d">Somebody wrote these up and nobody has picked them up. Of 45 incidents in the last
+        90 days at Rosewood Court.</div></div>
+  </div>
+  <div class="finding second">
+    <div class="n">9</div>
+    <div><div class="t">no notification decision</div>
+      <div class="d">Nobody has recorded whether the CQC must be told. Of 45.</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="filters">
+    <button class="pill" aria-pressed="true">Not acknowledged</button>
+    <button class="pill" aria-pressed="false">Open</button>
+    <button class="pill" aria-pressed="false">Under review</button>
+    <button class="pill" aria-pressed="false">Closed</button>
+    <button class="pill" aria-pressed="false">All</button>
+    <select><option>Any type</option><option>Fall — unwitnessed</option><option>Medication error</option></select>
+    <select><option>Any severity</option><option>Severe harm</option><option>Moderate harm</option></select>
+  </div>
+  <p class="sortLine">Oldest first &mdash; the wait is the finding</p>
+
+  <button class="row">
+    <span class="who"><span class="n">Segun</span><span class="r">Olusegun Fashola · Room 214</span></span>
+    <span class="state unack">Not acknowledged<small>waiting 2 days 6 hours</small></span>
+    <span class="what"><span class="t">Unexplained injury</span>
+      <span class="m">21/08/2026 09:14 BST · resident's own room · reported by K. Osei</span></span>
+    <span><span class="sev s2">Moderate harm</span><span class="owed">notification undecided</span></span>
+    <span class="chev">Open &rarr;</span>
+  </button>
+
+  <button class="row">
+    <span class="who"><span class="none">No resident involved</span>
+      <span class="r">recorded by T. Akinyemi</span></span>
+    <span class="state unack">Not acknowledged<small>waiting 1 day 3 hours</small></span>
+    <span class="what"><span class="t">Equipment failure</span>
+      <span class="m">22/08/2026 12:40 BST · corridor, ground floor · reported by T. Akinyemi</span></span>
+    <span><span class="sev s0">No harm</span></span>
+    <span class="chev">Open &rarr;</span>
+  </button>
+
+  <button class="row">
+    <span class="who"><span class="n">Beryl</span><span class="r">Beryl Hutchinson · Room 214</span></span>
+    <span class="state unack">Not acknowledged<small>waiting 19 hours</small></span>
+    <span class="what"><span class="t">Fall — witnessed</span>
+      <span class="m">22/08/2026 21:05 BST · main lounge · reported by N. Eze</span></span>
+    <span><span class="sev s1">Low harm</span><span class="owed">notification undecided</span></span>
+    <span class="chev">Open &rarr;</span>
+  </button>
+
+  <button class="row">
+    <span class="who"><span class="n">Emmanuel</span><span class="r">Emmanuel Okafor · Room 14</span></span>
+    <span class="state unack">Not acknowledged<small>waiting 4 hours</small></span>
+    <span class="what"><span class="t">Medication stock discrepancy</span>
+      <span class="m">23/08/2026 08:12 BST · clinic room · raised from the controlled drug register</span></span>
+    <span><span class="sev s0">No harm</span></span>
+    <span class="chev">Open &rarr;</span>
+  </button>
+</div>
+
+<!-- ============ measurements ============ -->
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+  <p>This is the fourth queue in the shape /care-notes, omissions and handover already share. Where this
+  does not say otherwise, match those exactly — the point of a fourth is that somebody who has learned
+  one has learned all of them.</p>
+
+  <h3>Head</h3>
+  Title and "Report an incident" on one row, space-between. The report action is primary and lives here,
+  not in the filter row — it is the only thing on this screen that is not about triage.
+
+  <h3>Two findings — the one difference from the other queues</h3>
+  <code>grid-template-columns: 1.5fr 1fr</code>, gap <code>16px</code>, <code>20px</code> below the head.
+  The lead is the hatched card at <code>1.5fr</code>: unacknowledged incidents, the thing still fixable
+  by whoever is looking. The secondary is a plain surface card at <code>1fr</code>: undecided
+  notifications, graver but older, and not what this screen is for.
+  Both carry their denominator and the range. Never summed, never one card — an unacknowledged incident
+  and an undecided notification are different failures and an incident can be both.
+  Figure <code>32px/800</code>, title <code>14px/700</code>, description <code>12.5px</code> max
+  <code>52ch</code>.
+
+  <h3>Filters</h3>
+  Pills for status, selects for type and severity — pill means filter, and a twelve-item type list is not
+  a pill row. Padding <code>14px 24px</code>, gap <code>8px</code>, 1px bottom border.
+  Default is Not acknowledged, never All. Sort line beneath at <code>13px</code> ink-500,
+  padding <code>12px 24px</code>.
+
+  <h3>Row</h3>
+  <code>grid-template-columns: 15rem 13rem minmax(0,1fr) 9rem auto</code>, gap <code>20px</code>,
+  padding <code>14px 24px</code>, 1px top border, aligned to start. The whole row is the button.
+  Resident: name <code>14px/600</code> over full name and room <code>12px</code> ink-500.
+  Where no resident was involved, that is the first column's content in <code>13px/600</code> ink-700 with
+  who recorded it beneath — a claim, never an empty column.
+  State chip <code>7px 11px</code>, <code>12px/700</code> over <code>11px/400</code>, max <code>200px</code>.
+  Not acknowledged takes the hatch with the wait as its second line. Open takes caution, under review
+  takes info. Closed is plain text with no chip at all — recorded and unremarkable renders quietly.
+  What happened: type <code>14px/600</code>, then one middot-separated meta line at <code>11px</code>
+  ink-500 carrying when, where and who reported it.
+  Severity <code>12px/700</code> pill, tinted by tier, words carrying the meaning.
+  Beneath it, where something is owed, one line at <code>11px/700</code> unrecorded-ink — "notification
+  undecided", "no root cause". This is the only place the secondary finding appears per row, and it is
+  how a reader gets from the second card to the incidents it counts.
+  Action column: one control, "Open".
+
+  <h3>What must not happen</h3>
+  Do not put a "Acknowledge" button on the row. Acknowledging without reading is the failure the
+  unacknowledged state exists to make visible, and a one-tap control on a list invites exactly that.
+  Acknowledgement happens on the detail screen, after the account has been read.
+</div>
+
+</div>
+</body>
+</html>

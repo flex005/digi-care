@@ -30,26 +30,14 @@
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.mark {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-32);
-  height: var(--space-32);
-  border-radius: var(--radius-md);
-  background-color: var(--purple-600);
-  color: var(--bg-surface);
-}
-
-.wordmark {
+/*
+ * The mark and the word are one asset now rather than a tinted square beside
+ * a bold string. `.brand` still owns the row, so the collapse control keeps
+ * its place in both states.
+ */
+.brand [data-logo] {
   flex: 1;
-  color: var(--purple-900);
-  font-size: var(--text-h3-size);
-  line-height: var(--text-h3-line);
-  font-weight: var(--weight-extrabold);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
+  min-width: 0;
 }
 
 .collapseButton {

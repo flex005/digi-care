@@ -48,3 +48,28 @@ export function coverageRatio(coverage: Coverage): number {
 export function isInsufficient(coverage: Coverage): boolean {
   return coverageRatio(coverage) < INSUFFICIENT_EVIDENCE_THRESHOLD
 }
+
+/**
+ * Below this population, no rate is shown — anywhere in the product.
+ *
+ * PRD §6.7: *never shows 100% off a denominator of two.* Rendering the
+ * denominator beside the figure is necessary and not sufficient — "100% — 2 of
+ * 2" is true and still invites a judgement two records cannot support. Below
+ * the floor the figure is replaced by **Insufficient Evidence**, which is not
+ * a milder finding but the absence of one.
+ *
+ * **It arrived as `MIN_REVIEWS_FOR_A_RATE` and was always the general rule
+ * wearing one module's name.** Documents needed the same floor, and a second
+ * constant with the same value is two things that can drift; so it lives here,
+ * beside `Aggregate` itself, and everything that renders a rate reads it.
+ *
+ * **The number is invented**, like the six-month review interval and the
+ * placeholder instrument, and folded under the same open item — approved at 8
+ * rather than derived from anything.
+ *
+ * The reasoning is an amendment to Rule 4 rather than a local decision: it is
+ * the first use of Insufficient Evidence outside the compliance dashboard
+ * §2.3 designed it for, and it belongs there because what is missing is
+ * evidence rather than performance.
+ */
+export const MIN_POPULATION_FOR_A_RATE = 8

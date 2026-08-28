@@ -1,3 +1,5 @@
+export { NeverWrittenUp } from './NeverWrittenUp'
+
 export { Unrecorded } from './Unrecorded'
 export type { UnrecordedProps, UnrecordedVariant } from './Unrecorded'
 

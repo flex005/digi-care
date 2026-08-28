@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>diGi-Care — Group overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple-900:#1E0059; --purple-600:#6935CF; --purple-400:#A284F1;
+  --purple-200:#D5C6FB; --purple-50:#F1ECFF;
+  --bg-page:#F2F6FE; --bg-surface:#FFFFFF; --bg-sunken:#F8FAFE;
+  --ink-900:#1E0059; --ink-700:#443B63; --ink-500:#6E6688; --ink-400:#9A93B0;
+  --border-strong:#E7E4FD; --border-subtle:#EFEAFE;
+  --positive:#46BC4A; --positive-ink:#1F7A33; --positive-tint:#EEF9EE;
+  --caution:#F07D13;  --caution-ink:#A65200;  --caution-tint:#FFEFE1;
+  --critical:#DD4347; --critical-ink:#B3272B; --critical-tint:#FFEFEF;
+  --info:#1563FF;     --info-ink:#0B45B8;     --info-tint:#ECF2FF;
+  --unrecorded:#8E86A8; --unrecorded-ink:#5C5470; --unrecorded-tint:#F2F1F6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --shadow-card:0 1px 2px rgba(30,0,89,.04),0 4px 12px rgba(30,0,89,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg-page);color:var(--ink-900);
+  font-size:15px;line-height:1.45;padding:26px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1250px;margin:0 auto}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--purple-600);outline-offset:2px}
+
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.sub{margin-top:4px;font-size:13px;color:var(--ink-500);max-width:84ch}
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);margin-top:18px}
+.viewNav{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+.viewNav button{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-pill);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--ink-700)}
+.viewNav button[aria-pressed="true"]{background:var(--purple-900);border-color:var(--purple-900);color:#fff}
+
+/* site cards */
+.sites{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}
+.site{border-radius:var(--r-lg);background:var(--bg-surface);border:1px solid var(--border-subtle);
+  box-shadow:var(--shadow-card);overflow:hidden}
+.siteHead{padding:18px 22px;border-bottom:1px solid var(--border-subtle);display:flex;
+  justify-content:space-between;align-items:flex-start;gap:16px}
+.siteHead h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
+.siteHead .m{font-size:12.5px;color:var(--ink-500);margin-top:3px}
+.thinTag{padding:6px 11px;border-radius:var(--r-sm);font-size:11px;font-weight:700;white-space:nowrap;
+  border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.siteRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;
+  padding:11px 22px;border-top:1px solid var(--border-subtle)}
+.siteRow .k{font-size:13px;color:var(--ink-700)}
+.siteRow .k small{display:block;font-size:11px;color:var(--ink-500);margin-top:1px}
+.v{font-size:14px;font-weight:800;white-space:nowrap}
+.v.bad{color:var(--critical-ink)} .v.warn{color:var(--caution-ink)} .v.calm{color:var(--ink-700)}
+.v.ie{font-size:11px;font-weight:700;padding:5px 9px;border-radius:var(--r-sm);
+  border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.siteFoot{padding:14px 22px;border-top:1px solid var(--border-subtle)}
+.btn{padding:8px 15px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--bg-surface);font-size:13px;font-weight:600;color:var(--purple-600);white-space:nowrap}
+.btn.primary{background:var(--purple-600);border-color:var(--purple-600);color:#fff}
+
+/* group figures */
+.gsec{padding:18px 24px;border-bottom:1px solid var(--border-subtle)}
+.gsec h2{font-size:15px;font-weight:700}
+.gsec p{font-size:12.5px;color:var(--ink-500);margin-top:3px;max-width:86ch;line-height:1.55}
+.grow{display:grid;grid-template-columns:minmax(0,1fr) 12rem 12rem;gap:20px;align-items:start;
+  padding:14px 24px;border-top:1px solid var(--border-subtle)}
+.gname{font-size:14px;font-weight:600}
+.gspread{font-size:11.5px;color:var(--ink-500);margin-top:3px;line-height:1.5;max-width:70ch}
+.per{font-size:13px;font-weight:700}
+.per small{display:block;font-size:11px;font-weight:400;color:var(--ink-500);margin-top:2px}
+.per.ie{font-size:11px;padding:6px 10px;border-radius:var(--r-sm);display:inline-block;
+  border:1.5px dashed var(--unrecorded);color:var(--unrecorded-ink);
+  background:repeating-linear-gradient(45deg,var(--unrecorded-tint) 0 6px,transparent 6px 12px)}
+.noRating{margin:18px 24px;padding:15px 19px;border-radius:var(--r-md);background:var(--bg-sunken);
+  border:1px solid var(--border-strong);color:var(--ink-500);font-size:12.5px;line-height:1.6;
+  max-width:88ch}
+.noRating b{color:var(--ink-700);font-weight:700}
+
+/* switch banner */
+.crossSite{padding:14px 20px;border-radius:var(--r-md);border:1px solid var(--info);border-left-width:4px;
+  background:var(--info-tint);color:var(--info-ink);font-size:13px;line-height:1.6;margin-top:18px;
+  display:flex;gap:16px;align-items:center}
+.crossSite .t{font-weight:700}
+.crossSite .d{font-size:12.5px;margin-top:2px;max-width:76ch}
+.crossSite .a{margin-left:auto;flex:0 0 auto}
+
+.meas{margin-top:34px;padding:22px 26px;border-radius:var(--r-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);font-size:12.5px;line-height:1.7;color:var(--ink-700)}
+.meas h2{font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:10px}
+.meas h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);
+  margin:14px 0 4px}
+.meas code{background:var(--purple-50);color:var(--purple-600);padding:0 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>All homes</h1>
+<p class="sub">Two homes. This is the only screen in diGi-Care whose subject is the organisation rather
+  than one home — everything else answers about a site, and comparing two meant switching, reading,
+  switching back and remembering.</p>
+
+<div class="sites">
+  <div class="site">
+    <div class="siteHead">
+      <div><h2>Rosewood Court</h2>
+        <div class="m">28 residents · 12 staff · Europe/London</div></div>
+      <button class="btn primary">Open</button>
+    </div>
+    <div class="siteRow"><div class="k">Overdue now<small>doses, review flags, handovers</small></div>
+      <div class="v bad">6</div></div>
+    <div class="siteRow"><div class="k">Nobody wrote up today<small>of 28 residents</small></div>
+      <div class="v warn">7</div></div>
+    <div class="siteRow"><div class="k">Unacknowledged incidents<small>oldest waiting 5 days</small></div>
+      <div class="v calm">2</div></div>
+    <div class="siteRow"><div class="k">Risks never assessed<small>of 252 expected</small></div>
+      <div class="v warn">81</div></div>
+  </div>
+
+  <div class="site">
+    <div class="siteHead">
+      <div><h2>Ashgrove Lodge</h2>
+        <div class="m">4 residents · 2 staff · Europe/London</div></div>
+      <span class="thinTag">Too small for most rates</span>
+    </div>
+    <div class="siteRow"><div class="k">Overdue now<small>doses, review flags, handovers</small></div>
+      <div class="v calm">0</div></div>
+    <div class="siteRow"><div class="k">Nobody wrote up today<small>of 4 residents</small></div>
+      <div class="v warn">1</div></div>
+    <div class="siteRow"><div class="k">Unacknowledged incidents<small>none in 90 days</small></div>
+      <div class="v calm">0</div></div>
+    <div class="siteRow"><div class="k">Risks never assessed<small>of 36 expected</small></div>
+      <div class="v warn">11</div></div>
+    <div class="siteFoot"><button class="btn">Open Ashgrove Lodge</button></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="gsec"><h2>Across both homes</h2>
+    <p>Every figure here says how many homes are inside it and how many could not support a figure of
+      their own. A rate over 32 residents clears any population floor while hiding a four-resident home
+      inside it — the number would be true and unreadable.</p></div>
+
+  <div class="grow">
+    <div><div class="gname">Doses with no record</div>
+      <div class="gspread">20 of 1,318 across both homes. Rosewood 20 of 1,219; Ashgrove 0 of 99, which
+        is too few doses to support a rate of its own.</div></div>
+    <div class="per">1.5%<small>Rosewood · 1.6%</small></div>
+    <div><span class="per ie">Ashgrove · insufficient evidence</span></div>
+  </div>
+
+  <div class="grow">
+    <div><div class="gname">Risks never assessed</div>
+      <div class="gspread">92 of 288 across both homes. Both homes support a figure, and they disagree —
+        Ashgrove is worse per resident despite the smaller number.</div></div>
+    <div class="per">32%<small>Rosewood · 32%</small></div>
+    <div class="per">31%<small>Ashgrove · 11 of 36</small></div>
+  </div>
+
+  <div class="grow">
+    <div><div class="gname">Care plan domains never written</div>
+      <div class="gspread">87 of 320 across both homes. Rosewood 55 of 280; Ashgrove 32 of 40, which is
+        four fifths of that home's plan.</div></div>
+    <div class="per">27%<small>Rosewood · 20%</small></div>
+    <div class="per">80%<small>Ashgrove · 32 of 40</small></div>
+  </div>
+
+  <div class="grow">
+    <div><div class="gname">Controlled drug counts that reconcile</div>
+      <div class="gspread">Neither home has enough counts in 30 days to support a rate, so the group has
+        none either. A group figure assembled from two unusable ones is not usable.</div></div>
+    <div><span class="per ie">Rosewood · insufficient evidence</span></div>
+    <div><span class="per ie">Ashgrove · insufficient evidence</span></div>
+  </div>
+
+  <div class="noRating">
+    <b>There is no group rating on this screen, and there will not be one.</b> A rating is a judgement
+    and judgements belong on the compliance panel, per home. A single figure for the organisation would
+    be the most reassuring thing this product could render, and it would be most reassuring exactly when
+    one home is thinnest — Ashgrove is Insufficient Evidence on three Key Questions today, and no
+    arithmetic turns that plus Rosewood's amber into a number that means anything.
+  </div>
+</div>
+
+<div class="crossSite">
+  <div><div class="t">You are reading a record that belongs to Ashgrove Lodge</div>
+    <div class="d">You have Rosewood Court selected. Emmanuel Okafor lives at Ashgrove Lodge, and every
+      time on this page is in Ashgrove's zone — the record's own home decides that, not the one you have
+      selected.</div></div>
+  <div class="a"><button class="btn">Switch to Ashgrove Lodge</button></div>
+</div>
+
+<div class="meas">
+  <h2>Measurements — build to these exactly</h2>
+
+  <h3>Site cards side by side, not a table</h3>
+  <code>1fr 1fr</code>, gap <code>18px</code>. Two homes read as two homes; a table would read as a
+  league. Head <code>18px 22px</code>, name <code>19px/700</code>, counts <code>12.5px</code> ink-500.
+  A site too small to support most rates carries the hatched tag in its head, once, rather than on every
+  row it affects.
+  Rows <code>minmax(0,1fr) auto</code>, padding <code>11px 22px</code>. Label <code>13px</code> with its
+  denominator beneath at <code>11px</code> ink-500. Figure <code>14px/800</code>.
+  <b>These are counts, not rates</b> — a count needs no population floor, and per-site counts are what a
+  manager acts on.
+
+  <h3>Group figures carry their spread in the same sentence as the number</h3>
+  Row <code>minmax(0,1fr) 12rem 12rem</code>, gap <code>20px</code>, padding <code>14px 24px</code>.
+  Name <code>14px/600</code>, then the spread at <code>11.5px</code> ink-500 naming both homes' figures
+  and any that cannot support one.
+  <b>Each site gets its own column and its own standing.</b> A Key Question that is Insufficient Evidence
+  at one home and Amber at the other renders as exactly that — never as a third figure that is neither.
+  Where a home cannot support a rate its cell is the hatched chip, not a blank and not a zero.
+  Where both cannot, the group has none either: a group figure assembled from two unusable ones is not
+  usable, and it renders as two hatched cells rather than one number.
+
+  <h3>No group rating, and the screen says so</h3>
+  Inert block at the foot, bg-surface-sunken with a plain border, no pattern — nothing here is a gap
+  somebody can close. It states that judgement belongs on the compliance panel per home, and why a
+  single organisation figure would be the most reassuring thing the product could render.
+
+  <h3>The cross-site banner</h3>
+  Info tint, <code>4px</code> left border, <code>14px 20px</code>. It names the record's home, names the
+  selected one, and says which governs the timestamps — the record's own.
+  <b>It offers the switch and does not perform it.</b> Navigating somebody away from a record they are
+  reading is the app deciding they made a mistake, and a manager covering both homes reads across them
+  all day.
+</div>
+
+</div>
+</body>
+</html>

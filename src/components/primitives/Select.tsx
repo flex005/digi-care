@@ -26,6 +26,16 @@ export interface SelectProps {
   value: string | undefined
   onValueChange: (value: string) => void
   disabled?: boolean
+  /**
+   * Render `label` above the control rather than only to a screen reader.
+   *
+   * A filter pill row carries its meaning in the placeholder — "Any template"
+   * — and a visible label there is noise. **A form field is the opposite**: it
+   * sits in a column with other fields whose labels are visible, and a control
+   * with no label is both a different thing to read and a different height,
+   * so the columns stop lining up. Off by default so the queues are unchanged.
+   */
+  labelVisible?: boolean
 }
 
 export function Select({
@@ -35,15 +45,32 @@ export function Select({
   value,
   onValueChange,
   disabled = false,
+  labelVisible = false,
 }: SelectProps) {
+  const trigger = (
+    <RadixSelect.Trigger
+      className={styles.trigger}
+      {...(labelVisible ? {} : { 'aria-label': label })}
+    >
+      <RadixSelect.Value placeholder={placeholder} />
+      <RadixSelect.Icon className={styles.chevron}>
+        <Icon name="arrows-sharp/arrow-down-01-sharp" size={16} />
+      </RadixSelect.Icon>
+    </RadixSelect.Trigger>
+  )
+
   return (
     <RadixSelect.Root value={value} onValueChange={onValueChange} disabled={disabled}>
-      <RadixSelect.Trigger className={styles.trigger} aria-label={label}>
-        <RadixSelect.Value placeholder={placeholder} />
-        <RadixSelect.Icon className={styles.chevron}>
-          <Icon name="arrows-sharp/arrow-down-01-sharp" size={16} />
-        </RadixSelect.Icon>
-      </RadixSelect.Trigger>
+      {labelVisible ? (
+        // A real <label>, so the visible text *is* the accessible name rather
+        // than a second one sitting beside an aria-label that says the same.
+        <label className={styles.field}>
+          <span className={styles.label}>{label}</span>
+          {trigger}
+        </label>
+      ) : (
+        trigger
+      )}
       <RadixSelect.Portal>
         <RadixSelect.Content
           className={surface.floating}

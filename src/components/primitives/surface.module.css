@@ -54,6 +54,16 @@
   font-weight: var(--weight-bold);
 }
 
+/* The subject, kept on screen beneath the question. Not a repeat of the
+   title: it is the line a reader checks against while deciding. */
+.subject {
+  margin-top: var(--space-4);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
 .description {
   color: var(--ink-700);
   font-size: var(--text-body-size);
