@@ -10319,3 +10319,35 @@ the markup:
 - **One list in Medications loses its bullets.** `.requiresItem::before` draws
   them, and pseudo-elements have no node to export. It is the only pseudo-element
   in the build carrying a visual.
+
+---
+
+## Two gitignore findings, both silent
+
+**A pattern with no leading slash matches at every depth.** `export/` was written
+for the Figma output at the project root and also matched `scripts/export/` —
+the exporter itself, which is source. It was never committed, and nothing said
+so: an ignore rule reports no collateral, the folder simply does not appear in
+`git status`, and `git add -A` skips it without a word. It surfaced only because
+somebody went looking for the exporter on GitHub and it was not there.
+
+Same shape as the selector-specificity check in a different file format: a
+pattern that names less than it matches, where the over-match is invisible
+because the failure mode is silence rather than an error. `/export/` anchors it.
+
+**And a check whose success message was wider than what it verified.**
+`src/assets/icons-generated/` is generated rather than committed, and
+`registry.generated.ts` — which *is* committed — imports forty-six SVGs from it.
+So on a fresh clone the registry is perfectly current and every icon it imports
+is missing.
+
+`npm run icons:check` passed in exactly that state and printed "registry is
+current", which was true of the two files it compared and useless to somebody
+whose test suite had just failed to resolve forty-six modules with no mention of
+icons in the error. `predev` and `prebuild` masked it for the two commands that
+have hooks; `npm run test` and `npm run verify` have none, so a fresh clone could
+run the build and not the suite.
+
+Both halves fixed: a `postinstall` generates the icons on `npm install`, and
+`icons:check` now asserts the files are on disk rather than only that the
+registry describing them is current.

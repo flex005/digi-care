@@ -270,8 +270,44 @@ async function main() {
       )
       process.exit(1)
     }
+
+    /*
+     * **And the icons the registry imports are actually on disk.**
+     *
+     * The two generated files are committed and the normalised copies are not,
+     * so on a fresh clone the registry is perfectly current and every icon it
+     * imports is missing. This check passed in exactly that state and said
+     * "registry is current" — true of the files it compared and useless to
+     * somebody whose test suite had just failed to resolve forty-six modules
+     * with no mention of icons anywhere in the error.
+     *
+     * A check whose success message is wider than what it verifies is the same
+     * defect this project keeps finding elsewhere. `postinstall` now generates
+     * them, and this is what says so when something has gone wrong with that.
+     */
+    const missing = []
+    for (const { name } of entries) {
+      const file = path.join(OUT_ICONS, `${name}.svg`)
+      if (
+        !(await readFile(file).then(
+          () => true,
+          () => false,
+        ))
+      )
+        missing.push(rel(file))
+    }
+    if (missing.length > 0) {
+      console.error(
+        `\n✖ icons:check — the registry is current and ${missing.length} of the icons it imports are not on disk.\n`,
+        `\n      ${missing.slice(0, 3).join('\n      ')}${missing.length > 3 ? `\n      … and ${missing.length - 3} more` : ''}\n`,
+        '\n  These are generated rather than committed. `npm install` runs `npm run icons`;',
+        '\n  run it directly if the install was skipped with --ignore-scripts.\n',
+      )
+      process.exit(1)
+    }
+
     console.log(
-      `✓ icons:check — registry is current (${allNames.length} available, ${usedNames.length} used)`,
+      `✓ icons:check — registry is current, ${usedNames.length} icons on disk (${allNames.length} available)`,
     )
     return
   }
