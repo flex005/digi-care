@@ -10351,3 +10351,81 @@ run the build and not the suite.
 Both halves fixed: a `postinstall` generates the icons on `npm install`, and
 `icons:check` now asserts the files are on disk rather than only that the
 registry describing them is current.
+
+---
+
+## The install that only worked on this machine — 29/08/2026
+
+Vercel failed on `npm install` with an ERESOLVE peer conflict:
+`eslint-plugin-jsx-a11y@6.10.2` declares `eslint` `^3 || … || ^9`, and we are
+on `eslint@10`. It had never failed here because the local tree was installed
+once with `--legacy-peer-deps`.
+
+**That flag left no trace in the repository.** No `.npmrc`, project or user —
+checked both. It was typed at a terminal, and the only thing that remembered it
+was this laptop's `node_modules`. Anyone cloning got the failure on their first
+install, and the first machine to actually report it was a build server that
+had never seen the flag. A dependency decision that lives in a shell history is
+not a decision the project has made.
+
+### Upgrade first, override second
+
+Checked before reaching for the override, as asked: **6.10.2 is `latest`**.
+There is no newer jsx-a11y, and no prerelease — `dist-tags` are only `latest`
+and a `v5-backport`. Every other ESLint plugin here already declares 10:
+`react-hooks` `^10.0.0`, `react-refresh` `^9 || ^10`, `typescript-eslint`
+`^10.0.0`, `@eslint/js` `^10.0.0`. jsx-a11y is the single laggard, so there was
+nothing to upgrade to and the override is the remaining answer.
+
+```json
+"overrides": { "eslint-plugin-jsx-a11y": { "eslint": "$eslint" } }
+```
+
+`$eslint` rather than a pinned literal, so it tracks whatever `eslint` version
+the project declares. A hardcoded `^10.8.0` here would be a second place to
+remember to bump, and it would be the place nobody remembers.
+
+### The override is not hiding a real incompatibility
+
+Worth separating, because silencing a peer warning and fixing a break look
+identical from the install log. **The plugin works on ESLint 10** — a probe
+file with `<img src="/x.png" />` and no alt was flagged by `jsx-a11y/alt-text`
+under `eslint@10.9.1`. The stale declaration is the whole problem; the code
+behind it is fine.
+
+### Proved by breaking it
+
+`rm -rf node_modules package-lock.json` then a plain `npm install`, no flags:
+**succeeds**. Then the mutation — the same clean install with the `overrides`
+block deleted — **reproduces Vercel's exact error locally**, naming the same
+peer range. So the override is what fixes it, rather than something incidental
+like the npm version being more forgiving.
+
+Regenerating the lockfile moved **64 packages**, all within the semver ranges
+already in `package.json` — `eslint` 10.8.1 → 10.9.1, `react-router`
+7.18.2 → 7.18.3, `vite` 8.2.1 → 8.2.2 and so on. Expected when a lockfile is
+deleted rather than a symptom.
+
+**`--legacy-peer-deps` is no longer needed anywhere**, and nothing in the repo
+asks for it.
+
+### `npm run verify` is not green, and was not before
+
+Reported rather than tidied away, because it would be easy to leave the
+impression that this change cleared the board. Two failures, both pre-existing:
+
+- **`group.test.tsx`** — 16 of 16 assertions pass, but the file exits 1 on an
+  unhandled rejection. `GroupOverviewRoute` does `navigate('/')` on the
+  card's switch control, and the test's memory router has no `/` route, so
+  react-router completes the navigation against an undefined match and throws
+  `Cannot read properties of undefined (reading 'element')`. **Confirmed
+  identical on the committed tree** by restoring `package-lock.json` from git
+  and running `npm ci --legacy-peer-deps` — same exit, same error. It is a test
+  harness gap, though it is worth deciding whether the product should navigate
+  to `/` at all when `/` only redirects to `/residents`.
+- **`care-notes-route.test.tsx`** — passes 32 of 32 in isolation in 42s, fails
+  once in the full run at 66s. A load-dependent timing flake, not a
+  dependency-resolution consequence.
+
+Neither is a dependency problem and neither is fixed here; both are somebody's
+decision rather than a silent repair on the way past.
