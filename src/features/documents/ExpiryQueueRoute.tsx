@@ -31,6 +31,10 @@ type Filter = 'all' | 'expired' | 'expiring' | 'not_recorded'
  * and lowercasing at the call site is the tidying transformation that has
  * already destroyed one label in this build.
  */
+/** How many rows fit before the list stops being readable. Matches the note
+ *  queue's 15 in intent, larger because a document row is one line. */
+const DOCUMENTS_PER_PAGE = 25
+
 const FILTERS: { id: Filter; label: string; phrase: string }[] = [
   { id: 'all', label: 'Everything on file', phrase: 'everything on file' },
   { id: 'expired', label: 'Expired', phrase: 'the documents that have expired' },
@@ -53,6 +57,7 @@ export function ExpiryQueueRoute() {
     { documents: DocumentRecord[]; residents: Resident[] } | 'loading'
   >('loading')
   const [filter, setFilter] = useState<Filter>('expired')
+  const [page, setPage] = useState(0)
 
   useEffect(() => {
     let live = true
@@ -82,6 +87,17 @@ export function ExpiryQueueRoute() {
       .filter((row) => matches(row.finding, filter))
       .sort((a, b) => order(a.finding) - order(b.finding))
   }, [loaded, today, filter, activeSite.name])
+
+  /*
+   * Clamped on render rather than reset in an effect, the same way the note
+   * queue does it: switching to a narrower filter can leave the reader on a
+   * page that no longer exists, and correcting that from an effect paints the
+   * empty page first. Derived, so there is no moment where the two disagree.
+   */
+  const pages = Math.max(1, Math.ceil(rows.length / DOCUMENTS_PER_PAGE))
+  const current = Math.min(page, pages - 1)
+  const start = current * DOCUMENTS_PER_PAGE
+  const shown = rows.slice(start, start + DOCUMENTS_PER_PAGE)
 
   if (loaded === 'loading') {
     return (
@@ -126,11 +142,27 @@ export function ExpiryQueueRoute() {
         ))}
       </div>
 
-      {/* The claim carries the filter, or it is a claim about a different set. */}
+      {/*
+        The claim carries the filter, or it is a claim about a different set —
+        and now it carries the page too. Paging hides rows, so a reader looking
+        at twenty-five of three hundred has been told this site holds
+        twenty-five unless the sentence says otherwise. Three figures, all
+        real: which slice is on screen, what the filter matched, and what the
+        library holds.
+      */}
       <p className={styles.filterClaim} data-filter-claim>
         <span data-numeric>{formatCount(rows.length)}</span> of{' '}
         <span data-numeric>{formatCount(counts.total)}</span> documents at{' '}
-        {activeSite.name}, showing <b>{selected?.phrase ?? 'everything on file'}</b>.
+        {activeSite.name}, showing <b>{selected?.phrase ?? 'everything on file'}</b>
+        {pages > 1 ? (
+          <>
+            {'. On screen: '}
+            <span data-numeric>{formatCount(start + 1)}</span> to{' '}
+            <span data-numeric>{formatCount(start + shown.length)}</span>.
+          </>
+        ) : (
+          '.'
+        )}
       </p>
 
       <Card>
@@ -141,7 +173,7 @@ export function ExpiryQueueRoute() {
           </p>
         ) : (
           <ul className={styles.rows}>
-            {rows.map((row) => (
+            {shown.map((row) => (
               <li key={row.document.id}>
                 <div className={styles.queueRow} data-queue-row={row.document.id}>
                   <div>
@@ -168,6 +200,39 @@ export function ExpiryQueueRoute() {
             ))}
           </ul>
         )}
+
+        {pages > 1 ? (
+          <nav
+            className={styles.pager}
+            aria-label="Pages of documents"
+            data-documents-pager
+          >
+            <button
+              type="button"
+              className={styles.pagerButton}
+              onClick={() => setPage(current - 1)}
+              disabled={current === 0}
+              data-documents-prev
+            >
+              <Icon name="arrows-sharp/arrow-left-01-sharp" size={16} aria-hidden />
+              Previous
+            </button>
+            <p className={styles.pagerWhere} aria-live="polite">
+              Page <span data-numeric>{formatCount(current + 1)}</span> of{' '}
+              <span data-numeric>{formatCount(pages)}</span>
+            </p>
+            <button
+              type="button"
+              className={styles.pagerButton}
+              onClick={() => setPage(current + 1)}
+              disabled={current === pages - 1}
+              data-documents-next
+            >
+              Next
+              <Icon name="arrows-sharp/arrow-right-01-sharp" size={16} aria-hidden />
+            </button>
+          </nav>
+        ) : null}
       </Card>
     </div>
   )

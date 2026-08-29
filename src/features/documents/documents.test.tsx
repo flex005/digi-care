@@ -553,3 +553,89 @@ describe('accessibility', () => {
     await check('/documents/expiry')
   }, 30000)
 })
+
+describe('the expiry queue pages, and says so', () => {
+  /**
+   * "Everything on file" is 346 rows at Rosewood Court. Paging is right here
+   * and wrong on the note timeline, and the difference is worth keeping
+   * straight: this list makes no claim about the stretches *between* its rows,
+   * so a page boundary invents nothing. The timeline does, which is why it
+   * takes a window instead.
+   *
+   * What paging does risk is the denominator. A reader shown twenty-five rows
+   * has been told the site holds twenty-five unless the sentence says
+   * otherwise, so the claim carries the slice as well as both totals.
+   */
+
+  const showEverything = async (
+    user: ReturnType<typeof userEvent.setup>,
+    container: HTMLElement,
+  ) => {
+    await user.click(container.querySelector('[data-filter="all"]')!)
+  }
+
+  it('draws a page rather than the whole library', async () => {
+    const user = userEvent.setup()
+    const { container } = renderAt('/documents/expiry')
+    await waitFor(() =>
+      expect(container.querySelector('[data-expiry-queue]')).toBeTruthy(),
+    )
+    await showEverything(user, container)
+
+    await waitFor(() =>
+      expect(container.querySelector('[data-documents-pager]')).toBeTruthy(),
+    )
+    const drawn = container.querySelectorAll('[data-queue-row]').length
+    expect(drawn).toBeGreaterThan(0)
+    expect(drawn).toBeLessThanOrEqual(25)
+  }, 30000)
+
+  it('states the slice as well as what it is a slice of', async () => {
+    const user = userEvent.setup()
+    const { container } = renderAt('/documents/expiry')
+    await waitFor(() =>
+      expect(container.querySelector('[data-expiry-queue]')).toBeTruthy(),
+    )
+    await showEverything(user, container)
+    await waitFor(() =>
+      expect(container.querySelector('[data-documents-pager]')).toBeTruthy(),
+    )
+
+    const claim = container.querySelector('[data-filter-claim]')?.textContent ?? ''
+    const drawn = container.querySelectorAll('[data-queue-row]').length
+    // The rows on screen, named — not left for the reader to infer.
+    expect(claim).toMatch(/On screen: 1 to \d+/i)
+    // And the totals it is a slice of, both still there.
+    const figures = [...claim.matchAll(/[\d,]+/g)].map((m) =>
+      Number(m[0].replace(/,/g, '')),
+    )
+    expect(Math.max(...figures)).toBeGreaterThan(drawn)
+  }, 30000)
+
+  it('moves through the pages and keeps the claim honest', async () => {
+    const user = userEvent.setup()
+    const { container } = renderAt('/documents/expiry')
+    await waitFor(() =>
+      expect(container.querySelector('[data-expiry-queue]')).toBeTruthy(),
+    )
+    await showEverything(user, container)
+    await waitFor(() =>
+      expect(container.querySelector('[data-documents-pager]')).toBeTruthy(),
+    )
+
+    const first = container
+      .querySelector('[data-queue-row]')
+      ?.getAttribute('data-queue-row')
+    await user.click(container.querySelector('[data-documents-next]')!)
+
+    await waitFor(() => {
+      const now = container
+        .querySelector('[data-queue-row]')
+        ?.getAttribute('data-queue-row')
+      expect(now).not.toBe(first)
+    })
+    expect(container.querySelector('[data-filter-claim]')?.textContent).toMatch(
+      /On screen: 26 to \d+/i,
+    )
+  }, 30000)
+})

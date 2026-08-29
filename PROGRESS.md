@@ -10632,3 +10632,70 @@ The first version of the bounded-window test asserted "fewer than a quarter of
 the record" and failed at 143 of 394 — a ratio is a property of the fixtures,
 not of the window (§8). It now asserts the bound itself: no note drawn is more
 than 30 days older than the newest one drawn.
+
+---
+
+## Pagination, surveyed before adding — 29/08/2026
+
+Frank asked for pagination on all the modules. The survey says it belongs on
+one, is unnecessary on most, and is **forbidden on three**.
+
+### Measured, per module
+
+| List | Rows it can draw | Bounded? |
+|---|---|---|
+| Documents · expiry queue, "Everything on file" | **346** | now paged, 25 |
+| Care notes · cross-resident feed | 12,153 held | already paged, 15 |
+| Care notes · profile timeline | 394 held | already windowed, 30 days |
+| MAR chart | 15,376 held | already bounded by week/month |
+| Activities | 52 | no |
+| Goals | 48 | no |
+| Incidents | 46 | no |
+| Residents | 32 | no |
+| Documents · library | 7 category rows | not a document list |
+| Goal progress notes | 5 on the busiest goal | no |
+
+Everything below the fold of that table is a list a reader can take in at
+once. Paging 32 residents would add a control, hide rows, and oblige the screen
+to state a total it was already showing — cost with nothing bought.
+
+### Where pagination is forbidden
+
+**Risk assessments (10 templates), consent (8 types), care plans (10
+domains).** CLAUDE.md §1 names these explicitly: *"All ten risk assessment
+templates are listed even if none is completed. All eight consent types. All
+care plan domains."*
+
+The reason is the whole product: on those screens an item's absence *is* the
+finding. Paginate them and "not on this page" becomes indistinguishable from
+"never assessed" — a blank cell wearing a page number. **The rule wins over the
+instruction**, and these are left alone deliberately rather than overlooked.
+
+### What was added
+
+The documents expiry queue, at 25 a page. It is the only list that can reach
+346 rows, and it is the right shape for paging precisely because it makes **no
+claim about the stretches between its rows** — unlike the note timeline, where
+a page boundary would invent a gap and which therefore took a window instead
+(29/08/2026, above). Same question, two different answers, and the difference
+is whether the spaces between rows mean anything.
+
+**Paging hides rows, so the claim carries the slice.** It already named the
+filter and the library total; it now names what is on screen as well:
+
+> 346 of 692 documents at Rosewood Court, showing **everything on file**.
+> On screen: 1 to 25.
+
+Three figures, all real. The mutation that proves it is the reason it is there:
+delete the slice and the sentence reads **"306 of 306 documents at Rosewood
+Court"** while twenty-five are visible — a true sentence that a reader would
+take as false, or worse, a false one they would take as true.
+
+The pager composes the note queue's styles rather than declaring its own — one
+shape, one meaning (§6) — and its page is clamped on render rather than reset
+in an effect, so narrowing the filter cannot paint an empty page first.
+
+Three guards, each mutated: draw every row and the page test fails at 306; drop
+the slice and the claim test fails on the sentence above.
+
+1,227 tests.

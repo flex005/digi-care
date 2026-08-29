@@ -571,3 +571,23 @@
   text-decoration: none;
   white-space: nowrap;
 }
+
+/**
+ * The pager, composed from the note queue's rather than declared again.
+ *
+ * One shape, one meaning (§6): a reader who has paged the note queue already
+ * knows this control. A second set of declarations would be a second thing to
+ * keep in step, and the kind that drifts quietly because nothing fails when it
+ * does.
+ */
+.pager {
+  composes: pager from '../notes/notes.module.css';
+}
+
+.pagerButton {
+  composes: pagerButton from '../notes/notes.module.css';
+}
+
+.pagerWhere {
+  composes: pagerWhere from '../notes/notes.module.css';
+}
