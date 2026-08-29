@@ -1062,3 +1062,58 @@
   font-size: var(--text-caption-size);
   line-height: var(--text-caption-line);
 }
+
+/* ---- the window on the timeline ---- */
+
+/**
+ * The MAR chart's range control, composed rather than copied.
+ *
+ * Two screens that bound a stretch of time use one control, so a reader who
+ * learns it on the chart already knows it here. A second set of declarations
+ * would be a second thing to keep in step, and it is the kind that drifts
+ * quietly because nothing fails when it does.
+ */
+.range {
+  composes: range from '../medications/medications.module.css';
+}
+
+.segmented {
+  composes: segmented from '../medications/medications.module.css';
+}
+
+.segment {
+  composes: segment from '../medications/medications.module.css';
+}
+
+.segmentActive {
+  composes: segmentActive from '../medications/medications.module.css';
+}
+
+/**
+ * The foot of the window.
+ *
+ * Deliberately *not* the hatch. The hatch means "nobody wrote anything here",
+ * and this means "we are not drawing what is here" — opposite claims, and
+ * spending the hatch on the second would blunt it for the first. Quiet, plain,
+ * and stated in words.
+ */
+.windowEdge {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-16);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.windowEdgeBound {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.windowEdgeDetail {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}

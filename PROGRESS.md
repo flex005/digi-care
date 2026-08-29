@@ -10542,3 +10542,93 @@ marker's span becomes an artefact of where the page broke, which is Rule 3c
 exactly: a claim over a filtered set that does not carry the filter is false.
 Getting that wrong would put a fabricated gap on a clinical record to make a
 test faster. It needs deciding, not guessing.
+
+---
+
+## The timeline gets a window — 29/08/2026
+
+### Vercel, first
+
+Both of Frank's changes need nothing from me. `vercel.json` is committed and
+its rewrite is the right shape: Vercel checks the filesystem *before* rewrites,
+so `/assets/*` still serves real files and only unmatched paths fall through to
+`index.html`. A clean clone has everything the build needs — all 3,559 SVGs
+tracked, and the generated icon registries tracked too, so the build does not
+depend on `postinstall` succeeding. The author email is a forward-only
+correction; nothing in the repo hardcodes one.
+
+### Windowed, not paginated
+
+Frank's reasoning, which is the part worth keeping: **a window is a stated
+bound and a page is not.** "The last 30 days" is a claim a reader can see and
+check; "page 2" is a claim about nothing, so a gap marker inside it has no
+denominator — it would state a span whose ends were chosen by where the page
+broke. That was the Rule 3c trap, and windowing removes it rather than working
+around it.
+
+- **Rolling, not calendar-aligned.** The MAR chart's `month` starts on the 1st.
+  Here the sentence on screen says "the last 30 days", so the window is the
+  last 30 days; a calendar month would make that sentence false for 30 days out
+  of every 31. The *control* is the MAR chart's — same segmented group, same
+  stepping buttons, composed from its stylesheet rather than copied — so the
+  two screens behave alike to a reader's hand even though the arithmetic
+  differs.
+- **Stepping is what makes the bound honest.** A window with no way past it
+  would hide the rest of the record behind a default nobody chose. Every note
+  is still reachable, and the "later" button is disabled rather than hidden at
+  the newest window, so a reader never wonders whether it was ever there.
+- **The edge is a statement, not a gap marker.** At the foot of the timeline —
+  newest-first, so that is where the window cuts — it says *"Showing the last
+  30 days. The previous note was 14/07/2026, 34 days before the one above."*
+  The bound and the true elapsed time across it. Nothing fabricated, nothing
+  hidden. Where the window already reaches the start of the record it says
+  **"There are no notes before this. This is the whole record"**, because "no
+  earlier notes" and "earlier notes we are not drawing" are different facts and
+  a reader deciding whether they have the whole history needs to know which.
+
+**One deviation from the brief, and it is a factual one.** The statement was
+specified as the timeline's *first* element, referring to "the one below". The
+timeline is newest-first, so the window cuts at the *foot*; placed at the top,
+"the previous note was 34 days before the one below" would point at the
+**newest** note and be false. It is at the foot, and reads "the one above".
+
+**A third empty state.** Notes exist but none inside the window is not "never
+written up" and not "no notes match these filters" — the second would blame a
+filter the reader never set. It says so with its bound, and the filter bar's
+"showing X of Y" now counts Y over the window rather than the whole record,
+because a denominator measured over a population that is not on screen is not
+a denominator.
+
+### Both checks Frank asked for
+
+**The axe scan, without touching the clock: 33,235ms → 3,089ms.** The timeout
+sat at 120s after three raises. It is now 20s — lowered because the cause went,
+not retuned again — which is about six times the measured cost: loose enough
+to survive parallel load, tight enough that a return to the old behaviour fails
+here rather than being absorbed.
+
+**The suite stabilises, and the variance is the evidence.** Before: 69.8s, with
+one run in two spiking to 76.7s and taking three files down on `waitFor`
+timeouts. After the formatter cache: 50.6s, still flaky. After the window:
+
+```
+37.82s  37.68s  37.77s  38.14s  37.89s     all 1224 passing
+```
+
+Five consecutive runs inside half a second of each other. A spread of ±26s
+collapsing to ±0.4s is what says the windowing was the whole answer rather than
+a reduction — if something else were still costing time under load, the spikes
+would have survived it.
+
+### Guards, and the mutations that prove them
+
+Four new tests, each broken on purpose:
+
+- Remove the window and *draw a bounded window* fails, naming the note that is
+  too old.
+- Render the edge as a gap marker and *no gap marker at the boundary* fails.
+
+The first version of the bounded-window test asserted "fewer than a quarter of
+the record" and failed at 143 of 394 — a ratio is a property of the fixtures,
+not of the window (§8). It now asserts the bound itself: no note drawn is more
+than 30 days older than the newest one drawn.

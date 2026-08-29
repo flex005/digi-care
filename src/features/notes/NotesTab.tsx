@@ -9,6 +9,15 @@ import { NeverWrittenUp } from '@/components/status'
 import { useSession, useTimeZone } from '@/app/session/use-session'
 import type { IsoDateTime } from '@/data/types'
 import { buildTimeline } from './timeline'
+import { WindowEdge } from './WindowEdge'
+import { RangeControl } from './RangeControl'
+import {
+  DEFAULT_NOTE_RANGE,
+  RANGE_DAYS,
+  rangeLabel,
+  windowNotes,
+  type NoteRange,
+} from './note-window'
 import { NoteCard } from './NoteCard'
 import { GapMarker } from './GapMarker'
 import { NoteFilterBar } from './NoteFilters'
@@ -55,7 +64,28 @@ export function NotesTab() {
   // filter agree with each other.
   const now = useMemo(() => new Date(), [])
 
-  const notes = resource.kind === 'ready' ? resource.data : []
+  const allNotes = resource.kind === 'ready' ? resource.data : []
+
+  /**
+   * The window, applied before the filters.
+   *
+   * Order matters for the denominators: the filter bar says "showing X of Y",
+   * and Y has to be the notes the window is drawing, not the whole record —
+   * otherwise the figure is measured over a population that is not on screen.
+   * Rule 4.
+   */
+  const [range, setRange] = useState<NoteRange>(DEFAULT_NOTE_RANGE)
+  const [stepsBack, setStepsBack] = useState(0)
+  const anchorMs = useMemo(
+    () => now.getTime() - stepsBack * RANGE_DAYS[range] * 86_400_000,
+    [now, stepsBack, range],
+  )
+  const shown = useMemo(
+    () => windowNotes(allNotes, range, anchorMs),
+    [allNotes, range, anchorMs],
+  )
+  const notes = shown.inWindow
+
   const { filters, setFilters, visible, authors, narrowed, clear } = useNoteFilters(
     notes,
     now,
@@ -114,6 +144,17 @@ export function NotesTab() {
           }
         />
         <div className={styles.filterSlot}>
+          <RangeControl
+            range={range}
+            stepsBack={stepsBack}
+            onRangeChange={(next) => {
+              setRange(next)
+              setStepsBack(0)
+            }}
+            onStep={(direction) =>
+              setStepsBack((steps) => Math.max(0, steps - direction))
+            }
+          />
           <NoteFilterBar
             filters={filters}
             authors={authors}
@@ -128,8 +169,8 @@ export function NotesTab() {
         <Card padded>
           <p className={styles.narrowedNote}>
             <strong>
-              Showing {visible.length} of {notes.length} notes, and gap markers are
-              hidden.
+              Showing {visible.length} of {notes.length} notes in {rangeLabel(range)},
+              and gap markers are hidden.
             </strong>{' '}
             A stretch with nothing in it here is a stretch with nothing matching these
             filters. Clear them to see where the real gaps are.
@@ -137,11 +178,25 @@ export function NotesTab() {
         </Card>
       ) : null}
 
-      {notes.length === 0 ? (
+      {allNotes.length === 0 ? (
         <Card padded>
           {/* No caption: the card above already says "Care notes", and a
               panel that repeats its own heading spends a line saying nothing. */}
           <NeverWrittenUp variant="panel" />
+        </Card>
+      ) : notes.length === 0 ? (
+        /*
+         * Written up, but not inside this window. A third answer, and it must
+         * not borrow either of the others: "never written up" would be false,
+         * and "no notes match these filters" would blame a filter the reader
+         * did not set. The claim carries its bound. Rule 3c.
+         */
+        <Card padded>
+          <p className={styles.emptyTitle}>No notes in {rangeLabel(range)}</p>
+          <p className={styles.emptyBody}>
+            {resident.preferredName} has {allNotes.length} care notes on the record, all
+            of them outside this range. Widen it or step back to reach them.
+          </p>
         </Card>
       ) : visible.length === 0 ? (
         <Card padded>
@@ -168,6 +223,14 @@ export function NotesTab() {
                 <GapMarker key={`gap-${item.from}-${item.to}`} gap={item} />
               ),
             )}
+            {/* Last, because newest-first means the window cuts at the foot.
+                Not a gap marker — see WindowEdge for why that distinction is
+                the whole reason this is a window and not a page. */}
+            <WindowEdge
+              range={range}
+              previous={shown.previous}
+              oldestShown={notes[notes.length - 1]?.recordedAt ?? 'none'}
+            />
           </ul>
         </Card>
       )}

@@ -326,15 +326,20 @@ describe('the tab within the profile', () => {
   })
 
   /**
-   * 120s. axe walks the whole subtree and this timeline is the longest one in
-   * the product; in isolation it takes about 28 seconds, and under the full
-   * suite's parallel load it has run to 85.
+   * 20s, down from 120s on 29/08/2026 — and the number came down because the
+   * cause went, not because it was retuned again.
    *
-   * A test that fails on how busy the machine was is measuring the machine,
-   * not accessibility — the same shape as a test that depends on the hour it
-   * runs (§8). Raising the number is the third time, though, and it is not a
-   * fix: if it goes again, scope what axe is given rather than the clock it is
-   * given. There are now several of these and they are the suite's long pole.
+   * The raise had happened three times and bought a phase each time. What it
+   * was hiding: this timeline drew all 394 of `res-okafor`'s notes, so axe
+   * walked every one of them and took 33 seconds. The screen now draws a
+   * 30-day window, the scan is **3.1 seconds**, and the ceiling is a real
+   * signal again rather than a place for the cost to keep growing.
+   *
+   * Left at 20s rather than the 5s default: files run in parallel, and a test
+   * that fails on how busy the machine was is measuring the machine, not
+   * accessibility (§8). 20s is roughly six times the measured cost — loose
+   * enough to survive load, tight enough that a return to anything like the
+   * old behaviour fails here instead of being absorbed.
    */
   it('has no detectable accessibility violations', async () => {
     const { container } = renderNotes('/residents/res-okafor/notes')
@@ -350,7 +355,7 @@ describe('the tab within the profile', () => {
     const panel = container.querySelector('[class*="tabPanel"]') ?? container
     const results = await axe(panel)
     expect(results).toHaveNoViolations()
-  }, 120000)
+  }, 20000)
 })
 
 describe('closing the supervisory loop', () => {
@@ -676,5 +681,94 @@ describe('the composer', () => {
         screen.queryByRole('button', { name: 'Write a care note' }),
       ).not.toBeInTheDocument(),
     )
+  }, 30000)
+})
+
+describe('the timeline is windowed, not paginated', () => {
+  /**
+   * The Phase 6 decision, arriving overdue. `res-okafor` has 394 notes and the
+   * tab drew every one of them, which cost the axe scan 33 seconds and, far
+   * worse, would have made any paging scheme fabricate a gap: a marker inside
+   * page 2 states a span whose ends were chosen by the page break. A window
+   * has a stated bound, so every gap inside it is measured between two real
+   * notes and the single edge is not a gap at all.
+   */
+
+  it('draws a bounded window rather than the whole record', async () => {
+    const { container } = renderNotes('/residents/res-okafor/notes')
+    await timeline(container)
+
+    const drawn = [...container.querySelectorAll('[data-note]')]
+    const held = careNotesFor('res-okafor' as ResidentId)
+
+    expect(held.length).toBeGreaterThan(300)
+    expect(drawn.length).toBeGreaterThan(0)
+    expect(drawn.length).toBeLessThan(held.length)
+
+    /*
+     * The bound itself, not a ratio. "Fewer than a quarter" was the first
+     * version of this and it failed at 143 of 394 — a number legitimate
+     * fixtures move, asserting a property of the data rather than of the
+     * window (§8). What must hold is that nothing outside 30 days is drawn.
+     */
+    const ids = new Set(drawn.map((row) => row.getAttribute('data-note')))
+    const shown = held.filter((note) => ids.has(note.id))
+    expect(shown.length).toBe(drawn.length)
+
+    const newest = Math.max(...shown.map((n) => new Date(n.recordedAt).getTime()))
+    for (const note of shown) {
+      const age = newest - new Date(note.recordedAt).getTime()
+      expect(
+        age,
+        `${note.id} is ${Math.round(age / 86_400_000)} days older than the newest note drawn`,
+      ).toBeLessThanOrEqual(30 * 86_400_000)
+    }
+  }, 20000)
+
+  it('states the bound and what lies past it, rather than a gap marker', async () => {
+    const { container } = renderNotes('/residents/res-okafor/notes')
+    await timeline(container)
+
+    const edge = container.querySelector('[data-window-edge]')
+    expect(edge, 'the window must say where it cuts').toBeTruthy()
+
+    const said = edge!.textContent ?? ''
+    // The bound, in the reader's words.
+    expect(said).toMatch(/Showing the last 30 days/i)
+    // And the real elapsed time across it, so nothing is fabricated and
+    // nothing is hidden.
+    expect(said).toMatch(/previous note was \d{2}\/\d{2}\/\d{4}/i)
+    expect(said).toMatch(/\d+ days? before the one above/i)
+  }, 20000)
+
+  it('puts no gap marker at the boundary, because the boundary is not a gap', async () => {
+    const { container } = renderNotes('/residents/res-okafor/notes')
+    await timeline(container)
+
+    const rows = [
+      ...container.querySelectorAll('[data-note], [data-gap], [data-window-edge]'),
+    ]
+    const last = rows[rows.length - 1]
+    // A gap marker here would be a claim about a stretch nobody chose to
+    // leave empty — the screen inventing a hole out of its own scrolling.
+    expect(last?.hasAttribute('data-window-edge')).toBe(true)
+    expect(last?.hasAttribute('data-gap')).toBe(false)
+  }, 20000)
+
+  it('reaches the older notes rather than hiding them behind the default', async () => {
+    const user = userEvent.setup()
+    const { container } = renderNotes('/residents/res-okafor/notes')
+    await timeline(container)
+
+    const first = container.querySelector('[data-note]')?.getAttribute('data-note')
+    await user.click(screen.getByRole('button', { name: /Earlier 30 days/i }))
+
+    await waitFor(() => {
+      const now = container.querySelector('[data-note]')?.getAttribute('data-note')
+      expect(now).not.toBe(first)
+    })
+    // Stepping back is what makes a bound honest: everything is still
+    // reachable, and the reader can see how far back they have gone.
+    expect(container.querySelector('[data-window-edge]')).toBeTruthy()
   }, 30000)
 })
