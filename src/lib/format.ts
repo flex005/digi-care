@@ -67,6 +67,35 @@ const dateParts = { day: '2-digit', month: '2-digit', year: 'numeric' } as const
 const timeParts = { hour: '2-digit', minute: '2-digit', hour12: false } as const
 
 /**
+ * Formatters, kept rather than rebuilt.
+ *
+ * **Constructing an `Intl.DateTimeFormat` is the expensive part** — around 36µs
+ * against well under a microsecond to format with one that already exists. The
+ * cost is invisible at one call and decisive in a loop, and these are called in
+ * loops: `withoutNoteToday` walks every note at a site asking which day it
+ * falls on, which was 11,125 constructions and 405ms of blocked main thread on
+ * one screen. The dashboard, the group figures, the MAR chart and the care note
+ * series all walk notes the same way.
+ *
+ * The cache is safe because the only things that vary are the zone and the
+ * option set, and both are in the key. A formatter is immutable once built.
+ */
+const formatterCache = new Map<string, Intl.DateTimeFormat>()
+
+function formatter(
+  shape: string,
+  timeZone: TimeZone | undefined,
+  options: Intl.DateTimeFormatOptions,
+): Intl.DateTimeFormat {
+  const key = `${shape}|${timeZone ?? ''}`
+  const cached = formatterCache.get(key)
+  if (cached) return cached
+  const made = new Intl.DateTimeFormat('en-GB', options)
+  formatterCache.set(key, made)
+  return made
+}
+
+/**
  * An instant re-expressed as its wall clock in `timeZone`, encoded as UTC
  * milliseconds.
  *
@@ -81,7 +110,7 @@ const timeParts = { hour: '2-digit', minute: '2-digit', hour12: false } as const
  * formatters rather than anywhere a component can reach for it casually.
  */
 export function zonedWallClock(value: IsoDateTime, timeZone: TimeZone): number {
-  const parts = new Intl.DateTimeFormat('en-GB', {
+  const parts = formatter('wall', timeZone, {
     timeZone,
     year: 'numeric',
     month: '2-digit',
@@ -129,16 +158,12 @@ export function zonedDate(value: IsoDateTime, timeZone: TimeZone): IsoDate {
 
 /** `12/03/2026`, in the site's zone. */
 export function formatInstantDate(value: IsoDateTime, timeZone: TimeZone): string {
-  return new Intl.DateTimeFormat('en-GB', { timeZone, ...dateParts }).format(
-    new Date(value),
-  )
+  return formatter('date', timeZone, { timeZone, ...dateParts }).format(new Date(value))
 }
 
 /** `08:04`, in the site's zone. */
 export function formatTime(value: IsoDateTime, timeZone: TimeZone): string {
-  return new Intl.DateTimeFormat('en-GB', { timeZone, ...timeParts }).format(
-    new Date(value),
-  )
+  return formatter('time', timeZone, { timeZone, ...timeParts }).format(new Date(value))
 }
 
 /** `12/03/2026 08:04`, in the site's zone. */
@@ -148,7 +173,7 @@ export function formatDateTime(value: IsoDateTime, timeZone: TimeZone): string {
 
 /** `BST` / `GMT` — whichever was in force at that instant, at that site. */
 export function zoneLabel(value: IsoDateTime, timeZone: TimeZone): string {
-  const parts = new Intl.DateTimeFormat('en-GB', {
+  const parts = formatter('zone', timeZone, {
     timeZone,
     timeZoneName: 'short',
   }).formatToParts(new Date(value))

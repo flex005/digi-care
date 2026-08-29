@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
+import { useSession } from '@/app/session/use-session'
 import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
 import type { IsoDateTime } from '@/data/types'
 import { NOW, toIsoDateTime } from '@/data/fixtures/generate'
@@ -40,9 +41,28 @@ afterEach(() => {
   }
 })
 
+/**
+ * Stands in for the Dashboard at `/`.
+ *
+ * The index route IS the Dashboard (routes.tsx), so "open this home" means
+ * "go to `/`". What is under test is that the button switches the session and
+ * moves the reader; the Dashboard's own content is tested by its own suite, and
+ * mounting it here would make this file pay for that too.
+ *
+ * It prints the active site, so one assertion can check both halves of the act.
+ */
+function DashboardStandIn() {
+  const { activeSite } = useSession()
+  return <div data-dashboard-standin>{activeSite.name}</div>
+}
+
 function renderAt(path: string) {
   const router = createMemoryRouter(
     [
+      // Without this the click below navigated into a router that had no `/`,
+      // react-router resolved against an undefined match, and the resulting
+      // unhandled rejection failed the file while every assertion passed.
+      { path: '/', element: <DashboardStandIn /> },
       { path: 'group', element: <GroupOverviewRoute /> },
       { path: 'settings', element: <SettingsRoute /> },
     ],
@@ -246,10 +266,23 @@ describe('the cross-site banner', () => {
 
     // The group card's own switch is the same act, and it is a control the
     // reader presses rather than something the app does to them.
+    //
+    // **This asserted the opposite until 29/08/2026.** It checked the overview
+    // was still on screen after the click, which was true only because the
+    // navigation was crashing: the router had no `/`, so nothing moved. With
+    // the route present the button does what it says, and the assertion now
+    // reads the act rather than the wreckage of it.
+    const ashgrove = sites.find((site) => site.id === 'site-ashgrove-lodge')!
     const open = container.querySelector('[data-open-site="site-ashgrove-lodge"]')!
     await user.click(open)
-    await waitFor(() => {
-      expect(container.querySelector('[data-group-overview]')).toBeTruthy()
+
+    const landed = await waitFor(() => {
+      const standIn = container.querySelector('[data-dashboard-standin]')
+      expect(standIn).toBeTruthy()
+      return standIn!
     })
+    // Both halves of one act: the session moved, and so did the reader.
+    expect(landed.textContent).toBe(ashgrove.name)
+    expect(container.querySelector('[data-group-overview]')).toBeNull()
   }, 30000)
 })

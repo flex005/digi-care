@@ -10429,3 +10429,116 @@ impression that this change cleared the board. Two failures, both pre-existing:
 
 Neither is a dependency problem and neither is fixed here; both are somebody's
 decision rather than a silent repair on the way past.
+
+---
+
+## The 42 seconds was not what it looked like — 29/08/2026
+
+### Standing check: state that lives outside the repo
+
+**A flag typed once at a terminal is invisible to everyone who clones
+afterwards, and it surfaces on a machine that has never seen it.**
+`--legacy-peer-deps` installed this tree for weeks and left nothing behind — no
+`.npmrc`, project or user. The build server was the first machine to run a
+plain `npm install`, so it was the first to see the failure that had been there
+all along.
+
+Same family as the gitignore pattern: **the state that matters lives somewhere
+nobody reading the repo can see.** A shell history is not a decision the
+project has made. If a command needs a flag to work, the flag belongs in a file
+that gets committed, or the need for it does.
+
+### `navigate('/')` — my report was wrong, so the fix was not the one asked for
+
+I reported `/` as "a route whose only job is to redirect to `/residents`". That
+was true before Phase 12 and has not been since: `{ index: true, element:
+<DashboardRoute /> }`. **`/` is the Dashboard.** The sidebar's Dashboard item
+points at it deliberately, with a comment saying there is no second URL for the
+same screen.
+
+So `navigate('/')` from the group overview already means "go to this home's
+dashboard" — the destination Frank asked me to change it to. There was no
+redirect hop and no product change to make. The other `navigate('/')`, on
+sign-in, is correct for the same reason.
+
+**The real defect was in the test, and it was worse than a missing route.** The
+memory router had `group` and `settings` and no `/`, so the click navigated
+into nothing and react-router threw. The assertion was:
+
+```
+await user.click(open)
+expect(container.querySelector('[data-group-overview]')).toBeTruthy()
+```
+
+which passed **because** the navigation crashed. Had the button worked, the
+overview would have unmounted and the assertion would have failed. A test that
+is satisfied by the wreckage of the act it is testing.
+
+Now the router has `/`, and the assertion reads the act: the stand-in prints
+the active site, so one check covers both halves — the session moved and the
+reader moved. Proved by mutating each half separately: removing `navigate`
+fails on "expected null to be truthy", removing `setActiveSite` fails on
+"expected 'Rosewood Court' to be 'Ashgrove Lodge'".
+
+### The 42 seconds: measured, not guessed
+
+The suspicion was 397 unpaginated notes. **It was not**, and the numbers say so
+plainly:
+
+| | |
+|---|---|
+| Synchronous mount | 33ms |
+| Waiting for content | 944ms |
+| DOM rendered | 168 nodes, 5 list items |
+| 120ms latency sleeps per render | 1 |
+
+The feed paginates at 15. The DOM is tiny. Only one simulated-latency sleep.
+None of the usual suspects.
+
+Timing the three derivations over the site's 11,125 notes found it:
+
+```
+authorsIn ............ 1.1ms
+flaggedNotReviewed ... 0.2ms
+withoutNoteToday ..... 404.7ms
+```
+
+`withoutNoteToday` asks which day each note falls on, so it called `zonedDate`
+11,125 times — and `zonedWallClock` **constructed a new
+`Intl.DateTimeFormat` on every call**. Construction is the expensive part,
+about 36µs; formatting with one that exists is well under a microsecond.
+11,125 × 36µs is the 405ms, and 32 tests each paying it is the 42 seconds.
+
+Cached by shape and zone in `format.ts`: **404.7ms → 39.6ms**, and the file
+**42.16s → 12.42s**.
+
+This was never only a test cost. `zonedDate` is called in loops by the
+dashboard, the group figures, the MAR chart and the note series, so the real
+screens were paying it too — 405ms of blocked main thread on every load of the
+care notes screen.
+
+### Still outstanding: the profile timeline, and it IS the windowing case
+
+`npm run verify` now exits 0 and the suite is 69.8s → 50.6s. But it is not
+stable: one run in two came in at 76.7s with three timeouts across three files,
+all of them `waitFor` running out rather than anything asserting wrongly.
+
+The headroom is gone because of **one test costing 33.2 seconds** — the axe
+scan of the profile notes tab. Its own comment already says the timeout has
+been raised three times and that the fix is to "scope what axe is given rather
+than the clock it is given". It **has** been scoped to the tab panel. The panel
+is still enormous: `res-okafor` has **394 notes**, and `NotesTab` renders every
+one, unpaginated, with gap markers interleaved. Axe walks all of it.
+
+**So this is the windowing decision, and it is overdue.** `PagedNotes` already
+exists and is used by the cross-resident feed at 15 a page with a claim reading
+"showing 1–15 of N", which satisfies the no-truncation rule by stating the
+whole count.
+
+**Not done here, because it is a product decision with a trap in it.** The
+timeline is not a list of notes — `buildTimeline` interleaves gap markers, and
+a gap marker is a claim about elapsed time between notes. Paginate naively and a
+marker's span becomes an artefact of where the page broke, which is Rule 3c
+exactly: a claim over a filtered set that does not carry the filter is false.
+Getting that wrong would put a fabricated gap on a clinical record to make a
+test faster. It needs deciding, not guessing.
