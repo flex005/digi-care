@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import type { Goal, GoalProgressNote, IsoDateTime, Resident } from '@/data/types'
 import { getGoalsBySite } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
-import { Button, Card, SelectedMark } from '@/components/primitives'
+import { Button, Card, Pager, SelectedMark, usePaged } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession } from '@/app/session/use-session'
@@ -135,6 +135,8 @@ function Found({
     })
     .sort(byLongestPast)
 
+  const paged = usePaged(visible)
+
   return (
     <>
       <div className={styles.lead} data-past-target={pastTarget.length}>
@@ -196,53 +198,59 @@ function Found({
               : 'Nothing matches this filter. That is a statement about the filter, not about the record.'}
           </p>
         ) : (
-          <ul className={styles.goalList}>
-            {visible.map(({ goal, resident }) => (
-              <li key={goal.id}>
-                <div className={styles.queueRow} data-row={goal.id}>
-                  <span className={styles.rowWho}>
-                    <span className={styles.rowName}>{resident.preferredName}</span>
-                    <span className={styles.rowMeta}>
-                      {resident.fullLegalName}
-                      {resident.room.kind === 'recorded'
-                        ? ` · Room ${resident.room.value}`
-                        : ' · Room not recorded'}
+          <>
+            <ul className={styles.goalList}>
+              {paged.shown.map(({ goal, resident }) => (
+                <li key={goal.id}>
+                  <div className={styles.queueRow} data-row={goal.id}>
+                    <span className={styles.rowWho}>
+                      <span className={styles.rowName}>{resident.preferredName}</span>
+                      <span className={styles.rowMeta}>
+                        {resident.fullLegalName}
+                        {resident.room.kind === 'recorded'
+                          ? ` · Room ${resident.room.value}`
+                          : ' · Room not recorded'}
+                      </span>
                     </span>
-                  </span>
 
-                  <span>
-                    {/* Their words, never a summary of them. */}
-                    <span className={styles.rowStatement} data-goal-statement={goal.id}>
-                      &ldquo;{goal.statement}&rdquo;
+                    <span>
+                      {/* Their words, never a summary of them. */}
+                      <span
+                        className={styles.rowStatement}
+                        data-goal-statement={goal.id}
+                      >
+                        &ldquo;{goal.statement}&rdquo;
+                      </span>
+                      <span className={styles.rowGoalMeta}>
+                        set by {goal.setBy.displayName}
+                      </span>
                     </span>
-                    <span className={styles.rowGoalMeta}>
-                      set by {goal.setBy.displayName}
-                    </span>
-                  </span>
 
-                  <GoalState
-                    goal={goal}
-                    progress={byGoal.get(goal.id) ?? []}
-                    now={now}
-                    preferredName={resident.preferredName}
-                  />
-
-                  <Link
-                    to={`/residents/${resident.id}/goals/${goal.id}`}
-                    className={styles.action}
-                    aria-label={`Open the goal "${goal.statement}" for ${resident.fullLegalName}`}
-                  >
-                    Open
-                    <Icon
-                      name="arrows-sharp/arrow-right-01-sharp"
-                      size={16}
-                      aria-hidden
+                    <GoalState
+                      goal={goal}
+                      progress={byGoal.get(goal.id) ?? []}
+                      now={now}
+                      preferredName={resident.preferredName}
                     />
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
+
+                    <Link
+                      to={`/residents/${resident.id}/goals/${goal.id}`}
+                      className={styles.action}
+                      aria-label={`Open the goal "${goal.statement}" for ${resident.fullLegalName}`}
+                    >
+                      Open
+                      <Icon
+                        name="arrows-sharp/arrow-right-01-sharp"
+                        size={16}
+                        aria-hidden
+                      />
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Pager paged={paged} total={visible.length} noun="goals" />
+          </>
         )}
       </Card>
     </>

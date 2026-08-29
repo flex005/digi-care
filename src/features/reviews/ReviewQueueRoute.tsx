@@ -4,7 +4,14 @@ import { Link } from 'react-router-dom'
 import type { IsoDate, IsoDateTime, Resident } from '@/data/types'
 import { getResidentsBySite } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
-import { Button, Card, Select, SelectedMark } from '@/components/primitives'
+import {
+  Button,
+  Card,
+  Pager,
+  Select,
+  SelectedMark,
+  usePaged,
+} from '@/components/primitives'
 import { AggregateFigure, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
@@ -134,6 +141,8 @@ function Found({
       }
     })
     .sort(filter === 'completed' ? byMostRecent : byUrgency)
+
+  const paged = usePaged(visible)
 
   /* The composition, said once and reused. Three populations behind one
      projection, and a count that does not say so is a figure nobody can
@@ -279,56 +288,59 @@ function Found({
               : 'Nothing matches these filters. That is a statement about the filters, not about the record.'}
           </p>
         ) : (
-          <ul className={styles.queueList}>
-            {visible.map((item) => (
-              <li key={item.id}>
-                <div className={styles.row} data-row={item.id} data-kind={item.kind}>
-                  {/* Every row names its resident. A review with nobody
+          <>
+            <ul className={styles.queueList}>
+              {paged.shown.map((item) => (
+                <li key={item.id}>
+                  <div className={styles.row} data-row={item.id} data-kind={item.kind}>
+                    {/* Every row names its resident. A review with nobody
                       attached is the wrong-subject failure with a date on it. */}
-                  <span className={styles.rowWho}>
-                    <span className={styles.rowName}>
-                      {item.resident.preferredName}
+                    <span className={styles.rowWho}>
+                      <span className={styles.rowName}>
+                        {item.resident.preferredName}
+                      </span>
+                      <span className={styles.rowMeta}>
+                        {item.resident.fullLegalName}
+                        {item.resident.room.kind === 'recorded'
+                          ? ` · Room ${item.resident.room.value}`
+                          : ' · Room not recorded'}
+                      </span>
                     </span>
-                    <span className={styles.rowMeta}>
-                      {item.resident.fullLegalName}
-                      {item.resident.room.kind === 'recorded'
-                        ? ` · Room ${item.resident.room.value}`
-                        : ' · Room not recorded'}
-                    </span>
-                  </span>
 
-                  <span className={styles.rowWhat}>
-                    {/* The kind is what stops three populations reading as
+                    <span className={styles.rowWhat}>
+                      {/* The kind is what stops three populations reading as
                         one list. */}
-                    <span className={styles.rowKind}>{KIND_LABEL[item.kind]}</span>
-                    <span className={styles.rowName}>{item.label}</span>
-                  </span>
+                      <span className={styles.rowKind}>{KIND_LABEL[item.kind]}</span>
+                      <span className={styles.rowName}>{item.label}</span>
+                    </span>
 
-                  <span className={styles.rowState}>
-                    <Standing standing={item.standing} />
-                  </span>
+                    <span className={styles.rowState}>
+                      <Standing standing={item.standing} />
+                    </span>
 
-                  <Link
-                    to={item.to}
-                    className={
-                      item.standing.kind === 'never_scheduled'
-                        ? styles.rowActionPrimary
-                        : styles.rowAction
-                    }
-                    data-action={item.kind}
-                    aria-label={`${item.actionLabel}, ${item.label} for ${item.resident.fullLegalName}`}
-                  >
-                    {item.actionLabel}
-                    <Icon
-                      name="arrows-sharp/arrow-right-01-sharp"
-                      size={16}
-                      aria-hidden
-                    />
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <Link
+                      to={item.to}
+                      className={
+                        item.standing.kind === 'never_scheduled'
+                          ? styles.rowActionPrimary
+                          : styles.rowAction
+                      }
+                      data-action={item.kind}
+                      aria-label={`${item.actionLabel}, ${item.label} for ${item.resident.fullLegalName}`}
+                    >
+                      {item.actionLabel}
+                      <Icon
+                        name="arrows-sharp/arrow-right-01-sharp"
+                        size={16}
+                        aria-hidden
+                      />
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Pager paged={paged} total={visible.length} noun="reviews" />
+          </>
         )}
       </Card>
     </>

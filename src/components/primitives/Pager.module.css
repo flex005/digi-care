@@ -1,0 +1,61 @@
+/**
+ * The pager. One shape wherever a list is paged (§6), so a reader who has
+ * paged one queue already knows the next.
+ */
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8) var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-12) var(--space-16);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* The slice. Not optional and not quiet — it is the sentence that stops a
+   page of rows reading as the whole holding. */
+.slice {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.controls {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+.button {
+  display: inline-flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.button:disabled {
+  color: var(--ink-400);
+  cursor: not-allowed;
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--purple-400);
+  background-color: var(--purple-50);
+  color: var(--purple-900);
+}
+
+.where {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}

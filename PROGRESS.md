@@ -10699,3 +10699,79 @@ Three guards, each mutated: draw every row and the page test fails at 306; drop
 the slice and the claim test fails on the sentence above.
 
 1,227 tests.
+
+---
+
+## Pagination across the modules — and where it stopped — 29/08/2026
+
+Frank confirmed he meant modules, not modals. My first survey was wrong in a
+way worth recording: **I measured fixture collections, not what each queue
+draws.** A module queue is `residents.flatMap(templates)`, so the row count is
+a product, not a table length — the risk queue is 32 × 10, the consent
+dashboard 32 × 8. Counting the fixture arrays missed that entirely and led me
+to report "one module needs this" when the truth was five.
+
+Measured properly, by rendering each queue and counting rows under its
+broadest filter:
+
+| Queue | Rows | Paged |
+|---|---|---|
+| Reviews | **419** | yes |
+| Documents · expiry | 346 | yes (earlier today) |
+| Care plans | 320 | **no — see below** |
+| Risk assessments | 320 | **no — see below** |
+| Consent | 256 | **no — see below** |
+| Goals | 40 | yes |
+| Residents · activities · incidents · handover | ≤ 52 | no, and the pager hides itself |
+
+### One pager, and the slice inside it
+
+`usePaged` + `<Pager>` in the primitives. Six screens page; a slice line
+written six times is a slice line forgotten once, so **the component renders it
+and there is no way to page without saying so**:
+
+> Showing 1 to 25 of 419 reviews
+
+It hides itself entirely below one page, so the small queues carry the
+machinery without showing chrome that asserts a bound that is not there. The
+page is clamped on render rather than reset in an effect, so narrowing a filter
+cannot paint an empty page first.
+
+### Where it stopped, and why I did not push through
+
+Three queues are **not** paged: risk assessments, care plans, consent. I paged
+them, and `reviews.test.tsx` failed:
+
+> the care plan queue › renders every resident against every domain, from the
+> constant
+
+It asserts `residents × CARE_PLAN_DOMAINS` rows are **rendered**. Paging draws
+25, so it fails.
+
+**I could have made it pass in one line** — assert the denominator in the claim
+instead of the rows on screen. That is the move §8 exists to stop: *"an
+assertion you edit each phase to make it pass has stopped asserting"*. Worse,
+this particular test carries a comment saying it was already hardened once,
+after asserting `rows.length % 10 === 0` — true of ten, of twenty, and of an
+empty list. Editing a guard so my change can land, on the second attempt at the
+same guard, is not a judgement I should be making alone.
+
+**The question underneath is real and is Frank's:** on a cross-resident queue,
+does §1's "all ten domains are listed" mean *all rows on screen*, or is
+"Showing 1 to 25 of 320" enough, given the denominator is stated and the
+finding — a home that has written nothing shows 320 pending — survives? The
+queue's own code comment argues the second: *"the denominator is residents ×
+templates rather than assessments on record"*, which is a claim about a figure,
+not about rendered rows.
+
+I think paging is defensible there. I am not confident enough to weaken a
+completeness guard to prove it, so the three stay whole and the decision is
+recorded rather than taken.
+
+### Guards
+
+Four on the primitive rather than one per screen, since the slice lives in the
+component. Mutated: delete the slice line and three fail; render the pager at
+one page and the fourth fails.
+
+1,231 tests.

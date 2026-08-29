@@ -69,3 +69,6 @@ export type { ToastProps, ToastTone } from './Toast'
 export { VisuallyHidden } from './VisuallyHidden'
 export { SelectedMark } from './SelectedMark'
 export { PasswordField } from './PasswordField'
+
+export { Pager, usePaged, ROWS_PER_PAGE } from './Pager'
+export type { Paged } from './Pager'
