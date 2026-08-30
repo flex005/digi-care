@@ -4,7 +4,7 @@ import type { AnyConsent, ConsentTypeId, Resident } from '@/data/types'
 import { CONSENT_TYPES } from '@/data/types'
 import { getResidentsBySite } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
-import { Button, Card, SelectedMark } from '@/components/primitives'
+import { Button, Card, Pager, SelectedMark, usePaged } from '@/components/primitives'
 import { ConsentBadge } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
@@ -110,26 +110,39 @@ function Found({
       row.status.by.kind !== 'the_resident',
   ).length
 
-  const visible = all.filter((row) => {
-    switch (filter) {
-      case 'all':
-        return true
-      case 'never_sought':
-        return row.status.kind === 'not_sought'
-      case 'pending':
-        return row.status.kind === 'pending'
-      case 'refused':
-        return row.status.kind === 'refused'
-      case 'best_interests':
-        return (
-          row.status.kind !== 'not_sought' &&
-          row.status.kind !== 'pending' &&
-          row.status.by.kind !== 'the_resident'
-        )
-      default:
-        return assertNever(filter)
-    }
-  })
+  const visible = all
+    .filter((row) => {
+      switch (filter) {
+        case 'all':
+          return true
+        case 'never_sought':
+          return row.status.kind === 'not_sought'
+        case 'pending':
+          return row.status.kind === 'pending'
+        case 'refused':
+          return row.status.kind === 'refused'
+        case 'best_interests':
+          return (
+            row.status.kind !== 'not_sought' &&
+            row.status.kind !== 'pending' &&
+            row.status.by.kind !== 'the_resident'
+          )
+        default:
+          return assertNever(filter)
+      }
+    })
+    /*
+     * Gaps first, and this became load-bearing the moment the list was paged.
+     *
+     * Unsorted, "Never sought" rows sat wherever `residents × types` happened
+     * to put them — fine while every row was on screen, and a way of burying
+     * the finding once only the first twenty-five are. A gap on page eight is
+     * hidden as surely as a gap behind a green tile; the ordering does the
+     * work the colour used to.
+     */
+    .sort(byUrgency)
+
+  const paged = usePaged(visible)
 
   return (
     <>
@@ -195,58 +208,82 @@ function Found({
               : 'Nothing matches this filter. That is a statement about the filter, not about the record.'}
           </p>
         ) : (
-          <ul className={styles.consentList}>
-            {visible.map((row) => (
-              <li key={`${row.resident.id}-${row.typeId}`}>
-                <div
-                  className={styles.queueRow}
-                  data-row={`${row.resident.id}-${row.typeId}`}
-                >
-                  <span className={styles.rowWho}>
-                    <span className={styles.rowName}>{row.resident.preferredName}</span>
-                    <span className={styles.rowMeta}>
-                      {row.resident.fullLegalName}
-                      {row.resident.room.kind === 'recorded'
-                        ? ` · Room ${row.resident.room.value}`
-                        : ' · Room not recorded'}
-                    </span>
-                  </span>
-
-                  <span>
-                    <span className={styles.rowName}>{row.typeName}</span>
-                    <span className={styles.typeMeans}>
-                      {CONSENT_MEANS[row.typeId]}
-                    </span>
-                  </span>
-
-                  <span data-outcome={row.status.kind}>
-                    <ConsentBadge status={row.status} />
-                  </span>
-
-                  <Link
-                    to={`/residents/${row.resident.id}/consent/${row.typeId}`}
-                    className={
-                      row.status.kind === 'not_sought'
-                        ? styles.actionPrimary
-                        : styles.action
-                    }
-                    aria-label={`${
-                      row.status.kind === 'not_sought' ? 'Seek' : 'Open'
-                    } consent for ${row.typeName}, ${row.resident.fullLegalName}`}
+          <>
+            <ul className={styles.consentList}>
+              {paged.shown.map((row) => (
+                <li key={`${row.resident.id}-${row.typeId}`}>
+                  <div
+                    className={styles.queueRow}
+                    data-row={`${row.resident.id}-${row.typeId}`}
+                    data-state={row.status.kind}
                   >
-                    {row.status.kind === 'not_sought' ? 'Seek consent' : 'Open'}
-                    <Icon
-                      name="arrows-sharp/arrow-right-01-sharp"
-                      size={16}
-                      aria-hidden
-                    />
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <span className={styles.rowWho}>
+                      <span className={styles.rowName}>
+                        {row.resident.preferredName}
+                      </span>
+                      <span className={styles.rowMeta}>
+                        {row.resident.fullLegalName}
+                        {row.resident.room.kind === 'recorded'
+                          ? ` · Room ${row.resident.room.value}`
+                          : ' · Room not recorded'}
+                      </span>
+                    </span>
+
+                    <span>
+                      <span className={styles.rowName}>{row.typeName}</span>
+                      <span className={styles.typeMeans}>
+                        {CONSENT_MEANS[row.typeId]}
+                      </span>
+                    </span>
+
+                    <span data-outcome={row.status.kind}>
+                      <ConsentBadge status={row.status} />
+                    </span>
+
+                    <Link
+                      to={`/residents/${row.resident.id}/consent/${row.typeId}`}
+                      className={
+                        row.status.kind === 'not_sought'
+                          ? styles.actionPrimary
+                          : styles.action
+                      }
+                      aria-label={`${
+                        row.status.kind === 'not_sought' ? 'Seek' : 'Open'
+                      } consent for ${row.typeName}, ${row.resident.fullLegalName}`}
+                    >
+                      {row.status.kind === 'not_sought' ? 'Seek consent' : 'Open'}
+                      <Icon
+                        name="arrows-sharp/arrow-right-01-sharp"
+                        size={16}
+                        aria-hidden
+                      />
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Pager paged={paged} total={visible.length} noun="consent records" />
+          </>
         )}
       </Card>
     </>
   )
+}
+
+/**
+ * Nobody asked, then asked and waiting, then decided for them, then settled.
+ *
+ * The same shape as the risk and care plan queues deliberately: three screens
+ * that rank a gap above a record should rank it the same way, or a reader
+ * learns one order and is wrong on the next.
+ */
+function byUrgency(a: Row, b: Row): number {
+  const rank = (row: Row) => {
+    if (row.status.kind === 'not_sought') return 0
+    if (row.status.kind === 'pending') return 1
+    if (row.status.kind === 'refused') return 2
+    if (row.status.by.kind !== 'the_resident') return 3
+    return 4
+  }
+  return rank(a) - rank(b)
 }

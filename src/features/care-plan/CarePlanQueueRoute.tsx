@@ -5,7 +5,14 @@ import type { CarePlanDomainId, IsoDateTime, Resident } from '@/data/types'
 import { CARE_PLAN_DOMAINS } from '@/data/types'
 import { getResidentsBySite } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
-import { Button, Card, Select, SelectedMark } from '@/components/primitives'
+import {
+  Button,
+  Card,
+  Pager,
+  Select,
+  SelectedMark,
+  usePaged,
+} from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
@@ -154,6 +161,8 @@ function Found({
     })
     .sort(byUrgency)
 
+  const paged = usePaged(visible)
+
   return (
     <>
       <div className={styles.findings}>
@@ -273,58 +282,63 @@ function Found({
               : 'Nothing matches these filters. That is a statement about the filters, not about the record.'}
           </p>
         ) : (
-          <ul className={styles.queueList}>
-            {visible.map((row) => (
-              <li key={`${row.resident.id}-${row.domainId}`}>
-                <div
-                  className={styles.row}
-                  data-row={`${row.resident.id}-${row.domainId}`}
-                  data-state={row.timing.kind}
-                >
-                  <span className={styles.rowWho}>
-                    <span className={styles.rowName}>{row.resident.preferredName}</span>
-                    <span className={styles.rowMeta}>
-                      {row.resident.fullLegalName}
-                      {row.resident.room.kind === 'recorded'
-                        ? ` · Room ${row.resident.room.value}`
-                        : ' · Room not recorded'}
-                    </span>
-                  </span>
-
-                  <span className={styles.rowWhat}>
-                    <span className={styles.rowKind}>Care plan domain</span>
-                    <span className={styles.rowName}>{row.domainName}</span>
-                  </span>
-
-                  <span className={styles.rowState}>
-                    <DomainStanding timing={row.timing} />
-                  </span>
-
-                  <Link
-                    to={`/residents/${row.resident.id}/care-plan/${row.domainId}`}
-                    className={
-                      row.timing.kind === 'not_started'
-                        ? styles.rowActionPrimary
-                        : styles.rowAction
-                    }
-                    data-action={row.timing.kind === 'not_started' ? 'write' : 'open'}
-                    aria-label={`${
-                      row.timing.kind === 'not_started' ? 'Write' : 'Open'
-                    } the ${row.domainName} care plan domain for ${row.resident.fullLegalName}`}
+          <>
+            <ul className={styles.queueList}>
+              {paged.shown.map((row) => (
+                <li key={`${row.resident.id}-${row.domainId}`}>
+                  <div
+                    className={styles.row}
+                    data-row={`${row.resident.id}-${row.domainId}`}
+                    data-state={row.timing.kind}
                   >
-                    {row.timing.kind === 'not_started'
-                      ? 'Write this domain'
-                      : 'Open domain'}
-                    <Icon
-                      name="arrows-sharp/arrow-right-01-sharp"
-                      size={16}
-                      aria-hidden
-                    />
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <span className={styles.rowWho}>
+                      <span className={styles.rowName}>
+                        {row.resident.preferredName}
+                      </span>
+                      <span className={styles.rowMeta}>
+                        {row.resident.fullLegalName}
+                        {row.resident.room.kind === 'recorded'
+                          ? ` · Room ${row.resident.room.value}`
+                          : ' · Room not recorded'}
+                      </span>
+                    </span>
+
+                    <span className={styles.rowWhat}>
+                      <span className={styles.rowKind}>Care plan domain</span>
+                      <span className={styles.rowName}>{row.domainName}</span>
+                    </span>
+
+                    <span className={styles.rowState}>
+                      <DomainStanding timing={row.timing} />
+                    </span>
+
+                    <Link
+                      to={`/residents/${row.resident.id}/care-plan/${row.domainId}`}
+                      className={
+                        row.timing.kind === 'not_started'
+                          ? styles.rowActionPrimary
+                          : styles.rowAction
+                      }
+                      data-action={row.timing.kind === 'not_started' ? 'write' : 'open'}
+                      aria-label={`${
+                        row.timing.kind === 'not_started' ? 'Write' : 'Open'
+                      } the ${row.domainName} care plan domain for ${row.resident.fullLegalName}`}
+                    >
+                      {row.timing.kind === 'not_started'
+                        ? 'Write this domain'
+                        : 'Open domain'}
+                      <Icon
+                        name="arrows-sharp/arrow-right-01-sharp"
+                        size={16}
+                        aria-hidden
+                      />
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Pager paged={paged} total={visible.length} noun="care plan domains" />
+          </>
         )}
       </Card>
     </>

@@ -4,7 +4,14 @@ import type { IsoDate, Resident, RiskStatus, RiskTemplateId } from '@/data/types
 import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
 import { getResidentsBySite } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
-import { Button, Card, Select, SelectedMark } from '@/components/primitives'
+import {
+  Button,
+  Card,
+  Pager,
+  Select,
+  SelectedMark,
+  usePaged,
+} from '@/components/primitives'
 import { StatusPill, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
@@ -149,6 +156,8 @@ function Found({
     })
     .sort(sortByUrgency)
 
+  const paged = usePaged(visible)
+
   return (
     <>
       <div className={styles.findings}>
@@ -247,45 +256,50 @@ function Found({
               : 'Nothing matches these filters. That is a statement about the filters, not about the record.'}
           </p>
         ) : (
-          <ul className={styles.queueList}>
-            {visible.map((row) => (
-              <li key={`${row.resident.id}-${row.templateId}`}>
-                <Link
-                  to={`/residents/${row.resident.id}/risk-assessments/${row.templateId}`}
-                  className={styles.queueRow}
-                  data-row={`${row.resident.id}-${row.templateId}`}
-                  data-state={row.status.kind}
-                >
-                  {/* Every row names its resident. An assessment with nobody
+          <>
+            <ul className={styles.queueList}>
+              {paged.shown.map((row) => (
+                <li key={`${row.resident.id}-${row.templateId}`}>
+                  <Link
+                    to={`/residents/${row.resident.id}/risk-assessments/${row.templateId}`}
+                    className={styles.queueRow}
+                    data-row={`${row.resident.id}-${row.templateId}`}
+                    data-state={row.status.kind}
+                  >
+                    {/* Every row names its resident. An assessment with nobody
                       attached is the wrong-subject failure with a risk on it. */}
-                  <span className={styles.rowWho}>
-                    <span className={styles.rowName}>{row.resident.preferredName}</span>
-                    <span className={styles.rowMeta}>
-                      {row.resident.fullLegalName}
-                      {row.resident.room.kind === 'recorded'
-                        ? ` · Room ${row.resident.room.value}`
-                        : ' · Room not recorded'}
+                    <span className={styles.rowWho}>
+                      <span className={styles.rowName}>
+                        {row.resident.preferredName}
+                      </span>
+                      <span className={styles.rowMeta}>
+                        {row.resident.fullLegalName}
+                        {row.resident.room.kind === 'recorded'
+                          ? ` · Room ${row.resident.room.value}`
+                          : ' · Room not recorded'}
+                      </span>
                     </span>
-                  </span>
 
-                  <span className={styles.rowWhat}>
-                    <span className={styles.rowName}>{row.templateName}</span>
-                  </span>
+                    <span className={styles.rowWhat}>
+                      <span className={styles.rowName}>{row.templateName}</span>
+                    </span>
 
-                  <QueueState status={row.status} format={format} />
+                    <QueueState status={row.status} format={format} />
 
-                  <span className={styles.rowOpen}>
-                    {row.status.kind === 'not_assessed' ? 'Score now' : 'Re-score'}
-                    <Icon
-                      name="arrows-sharp/arrow-right-01-sharp"
-                      size={16}
-                      aria-hidden
-                    />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    <span className={styles.rowOpen}>
+                      {row.status.kind === 'not_assessed' ? 'Score now' : 'Re-score'}
+                      <Icon
+                        name="arrows-sharp/arrow-right-01-sharp"
+                        size={16}
+                        aria-hidden
+                      />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Pager paged={paged} total={visible.length} noun="assessments" />
+          </>
         )}
       </Card>
     </>

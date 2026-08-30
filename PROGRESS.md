@@ -10790,3 +10790,72 @@ component. Mutated: delete the slice line and three fail; render the pager at
 one page and the fourth fails.
 
 1,231 tests.
+
+---
+
+## Paging the cross-resident queues — 30/08/2026
+
+Frank's two rulings, and the distinction that settles the whole question:
+
+> A resident's care plan tab is a complete set — all ten domains, always, never
+> paged, because a reader there is looking at that person's whole plan and a
+> partial list reads as a complete one. `/care-plans` is a population, and
+> "1 to 25 of 320" carries what the rule protects.
+
+**Complete set versus view over a population.** That is the line, and it is
+sharper than the one I drew. Risk assessments, care plans and consent are now
+paged at module level; the per-resident tabs beneath them are untouched and
+must stay that way.
+
+**Residents is not paged.** Splitting 28 rows into 25 and 3 helps nobody. Where
+a table does need paging, the page size goes up rather than the table being
+carved at 25 — `usePaged` takes `perPage` for exactly that.
+
+### The condition, which was not already satisfied
+
+All three defaulted to the gap filter — `never_assessed`, `never_written`,
+`never_sought` — so that half held. **The sort did not.** The consent dashboard
+had no `.sort` at all: its "Never sought" rows sat wherever `residents × types`
+happened to put them. Harmless while every row was on screen, and a way of
+burying the finding the moment only the first twenty-five are. A gap on page
+eight is hidden as surely as a gap behind a green tile — the ordering doing the
+work the colour used to. It now ranks gaps first, in the same shape as the
+other two, so three screens that rank a gap above a record rank it the same
+way.
+
+### The guard, rewritten — and the hole in my first attempt
+
+`renders every resident against every domain` counted rendered rows against
+`residents × CARE_PLAN_DOMAINS`. It now reads the denominator out of the claim
+the screen makes, plus a check that what is drawn is *fewer* than the whole —
+otherwise it would pass on a screen that never paged.
+
+**The proxy did not fail. It stopped matching.** Paging broke nothing the guard
+protected: the constant was still the source, the denominator still right. It
+went red for a reason unrelated to the defect it existed to catch — and that is
+the dangerous kind, because a test that has stopped matching invites you to
+adjust the number until it is green, which is the same keystroke as fixing a
+real regression and the opposite act.
+
+A second guard, as Frank required: **the gaps are on the first page.** Three
+mutations were run against it, and the third is the reason it is worth
+recording — setting the default filter to "All" **passed**. My assertion was
+"every row on page one is a gap", which the sort satisfies on its own: gaps
+first means page one is all gaps whichever filter is default. The guard was
+being satisfied by the very mechanism it was meant to be independent of. It now
+asks the filter control which one is pressed, and the mutation fails.
+
+Sorting gaps last fails it too, and counting the drawn rows as the pager's
+total fails the denominator guard.
+
+### Two entries added to §8
+
+*A test's history is what tells you whether an edit is a fix or a retreat* —
+the comment recording the earlier hardening is the only thing that made the
+second edit visible as a pattern rather than as maintenance, and neither the
+assertion nor the diff carries that.
+
+*A red test can stop matching rather than fail* — the harder version to notice,
+for the reason above.
+
+1,232 tests.

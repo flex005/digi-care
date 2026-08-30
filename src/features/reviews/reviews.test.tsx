@@ -554,7 +554,7 @@ describe('the care plan queue', () => {
     expect(never?.textContent).not.toMatch(/started/)
   })
 
-  it('renders every resident against every domain, from the constant', async () => {
+  it('states every resident against every domain, from the constant', async () => {
     const { container } = renderAt('/care-plans')
     await settled(container)
 
@@ -562,21 +562,78 @@ describe('the care plan queue', () => {
     await user.click(container.querySelector<HTMLButtonElement>('[data-filter="all"]')!)
 
     /*
-     * The exact count, derived from the constants.
+     * The denominator, through the claim the screen makes.
      *
-     * This asserted `rows.length % 10 === 0`, which is true of 0, of 10, and
-     * of every wrong answer that happens to be a multiple of ten — including
-     * an empty list. Counting what exists would make a home that has written
-     * nothing look complete, so the figure under test is residents × domains.
+     * Two versions of this have now been wrong in different ways. It began as
+     * `rows.length % 10 === 0`, true of ten, of twenty and of an empty list.
+     * It was then hardened to count rendered rows against residents × domains,
+     * which was correct until the queue was paged — and then it did not fail,
+     * it **stopped matching**, which is the harder one to notice: a red test
+     * that has stopped being about the thing invites you to adjust the number
+     * until it is green again.
+     *
+     * Counting rows was always a proxy for "the constant is the source". The
+     * claim is the thing itself, and it survives any change to how many rows
+     * are drawn.
      */
-    const expected = residents.filter(
-      (resident) => resident.siteId === 'site-rosewood-court',
-    ).length
+    const expected =
+      residents.filter((resident) => resident.siteId === 'site-rosewood-court').length *
+      CARE_PLAN_DOMAINS.length
+
     await waitFor(() => {
-      expect(container.querySelectorAll('[data-row]').length).toBe(
-        expected * CARE_PLAN_DOMAINS.length,
+      expect(container.querySelector('[data-pager-slice]')?.textContent).toMatch(
+        new RegExp(`of\\s*${expected}\\s*care plan domains`),
       )
     })
+
+    // And what is drawn is a page of it, not the whole set — otherwise the
+    // assertion above would pass on a screen that never paged at all.
+    expect(container.querySelectorAll('[data-row]').length).toBeLessThan(expected)
+  })
+
+  /**
+   * Paging can bury a finding by ordering alone.
+   *
+   * If page one holds written domains and the gaps land on page twelve, the
+   * screen has hidden them as surely as a green tile would — the same failure
+   * reached through sequence rather than colour. So: the default view is the
+   * gap, and under "All" the gaps are still on the first page.
+   */
+  it('keeps the gaps on the first page, not on page twelve', async () => {
+    const { container } = renderAt('/care-plans')
+    await settled(container)
+
+    const gapsOnPageOne = () =>
+      [...container.querySelectorAll('[data-row]')].filter(
+        (row) => row.getAttribute('data-state') === 'not_started',
+      ).length
+
+    /*
+     * The default view is the gap itself — asserted on the control, not on the
+     * rows.
+     *
+     * This first checked that every row on page one was a gap, which passed
+     * with the default set to "All": the sort puts gaps first, so page one is
+     * all gaps either way. The assertion was satisfied by the mechanism it was
+     * meant to be independent of. Ask the filter which one it is.
+     */
+    await waitFor(() =>
+      expect(container.querySelectorAll('[data-row]').length).toBeGreaterThan(0),
+    )
+    expect(
+      container
+        .querySelector('[data-filter="never_written"]')
+        ?.getAttribute('aria-pressed'),
+    ).toBe('true')
+    expect(gapsOnPageOne()).toBe(container.querySelectorAll('[data-row]').length)
+
+    // And widening to everything does not push them off the first page.
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    await user.click(container.querySelector<HTMLButtonElement>('[data-filter="all"]')!)
+    await waitFor(() =>
+      expect(container.querySelector('[data-pager-slice]')).toBeTruthy(),
+    )
+    expect(gapsOnPageOne()).toBeGreaterThan(0)
   })
 })
 
