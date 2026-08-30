@@ -10722,7 +10722,8 @@ broadest filter:
 | Risk assessments | 320 | **no — see below** |
 | Consent | 256 | **no — see below** |
 | Goals | 40 | yes |
-| Residents · activities · incidents · handover | ≤ 52 | no, and the pager hides itself |
+| Activities · incidents · handover | ≤ 52 | no — under one page, so the pager would hide itself |
+| Residents | 28 | **no, and this one was an oversight — see the correction below** |
 
 ### One pager, and the slice inside it
 
@@ -10767,6 +10768,20 @@ not about rendered rows.
 I think paging is defensible there. I am not confident enough to weaken a
 completeness guard to prove it, so the three stay whole and the decision is
 recorded rather than taken.
+
+### Correction: residents was not a decision
+
+The table above first grouped residents with the lists that are too short to
+page. It is not one. It draws **28 rows** against a page size of **25**, so it
+would page — the only thing stopping it is that `usePaged` was never applied
+there.
+
+There is no rule protecting it, either: a resident roster is a population, not
+a complete-set list, and its caption already states "16 of 28 residents at
+Rosewood Court", so the denominator survives paging. Whether it *should* page
+is a real question — splitting 28 rows into 25 and 3 helps nobody — but that is
+a judgement about the threshold, not the reason it was skipped. It was skipped
+because I put it in the wrong column.
 
 ### Guards
 
