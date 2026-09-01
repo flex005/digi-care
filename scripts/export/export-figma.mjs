@@ -90,19 +90,56 @@ const WIDTH = widthFromArgv(process.argv)
 /** Which routes to export, and what to call the file. */
 const ROUTES = [{ name: 'dashboard', path: '/' }]
 
-const FONT_FILES = {
-  400: 'node_modules/@fontsource/manrope/files/manrope-latin-400-normal.woff2',
-  600: 'node_modules/@fontsource/manrope/files/manrope-latin-600-normal.woff2',
-  700: 'node_modules/@fontsource/manrope/files/manrope-latin-700-normal.woff2',
-}
+/**
+ * One family name per weight, rather than one family at three weights.
+ *
+ * **The one hypothesis left for the ExtraLight problem, and it is a test.**
+ * Neither the app nor this file has ever presented a variable font or a weight
+ * range: `src/main.tsx` loads five static `@fontsource` faces with seven
+ * distinct masters, and the block below writes three static faces with
+ * unambiguous weights. So the range explanation does not fit — but an importer
+ * that resolves by *family name* would look up bare `Manrope`, find Figma's
+ * own Manrope, which is variable, and take its default master. That master is
+ * ExtraLight, and it explains the one thing the range theory could not: why
+ * installing Manrope in Figma does not help.
+ *
+ * Naming the family `Manrope SemiBold` means there is no bare `Manrope` to
+ * resolve against. It either fixes it or rules the whole idea out; both are
+ * worth more than another round of reasoning about a plugin that cannot be run
+ * from here.
+ *
+ * **The browser rendering is unchanged either way.** Each family holds exactly
+ * one face at exactly one weight, so there is one exact match and nothing to
+ * synthesise — verified against the app rather than assumed.
+ */
+const FONT_FACES = [
+  {
+    weight: 400,
+    family: 'Manrope Regular',
+    file: 'node_modules/@fontsource/manrope/files/manrope-latin-400-normal.woff2',
+  },
+  {
+    weight: 600,
+    family: 'Manrope SemiBold',
+    file: 'node_modules/@fontsource/manrope/files/manrope-latin-600-normal.woff2',
+  },
+  {
+    weight: 700,
+    family: 'Manrope Bold',
+    file: 'node_modules/@fontsource/manrope/files/manrope-latin-700-normal.woff2',
+  },
+]
+
+/** Weight → family, for the walker. The fallback is the lightest we ship. */
+const FAMILIES = Object.fromEntries(
+  FONT_FACES.map(({ weight, family }) => [weight, family]),
+)
 
 function embeddedFonts() {
-  return Object.entries(FONT_FILES)
-    .map(([weight, file]) => {
-      const data = readFileSync(file).toString('base64')
-      return `@font-face{font-family:'Manrope';font-style:normal;font-weight:${weight};font-display:block;src:url(data:font/woff2;base64,${data}) format('woff2')}`
-    })
-    .join('\n')
+  return FONT_FACES.map(({ weight, family, file }) => {
+    const data = readFileSync(file).toString('base64')
+    return `@font-face{font-family:'${family}';font-style:normal;font-weight:${weight};font-display:block;src:url(data:font/woff2;base64,${data}) format('woff2')}`
+  }).join('\n')
 }
 
 function serve() {
@@ -150,7 +187,7 @@ async function exportRoute(page, route) {
 
   const result = await page.evaluate(
     ([walker, options]) => eval(`(${walker})`)(options),
-    [WALKER, { weights: WEIGHTS }],
+    [WALKER, { weights: WEIGHTS, families: FAMILIES }],
   )
 
   const document_ = `<!doctype html>
@@ -162,7 +199,7 @@ async function exportRoute(page, route) {
 ${embeddedFonts()}
 *{margin:0;padding:0;box-sizing:border-box}
 html{background:#f2f6fe}
-body{background:#f2f6fe;font-family:Manrope,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{background:#f2f6fe;font-family:'Manrope Regular',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 /*
  * The capture, at the width it was captured. Nothing inside this box moves:
  * every child is still at the absolute pixel the browser resolved for it.

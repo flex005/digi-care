@@ -11192,3 +11192,28 @@ roundings.
 Grid audit, for the second half: 122 `display: grid` against 462 `display:
 flex` and 87 `inline-flex`. Of 113 `grid-template-columns`, 112 use `fr`, 90
 use `minmax()` and 12 use `auto-fit`/`auto-fill`.
+
+## Per-weight family names in the export
+
+Tried the one hypothesis left for the ExtraLight problem. Neither the app nor
+the exporter has ever presented a variable font or a weight range — that was
+checked and disproved last turn — but an importer resolving by *family name*
+would look up bare `Manrope`, find Figma's own Manrope, which is variable, and
+take its default master. That master is ExtraLight, and it explains the one
+thing the range theory could not: why installing Manrope in Figma does not
+help.
+
+So the export now ships three families rather than one at three weights:
+`Manrope Regular` 400, `Manrope SemiBold` 600, `Manrope Bold` 700. Verified in
+the emitted file — three `@font-face` rules, 227 content references split
+119/54/54, 19 SVG `font-family` attributes, and **no bare `Manrope` anywhere**.
+
+Browser rendering is unchanged, and that was measured rather than assumed: all
+three faces report `loaded`, and a probe string renders at 483 / 496 / 502px
+against 473px for the sans-serif fallback. Three distinct real faces, none
+falling back, none shared.
+
+This is a test, not a fix. If Figma still resolves to ExtraLight, the family
+name was not the mechanism and the idea is ruled out.
+
+One §8 entry added, about the green build that was red.

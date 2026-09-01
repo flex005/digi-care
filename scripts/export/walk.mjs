@@ -9,7 +9,14 @@
  * the output does not contain one.
  */
 export const WALKER = String(function walk(options) {
-  const { weights } = options
+  const { weights, families } = options
+
+  /*
+   * The family that carries this weight. One family per weight (see
+   * `FONT_FACES`), so there is never a bare `Manrope` for an importer to
+   * resolve against a variable face.
+   */
+  const familyFor = (weight) => `'${families[weight]}', sans-serif`
   const out = []
   const rounded = []
   const skipped = { hidden: 0, empty: 0 }
@@ -152,7 +159,7 @@ export const WALKER = String(function walk(options) {
         `<div style="position:absolute;left:${px(left - originX)};top:${px(
           top - originY,
         )};width:${px(right - left + 1)};height:${px(bottom - top)};` +
-          `color:${style.color};font-family:Manrope,sans-serif;font-size:${style.fontSize};` +
+          `color:${style.color};font-family:${familyFor(weight)};font-size:${style.fontSize};` +
           `font-weight:${weight};line-height:${style.lineHeight};` +
           `letter-spacing:${style.letterSpacing === 'normal' ? '0px' : style.letterSpacing};` +
           `text-align:${
@@ -273,7 +280,10 @@ export const WALKER = String(function walk(options) {
               'font-weight',
               String(nearestWeight(parseInt(painted.fontWeight, 10) || 400)),
             )
-            target.setAttribute('font-family', 'Manrope, sans-serif')
+            target.setAttribute(
+              'font-family',
+              families[nearestWeight(parseInt(painted.fontWeight, 10) || 400)],
+            )
           }
         })
         emit(
@@ -359,7 +369,9 @@ export const WALKER = String(function walk(options) {
           top + (rect.height - parseFloat(style.fontSize) * 1.4) / 2,
         )};width:${px(rect.width - inset * 2)};height:${px(
           parseFloat(style.fontSize) * 1.4,
-        )};color:#9a93b0;font-family:Manrope,sans-serif;font-size:${style.fontSize};` +
+        )};color:#9a93b0;font-family:${familyFor(
+          nearestWeight(parseInt(style.fontWeight, 10) || 400),
+        )};font-size:${style.fontSize};` +
           `font-weight:${nearestWeight(parseInt(style.fontWeight, 10) || 400)};` +
           `line-height:${px(parseFloat(style.fontSize) * 1.4)};">` +
           escape(element.placeholder) +
