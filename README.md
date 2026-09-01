@@ -55,11 +55,19 @@ somebody signs in. The email is prefilled — one click on **Sign in** gets you
 in as a care worker. Any password works.
 
 ```bash
-npm run verify       # icons, typecheck, ten lint scripts, format, 1220 tests
+npm run verify       # icons, typecheck, lint scripts, format, tests, layout
 npm run test         # tests alone
 npm run build        # production build
-npm run export:figma # flatten a screen to standalone HTML for html.to.design
+npm run check:layout # a real browser: nothing clips at the narrowest width
 ```
+
+No counts here on purpose — a tally of tests or lint scripts in a README is
+a number nobody updates and everybody reads.
+
+**For Figma**, point [html.to.design](https://html.to.design) at the running
+app rather than at an export. It builds auto-layout from flex and gap and
+reads type from elements in normal flow, which is what the app already is.
+`scripts/export/` is parked and explains why.
 
 `npm run icons` regenerates the icon registry and is wired into `predev` and
 `prebuild`; it compiles only the icons actually used, out of 3,559 available.

@@ -1,5 +1,38 @@
 #!/usr/bin/env node
 /**
+ * PARKED. Do not run this, and do not extend it. Point html.to.design at the
+ * running app instead — the dev server, or the deployed URL.
+ *
+ * **The premise was wrong, and it was the premise rather than the execution.**
+ * This resolves the layout away: `getComputedStyle` and
+ * `getBoundingClientRect` turn `flex`, `gap`, `grid` and every percentage into
+ * one absolutely-positioned `<div>` per box, on the reasoning that a plugin
+ * given finished pixels has nothing left to misinterpret. html.to.design does
+ * not want finished pixels. It builds Figma auto-layout *from* flex and gap,
+ * and reads type from text elements in normal flow — so the two things it
+ * needs are precisely the two things this strips out. 149 absolutely
+ * positioned divs give it neither, and no amount of fixing the output helps,
+ * because the output is the problem.
+ *
+ * **Everything that went wrong downstream followed from that.** The ExtraLight
+ * fonts, the per-weight family names, the rounding of 500 and 800, the
+ * quarter-turn donut, the frozen capture width and the scaling wrapper bolted
+ * on to undo it — six rounds of repair, every one of them a consequence of
+ * having thrown the structure away and then trying to reconstruct what it
+ * carried. **The tell was available from the first round and went unread: a
+ * fix that works and is immediately followed by another defect of the same
+ * kind is a fix to a symptom.** Six symptoms is not bad luck.
+ *
+ * Kept rather than deleted because the walker learned things that are true of
+ * the product and not of this approach, and they are cheaper to read here than
+ * to rediscover: an SVG shape with no `fill` renders black once it leaves the
+ * stylesheet; `repeating-linear-gradient` has no Figma equivalent, so the
+ * hatch needs geometry; `.donut` carries a transform on the `<svg>` root that
+ * a child-only paint loop misses; the product uses five weights and rounding
+ * two of them is visible in the sidebar.
+ *
+ * ---
+ *
  * Every screen as standalone HTML, for import into Figma via html.to.design.
  *
  * **The React app is the source and the browser does the interpreting.** Each

@@ -11252,3 +11252,67 @@ from `FONT_FACES` now rather than typed.
 
 Cost: five embedded faces instead of three, so the file is larger. Named
 rather than traded away quietly.
+
+## The exporter is parked, and the grid audit
+
+**Parked, not deleted.** The premise was wrong rather than the execution: the
+walker resolves the layout away, and html.to.design builds auto-layout *from*
+flex and gap and reads type from elements in normal flow. The two things it
+needs are the two things the walker strips. `npm run export:figma` is gone from
+`package.json` and the README now says to point the plugin at the running app.
+
+Kept rather than deleted because the walker learned things that are true of the
+product rather than of the approach, and they are cheaper to read than to
+rediscover: an SVG shape with no `fill` renders black once it leaves the
+stylesheet; `repeating-linear-gradient` has no Figma equivalent so the hatch
+needs geometry; `.donut` carries a transform on the `<svg>` root that a
+child-only paint loop misses; the product uses five weights and rounding two of
+them is visible in the sidebar.
+
+One §8 entry added, and it is the one that matters here: six repairs in a row,
+every one a real defect correctly fixed, is what a wrong premise looks like
+from the inside. A wrong premise does not present as one wrong thing; it
+presents as a queue of right ones.
+
+Also fixed two stale counts while in there — the README claimed 1220 tests
+against 1236, and listed the parked command. Counts removed rather than
+corrected, because a tally in a README is a number nobody updates.
+
+### Grid, measured
+
+122 grid rules across 26 stylesheets, against 549 flex (462 `flex`, 87
+`inline-flex`) — about 4.5:1. Of the 110 that declare `grid-template-columns`,
+108 use `fr`, 88 use `minmax()`, and **exactly one uses fixed or auto tracks
+only**.
+
+Mutually exclusive buckets, so they sum:
+
+| | |
+|---|---|
+| 58 | one-off row inside a card — nothing aligns against it |
+| 42 | repeated row, aligning columns down a list |
+| 11 | card grid, `repeat(auto-fit, minmax(…))` |
+| 7 | single-column stack |
+| 4 | two-dimensional (named areas or explicit rows) |
+
+Grid-heavy stylesheets: incidents (12), medications (10), resident profile (8),
+group (7), risk (7), auth (6), compliance (6), me (6).
+
+**Only 4 of 122 are two-dimensional**, and one of those is the app shell itself
+(`auto 1fr`, rail plus main) and one is the Reports chart row written last week.
+So the "grid is 2D and flex is 1D" objection barely applies here.
+
+**The real cost is the 42 repeated rows.** In grid, every `.logRow` in a list
+resolves the same track definition, so columns line up down the page. Flex
+sizes each row independently, so holding the alignment means converting every
+`fr` and `minmax` track to a fixed or percentage width. That is mechanical, and
+it drops the floors: 6 of the 42 carry a non-zero `minmax` floor — the consent,
+goals, risk and reviews queues, the incident log, and the group metric row —
+and those floors are what stop a column being squeezed below its content. That
+is not hypothetical here: the incident row's floors summing above the available
+width is the defect fixed two commits ago, and a squeezed column is how the
+Reports panel lost every denominator.
+
+So: 76 of 122 would swap cleanly (58 one-off rows, 11 card grids to
+`flex-wrap` + `flex-basis`, 7 stacks). 42 are mechanical but lossy. 4 are
+genuinely hard, and two of those are load-bearing shell and chart layout.
