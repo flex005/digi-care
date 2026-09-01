@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <title>Figma import probe</title>
+    <!--
+      WHAT THIS IS
+
+      Twelve specimens, one per SVG or CSS mechanism the diGi-Care charts use.
+      Import it and note which numbers arrive intact. It is not part of the app,
+      it imports nothing from the app, and it is not styled to look like it.
+
+      Colours are literals on purpose. This file has no dependency on the token
+      sheet, because a probe that shares machinery with the thing it is testing
+      can fail for the thing's reasons.
+
+      Each <svg> carries its OWN <defs>. A url(#…) reference does not resolve
+      across two <svg> roots in anything but a browser, so sharing one <defs>
+      would test the wrong thing.
+
+      HOW TO READ IT
+        1, 2   pattern as a FILL          — 9 uses in the app
+        3, 4   pattern as a STROKE        — 3 uses, the expensive third
+        5, 6, 7  plain shapes, no reference — the control for "does SVG arrive"
+        8      clipPath                   — the fallback for 1 and 2 rests on it
+        9, 10  border-radius 8px vs 50%   — the legend swatch question
+        11     CSS repeating-linear-gradient — the hatch outside SVG
+        12     a solid div                — the control for "did anything arrive"
+    -->
+    <style>
+      body {
+        margin: 0;
+        padding: 32px;
+        background: #ffffff;
+        color: #1e0059;
+        font-family: system-ui, sans-serif;
+        font-size: 15px;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 20px;
+      }
+      p.intro {
+        margin: 0 0 28px;
+        color: #5b5570;
+      }
+      .row {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        padding: 14px 0;
+        border-top: 1px solid #e6e3ee;
+      }
+      .num {
+        flex: 0 0 28px;
+        color: #5b5570;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .spec {
+        flex: 0 0 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 72px;
+      }
+      .label {
+        flex: 1 1 auto;
+      }
+      .label b {
+        display: block;
+      }
+      .label span {
+        color: #5b5570;
+        font-size: 13px;
+      }
+      /* 9 and 10 — the two radius declarations, at the size the app uses. */
+      .swatch8 {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background: #6935cf;
+        border-radius: 8px;
+      }
+      .swatch50 {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background: #6935cf;
+        border-radius: 50%;
+      }
+      /* 11 — the CSS half of the unrecorded hatch. */
+      .gradient {
+        width: 64px;
+        height: 48px;
+        border: 1.5px dashed #8e86a8;
+        background: repeating-linear-gradient(
+          45deg,
+          #d9d5e6 0 8px,
+          transparent 8px 16px
+        );
+      }
+      /* 12 — the control. */
+      .solid {
+        width: 64px;
+        height: 48px;
+        background: #6935cf;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Figma import probe</h1>
+    <p class="intro">
+      Twelve mechanisms, one per row. Note which numbers arrive intact.
+    </p>
+
+    <div class="row">
+      <span class="num">1</span>
+      <span class="spec">
+        <svg width="64" height="48" role="img" aria-label="Specimen 1">
+          <defs>
+            <pattern id="p1" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="16" height="16" fill="#f2f1f6"></rect>
+              <rect width="8" height="16" fill="#8e86a8"></rect>
+            </pattern>
+          </defs>
+          <rect width="64" height="48" fill="url(#p1)"></rect>
+        </svg>
+      </span>
+      <span class="label">
+        <b>rect, fill = pattern</b>
+        <span>Expect diagonal stripes. Blank or solid means pattern fills are dropped.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">2</span>
+      <span class="spec">
+        <svg width="64" height="48" role="img" aria-label="Specimen 2">
+          <defs>
+            <pattern id="p2" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="16" height="16" fill="#f2f1f6"></rect>
+              <rect width="8" height="16" fill="#8e86a8"></rect>
+            </pattern>
+          </defs>
+          <path d="M0 48 L0 12 Q0 0 12 0 L52 0 Q64 0 64 12 L64 48 Z" fill="url(#p2)"></path>
+        </svg>
+      </span>
+      <span class="label">
+        <b>path, fill = pattern</b>
+        <span>The bar-cap shape. Same question as 1, on a path rather than a rect.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">3</span>
+      <span class="spec">
+        <svg width="64" height="48" role="img" aria-label="Specimen 3">
+          <defs>
+            <pattern id="p3" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="16" height="16" fill="#f2f1f6"></rect>
+              <rect width="8" height="16" fill="#8e86a8"></rect>
+            </pattern>
+          </defs>
+          <path d="M8 40 Q32 0 56 40" fill="none" stroke="url(#p3)" stroke-width="10"></path>
+        </svg>
+      </span>
+      <span class="label">
+        <b>path, stroke = pattern</b>
+        <span>A hatched curved band. If this fails, the donut arc needs filled geometry.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">4</span>
+      <span class="spec">
+        <svg width="64" height="48" role="img" aria-label="Specimen 4">
+          <defs>
+            <pattern id="p4" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="16" height="16" fill="#f2f1f6"></rect>
+              <rect width="8" height="16" fill="#8e86a8"></rect>
+            </pattern>
+          </defs>
+          <circle cx="32" cy="24" r="18" fill="none" stroke="url(#p4)" stroke-width="8"></circle>
+        </svg>
+      </span>
+      <span class="label">
+        <b>circle, stroke = pattern</b>
+        <span>The round-ring track. Tests circle and pattern-stroke together.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">5</span>
+      <span class="spec">
+        <svg width="64" height="48" role="img" aria-label="Specimen 5">
+          <circle cx="32" cy="24" r="20" fill="#6935cf"></circle>
+        </svg>
+      </span>
+      <span class="label">
+        <b>circle, solid fill</b>
+        <span>No reference at all. If this arrives square, circles are not preserved.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">6</span>
+      <span class="spec">
+        <svg width="64" height="48" role="img" aria-label="Specimen 6">
+          <rect width="64" height="48" rx="12" fill="#6935cf"></rect>
+        </svg>
+      </span>
+      <span class="label">
+        <b>rect with rx, solid fill</b>
+        <span>Whether SVG corner radius survives. The fallback shape if 5 fails.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">7</span>
+      <span class="spec">
+        <svg width="64" height="48" role="img" aria-label="Specimen 7">
+          <path d="M0 48 L0 12 Q0 0 12 0 L52 0 Q64 0 64 12 L64 48 Z" fill="#6935cf"></path>
+        </svg>
+      </span>
+      <span class="label">
+        <b>path, solid fill</b>
+        <span>The control for SVG itself. This one is expected to arrive.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">8</span>
+      <span class="spec">
+        <svg width="64" height="48" role="img" aria-label="Specimen 8">
+          <defs>
+            <clipPath id="c8">
+              <circle cx="32" cy="24" r="20"></circle>
+            </clipPath>
+          </defs>
+          <g clip-path="url(#c8)">
+            <rect width="64" height="48" fill="#6935cf"></rect>
+            <rect y="16" width="64" height="8" fill="#ffffff"></rect>
+            <rect y="32" width="64" height="8" fill="#ffffff"></rect>
+          </g>
+        </svg>
+      </span>
+      <span class="label">
+        <b>shapes inside a clipPath</b>
+        <span>Expect a striped circle. A striped square means the clip is ignored — and
+          the 50-node stripe fallback for 1 and 2 rests entirely on this.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">9</span>
+      <span class="spec"><span class="swatch8"></span></span>
+      <span class="label">
+        <b>CSS span, 12px, border-radius: 8px</b>
+        <span>What the app declares today. The browser clamps 8px to 6px and draws a
+          circle; a reader of the declaration gets a rounded square.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">10</span>
+      <span class="spec"><span class="swatch50"></span></span>
+      <span class="label">
+        <b>CSS span, 12px, border-radius: 50%</b>
+        <span>The same circle, declared unambiguously. If 10 arrives round and 9 does
+          not, the swatch fix is one line.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">11</span>
+      <span class="spec"><div class="gradient"></div></span>
+      <span class="label">
+        <b>CSS repeating-linear-gradient</b>
+        <span>The hatch outside SVG, with the dashed border. Known to have no Figma
+          equivalent — included to confirm rather than assume.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">12</span>
+      <span class="spec"><div class="solid"></div></span>
+      <span class="label">
+        <b>solid div</b>
+        <span>The control. If this is missing, nothing imported and the rest says nothing.</span>
+      </span>
+    </div>
+  </body>
+</html>

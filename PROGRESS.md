@@ -11630,3 +11630,36 @@ than renamed. One line to restore if it was holding a place for something.
 The shape/paint extraction on `MetricTile` is deliberately not done. Doing it
 as a side effect of a rename is how a component acquires a second reason to
 exist.
+
+## A probe page for the Figma importer
+
+`docs/figma-probe.html` — one standalone file, twelve specimens, no app code, no
+framework, no fixtures, no token sheet. A probe that shares machinery with the
+thing it tests can fail for the thing's reasons, so it shares none.
+
+Each `<svg>` carries its own `<defs>`: `url(#…)` does not resolve across two
+`<svg>` roots anywhere but a browser, and sharing one would test the wrong
+thing.
+
+| | specimen | what it settles |
+| --- | --- | --- |
+| 1, 2 | pattern as a **fill**, on a rect and on a path | the 9 fill uses in the app |
+| 3, 4 | pattern as a **stroke**, on a path and on a circle | the 3 stroke uses — the expensive third |
+| 5, 6, 7 | plain circle, rect with `rx`, plain path | whether SVG arrives at all, and which primitives |
+| 8 | shapes inside a `clipPath` | whether the 50-node stripe fallback is viable *before* building it |
+| 9, 10 | CSS span at `border-radius: 8px` and at `50%` | whether the swatch problem is the declaration |
+| 11 | CSS `repeating-linear-gradient` | the hatch outside SVG |
+| 12 | a solid div | the control — if this is missing, the rest says nothing |
+
+All twelve verified rendering correctly in Chrome before handing it over, so a
+failure in Figma is attributable to the importer rather than to a broken
+specimen.
+
+Nothing in `src/` was touched. The one-line swatch fix waits on specimens 9 and
+10 rather than being taken on the strength of the reasoning.
+
+**Why a probe rather than a seventh change.** Six rounds each tested a
+hypothesis against a whole application, and each produced a plausible result
+and no conclusion — because an app has too many mechanisms in play for a
+failure to name its own cause. Twelve labelled specimens cannot be ambiguous
+about which one failed.
