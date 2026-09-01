@@ -65,9 +65,10 @@ No counts here on purpose — a tally of tests or lint scripts in a README is
 a number nobody updates and everybody reads.
 
 **For Figma**, point [html.to.design](https://html.to.design) at the running
-app rather than at an export. It builds auto-layout from flex and gap and
-reads type from elements in normal flow, which is what the app already is.
-`scripts/export/` is parked and explains why.
+app. It builds auto-layout from flex and gap and reads type from elements in
+normal flow, which is what the app already is. There was once an exporter that
+flattened a screen to absolutely-positioned HTML; it gave the plugin neither of
+those and is gone. See PROGRESS.md.
 
 `npm run icons` regenerates the icon registry and is wired into `predev` and
 `prebuild`; it compiles only the icons actually used, out of 3,559 available.

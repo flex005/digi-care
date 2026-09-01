@@ -1,15 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-// Manrope, self-hosted via @fontsource. Weights 400/500/600/700/800 — the
-// five in the closed type scale, and no others. PRD §4.3.
-import '@fontsource/manrope/400.css'
-import '@fontsource/manrope/500.css'
-import '@fontsource/manrope/600.css'
-import '@fontsource/manrope/700.css'
-import '@fontsource/manrope/800.css'
-
-// Order matters: tokens first, so everything after can read them.
+// Order matters: tokens first, so everything after can read them. tokens.css
+// also carries the @font-face rules — Manrope's five static masters under our
+// own family name, and it says there why the rename exists. PRD §4.3.
 import './styles/tokens.css'
 import './styles/reset.css'
 import './styles/base.css'

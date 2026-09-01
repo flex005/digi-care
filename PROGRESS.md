@@ -11360,3 +11360,73 @@ Verify green: 1236/1236, layout guard 23 of 28, 70 screens crawled.
 
 `format:check` earned its place in the chain by catching a `shot.tmp.mjs` I had
 left in the repo root.
+
+## The font fix, applied where the import actually reads from
+
+`--font-family` is now `'DigiCare Sans'`, and `tokens.css` declares Manrope's
+five static masters under that name — ten `@font-face` rules, five weights
+across the Latin and Latin Extended subsets, each with one unambiguous
+`font-weight` and no range anywhere.
+
+Verified identical, not assumed: 154 text boxes on the dashboard measured with
+the change stashed and again with it applied, and every computed weight and
+every width matches to two decimal places. The five faces load, and a probe
+string renders at 931.0 / 946.6 / 962.2 / 977.6 / 993.2px — the same
+progression the same masters gave in the export. Bundle went from 50 font
+files to 20, because the Cyrillic, Greek and Vietnamese subsets are unreachable
+by anything in this build.
+
+**The correction, plainly stated.** html.to.design resolves a font by *family
+name*. Bare `Manrope` finds Figma's Manrope, which is variable, and takes that
+family's default master — ExtraLight. Giving the *exporter* per-weight family
+names stopped it, and that was the one change in the whole effort with evidence
+from a real import. It was then left in the exporter, and the app it read from
+carried on declaring bare `Manrope` at `tokens.css:101`. So switching to
+importing the running app reintroduced the exact configuration that fails,
+predictably, and the fix that had worked sat in a file that had just been
+parked.
+
+Two turns went into diagnosing fonts against an audit from another project,
+producing an app change that was never needed — `src/main.tsx` has one commit,
+Phase 0, and the app has loaded five distinct static masters since the
+beginning. The change that *was* needed went unmade, in the source the export
+was reading from. **The general shape: when a fix is proved in a derived
+artefact, ask what the artefact was derived from and whether the fix belongs
+there instead.** A fix in the copy is a fix that the original will overwrite the
+moment anyone stops using the copy.
+
+**Where the faces live and why.** In `tokens.css`, not a `fonts.css`. `var()`
+is invalid in an `@font-face` descriptor, so these weights cannot be tokens,
+and `tokens.css` is the one file the project allows a literal in. A face
+declaration introduces no type step — it says which file *is* weight 500 —
+where the closed-scale rule is about components inventing a tenth. Its own
+sheet would have needed a stylelint exemption, which CLAUDE.md §4 forbids
+adding without asking. Say if you would rather have the sheet and the
+exemption.
+
+## The exporter, deleted
+
+`scripts/export/` is gone, along with the stale `/export/` output on disk, the
+`.gitignore` comment naming a script that no longer exists, and the ESLint
+browser-globals override that covered it. The README now points at the running
+app with nothing to qualify.
+
+Four things the walker learned are true of the product rather than of the
+approach, and are kept here because that is the only place they now exist:
+
+1. **An SVG shape with no `fill` renders black once it leaves the stylesheet.**
+   A circle whose CSS says `fill: none` arrives as a solid black disc. That is
+   how the donut laid a black disc over "of 162 doses scheduled today" — over
+   the denominator — with every test passing and every test right.
+2. **`repeating-linear-gradient` has no equivalent outside CSS**, so the
+   unrecorded hatch has to be re-drawn as geometry wherever it leaves the
+   stylesheet. It is the one background in the product that carries meaning:
+   dropping it turns a gap into a blank.
+3. **`.donut` carries `transform: rotate(-90deg)` on the `<svg>` root**, so its
+   first arc starts at twelve o'clock. Any pass that paints children only —
+   `querySelectorAll('*')` — misses it, and the ring comes out a quarter turn
+   round with every arc the right length and the right colour. A chart can be
+   wrong about *where* while being right about how much.
+4. **The product uses five weights and rounding two of them is visible.** 500
+   and 800 are 94 of the 626 weight-token uses; collapsing them to 400 and 700
+   made the sidebar's nav items and section labels visibly thinner.
