@@ -207,6 +207,27 @@ export const WALKER = String(function walk(options) {
         const clone = element.cloneNode(true)
         clone.setAttribute('width', String(Math.round(rect.width)))
         clone.setAttribute('height', String(Math.round(rect.height)))
+        /*
+         * **The root's own transform, which the paint loop below never sees.**
+         * That loop walks `querySelectorAll('*')` — the children — so a
+         * transform declared on the `<svg>` itself was dropped, and the donut
+         * carries `transform: rotate(-90deg)` to start its first arc at twelve
+         * o'clock. Exported without it the whole ring came out a quarter turn
+         * round: the purple ran anticlockwise and the hatched "no record"
+         * wedge sat opposite where the app puts it. Every arc was the right
+         * length and the right colour, which is what made it survive review —
+         * a chart can be wrong about *where* while being right about how much.
+         *
+         * Copied rather than reasoned about, because `getBoundingClientRect`
+         * already reports the transformed box and the two have to agree. That
+         * holds exactly for a rotation about the centre of a square, which is
+         * the only transformed graphic in the product; a transform that moved
+         * the box would need the untransformed offset instead.
+         */
+        if (style.transform && style.transform !== 'none') {
+          clone.style.transform = style.transform
+          clone.style.transformOrigin = style.transformOrigin
+        }
         // The stylesheet is not coming with it, so the paint is inlined.
         const source = element.querySelectorAll('*')
         const copies = clone.querySelectorAll('*')

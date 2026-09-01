@@ -11079,3 +11079,47 @@ Three §8 entries added: jsdom performs no layout, as the third variant of
 right-assertion-wrong-medium; a guard naming one subject measures that subject;
 and a mutation whose build fails silently reports the previous mutation's
 findings — which happened here, and printed a plausible red tick.
+
+## The export fits the window it is opened in
+
+The exported HTML is absolute pixels resolved at the capture width — that is
+the whole reason the importer has nothing left to interpret — so it could not
+fit anything but a screen of exactly that width, and a 1,440px export on a
+1,280px laptop scrolled sideways.
+
+**Reflowing it was the wrong half of the choice.** The text runs are captured
+as pinned boxes with positions and widths already decided; making their
+containers relative while the runs stayed put would misalign the page, and the
+brief asks for identical rather than merely fitting. A uniform scale keeps
+every relative position exactly as captured.
+
+So the capture is wrapped in `#fit` / `#page`. `#page` holds the untouched
+capture and is out of flow, so its width never reaches the layout and never
+raises a horizontal scrollbar; a small inline script sets
+`transform: scale(min(1, viewport / captureWidth))` on it and gives `#fit` the
+height the scaled capture actually occupies.
+
+**Clamped at 1, which is what protects the Figma path.** At any viewport at
+least as wide as the capture the transform is `none` and the geometry is
+identical to the file this exporter produced before — verified: at 1440, 1536
+and 1920 the computed transform is exactly `none`. And with scripting off,
+which is how a good deal of import tooling reads a pasted document, nothing
+runs and the result is that same untouched capture. Fitting is layered on top;
+it cannot subtract from what is exported. That is reasoning plus a measurement
+of the transform, not a test of html.to.design itself, which cannot be run
+from here.
+
+Measured on the re-exported dashboard, no horizontal scrollbar at any of
+1024, 1280, 1440, 1536 or 1920, and the foot of the page lands exactly at the
+foot of the viewport rather than leaving dead space.
+
+**And the comparison found a defect that had nothing to do with width.** Held
+against the app at 1440, the donut was a quarter turn out: `.donut` carries
+`transform: rotate(-90deg)` on the `<svg>` root so its first arc starts at
+twelve o'clock, and the walker's paint loop iterates `querySelectorAll('*')` —
+the children — so the root's own transform was never copied. Every arc was the
+right length and the right colour and the ring was rotated, which is why it
+survived: **a chart can be wrong about *where* while being right about how
+much**, and the figures a reader checks are the ones that were correct. The
+hatched "no record" wedge sat opposite where the app puts it. The clone now
+carries the root's transform and transform-origin.

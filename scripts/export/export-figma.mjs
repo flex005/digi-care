@@ -46,13 +46,20 @@ const OUT_DIR = 'export'
 /**
  * The viewport the export is captured at.
  *
- * **This has to be a parameter, because the output freezes it.** Every box is
- * emitted at an absolute position resolved by the browser at this width, so an
- * export is not a responsive layout that adapts later — it is one width, made
- * permanent. Exporting at the wrong one and discovering it in Figma means
- * running the whole thing again.
+ * **A parameter, because the geometry inside the file is resolved at it.**
+ * Every box is emitted at an absolute position the browser worked out at this
+ * width, so the capture is one width made permanent — it cannot reflow, and
+ * that is deliberate: resolved pixels are what leave the importer nothing to
+ * interpret.
  *
  *     npm run export:figma -- --width 1920
+ *
+ * **What the width no longer decides is whether the file can be read.** The
+ * document scales the whole capture down to whatever window it is opened in,
+ * so a 1,440px export opens on a 1,280px laptop with no horizontal scrollbar
+ * and every proportion intact. Scaling never goes above 1, so at any window at
+ * least as wide as the capture the geometry is untouched. Choosing this number
+ * is now about how much detail the capture holds, not about who can open it.
  *
  * Below `--layout-min-width` the app deliberately refuses to lay out and shows
  * the too-narrow notice instead (PRD §4.6), so a smaller width would export a
@@ -154,11 +161,59 @@ async function exportRoute(page, route) {
 <style>
 ${embeddedFonts()}
 *{margin:0;padding:0;box-sizing:border-box}
-body{position:relative;width:${WIDTH}px;height:${result.height}px;background:#f2f6fe;font-family:Manrope,sans-serif;-webkit-font-smoothing:antialiased}
+html{background:#f2f6fe}
+body{background:#f2f6fe;font-family:Manrope,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+/*
+ * The capture, at the width it was captured. Nothing inside this box moves:
+ * every child is still at the absolute pixel the browser resolved for it.
+ */
+#page{position:absolute;left:0;top:0;width:${WIDTH}px;height:${result.height}px;transform-origin:0 0}
+/*
+ * The window the capture is fitted into. \`#page\` is out of flow, so its
+ * ${WIDTH}px never reaches the layout and never raises a horizontal scrollbar;
+ * this box carries the height the scaled capture actually occupies.
+ */
+#fit{position:relative;width:100%;height:${result.height}px;overflow:hidden}
 </style>
 </head>
-<body>
+<body data-export-width="${WIDTH}" data-export-height="${result.height}">
+<div id="fit"><div id="page">
 ${result.body}
+</div></div>
+<script>
+/*
+ * Fit the capture to the window, and never magnify it.
+ *
+ * The export is absolute pixels by design — that is what leaves the importer
+ * nothing to interpret — so it cannot reflow, and reflowing it is not what is
+ * wanted anyway: the text runs are pinned boxes, and making their containers
+ * fluid while they stayed put would misalign the whole page. A uniform scale
+ * keeps every relative position exactly as captured, which is the difference
+ * between fitting and still looking like the app.
+ *
+ * **Clamped at 1, which is what keeps the Figma path intact.** At any viewport
+ * at least as wide as the capture the transform is \`none\` and the geometry is
+ * untouched — identical to the file this exporter produced before it could
+ * fit. And with scripting off, which is how a good deal of import tooling
+ * reads a pasted document, nothing here runs at all and the result is that
+ * same untouched capture. Fitting is a viewing affordance layered on top; it
+ * cannot subtract from what is exported.
+ */
+;(function () {
+  var W = ${WIDTH}
+  var H = ${result.height}
+  var page = document.getElementById('page')
+  var fit = document.getElementById('fit')
+  function apply() {
+    var available = document.documentElement.clientWidth
+    var scale = Math.min(1, available / W)
+    page.style.transform = scale === 1 ? 'none' : 'scale(' + scale + ')'
+    fit.style.height = Math.ceil(H * scale) + 'px'
+  }
+  apply()
+  window.addEventListener('resize', apply)
+})()
+</script>
 </body>
 </html>
 `
