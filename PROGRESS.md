@@ -11663,3 +11663,52 @@ hypothesis against a whole application, and each produced a plausible result
 and no conclusion — because an app has too many mechanisms in play for a
 failure to name its own cause. Twelve labelled specimens cannot be ambiguous
 about which one failed.
+
+## The Figma limitation, isolated and documented
+
+**html.to.design resolves no referenced SVG definition.** `fill="url(#…)"`,
+`stroke="url(#…)"` and `clip-path="url(#…)"` are all dropped. Everything else
+imports correctly — paths, circles, rects with `rx`, solid fills and strokes,
+colours, text, font weights, and layout including flex and grid.
+
+Established by `docs/figma-probe.html`: twelve labelled specimens, no app code,
+imported once. Specimens 1–4 and 8 failed; 5, 6, 7, 9, 10, 11, 12 arrived. One
+import answered every question six rounds of changing the application had not.
+
+**The stripe fallback is dead and the probe is why we know cheaply.** Drawing
+the hatch as `<rect>`s clipped to the shape was costed at 65 added nodes for the
+nine fill uses — and specimen 8 showed a `clipPath` is the same dropped
+mechanism, so it would have traded one dropped reference for another and
+arrived at the same blank shape, 65 nodes heavier. That is the entire value of
+having built the probe: the cost of finding out was one HTML file instead of a
+seventh round of application changes.
+
+**And grid was never involved.** Outcome 1 on the dashboard: four tiles in a
+row, panels side by side, equal heights. The remaining 68 conversions are
+unnecessary and will not be done. The 76-clean/42-lossy/4-hard audit stands as
+a record of what was measured, not as a plan.
+
+### Where it is written down, and why in four places
+
+The consequence matters more than the mechanism: **in an imported frame,
+"nobody recorded this" renders identically to "recorded"** — the exact failure
+this product exists to prevent, reproduced at the last step by a tool. A
+designer working from those frames would reproduce a complete-looking record,
+and reasonably. So it is stated wherever a different reader would meet it:
+
+- **`docs/FIGMA-HANDOFF.md`** — the whole account, for somebody starting a
+  handoff. What to do, why it matters, the affected elements by selector, and
+  the two honest options.
+- **`README.md`** — a blockquote in the Figma paragraph, because that is where
+  somebody looks before their first import.
+- **`src/styles/unrecorded.module.css`** — the hatch's one owner, for a
+  developer asking why there is no fallback.
+- **`src/features/dashboard/charts.tsx`** — the SVG pattern's owner, with the
+  65-node costing recorded so nobody prices it a second time.
+- **`docs/figma-probe.html`** — the probe now carries its own result, so the
+  evidence and the finding cannot drift apart.
+
+**No code change was made and none is available.** Changing the app to suit the
+importer would mean drawing the product's most load-bearing visual worse for
+every real user in order to serve a handoff step. The limitation is documented
+rather than worked around badly.

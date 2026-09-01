@@ -32,6 +32,13 @@
  *
  * Under prefers-reduced-motion nothing changes here; the hatch is static
  * by design.
+ *
+ * **It does not survive a Figma import, and that is not fixable here.**
+ * html.to.design resolves no referenced SVG definition — pattern fills,
+ * pattern strokes and clipPaths are all dropped — so the chart hatch imports
+ * as a blank shape and a gap becomes indistinguishable from a record. This
+ * gradient itself imports intact; only the SVG half is lost. Do not redraw
+ * either half to suit the importer: see docs/FIGMA-HANDOFF.md.
  */
 
 .unrecorded {
