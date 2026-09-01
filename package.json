@@ -30,7 +30,8 @@
     "lint:dashes": "node scripts/check-em-dashes.mjs",
     "lint:losses": "node scripts/check-session-losses.mjs",
     "lint:svg": "node scripts/check-svg-portable.mjs",
-    "export:figma": "npm run build && node scripts/export/export-figma.mjs"
+    "export:figma": "npm run build && node scripts/export/export-figma.mjs",
+    "check:layout": "node scripts/check-week-fits.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --fix",

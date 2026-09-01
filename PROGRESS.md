@@ -10914,3 +10914,98 @@ changed about it. Removing or raising the cap is a design decision about how
 wide a care record should get before it stops being readable, and it would
 change every screen at once, not only the export.
 
+
+---
+
+## The MAR week view cannot show a week — costed, guarded, not yet fixed — 01/09/2026
+
+Frank's naming of the defect is the useful part: **the heading says "Week of
+31/08 to 06/09" and the grid beneath renders six days.** A caption disagreeing
+with what it captions — the same class as a figure without its denominator,
+except the claim is in the heading and the contradiction is in the pixels.
+
+### It is 218px, not 58px
+
+58px is the overflow at 1440. **At 1280 — the narrowest width the app
+supports, and therefore the number any fix has to satisfy — it is 218px.**
+
+The grid is 1188px, and it decomposes exactly:
+
+| Part | Width |
+|---|---|
+| Medication column (sticky left) | 250px |
+| 21 round columns × 38px (34px cell + 4px gutter) | 798px |
+| Totals column (sticky right) | 140px |
+| **Total** | **1188px** |
+
+Visible: **970px** at 1280, **1130px** at 1440.
+
+*(One correction: the 250px column is the medication name, not the totals. The
+totals column is 140px.)*
+
+### What each option costs
+
+**Narrow the totals column — 140px available.** Removing it entirely still
+leaves 78px short at 1280. It carries "3 given of 14 due" per medication, which
+is a Rule 4 figure with its denominator; narrowing forces it to wrap, removing
+it drops the denominator. **Cost: a figure, and still not enough.**
+
+**Narrow the 34px cells — 210px available, and this is the one with a floor
+under it.** WCAG 2.5.8 Target Size (Minimum), AA, is 24×24 CSS px. Going 34 →
+24 gives a 28px column and saves 10 × 21 = 210px, which almost exactly closes
+1280 — **and lands precisely on the accessibility minimum with no margin**, for
+the control that records a medication, the highest-consequence button in the
+product. The cell is also deliberately in `rem` rather than px so it grows
+under text-only zoom; that reasoning is unaffected, but the 100% floor is what
+2.5.8 measures. **Cost: the accessibility headroom, entirely.**
+
+**Narrow the medication column — 250px, of which 48px is padding.** A drug name
+is the subject of its row. "Morphine sulfate oral solution" already wraps to
+two lines at 202px of text; taking 60px makes it three and taller rows.
+Truncating a drug name on a MAR chart is not available. **Cost: row height, and
+a wrapping risk on the one field that must never be ambiguous.**
+
+**Drop the 4px round gutter — 84px available.** Cells then touch. At 34px they
+still clear 2.5.8's 24px minimum, so it is legal; the cost is that adjacent
+dose targets abut, which raises mis-click risk on exactly the control where a
+mis-click is a medication error. **Cost: 84px for a real safety trade, and
+still 134px short.**
+
+**What I can also see, and it is the answer none of the four gives.** The space
+is in the chrome around the grid, not in the grid. Measured at 1280:
+
+| | Visible | Needed | Short by |
+|---|---|---|---|
+| As built | 970px | 1188px | 218px |
+| Sidebar collapsed | 1146px | 1188px | 42px |
+| Collapsed **and** no page gutter | **1194px** | 1188px | **fits** |
+
+The rail holds 176px and the gutter 48px — 224px between them, against 218px
+needed. **The week fits at the minimum supported width without touching cell
+size, drug names, or the totals denominator.**
+
+That suggests the fix is a property of the route rather than of the grid: this
+one screen wants its rail collapsed and its gutters off, the way a spreadsheet
+does. Whether that should happen automatically on entering the chart, or be
+offered, is a design decision and Frank's.
+
+### The guard
+
+`scripts/check-week-fits.mjs`, `npm run check:layout`. It asserts what the
+caption already claims: seven day columns, no clipping, at 1280.
+
+**It cannot be a vitest test, and that is worth stating rather than working
+around.** jsdom performs no layout — every `getBoundingClientRect` is zero — so
+the same assertion written as a unit test would pass on any grid at any width.
+It would look like coverage and be nothing. So it drives a real browser against
+a built preview.
+
+**It currently fails, by design**, reporting `clipped by 218px at 1280px`. It
+is deliberately *not* wired into `npm run verify`: a red gate blocks every
+unrelated change, and the defect is awaiting a decision rather than an
+oversight. It joins `verify` the day the fix lands.
+
+Its first version read the caption with `document.querySelector('h2')` and
+picked up the profile header's "Medication due · next 2 hours" — a loose
+selector naming the wrong element, in a check whose whole subject is a caption.
+It names the chart title now.

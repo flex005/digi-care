@@ -116,15 +116,20 @@ export default tseslint.config(
   },
   {
     /*
-     * The Figma exporter's walker runs inside the page, not in Node.
+     * Scripts whose bodies run inside the page, not in Node.
      *
-     * It is a `.mjs` file in `scripts/`, so the block above claims it and
+     * They are `.mjs` files in `scripts/`, so the block above claims them and
      * reports `document`, `window` and `getComputedStyle` as undefined — which
-     * is true of the file's own scope and false of where it executes. Reading
-     * computed styles in the browser is the entire method: it is what turns
-     * `var()`, `rem`, `fr` and `gap` into pixels before anything is captured.
+     * is true of each file's own scope and false of where it executes.
+     *
+     * The Figma exporter's walker reads computed styles in the browser, which
+     * is its entire method: it is what turns `var()`, `rem`, `fr` and `gap`
+     * into pixels before anything is captured. The layout check measures real
+     * `scrollWidth` against `clientWidth`, which no amount of jsdom can
+     * produce — jsdom performs no layout, so the same assertion written as a
+     * unit test would pass on any grid at any width.
      */
-    files: ['scripts/export/**/*.mjs'],
+    files: ['scripts/export/**/*.mjs', 'scripts/check-week-fits.mjs'],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },
     },
