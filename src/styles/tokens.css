@@ -170,8 +170,16 @@
      LAYOUT — PRD §4.6
      Desktop only in this build. Below --layout-min-width the app shows a
      message directing the user to a wider screen rather than degrading.
+
+     --layout-max-width is `none`: content fills the viewport at every width.
+     It was 1440px, which meant a wide screen showed the app in a 1440 column
+     with dead space either side — and the ceiling only ever bound above about
+     1748px, since below that the viewport is the narrower limit. Prose still
+     has a readable measure where it matters; that is a `ch` bound on the text
+     itself, which is the right place for it, rather than a ceiling on every
+     table and chart on the screen.
      ================================================================== */
-  --layout-max-width: 1440px;
+  --layout-max-width: none;
   --layout-min-width: 1280px;
   --layout-gutter: 24px;
   --layout-sidebar-width: 248px;

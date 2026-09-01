@@ -122,6 +122,14 @@ try {
         const over = el.scrollWidth - el.clientWidth
         if (over <= 1) continue
 
+        /*
+         * Inside an `<svg>`, `clientWidth` is not a CSS box and the comparison
+         * is meaningless: at 2560 the chart's axis labels reported 4–10px of
+         * "overflow" while rendering complete and legible. An `<svg>` root is
+         * a replaced element that is measured normally and stays in scope.
+         */
+        if (el.ownerSVGElement) continue
+
         const style = getComputedStyle(el)
         if (/auto|scroll/.test(style.overflowX)) continue // reachable
         if (style.textOverflow === 'ellipsis') continue // truncation you can see

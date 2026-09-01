@@ -11123,3 +11123,72 @@ survived: **a chart can be wrong about *where* while being right about how
 much**, and the figures a reader checks are the ones that were correct. The
 hatched "no record" wedge sat opposite where the app puts it. The clone now
 carries the root's transform and transform-origin.
+
+## The content cap is gone, and a correction about a green build
+
+`--layout-max-width` is `none`. Content now fills the viewport at every width:
+content is 972px at 1280, 1132 at 1440, 1612 at 1920 and 2252 at 2560, with
+only the 24px `--layout-gutter` either side. The ceiling only ever bound above
+about 1748px — below that the viewport was the narrower limit, which is why
+the 1440 export never showed the dead space the app did.
+
+Swept the newly-uncapped regime: 60 screens at 1920 clean, 60 at 2560 clean
+apart from three SVG `<text>` nodes reporting 4–10px. Those are a measurement
+artefact — `clientWidth` on an SVG text node is not a CSS box, and the axis
+labels render complete — so `check-layout.mjs` now skips anything with an
+`ownerSVGElement`. Left in, it would have been three findings a week from now
+that nobody could act on, which is how a guard turns into wallpaper.
+
+**A correction. I reported `npm run verify` green after the layout work and it
+was not.** The background command was `npm run verify > log 2>&1; echo $?;
+tail -6 log`, so the status I read was `tail`'s, and the six lines I read were
+the layout guard's success message — which sits *after* the tests in the log
+and passes whether or not they did. The run had `27 failed | 1209 passed`.
+
+The cause was mine, from the same commit: `useWideScreen()` called
+`useShellLayout()`, which throws outside the shell, and `mar.test.tsx` and
+`export.test.tsx` render the MAR route on its own. The throw reached React
+Router's error boundary, so the screen never rendered and 27 assertions failed
+on an "Unexpected Application Error" page. Bisected to confirm: `MarChartRoute`
+at HEAD~2 passes 19/19, at HEAD fails 18.
+
+`useWideScreen` now reads the context optionally and does nothing without a
+shell — taking the width is something a screen does *to* a shell, so with no
+shell there is nothing to take. The silence is only safe because the layout
+guard counts weeks that fit and that count falls from 23 to 8 without the
+hook; all three mutations still fail. Verify is now exit 0 with 1236/1236.
+
+**Two things worth keeping from how this was missed.** A compound command ends
+with the exit status of its last element, so `cmd; echo $?; tail` reports the
+tail. And reading the foot of a verify log reads the *last* check, not the
+worst one — the ordering of the chain decided which failure I saw.
+
+## Fonts: the change asked for is already in place
+
+An audit of another project found Manrope loaded as a variable font, which
+Figma resolves to the family's default master — ExtraLight — and the fix was
+static files, one per weight. Checked against this codebase before changing
+anything, and it does not apply:
+
+- `src/main.tsx` imports `@fontsource/manrope/{400,500,600,700,800}.css`.
+- Each declares a single `font-weight`, no range, pointing at its own file.
+- The seven latin `woff2` files have seven different md5s — genuinely
+  different masters, not one variable file reused.
+- No variable font ships in `@fontsource/manrope/files/` and nothing imports
+  one. `dist/` carries 50 static subset files.
+
+**And the export does not read the app's fonts**, which is the part of the
+model to correct: `embeddedFonts()` reads three `woff2` files straight out of
+`node_modules` and writes its own `@font-face` block, so a font change in the
+app would not reach the export at all. Geometry is read from the app; type is
+not. The exported file declares exactly three faces, 400/600/700, each with an
+unambiguous weight and no range.
+
+Weights in use: 700 (254), 600 (241), 800 (64), 400 (37), 500 (30) — all five
+real, no raw `font-weight` outside the tokens. The export already collapses
+them to three, rounding 500→400 and 800→700, which on the dashboard is 64
+roundings.
+
+Grid audit, for the second half: 122 `display: grid` against 462 `display:
+flex` and 87 `inline-flex`. Of 113 `grid-template-columns`, 112 use `fr`, 90
+use `minmax()` and 12 use `auto-fit`/`auto-fill`.

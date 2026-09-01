@@ -46,9 +46,27 @@ export function useShellLayout(): ShellLayout {
   return layout
 }
 
-/** Call from a route that needs the full width for as long as it is mounted. */
+/**
+ * Call from a route that needs the full width for as long as it is mounted.
+ *
+ * **Asks for the shell rather than demanding it.** `useShellLayout` throws
+ * outside one, which is right for a component that reads the rail's state and
+ * wrong here: taking the width is something a screen does *to* a shell, so
+ * with no shell there is nothing to take and nothing to restore. Demanding it
+ * took down every test that renders the MAR chart as a route on its own — 27
+ * of them — because the throw reached React Router's error boundary and the
+ * screen never rendered at all.
+ *
+ * Silently doing nothing is only safe because something else notices when it
+ * stops working in the app: `scripts/check-layout.mjs` counts how many weeks
+ * fit at 1280, and without this hook that count falls from 23 to 8. That is
+ * the check, and it was mutated to confirm it fails.
+ */
 export function useWideScreen(): void {
-  const { collapsed, setCollapsed, setWide } = useShellLayout()
+  const layout = useContext(ShellLayoutContext)
+  const collapsed = layout?.collapsed ?? false
+  const setCollapsed = layout?.setCollapsed
+  const setWide = layout?.setWide
 
   /*
    * The rail's state as it was on arrival, captured once.
@@ -65,6 +83,7 @@ export function useWideScreen(): void {
   const before = useRef(collapsed)
 
   useEffect(() => {
+    if (setCollapsed === undefined || setWide === undefined) return
     const restoreTo = before.current
     setCollapsed(true)
     setWide(true)

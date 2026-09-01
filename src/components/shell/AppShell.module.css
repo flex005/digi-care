@@ -58,8 +58,8 @@
  *
  * The gutter is 24px each side, and the MAR week view is 218px short of
  * showing a week at 1280 — the rail gives 176 of that and this gives the rest.
- * The 1440 cap is untouched: this drops the padding around the content, not
- * the ceiling on how wide a line of prose may run.
+ * This drops the padding around the content, which is all it ever did; the
+ * `--layout-max-width` ceiling it used to leave standing is now `none`.
  */
 .mainWide {
   padding-right: 0;
