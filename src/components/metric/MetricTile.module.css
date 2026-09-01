@@ -25,6 +25,17 @@
   gap: var(--space-8);
   align-items: stretch;
   height: 100%;
+
+  /*
+   * Lets the grid track shrink to its share.
+   *
+   * Without it a track's floor is its content's min-content width, and the
+   * denominator pill below declared `nowrap` — so four tiles asked for more
+   * than the content column has at 1280 and the last one ran off the screen
+   * with "of 40 on record at Rosewood Court" cut mid-word. A clipped
+   * denominator is Rule 4 failing in layout rather than in a string.
+   */
+  min-width: 0;
   padding: var(--space-16);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -109,7 +120,14 @@
   line-height: var(--text-micro-line);
   font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+
+  /*
+   * Wraps. It held `nowrap` to keep "12 of 28" on one line, and the cost of
+   * that was the whole phrase leaving the screen at 1280 — the denominator
+   * traded for the shape of the denominator. Two lines inside the card states
+   * the figure; one line outside it does not.
+   */
+  white-space: normal;
 }
 
 .tileExcluded {

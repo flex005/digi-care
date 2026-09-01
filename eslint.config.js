@@ -129,7 +129,7 @@ export default tseslint.config(
      * produce — jsdom performs no layout, so the same assertion written as a
      * unit test would pass on any grid at any width.
      */
-    files: ['scripts/export/**/*.mjs', 'scripts/check-week-fits.mjs'],
+    files: ['scripts/export/**/*.mjs', 'scripts/check-layout.mjs'],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },
     },

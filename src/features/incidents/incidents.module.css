@@ -974,11 +974,18 @@
    * stranding the chip. Both readings were about where the slack went; there
    * should not be that much slack. Each column now has a floor and a share of
    * the width, and the action sits at the right edge of a row that reaches it.
+   *
+   * The floors then have to sum to something the *narrowest* supported width
+   * can hold, which the first version of them did not: 55rem plus the gaps and
+   * the row's own padding asked for 1,008px against the 970px the content
+   * column gives at 1280, so every incident row overflowed its card by 14px.
+   * Both ends matter — a row wide enough to reach a 1,990px card and too wide
+   * to fit a 1,280px one is one measurement short, not fixed.
    */
   grid-template-columns:
-    minmax(10rem, 1fr) minmax(10rem, 1fr) minmax(16rem, 2fr)
+    minmax(10rem, 1fr) minmax(10rem, 1fr) minmax(14rem, 2fr)
     minmax(9rem, 1fr) 10rem;
-  gap: var(--space-20);
+  gap: var(--space-16);
   align-items: start;
   width: 100%;
   padding: var(--space-12) var(--space-24);

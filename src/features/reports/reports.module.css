@@ -280,14 +280,34 @@
   list-style: none;
 }
 
+/**
+ * Label and figure on one line, bar beneath — not three columns.
+ *
+ * It was `16rem minmax(0, 1fr) 6rem`, which asks for 376px of floor inside a
+ * panel that is 344px wide at 1280. Two things followed, and both were
+ * invisible to the suite because the DOM was correct throughout: the bar's
+ * flexible track was squeezed to **nought pixels**, so the hatch carrying
+ * "below the floor" was not drawn at all, and the panel's `overflow: hidden`
+ * cut the figure column mid-phrase — every row read "15 of", "0 of", "8 o".
+ *
+ * A denominator sliced off by layout is Rule 4, on the one panel in the
+ * product whose whole subject is denominators. Stacking costs a row of height
+ * and removes the floor: the label takes what it needs, the figure sizes to
+ * its own content, and the bar gets the full width on its own line at any
+ * viewport the app supports.
+ */
 .chartRow {
   display: grid;
-  gap: var(--space-12);
+  gap: var(--space-4) var(--space-12);
   align-items: center;
-  grid-template-columns: 16rem minmax(0, 1fr) 6rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label figure'
+    'track track';
 }
 
 .chartRowLabel {
+  grid-area: label;
   color: var(--ink-700);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
@@ -296,6 +316,7 @@
 
 .chartTrack {
   display: flex;
+  grid-area: track;
   overflow: hidden;
   height: var(--space-16);
   border-radius: var(--radius-pill);
@@ -303,6 +324,7 @@
 }
 
 .chartRowFigure {
+  grid-area: figure;
   color: var(--ink-500);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);

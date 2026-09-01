@@ -11,6 +11,7 @@ import type { NavCount } from './NavBadge'
 import { TopBar } from './TopBar'
 import { Sidebar } from './Sidebar'
 import { ViewportGuard } from './ViewportGuard'
+import { ShellLayoutContext, type ShellLayout } from './wide-screen'
 import styles from './AppShell.module.css'
 
 /**
@@ -34,6 +35,13 @@ export function AppShell() {
    */
   const { sites, activeSite, setActiveSite, currentUser } = useSession()
   const [collapsed, setCollapsed] = useState(false)
+  /* Dropped by a route that needs the width — see wide-screen.ts. */
+  const [wide, setWide] = useState(false)
+
+  const layout: ShellLayout = useMemo(
+    () => ({ collapsed, setCollapsed, wide, setWide }),
+    [collapsed, wide],
+  )
   const navigate = useNavigate()
 
   /**
@@ -85,51 +93,58 @@ export function AppShell() {
   }, [activeSite])
 
   return (
-    <ViewportGuard>
-      <TooltipProvider delayDuration={200}>
-        <ToastProvider>
-          <a className="skipToContent" href="#main">
-            Skip to content
-          </a>
-          <div className={styles.shell}>
-            <div className={styles.topbar}>
-              <TopBar
-                sites={sites}
-                activeSite={activeSite}
-                onSiteChange={setActiveSite}
-                alertCount={0}
-                userName={currentUser.displayName}
-                userRoleLabel={STAFF_ROLE_NAMES[currentUser.role]}
-                onMyDashboard={() => navigate('/me')}
-                onMyPermissions={() => navigate('/me/permissions')}
-                onSignOut={() => navigate('/sign-out')}
-              />
-            </div>
-            <div className={styles.sidebar}>
-              <Sidebar
-                collapsed={collapsed}
-                onToggleCollapsed={() => setCollapsed((value) => !value)}
-                counts={navCounts}
-              />
-            </div>
-            <main id="main" className={styles.main}>
-              <div className={styles.content}>
-                {/*
-                 * Above everything, on every screen, while any figure differs
-                 * from its documented default. A screen behaving differently
-                 * from what its documentation says, without saying so, is the
-                 * reassurance failure with the reader's own change as the
-                 * cause — the version they would least suspect.
-                 */}
-                <MovedClockBanner />
-                <ChangedFiguresBanner />
-                <Outlet />
+    <ShellLayoutContext.Provider value={layout}>
+      <ViewportGuard>
+        <TooltipProvider delayDuration={200}>
+          <ToastProvider>
+            <a className="skipToContent" href="#main">
+              Skip to content
+            </a>
+            <div className={styles.shell}>
+              <div className={styles.topbar}>
+                <TopBar
+                  sites={sites}
+                  activeSite={activeSite}
+                  onSiteChange={setActiveSite}
+                  alertCount={0}
+                  userName={currentUser.displayName}
+                  userRoleLabel={STAFF_ROLE_NAMES[currentUser.role]}
+                  onMyDashboard={() => navigate('/me')}
+                  onMyPermissions={() => navigate('/me/permissions')}
+                  onSignOut={() => navigate('/sign-out')}
+                />
               </div>
-            </main>
-          </div>
-          <ToastViewport />
-        </ToastProvider>
-      </TooltipProvider>
-    </ViewportGuard>
+              <div className={styles.sidebar}>
+                <Sidebar
+                  collapsed={collapsed}
+                  onToggleCollapsed={() => setCollapsed((value) => !value)}
+                  counts={navCounts}
+                />
+              </div>
+              <main
+                id="main"
+                className={[styles.main, wide ? styles.mainWide : '']
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                <div className={styles.content}>
+                  {/*
+                   * Above everything, on every screen, while any figure differs
+                   * from its documented default. A screen behaving differently
+                   * from what its documentation says, without saying so, is the
+                   * reassurance failure with the reader's own change as the
+                   * cause — the version they would least suspect.
+                   */}
+                  <MovedClockBanner />
+                  <ChangedFiguresBanner />
+                  <Outlet />
+                </div>
+              </main>
+            </div>
+            <ToastViewport />
+          </ToastProvider>
+        </TooltipProvider>
+      </ViewportGuard>
+    </ShellLayoutContext.Provider>
   )
 }

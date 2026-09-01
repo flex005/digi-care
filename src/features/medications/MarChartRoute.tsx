@@ -1,5 +1,6 @@
 import { now as appNow } from '@/data/fixtures/clock'
 import { useCallback, useMemo, useState } from 'react'
+import { useWideScreen } from '@/components/shell/wide-screen'
 import { useOutletContext, useParams } from 'react-router-dom'
 import type { IsoDate, MarCellState, Medication, ResidentId } from '@/data/types'
 import type { ResidentProfile } from '@/data/access/client'
@@ -36,6 +37,13 @@ import styles from './medications.module.css'
 const DEFAULT_RANGE: MarRange = 'week'
 
 export function MarChartRoute() {
+  /*
+   * The grid needs 1188px and the content column gives 970 at 1280, so the
+   * screen takes the rail's 176px and the gutter's 48px rather than narrowing
+   * a dose target to the accessibility floor. Restored on the way out.
+   */
+  useWideScreen()
+
   const { resident, site } = useOutletContext<ResidentProfile>()
   const { residentId } = useParams<{ residentId: string }>()
   const timeZone = useTimeZone()

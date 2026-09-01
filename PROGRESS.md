@@ -11009,3 +11009,73 @@ Its first version read the caption with `document.querySelector('h2')` and
 picked up the profile header's "Medication due · next 2 hours" — a loose
 selector naming the wrong element, in a check whose whole subject is a caption.
 It names the chart title now.
+
+## Automatic wide screen on the MAR chart, and a layout guard that found four more
+
+**The rail collapse is automatic and the rail is restorable.** `useWideScreen()`
+(`src/components/shell/wide-screen.ts`) collapses the rail and drops the page
+gutter for as long as the MAR chart is mounted, and restores whatever the rail
+was *on arrival* when the screen unmounts. The collapse control stays visible
+throughout, so it is obviously reversible; expanding it again clips the week,
+which is the reader's call.
+
+**The first version of its test suite could not fail.** Four tests, all green,
+and both mutations of the hook — never restore, and restore the reader's last
+state rather than their arrival state — passed too. The reason is worth keeping:
+the third test had the reader manually expand the rail before leaving, so every
+one of the three behaviours ended with the rail expanded, and the fourth arrived
+already collapsed, so every one ended collapsed. Neither test created the case
+where the behaviours differ. Rewritten as two: arrive open, let the screen
+collapse it, leave untouched (catches "never restore"); and arrive collapsed,
+expand by hand while there, leave (catches "restore the last state"). Both
+mutations now fail, and so does a third — adding `collapsed` to the effect's
+dependency array, which is how the ref would actually be lost in a future edit.
+
+A fourth mutation still passes and is *not* a gap: with stable dependencies the
+effect runs once, so reading `collapsed` inside it captures the arrival value
+anyway. The ref is legibility, not mechanism, and the comment now says that
+rather than claiming a guarantee it does not provide.
+
+**`check:layout` is in `verify`.** It builds first — it serves `dist` through
+`vite preview`, so without a build in the chain it would have gated on whatever
+was last built, which for a gate is worse than no gate. Cost: about 110s.
+
+**The guard was generalised from the week view to the whole app, and found four
+defects nothing else could see.** It crawls the app's own links rather than
+holding a route list (a list here would be a second copy of the route table, and
+two rules drift), reached 70 screens, and asserts one contract: content fits its
+own box, or declares how it does not — a scroller, an ellipsis, a line clamp.
+
+1. **Dashboard and Handover tiles, a clipped denominator.** `.tileChange` was
+   `white-space: nowrap`, which set the grid track's floor above the content
+   column at 1280. The fourth tile ran off the right edge with "of 40 on record
+   at Rosewood Court" cut mid-word, and Handover showed "of 22 residents
+   reviewed this shif" three times over. Fixed at the owner: `min-width: 0` on
+   the tile so the track can shrink, and the pill wraps.
+2. **Reports, "What each report has to work with".** `16rem minmax(0,1fr) 6rem`
+   asks 376px of floor inside a 344px panel, so the bar track was squeezed to
+   **nought pixels** — the hatch carrying "below the floor" was not drawn at
+   all — and the panel's `overflow: hidden` cut every figure: "15 of", "0 of",
+   "8 o". Every denominator on the one panel whose subject is denominators.
+   Restacked: label and figure on one line, bar full width beneath.
+3. **Incidents rows** overflowed their card by 14px on every row; the column
+   floors summed to 1,008px against 970px available. An earlier pass had fixed
+   the row for a 1,990px card and never measured the other end.
+4. **The status pill** ran 3px into the next column on the residents table,
+   which is `table-layout: fixed`, so the column cannot grow to meet it. Now
+   `max-width: 100%` with `flex-wrap: wrap`.
+
+**And the week fix was incomplete when it was reported as done.** The grid's
+width is seven days times that resident's rounds a day: `res-okafor` at three
+rounds fits 1,194px, and the five residents on four rounds need 1,454px.
+Collapsing the rail took it from 5 of 28 fitting to 23 of 28 — a real
+improvement reported as a completed fix, because the check named one resident.
+The guard now prints "23 of 28 weeks fit" and holds 23 as a floor. **The
+remaining five are a decision, not an oversight** — closing 260px costs either
+the dose target's WCAG 2.5.8 floor (34px cells → 25px) or the medication
+column's drug names, and neither is mine to spend.
+
+Three §8 entries added: jsdom performs no layout, as the third variant of
+right-assertion-wrong-medium; a guard naming one subject measures that subject;
+and a mutation whose build fails silently reports the previous mutation's
+findings — which happened here, and printed a plausible red tick.

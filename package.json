@@ -21,7 +21,7 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "verify": "npm run icons:check && npm run typecheck && npm run lint && npm run format:check && npm run test",
+    "verify": "npm run icons:check && npm run typecheck && npm run lint && npm run format:check && npm run test && npm run check:layout",
     "prepare": "husky",
     "lint:tel": "node scripts/check-tel-links.mjs",
     "lint:plurals": "node scripts/check-plurals.mjs",
@@ -31,7 +31,7 @@
     "lint:losses": "node scripts/check-session-losses.mjs",
     "lint:svg": "node scripts/check-svg-portable.mjs",
     "export:figma": "npm run build && node scripts/export/export-figma.mjs",
-    "check:layout": "node scripts/check-week-fits.mjs"
+    "check:layout": "npm run build && node scripts/check-layout.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --fix",

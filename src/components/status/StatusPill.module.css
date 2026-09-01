@@ -26,8 +26,21 @@
  */
 .pill {
   display: inline-flex;
+
+  /*
+   * Never wider than what holds it. As an inline-flex with a nowrap line, the
+   * pill's floor was the sum of its two children's min-content, so a long
+   * detail pushed it past its table cell — "3 months overdue" ran 3px into the
+   * next column. Small, and the same shape as the tile denominator that ran
+   * off the screen: a box declaring a width its container never agreed to.
+   */
+  max-width: 100%;
   gap: var(--space-4);
   align-items: center;
+
+  /* So the detail wraps inside the pill rather than widening it. The table it
+     sits in is `table-layout: fixed`, so the column cannot grow to meet it. */
+  flex-wrap: wrap;
   padding: var(--space-4) var(--space-8);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
