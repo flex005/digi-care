@@ -11316,3 +11316,47 @@ Reports panel lost every denominator.
 So: 76 of 122 would swap cleanly (58 one-off rows, 11 card grids to
 `flex-wrap` + `flex-basis`, 7 stacks). 42 are mechanical but lossy. 4 are
 genuinely hard, and two of those are load-bearing shell and chart layout.
+
+## Dashboard grids converted to flex — the probe
+
+Three rules converted, two left alone, and the measurements held.
+
+**Converted**
+
+- `.rowTwo` — `1.85fr 1fr`, the chart panel beside the donut panel. Flex with
+  `flex-basis: 0` and grow factors 1.85 and 1. Measured ratio 1.845 at 1280,
+  1.847 at 1440, 1.845 at 1920 — the same split the tracks gave.
+- `.rowThree` — `1fr 1fr`. Flex, equal grow. 478/478, 558/558, 798/798.
+- `.tiles` in `MetricTile.module.css` — `repeat(auto-fit, minmax(170px, 1fr))`
+  to `flex-wrap` with `flex-basis: 0` and `min-width` restoring the 170px
+  floor. Shared, so this also moves Handover, Care Notes, Medications and
+  Residents; all four were measured before and after.
+
+**Left alone**: `.roundRow` and `.row`, both repeated rows where the shared
+track definition is the column alignment, and the shell's `grid-template-areas`.
+
+**The tile widths are identical, and getting there found the real cost of a
+conversion.** `.tileLead` was `grid-column: span 2`. The obvious flex form —
+grow 2 against grow 1 — gave 413/224/224/224 where grid gave 443/214/214/214.
+The cause is that **`box-sizing: border-box` clamps `flex-basis: 0` to padding
+plus border**, 34px here, so a tile's base size is never zero and the grow
+factors divide only what is left. Grid has no such floor because padding sits
+*inside* a track. Stating the difference as basis — the swallowed gap plus one
+track's worth of chrome, from the same tokens the padding uses — makes it exact
+at every width, and the algebra reduces to grid's `2t + g` rather than being
+tuned to one measurement: verified at 972, 1132 and 1612px.
+
+**A correction to my own audit.** The "76 that swap cleanly" was counted by
+classifying the rule that declares `display: grid`, and it never looked at
+children. `.tiles` was bucketed a clean card grid while `.tileLead` carried
+`grid-column: span 2`. Sweeping properly: 14 grid-placement declarations on
+children, 6 of them on the four already-known two-dimensional grids, leaving
+**8 grids in the "clean" buckets with a spanning or explicitly placed child** —
+medications (3), interim, admission, goals, auth, consent, incidents. So the
+number is nearer 68 straightforward and 8 needing the treatment above, not 76.
+Each of those 8 is doable; none is free.
+
+Verify green: 1236/1236, layout guard 23 of 28, 70 screens crawled.
+
+`format:check` earned its place in the chain by catching a `shot.tmp.mjs` I had
+left in the repo root.
