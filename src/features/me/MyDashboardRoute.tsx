@@ -108,34 +108,34 @@ export function MyDashboardRoute() {
         </div>
       </div>
 
-      <div className={styles.tiles}>
-        <div className={styles.tileNow} data-tile="next-round">
-          <p className={styles.tileKey}>The next round here</p>
-          <p className={styles.tileValue} data-numeric>
+      <div className={styles.statusTiles}>
+        <div className={styles.statusTileNow} data-tile="next-round">
+          <p className={styles.statusTileKey}>The next round here</p>
+          <p className={styles.statusTileValue} data-numeric>
             {next === undefined ? 'None left today' : next.at}
           </p>
-          <p className={styles.tileDetail}>
+          <p className={styles.statusTileDetail}>
             {next === undefined
               ? `Every round at ${activeSite.name} has come round today. The next is tomorrow morning.`
               : `${pluralise(next.expected, 'dose')} scheduled · ${formatCount(next.notDueYet + next.dueSoon)} not yet due`}
           </p>
-          <p className={styles.tileDetail} data-no-allocation>
+          <p className={styles.statusTileDetail} data-no-allocation>
             Nobody is allocated to rounds in this build, so this is the home&rsquo;s
             next round rather than one assigned to you.
           </p>
-          <div className={styles.tileAction}>
-            <Link to="/medications/round" className={styles.tileButton}>
+          <div className={styles.statusTileAction}>
+            <Link to="/medications/round" className={styles.statusTileButton}>
               Open the round
             </Link>
           </div>
         </div>
 
-        <div className={styles.tileWarn} data-tile="waiting">
-          <p className={styles.tileKey}>You flagged, still waiting</p>
-          <p className={styles.tileValue} data-numeric>
+        <div className={styles.statusTileWarn} data-tile="waiting">
+          <p className={styles.statusTileKey}>You flagged, still waiting</p>
+          <p className={styles.statusTileValue} data-numeric>
             {formatCount(waiting.length)}
           </p>
-          <p className={styles.tileDetail}>
+          <p className={styles.statusTileDetail}>
             {waiting.length === 0
               ? 'Nothing you flagged is waiting for a senior.'
               : `${pluralise(waiting.length, 'care note')} you asked a senior to look at, and nobody has. Oldest flagged ${oldestOn ?? 'on a date the record does not carry'}.`}
@@ -150,15 +150,15 @@ export function MyDashboardRoute() {
          * name against a gap nobody assigned.
          */}
         <div
-          className={styles.tileGap}
+          className={styles.statusTileGap}
           data-tile="not-written-up"
           data-state="unrecorded"
         >
-          <p className={styles.tileKey}>Nobody has written up</p>
-          <p className={styles.tileValue} data-numeric>
+          <p className={styles.statusTileKey}>Nobody has written up</p>
+          <p className={styles.statusTileValue} data-numeric>
             {formatCount(quiet.length)}
           </p>
-          <p className={styles.tileDetail}>
+          <p className={styles.statusTileDetail}>
             of {pluralise(residents.length, 'resident')} at {activeSite.name}, today.
             Not allocated to anybody, including you.
           </p>

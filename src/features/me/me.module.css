@@ -113,7 +113,7 @@
  * The three tiles
  * ----------------------------------------------------------------------- */
 
-.tiles {
+.statusTiles {
   display: grid;
   gap: var(--space-16);
   grid-template-columns: 1.4fr 1fr 1fr;
@@ -126,41 +126,47 @@
  * it — the tile carried the class and the attribute, passed both assertions,
  * and rendered as a plain white card.
  */
-.tile,
-.tileNow,
-.tileWarn,
-.tileGap {
+
+/*
+ * The three-up status strip on /me. **Not `MetricTile`, and not a variant of
+ * it.** These cards are tinted by state on purpose — reversed purple for the
+ * round in hand, caution for what is waiting, the hatch for what nobody has
+ * written up — where `MetricTile` states that it is never tinted by state,
+ * because a tinted card cannot say whether the tint is the finding or the
+ * card. They also carry an action, and the lead figure is a *time*, which has
+ * no denominator to satisfy `MetricTile`'s required `of`.
+ *
+ * Named `statusTile*` because two things called `.tile` read as one concept
+ * and cost a reading of both to find out otherwise.
+ */
+.statusTileNow,
+.statusTileWarn,
+.statusTileGap {
   display: flex;
   flex-direction: column;
   padding: var(--space-20);
   border-radius: var(--radius-xl);
 }
 
-.tile {
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-surface);
-  box-shadow: var(--shadow-card);
-}
-
-.tileNow {
+.statusTileNow {
   background: var(--purple-900);
   color: var(--bg-surface);
   box-shadow: var(--shadow-card);
 }
 
-.tileWarn {
+.statusTileWarn {
   border: 1px solid var(--status-caution);
   background: var(--status-caution-tint);
   color: var(--status-caution-ink);
 }
 
 /* The only tile counting an absence. One definition of the hatch, composed. */
-.tileGap {
+.statusTileGap {
   composes: unrecorded from '../../styles/unrecorded.module.css';
   border-radius: var(--radius-xl);
 }
 
-.tileKey {
+.statusTileKey {
   color: var(--ink-500);
   font-size: var(--text-micro-size);
   font-weight: var(--weight-bold);
@@ -168,19 +174,19 @@
   text-transform: uppercase;
 }
 
-.tileNow .tileKey {
+.statusTileNow .statusTileKey {
   color: var(--purple-200);
 }
 
-.tileWarn .tileKey {
+.statusTileWarn .statusTileKey {
   color: var(--status-caution-ink);
 }
 
-.tileGap .tileKey {
+.statusTileGap .statusTileKey {
   color: var(--status-unrecorded-ink);
 }
 
-.tileValue {
+.statusTileValue {
   margin-top: var(--space-8);
   color: var(--ink-900);
   font-size: var(--text-display-size);
@@ -188,43 +194,43 @@
   font-weight: var(--weight-extrabold);
 }
 
-.tileNow .tileValue {
+.statusTileNow .statusTileValue {
   color: var(--bg-surface);
 }
 
-.tileWarn .tileValue {
+.statusTileWarn .statusTileValue {
   color: var(--status-caution-ink);
 }
 
-.tileGap .tileValue {
+.statusTileGap .statusTileValue {
   color: var(--status-unrecorded-ink);
 }
 
-.tileDetail {
+.statusTileDetail {
   margin-top: var(--space-8);
   color: var(--ink-500);
   font-size: var(--text-caption-size);
   line-height: var(--text-body-line);
 }
 
-.tileNow .tileDetail {
+.statusTileNow .statusTileDetail {
   color: var(--purple-200);
 }
 
-.tileWarn .tileDetail {
+.statusTileWarn .statusTileDetail {
   color: var(--status-caution-ink);
 }
 
-.tileGap .tileDetail {
+.statusTileGap .statusTileDetail {
   color: var(--status-unrecorded-ink);
 }
 
-.tileAction {
+.statusTileAction {
   margin-top: auto;
   padding-top: var(--space-16);
 }
 
-.tileButton {
+.statusTileButton {
   display: inline-flex;
   padding: var(--space-8) var(--space-16);
   border-radius: var(--radius-md);

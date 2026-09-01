@@ -11608,3 +11608,25 @@ worth doing deliberately rather than as a side effect of this.
 
 The smaller option, if the goal is only to stop the name implying a shared
 concept: rename /me's classes to `.statusTile*`. Two files, no visual change.
+
+## /me's tiles renamed to statusTile*
+
+Two files, no visual change: 248 elements on `/me` captured before and after —
+position, size, background, border, background-image and colour — and the two
+captures are byte-identical.
+
+`.tiles` and the eight `.tile*` classes are now `.statusTiles` and
+`.statusTile*`, with a note at the head of the block saying what they are and
+what they are not: tinted by state on purpose, carrying an action, and leading
+with a figure that is a time and therefore has no denominator to satisfy
+`MetricTile`'s required `of`.
+
+**One deletion beyond the rename.** The bare `.tile` rule — border, surface
+background, card shadow — had no user: nothing in `/me` applied it and nothing
+outside imports the sheet. It was also the single most misleading name in the
+file, and the reason two different cards read as one concept. Removed rather
+than renamed. One line to restore if it was holding a place for something.
+
+The shape/paint extraction on `MetricTile` is deliberately not done. Doing it
+as a side effect of a rename is how a component acquires a second reason to
+exist.
