@@ -125,7 +125,6 @@
 }
 
 .swatchRecorded,
-.swatchGap,
 .swatchDueNow,
 .swatchDueSoon,
 .swatchNotDue {
@@ -137,11 +136,6 @@
 
 .swatchRecorded {
   background: var(--purple-600);
-}
-
-.swatchGap {
-  composes: unrecorded from '../../styles/unrecorded.module.css';
-  border-width: 1px;
 }
 
 .swatchDueNow {

@@ -40,6 +40,16 @@
   --tile-chrome: calc(var(--space-16) * 2 + 2px);
 
   display: flex;
+
+  /*
+   * The row decides the height; every tile takes it.
+   *
+   * Stated rather than left to the initial value, because the tiles are one
+   * comparison and a tile that is taller because its figure is a hatched block
+   * rather than a numeral reads as a difference in the data. It was `normal`
+   * and four screens rendered a ragged row.
+   */
+  align-items: stretch;
   flex-wrap: wrap;
   gap: var(--space-16);
 }
@@ -51,7 +61,14 @@
   flex-direction: column;
   gap: var(--space-8);
   align-items: stretch;
-  height: 100%;
+
+  /*
+   * No `height`. It was `100%`, which is a *definite* cross size — and
+   * `align-items: stretch` exempts an item that already has one, so each tile
+   * sized to its own content and the row went ragged. Harmless under grid,
+   * where the track stretched it regardless; the conversion to flex is what
+   * made it load-bearing. The row above sets the height now.
+   */
 
   /*
    * One share of the row, with a floor.

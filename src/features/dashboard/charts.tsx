@@ -135,6 +135,39 @@ function useHatchId(): string {
 }
 
 /**
+ * The hatch at swatch size, in the same medium as the thing it labels.
+ *
+ * **A legend drawn by a different mechanism from its chart is two definitions
+ * of one treatment**, and they disagree exactly where nobody looks. This one
+ * did: the bars fill with the SVG `<pattern>` below and the swatch beside them
+ * composed the CSS `repeating-linear-gradient`, which at twelve pixels lays
+ * down most of one band of a pale tint inside a dashed border and reads as
+ * blank. The reader was shown a key whose "not recorded" entry had no
+ * treatment in it.
+ *
+ * The CSS hatch stays the definition for anything with a box around it — a
+ * cell, a chip, a panel. This is for a swatch standing next to SVG geometry,
+ * where matching the *chart* matters more than matching the surrounding boxes,
+ * and it carries its own `<pattern>` because `url(#…)` does not resolve across
+ * two `<svg>` elements anywhere but a browser.
+ */
+export function HatchSwatch({ size = 12 }: { size?: number }) {
+  const id = useHatchId()
+  return (
+    <svg width={size} height={size} aria-hidden focusable="false">
+      <ChartDefs id={id} />
+      <rect
+        width={size}
+        height={size}
+        rx="2"
+        fill={`url(#${id})`}
+        className={styles.swatchEdge}
+      />
+    </svg>
+  )
+}
+
+/**
  * Seven days of one figure, with today marked.
  *
  * **A line and never an arrow.** "↑5%" states a direction with no denominator

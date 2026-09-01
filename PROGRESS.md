@@ -11501,3 +11501,60 @@ matching `usWeightClass` and no `fvar`.
 
 One §8 entry added: a file can lie about its own identity, and the tell is two
 formats of the same artefact disagreeing.
+
+## Two fixes on the tile row and the chart legend
+
+### Tiles now take their height from the row
+
+`.tile` carried `height: 100%`, and **`align-items: stretch` exempts an item
+that already has a definite cross size** — so each tile sized to its own
+content and a tile holding a hatched block came out taller than the three
+holding a numeral. They render as one comparison, so a height difference
+caused by the *shape* of a figure reads as a difference in the data.
+
+Harmless under grid, where the track stretched the item regardless. The flex
+conversion made it load-bearing, which is the same class as `--tile-chrome`:
+converting a layout moves which declarations are doing the work, and one that
+was inert becomes decisive without being edited.
+
+`.tiles` now states `align-items: stretch` and `.tile` has no `height`.
+
+**How many there were: four screens rendering ragged rows** — Dashboard
+[166, 162, 182, 162], Handover [166, 162, 162, 162], Care Notes
+[148, 148, 182, 148], Medications [182, 148, 148, 148]. Residents was equal by
+luck, its tiles all carrying the same shape of content. All five compose from
+`components/metric/MetricTile.module.css`, so it was one fix.
+
+**And a second owner, reported rather than converted.** `/me` has its own
+`.tiles` and `.tile` in `me.module.css` — a three-column grid, equal-height
+already because grid stretches by default. It is not affected, but it is a
+second implementation of the figure card that the one-owner rule says will
+drift. Converting it would change its column layout, so it is named here for a
+decision rather than changed.
+
+### The legend swatch is the same mechanism as the bars
+
+`.swatchGap` composed the CSS `repeating-linear-gradient` while the bars beside
+it filled with the SVG `<pattern>`. At twelve pixels the gradient lays down
+most of one band of a pale tint inside a dashed border, and the swatch read as
+blank — a key whose "not recorded" entry had no treatment in it.
+
+`HatchSwatch` now lives in `charts.tsx`, beside the `<pattern>` it uses, so the
+hatch still has exactly one definition per medium and `check-hatch` still
+passes. Two sites on the Dashboard use it: the area chart's legend and the
+donut key. `DonutKey`'s `swatch` prop widened from a class name to a class name
+*or* a node, because the hatched row's treatment is geometry rather than a box.
+
+**Every legend in the build was checked, and the Dashboard is the only place
+the split existed.** It is also the only feature that renders an SVG hatch —
+Reports and Compliance draw their bars as CSS elements and their swatches as
+CSS, so both halves already agree there. The general rule, which is why this
+was worth a sweep: the swatch matches whatever medium its own chart is drawn
+in, not whatever the boxes around it use.
+
+Verified: both swatches render a 12px SVG rect filled from a uniquely-id'd
+pattern, zero CSS `.swatchGap` elements remain, and the treatment is legible in
+colour and in greyscale at 6× — checked in a picture, because a swatch being in
+the DOM is what it was doing before.
+
+`npm run verify` green: 1236/1236, hatch guard passing, layout 23 of 28.

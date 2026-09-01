@@ -238,3 +238,13 @@
   stroke-width: 6;
   stroke-linecap: round;
 }
+
+/*
+ * The swatch's edge, so a 12px square of hatch reads as a deliberate marker
+ * rather than a smudge. The same dashed unrecorded border the CSS hatch draws
+ * around a cell — named here because an SVG rect cannot compose a CSS class.
+ */
+.swatchEdge {
+  stroke: var(--border-unrecorded);
+  stroke-width: 1;
+}

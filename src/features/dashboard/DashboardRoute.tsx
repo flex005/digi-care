@@ -1,6 +1,7 @@
 import { now as appNow } from '@/data/fixtures/clock'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import type { ReactElement } from 'react'
 import type { IsoDateTime } from '@/data/types'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { Card, SelectedMark } from '@/components/primitives'
@@ -18,7 +19,7 @@ import {
 } from './today'
 import { MetricTile, MetricTiles, MetricValue } from '@/components/metric/MetricTile'
 import { dashboardIcons } from './dashboard-tiles.icons'
-import { DoseBars, RoundRing, RoundsDonut } from './charts'
+import { DoseBars, HatchSwatch, RoundRing, RoundsDonut } from './charts'
 import {
   dosesByDay,
   moduleBars,
@@ -173,7 +174,7 @@ export function DashboardRoute() {
                 Recorded
               </span>
               <span className={styles.legendItem}>
-                <span className={styles.swatchGap} aria-hidden />
+                <HatchSwatch />
                 Due and not recorded
               </span>
             </div>
@@ -219,7 +220,7 @@ export function DashboardRoute() {
               <DonutKey
                 what="No record"
                 note="the window closed"
-                swatch={styles.swatchGap}
+                swatch={<HatchSwatch />}
                 value={doses.noRecord}
               />
               <DonutKey
@@ -591,12 +592,17 @@ function DonutKey({
 }: {
   what: string
   note?: string
-  swatch: string
+  /*
+   * A class for a plain colour, or the hatch swatch itself. The hatched row
+   * cannot take a class: its treatment is SVG geometry, matching the arc it
+   * labels rather than the boxes around it. See `HatchSwatch`.
+   */
+  swatch: string | ReactElement
   value: number
 }) {
   return (
     <li className={styles.donutKeyRow} data-donut-key={what}>
-      <span className={swatch} aria-hidden />
+      {typeof swatch === 'string' ? <span className={swatch} aria-hidden /> : swatch}
       <span className={styles.donutKeyName}>
         {what}
         {note === undefined ? null : (
