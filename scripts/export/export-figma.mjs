@@ -3,7 +3,8 @@
  * Every screen as standalone HTML, for import into Figma via html.to.design.
  *
  * **The React app is the source and the browser does the interpreting.** Each
- * route is opened in Playwright's Chromium at 1440px, and the DOM is read with
+ * route is opened in Playwright's Chromium at a width given by `--width`, and
+ * the DOM is read with
  * `getComputedStyle` rather than from the stylesheet: by then `var()`, `rem`,
  * `fr`, `gap`, `grid` and every percentage have been resolved to pixels. What
  * comes out is one absolutely-positioned `<div>` per box and one per run of
@@ -39,11 +40,45 @@ import { join } from 'node:path'
 import { WALKER } from './walk.mjs'
 
 const PORT = 4319
-const WIDTH = 1440
 const WEIGHTS = [400, 600, 700]
-/** Room for the weight strip, and every captured box is offset by it. */
-const STRIP = 108
 const OUT_DIR = 'export'
+
+/**
+ * The viewport the export is captured at.
+ *
+ * **This has to be a parameter, because the output freezes it.** Every box is
+ * emitted at an absolute position resolved by the browser at this width, so an
+ * export is not a responsive layout that adapts later — it is one width, made
+ * permanent. Exporting at the wrong one and discovering it in Figma means
+ * running the whole thing again.
+ *
+ *     npm run export:figma -- --width 1920
+ *
+ * Below `--layout-min-width` the app deliberately refuses to lay out and shows
+ * the too-narrow notice instead (PRD §4.6), so a smaller width would export a
+ * screenshot of that message rather than the screen. Rejected rather than
+ * captured, because the file would look plausible and be worthless.
+ */
+const MIN_WIDTH = 1280
+
+function widthFromArgv(argv) {
+  const flag = argv.indexOf('--width')
+  if (flag === -1) return 1440
+  const value = Number(argv[flag + 1])
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`--width needs a number, got "${argv[flag + 1] ?? '(nothing)'}"`)
+  }
+  if (value < MIN_WIDTH) {
+    throw new Error(
+      `--width ${value} is below the app's minimum of ${MIN_WIDTH}. ` +
+        'Below it the app shows the too-narrow notice rather than the screen, ' +
+        'so the export would be a picture of that.',
+    )
+  }
+  return value
+}
+
+const WIDTH = widthFromArgv(process.argv)
 
 /** Which routes to export, and what to call the file. */
 const ROUTES = [{ name: 'dashboard', path: '/' }]
@@ -61,22 +96,6 @@ function embeddedFonts() {
       return `@font-face{font-family:'Manrope';font-style:normal;font-weight:${weight};font-display:block;src:url(data:font/woff2;base64,${data}) format('woff2')}`
     })
     .join('\n')
-}
-
-/** The strip that proves the three weights survived the import. */
-function weightStrip() {
-  const row = (weight, label) =>
-    `<div style="position:absolute;left:24px;top:${
-      14 + (weight === 400 ? 0 : weight === 600 ? 32 : 64)
-    }px;width:900px;height:26px;color:#1e0059;font-family:Manrope,sans-serif;font-size:19px;font-weight:${weight};line-height:26px;">${label} &mdash; Handgloves 0123 &mdash; the quick brown fox</div>`
-  return [
-    `<div style="position:absolute;left:0;top:0;width:${WIDTH}px;height:${
-      STRIP - 8
-    }px;background:#ffffff;border-bottom:1px solid #e7e4fd;"></div>`,
-    row(400, '400 Regular'),
-    row(600, '600 SemiBold'),
-    row(700, '700 Bold'),
-  ].join('\n')
 }
 
 function serve() {
@@ -124,7 +143,7 @@ async function exportRoute(page, route) {
 
   const result = await page.evaluate(
     ([walker, options]) => eval(`(${walker})`)(options),
-    [WALKER, { stripHeight: STRIP, weights: WEIGHTS }],
+    [WALKER, { weights: WEIGHTS }],
   )
 
   const document_ = `<!doctype html>
@@ -139,7 +158,6 @@ body{position:relative;width:${WIDTH}px;height:${result.height}px;background:#f2
 </style>
 </head>
 <body>
-${weightStrip()}
 ${result.body}
 </body>
 </html>

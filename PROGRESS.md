@@ -10859,3 +10859,58 @@ assertion nor the diff carries that.
 for the reason above.
 
 1,232 tests.
+
+---
+
+## The Figma exporter takes a width — 01/09/2026
+
+### What it used, and why it had to become a parameter
+
+`const WIDTH = 1440`. The output freezes it: every box is emitted at an
+absolute position the browser resolved at that width, so an export is not a
+responsive layout that adapts later — it is **one width, made permanent**.
+Discovering the wrong one in Figma means running the whole thing again.
+
+```
+npm run export:figma -- --width 1920
+```
+
+Defaults to 1440. **Rejected below 1280**, with the reason said out loud: below
+`--layout-min-width` the app deliberately refuses to lay out and shows the
+too-narrow notice instead (PRD §4.6), so a smaller export would be a picture of
+that message. It would look like a plausible file and be worthless, which is
+exactly the kind of thing worth failing on rather than producing.
+
+### The font strip is gone, and so is its offset
+
+Removed entirely rather than switched off. The strip reserved 108px and
+**every captured box was offset by it** — `stripHeight` threaded through
+`walk.mjs` in four places. Leaving that parameter behind at zero would have
+left a knob that exists only to be nothing, which is the sort of thing the next
+reader spends ten minutes understanding. Content now starts at `top:0`.
+
+### The app caps content width, and that is the answer to the dead space
+
+**Yes — `--layout-max-width: 1440px`, applied by `.content` in
+`AppShell.module.css` with `margin: 0 auto`.** Measured across four viewports:
+
+| Viewport | Content | Dead space each side |
+|---|---|---|
+| 1440 | 1132px | 24px (the gutter) |
+| 1600 | 1292px | 24px |
+| 1748 | 1440px | 24px — the cap exactly reached |
+| **1920** | **1440px** | **110px** |
+
+So the cap bites at about **1748px** and above. Below it the content fills and
+the only inset is the 24px gutter; above it the layout stops growing and the
+extra width becomes white space either side.
+
+**Exporting at 1920 therefore gives the same layout with more margin, not a
+wider one.** The sidebar and the top bar span the full 1920 — the export's
+widest box does reach 1920 — but the content column stops at 1440.
+
+**That is a property of the app, not of the exporter**, so nothing has been
+changed about it. Removing or raising the cap is a design decision about how
+wide a care record should get before it stops being readable, and it would
+change every screen at once, not only the export.
+

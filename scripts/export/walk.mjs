@@ -9,7 +9,7 @@
  * the output does not contain one.
  */
 export const WALKER = String(function walk(options) {
-  const { stripHeight, weights } = options
+  const { weights } = options
   const out = []
   const rounded = []
   const skipped = { hidden: 0, empty: 0 }
@@ -150,7 +150,7 @@ export const WALKER = String(function walk(options) {
 
       emit(
         `<div style="position:absolute;left:${px(left - originX)};top:${px(
-          top - originY + stripHeight,
+          top - originY,
         )};width:${px(right - left + 1)};height:${px(bottom - top)};` +
           `color:${style.color};font-family:Manrope,sans-serif;font-size:${style.fontSize};` +
           `font-weight:${weight};line-height:${style.lineHeight};` +
@@ -194,7 +194,7 @@ export const WALKER = String(function walk(options) {
       return
     }
     const left = rect.left - originX
-    const top = rect.top - originY + stripHeight
+    const top = rect.top - originY
 
     /*
      * An `<svg>` goes out whole. The charts are the only vector geometry in the
@@ -363,7 +363,7 @@ export const WALKER = String(function walk(options) {
   return {
     body: out.join('\n'),
     width: Math.ceil(doc.body.getBoundingClientRect().width),
-    height: Math.ceil(root.scrollHeight) + stripHeight,
+    height: Math.ceil(root.scrollHeight),
     rounded,
     skipped,
   }
