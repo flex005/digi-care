@@ -11712,3 +11712,50 @@ and reasonably. So it is stated wherever a different reader would meet it:
 importer would mean drawing the product's most load-bearing visual worse for
 every real user in order to serve a handoff step. The limitation is documented
 rather than worked around badly.
+
+## Correction: the Figma limitation is product-wide, not a chart limitation
+
+Specimen 11 — the CSS `repeating-linear-gradient` — **also failed**. So two
+mechanisms are dropped, not one: every `url(#…)` reference, *and* CSS gradient
+backgrounds.
+
+That changes the size of the finding entirely. The gradient is how the hatch is
+drawn in every box outside the charts: **49 sites across 19 feature
+stylesheets, six variants, 84 files, 17 feature modules.** The MAR grid's
+omitted dose cells, never-assessed risk templates, not-sought consents, care
+plan domains never started, documents with no expiry decision, "Insufficient
+evidence" wherever a figure cannot carry a claim — all of it imports as a plain
+settled box. **The Evidence Invariant does not survive this import at all.**
+
+`FIGMA-HANDOFF.md` is rewritten from that premise and now leads with the
+practical consequence: a Figma frame imported from this app is not a picture of
+the product, and anything shown to a stakeholder from those frames
+misrepresents the design in the one way that matters most. The same claim was
+corrected in the README blockquote, `unrecorded.module.css`, `charts.tsx`, and
+the probe's own stated result.
+
+**One thing survives and is worth knowing.** `<Unrecorded>` takes `label` as a
+required prop, precisely so the pattern can never be the sole carrier of
+meaning — and text imports correctly. So an imported frame still reads "Falls
+risk — not assessed" in words. The record is not silently complete; it is
+complete *at a glance*, and only a reader going label by label finds the gaps.
+That is enough to reconstruct the truth and nowhere near enough to present
+from. A design rule written for screen readers and colour blindness turned out
+to be the only thing standing between this import and a total inversion of the
+product's central claim.
+
+### How this was nearly recorded wrong
+
+The first version of the write-up said the CSS gradient imports intact and the
+limitation was confined to the Dashboard charts. **That came from reading "and
+everything else arrives correctly" as covering specimen 11 rather than asking.**
+It was flagged as an inference at the time and it was wrong — which is the
+argument for flagging one rather than for trusting the flag. Had it not been
+questioned, four files would now carry a confident, specific, wrong scope, and
+the specificity would have made it more trusted rather than less: the §8 entry
+about a claim built on a false source, arriving in documentation instead of a
+UI.
+
+The probe file is the reason this was cheap to correct: it names its specimens,
+so a wrong result is a one-line fix in a file whose whole purpose is that the
+evidence and the finding cannot drift apart.

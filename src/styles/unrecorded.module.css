@@ -34,11 +34,17 @@
  * by design.
  *
  * **It does not survive a Figma import, and that is not fixable here.**
- * html.to.design resolves no referenced SVG definition — pattern fills,
- * pattern strokes and clipPaths are all dropped — so the chart hatch imports
- * as a blank shape and a gap becomes indistinguishable from a record. This
- * gradient itself imports intact; only the SVG half is lost. Do not redraw
- * either half to suit the importer: see docs/FIGMA-HANDOFF.md.
+ * html.to.design does not render `repeating-linear-gradient`, so every box
+ * carrying this treatment — 49 sites, 19 stylesheets, 84 files — imports as a
+ * plain settled box. The SVG half in charts.tsx is dropped too, by a different
+ * mechanism. A gap becomes indistinguishable from a record on every screen,
+ * which is the Evidence Invariant failing at the last step.
+ *
+ * The required `label` on <Unrecorded> is what stops that being silent: the
+ * text imports, so the gaps are still readable word by word. They are not
+ * visible at a glance, which is the whole job this pattern does.
+ *
+ * Do not redraw either half to suit the importer. See docs/FIGMA-HANDOFF.md.
  */
 
 .unrecorded {

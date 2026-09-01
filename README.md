@@ -68,11 +68,13 @@ a number nobody updates and everybody reads.
 app. It builds auto-layout from flex and gap and reads type from elements in
 normal flow, which is what the app already is.
 
-> **Read [docs/FIGMA-HANDOFF.md](docs/FIGMA-HANDOFF.md) before working from an
-> imported frame.** The importer drops the hatch, so "nobody recorded this"
-> arrives looking exactly like "recorded" — the one failure this product exists
-> to prevent. It affects the Dashboard charts only, it cannot be fixed in code,
-> and the hatching has to be redrawn in Figma rather than assumed present.
+> **A Figma frame imported from this app is not a picture of the product.**
+> Read [docs/FIGMA-HANDOFF.md](docs/FIGMA-HANDOFF.md) before working from one,
+> and before showing one to anybody. The importer drops the hatch in both media
+> — the SVG pattern *and* the CSS gradient — so every unrecorded value on every
+> screen arrives looking settled. "Nobody recorded this" becomes
+> indistinguishable from "recorded", which is the one failure this product
+> exists to prevent. It cannot be fixed in code.
 
 `npm run icons` regenerates the icon registry and is wired into `predev` and
 `prebuild`; it compiles only the icons actually used, out of 3,559 available.

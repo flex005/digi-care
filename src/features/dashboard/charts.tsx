@@ -105,7 +105,10 @@ export function arcPath(
  * Rendered once per page. The colours come from CSS so stylelint's token rule
  * still governs them.
  *
- * **This is the half that cannot cross a Figma import.** html.to.design drops
+ * **This is one of two halves that cannot cross a Figma import**, and the
+ * smaller one: the CSS gradient in styles/unrecorded.module.css is dropped as
+ * well, so the loss is product-wide rather than confined to these charts.
+ * html.to.design drops
  * every `url(#…)` reference — pattern fills, pattern strokes and clipPaths
  * alike — so a hatched region arrives blank and reads as recorded. Drawing the
  * stripes as clipped `<rect>`s was costed at 65 nodes and rejected, because a

@@ -114,10 +114,11 @@
       Twelve mechanisms, one per row. Note which numbers arrive intact.
     </p>
     <p class="intro">
-      <b>Result, html.to.design, 01/09/2026:</b> 1, 2, 3, 4 and 8 were dropped.
-      5, 6, 7, 9, 10, 11 and 12 arrived. Every failure is a
-      <code>url(#&hellip;)</code> reference and nothing else failed &mdash; the
-      importer resolves no referenced SVG definition. See
+      <b>Result, html.to.design, 01/09/2026:</b> 1, 2, 3, 4, 8 <b>and 11</b>
+      were dropped. 5, 6, 7, 9, 10 and 12 arrived. So two mechanisms fail, not
+      one: every <code>url(#&hellip;)</code> reference, and
+      <code>repeating-linear-gradient</code>. Because 11 is how the hatch is
+      drawn in every box outside the charts, the loss is product-wide. See
       <code>docs/FIGMA-HANDOFF.md</code>.
     </p>
 
