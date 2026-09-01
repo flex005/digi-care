@@ -11430,3 +11430,74 @@ approach, and are kept here because that is the only place they now exist:
 4. **The product uses five weights and rounding two of them is visible.** 500
    and 800 are 94 of the 626 weight-token uses; collapsing them to 400 and 700
    made the sidebar's nav items and section labels visibly thinner.
+
+## Manrope, self-hosted from correctly-named files
+
+`@fontsource/manrope` is gone. Five static weights are committed under
+`src/assets/fonts/`, subset to Latin and Latin Extended, and `--font-family` is
+back to `Manrope` — a name the files now agree with. The `DigiCare Sans` alias
+is reverted; it was built on a mechanism I had described wrongly and was never
+load-bearing.
+
+**What was actually wrong.** The woff2 files `@fontsource/manrope@5.3.0` ships
+declare their internal family name as `Manrope ExtraLight` — `Manrope
+ExtraLight SemiBold`, `Manrope ExtraLight Medium`, and so on. Their `.woff`
+files of the same weights are named correctly. Browsers prefer woff2.
+
+**Why nothing found it for six rounds.** The outlines and `usWeightClass` are
+right, so the screen rendered correctly and a probe string measured five
+distinct monotonic widths — 931.0 / 946.6 / 962.2 / 977.6 / 993.2px. Nothing in
+the CSS, the app, the build or the rendering was wrong, and every tool
+downstream read a name the file was wrong about. Every repair examined
+something that was working.
+
+**The tell was two formats of the same font disagreeing**, and it was found only
+by decompressing the binary and reading the name table. An earlier check had
+cleared the `.woff` files — the wrong format — which is exactly how it survived
+one round of the right question asked of the wrong artefact.
+
+**It is inherited, not invented.** Google's `ofl/manrope/Manrope[wght].ttf`
+declares `family(1) = "Manrope ExtraLight"` at `usWeightClass 200` with a
+`wght` axis defaulting to 200, because name IDs 1 and 2 describe a variable
+font's default instance. Google's own `METADATA.pb` records
+`full_name: "Manrope ExtraLight"` for the entry it lists at weight 400. Anyone
+instancing statics from it inherits the name; @fontsource is one of many.
+
+### What was done
+
+Google Fonts has **no** static Manrope — the API returns six files for five
+weights, one per subset, all the variable font, and `google/fonts` holds a
+single `Manrope[wght].ttf`. So the source is the upstream `google/fonts`
+records: `aaronbell/manrope`, commit `6f81ebec`, whose `fonts/webfonts/`
+statics are named correctly. Subset once with fontTools 4.60.2 and committed;
+the command and the flags are in `src/assets/fonts/README.md`, along with the
+name-table check to re-run before trusting any replacement.
+
+**The check was re-run on the output, not the input.** Subsetters rewrite name
+tables, and `pyftsubset` drops most name records unless `--name-IDs='*'` is
+passed — verifying the source and shipping the output unverified would have
+been the same defect in a new place. Every shipped file reports `Manrope`,
+`Manrope Medium`, `Manrope SemiBold`, `Manrope`/Bold, `Manrope ExtraBold`, with
+matching `usWeightClass` and no `fvar`.
+
+### Verification
+
+- Chrome now reports `Manrope SemiBold` (600), `Manrope Medium` (500),
+  `Manrope` (700) via `CSS.getPlatformFontsForNode`. No ExtraLight anywhere.
+- 111 comparable text boxes measured before and after: **zero width
+  differences.** The 2021 upstream and Google's v20 are metrically identical
+  for this build's text.
+- Transfer: 85,236 bytes against 70,184 today — **+21%**, and today's figure is
+  Latin only where these carry Latin and Latin Extended in one file each. The
+  unsubsetted upstream files would have been +238%, and the `.woff` route +30%.
+- `npm run verify` green: 1236/1236, layout guard 23 of 28.
+
+### Reported upstream
+
+- fontsource/font-files#162 — the woff2/woff naming disagreement, with the
+  name-table evidence.
+- google/fonts#10870 — the variable font's default-instance naming, which is
+  where it originates.
+
+One §8 entry added: a file can lie about its own identity, and the tell is two
+formats of the same artefact disagreeing.
