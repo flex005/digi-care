@@ -13,10 +13,11 @@
  *
  * Three conversions the output cannot avoid making:
  *
- *   - **Weights round to 400, 600 or 700.** Those are the three static faces
- *     embedded in the file. Anything computing to 500 or 800 is rounded to the
- *     nearest and written to `<route>.weights.txt`, named, so a rounding that
- *     matters can be found rather than discovered.
+ *   - **Nothing rounds.** All five weights the product uses — 400, 500, 600,
+ *     700, 800 — ship as their own static face. Anything that *did* have to
+ *     round would be written to `<route>.weights.txt`, named, so a rounding
+ *     that matters can be found rather than discovered; that file should now
+ *     say nothing was rounded, and a line in it is a regression.
  *   - **The hatch becomes an SVG pattern.** `repeating-linear-gradient` does
  *     not exist in Figma, and this is the one background in the product that
  *     means something: it says nobody recorded this. It is re-emitted as
@@ -40,7 +41,22 @@ import { join } from 'node:path'
 import { WALKER } from './walk.mjs'
 
 const PORT = 4319
-const WEIGHTS = [400, 600, 700]
+/**
+ * The weights the export carries, which is every weight the product uses.
+ *
+ * It was 400/600/700, and the two it left out are both real: `--weight-medium`
+ * has 30 uses and `--weight-extrabold` 64. Rounding them collapsed 64 runs of
+ * text on the dashboard alone — the sidebar's nav items are 500 and arrived at
+ * 400, visibly thinner than the app. A rounding that changes what a reader
+ * sees is not a conversion, it is a loss, and there was no reason to take it:
+ * `@fontsource` ships a static master for each of the five.
+ *
+ * `nearestWeight` still exists and now rounds nothing, because it is the thing
+ * that *reports* a rounding. If a sixth weight is ever introduced without a
+ * face to carry it, this list is what makes it show up in `.weights.txt` named
+ * rather than silently flattened.
+ */
+const WEIGHTS = [400, 500, 600, 700, 800]
 const OUT_DIR = 'export'
 
 /**
@@ -91,7 +107,7 @@ const WIDTH = widthFromArgv(process.argv)
 const ROUTES = [{ name: 'dashboard', path: '/' }]
 
 /**
- * One family name per weight, rather than one family at three weights.
+ * One family name per weight, rather than one family at several weights.
  *
  * **The one hypothesis left for the ExtraLight problem, and it is a test.**
  * Neither the app nor this file has ever presented a variable font or a weight
@@ -113,22 +129,15 @@ const ROUTES = [{ name: 'dashboard', path: '/' }]
  * synthesise — verified against the app rather than assumed.
  */
 const FONT_FACES = [
-  {
-    weight: 400,
-    family: 'Manrope Regular',
-    file: 'node_modules/@fontsource/manrope/files/manrope-latin-400-normal.woff2',
-  },
-  {
-    weight: 600,
-    family: 'Manrope SemiBold',
-    file: 'node_modules/@fontsource/manrope/files/manrope-latin-600-normal.woff2',
-  },
-  {
-    weight: 700,
-    family: 'Manrope Bold',
-    file: 'node_modules/@fontsource/manrope/files/manrope-latin-700-normal.woff2',
-  },
-]
+  { weight: 400, family: 'Manrope Regular' },
+  { weight: 500, family: 'Manrope Medium' },
+  { weight: 600, family: 'Manrope SemiBold' },
+  { weight: 700, family: 'Manrope Bold' },
+  { weight: 800, family: 'Manrope ExtraBold' },
+].map((face) => ({
+  ...face,
+  file: `node_modules/@fontsource/manrope/files/manrope-latin-${face.weight}-normal.woff2`,
+}))
 
 /** Weight → family, for the walker. The fallback is the lightest we ship. */
 const FAMILIES = Object.fromEntries(
@@ -260,8 +269,14 @@ ${result.body}
 
   const log = [
     `Weights rounded on ${route.name} (${route.path})`,
-    `The export carries three static faces: 400, 600, 700.`,
-    `Anything else is rounded to the nearest, and listed here.`,
+    // Derived, not typed. This line said "three static faces: 400, 600, 700"
+    // for one export after five started shipping — true when written, printed
+    // every run, and exactly the sentence nobody reads.
+    `The export carries ${FONT_FACES.length} static faces, one per weight: ` +
+      `${FONT_FACES.map((face) => `${face.weight} ${face.family}`).join(', ')}.`,
+    `Anything the product uses outside that set is rounded to the nearest and`,
+    `listed here, so a weight with no face of its own is named rather than`,
+    `silently flattened.`,
     '',
     ...(result.rounded.length === 0
       ? ['Nothing was rounded.']

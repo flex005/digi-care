@@ -11217,3 +11217,38 @@ This is a test, not a fix. If Figma still resolves to ExtraLight, the family
 name was not the mechanism and the idea is ruled out.
 
 One §8 entry added, about the green build that was red.
+
+## All five weights ship; nothing rounds
+
+The export carried three faces and rounded the other two — 500→400 and
+800→700, 64 runs of text on the dashboard alone. That was visible: the
+sidebar's nav items and section labels are 500 in the app and arrived at 400,
+noticeably thinner. A rounding that changes what a reader sees is not a
+conversion, it is a loss, and there was no reason to take it — `@fontsource`
+ships a static master for each of the five.
+
+Five families now, one per weight: `Manrope Regular` 400, `Manrope Medium`
+500, `Manrope SemiBold` 600, `Manrope Bold` 700, `Manrope ExtraBold` 800.
+**0 weights rounded**, and `dashboard.weights.txt` says nothing was rounded.
+
+The arithmetic reconciles against what was reported before, which is the check
+that it moved the right text rather than merely reporting a smaller number:
+content references went 119 Regular → 74 Regular + 46 Medium (45 moved, the
+exact 500→400 count) and 54 Bold → 35 Bold + 20 ExtraBold, with 7 of the SVG
+labels among them. All five faces load and render at 931.0 / 946.6 / 962.2 /
+977.6 / 993.2px on a probe string against 889.4px for the fallback — five
+distinct real faces in a monotonic progression, none falling back, none
+shared. The nav item "Residents" now resolves to `Manrope Medium` at 500.
+
+`nearestWeight` still exists and now rounds nothing. It is what *reports* a
+rounding, so a sixth weight introduced without a face to carry it shows up in
+`.weights.txt` named rather than silently flattened.
+
+**And the log header had gone stale in one release.** It still read "The
+export carries three static faces: 400, 600, 700" after five started shipping
+— true when written, printed every run, and precisely the sentence nobody
+reads. Second occurrence of the §8 staleness class this build. It is derived
+from `FONT_FACES` now rather than typed.
+
+Cost: five embedded faces instead of three, so the file is larger. Named
+rather than traded away quietly.
