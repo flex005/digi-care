@@ -11558,3 +11558,53 @@ colour and in greyscale at 6× — checked in a picture, because a swatch being 
 the DOM is what it was doing before.
 
 `npm run verify` green: 1236/1236, hatch guard passing, layout 23 of 28.
+
+## Two §8 entries, and why /me's tiles were not converted
+
+Added: **a legend is drawn in the medium of the thing it explains**, generalised
+past the hatch to any swatch explaining a visual property; and **converting a
+layout moves which declarations are doing the work**, now on its second
+occurrence in one file — `--tile-chrome` and `height: 100%`.
+
+### /me's tiles are not a second implementation of MetricTile
+
+Held, not converted, because the premise does not survive reading the two side
+by side. MetricTile's docblock states the rule that blocks it:
+
+> **Nothing here is tinted by state.** A gap goes in `figure` as an
+> `<Unrecorded>` chip rather than colouring the card, because the hatch has one
+> owner and a tinted card cannot say whether the tint is the finding or the
+> card.
+
+**All three of /me's tiles are tinted by state**, deliberately: `.tileNow` is
+`--purple-900` reversed out, `.tileWarn` carries `--status-caution` with its
+border and tint, and `.tileGap` composes the hatch across the whole card. That
+is the opposite of MetricTile's contract, not a variant of it.
+
+Three more differences, each independent of the column shape:
+
+- **Shape.** padding 20 vs 16, radius `xl` vs `lg`, and /me's children space
+  themselves with `margin-top` where MetricTile uses a flex `gap`.
+- **Content.** /me's lead tile carries two detail paragraphs and an action
+  button ("Open the round"). MetricTile has no action slot.
+- **The denominator.** `of` is required on MetricTile and its docblock calls
+  that the reason the component exists. /me's lead figure is a *time* —
+  "14:00", or "None left today" — which has no denominator, so the tile cannot
+  satisfy the invariant without inventing one.
+
+So converting means one of two things, and both are decisions rather than
+refactors: **redesign `/me`**, dropping three deliberate state treatments and
+an action button; or **add state tinting to MetricTile**, which contradicts the
+rule its own docblock states — and that rule is the subject of an existing §8
+entry, about this very file's `.tile, .tileNow, .tileWarn, .tileGap` rule
+painting over the hatch.
+
+The drift concern is real and I am not dismissing it. What is actually shared
+between the two is the *card surface*, and the §8 entry already prescribes the
+split: shape in the shared rule, paint per tile. If you want one owner without
+redesigning `/me`, the honest version is to extract MetricTile's shape from its
+paint and have both consume the shape — a change to MetricTile's structure,
+worth doing deliberately rather than as a side effect of this.
+
+The smaller option, if the goal is only to stop the name implying a shared
+concept: rename /me's classes to `.statusTile*`. Two files, no visual change.
