@@ -26,6 +26,10 @@
         9, 10  border-radius 8px vs 50%   — the legend swatch question
         11     CSS repeating-linear-gradient — the hatch outside SVG
         12     a solid div                — the control for "did anything arrive"
+        13, 14 the SAME as 1 and 8, with xmlns — the only difference is the
+               namespace declaration. 1–12 have none, which is legal in an HTML
+               document and invisible in a browser, but makes the markup stop
+               being SVG the moment it is re-parsed on its own.
     -->
     <style>
       body {
@@ -120,6 +124,14 @@
       <code>repeating-linear-gradient</code>. Because 11 is how the hatch is
       drawn in every box outside the charts, the loss is product-wide. See
       <code>docs/FIGMA-HANDOFF.md</code>.
+    </p>
+    <p class="intro">
+      <b>13 and 14 are new and untested.</b> They are specimens 1 and 8 again
+      with one attribute added: <code>xmlns</code>. Specimens 1&ndash;12 carry
+      none &mdash; legal inside an HTML document, invisible in a browser, and it
+      makes the markup stop being SVG when re-parsed on its own. If 13 and 14
+      arrive with their stripes and 1 and 8 do not, the failure is in our markup
+      rather than in the importer.
     </p>
 
     <div class="row">
@@ -296,6 +308,50 @@
       <span class="label">
         <b>solid div</b>
         <span>The control. If this is missing, nothing imported and the rest says nothing.</span>
+      </span>
+    </div>
+    <div class="row">
+      <span class="num">13</span>
+      <span class="spec">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" role="img" aria-label="Specimen 13">
+          <defs>
+            <pattern id="p13" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="16" height="16" fill="#f2f1f6"></rect>
+              <rect width="8" height="16" fill="#8e86a8"></rect>
+            </pattern>
+          </defs>
+          <rect width="64" height="48" fill="url(#p13)"></rect>
+        </svg>
+      </span>
+      <span class="label">
+        <b>specimen 1 again, WITH xmlns</b>
+        <span>Byte-for-byte specimen 1 plus <code>xmlns</code>. If this one has
+          stripes and 1 does not, pattern fills are fine and our SVG was not
+          SVG.</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="num">14</span>
+      <span class="spec">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" role="img" aria-label="Specimen 14">
+          <defs>
+            <clipPath id="c14">
+              <circle cx="32" cy="24" r="20"></circle>
+            </clipPath>
+          </defs>
+          <g clip-path="url(#c14)">
+            <rect width="64" height="48" fill="#6935cf"></rect>
+            <rect y="16" width="64" height="8" fill="#ffffff"></rect>
+            <rect y="32" width="64" height="8" fill="#ffffff"></rect>
+          </g>
+        </svg>
+      </span>
+      <span class="label">
+        <b>specimen 8 again, WITH xmlns</b>
+        <span>Expect a striped circle. A striped circle here and an empty shape
+          at 8 means clipPath works and the 65-node fallback is alive after
+          all.</span>
       </span>
     </div>
   </body>

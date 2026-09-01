@@ -11759,3 +11759,52 @@ UI.
 The probe file is the reason this was cheap to correct: it names its specimens,
 so a wrong result is a one-line fix in a file whose whole purpose is that the
 evidence and the finding cannot drift apart.
+
+## Specimens 13 and 14, and the grid conversion reverted
+
+### The probe gains a controlled comparison
+
+**Our chart `<svg>` elements carry no `xmlns`.** All eight of them; every SVGR
+icon in the app has one. Inside an HTML document that is legal and invisible —
+the parser assigns the namespace and `namespaceURI` reads correctly. Take the
+`outerHTML` and re-parse it on its own and **the root's `namespaceURI` is
+`null`.** It stops being SVG. Plain shapes can survive a lenient parse;
+resolving `url(#…)` against `<defs>` is exactly what would not.
+
+**And the probe shared the defect**, because it was written in the same style.
+So specimens 1–4 and 8 failing never established "the plugin drops referenced
+definitions". It established "namespace-less SVG markup loses its references",
+which is a different claim — and the one the five documents assert.
+
+Specimens **13 and 14** are 1 and 8 again with `xmlns` added and nothing else
+changed; verified as controlled copies by normalising the markup and comparing
+(identical once `xmlns`, the aria-label and the id are set aside), and by
+re-parsing each standalone: 1 and 8 give `namespaceURI null`, 13 and 14 give
+the SVG namespace. Both render correctly in Chrome.
+
+The documents are deliberately **not** corrected yet. They will be wrong in one
+direction or the other after the import, and rewriting them on a prediction is
+the error this whole sequence has been about.
+
+### The grid conversion is reverted
+
+The imported dashboard held its arrangement — four tiles in a row, panels side
+by side, equal heights — so grid was never what clamped the import.
+`.rowTwo`, `.rowThree`, `.tiles` and `.tileLead` are back to grid, and
+`--tile-chrome` and `--tile-min` are gone with it. The compensator existed only
+because `box-sizing: border-box` clamps `flex-basis: 0` to padding plus border,
+where a grid track has no such floor; with the track back, there is nothing to
+compensate for.
+
+Measured against the values recorded under flex, at three widths: tiles
+379/182/182/182 at 1280, 443/214/214/214 at 1440, 635/310/310/310 at 1920;
+rowTwo ratios 1.854 / 1.847 / 1.850; rowThree equal. Every figure matches.
+
+**The tile-height fix survives the revert**, and deliberately: `height: 100%`
+was *not* restored. Grid stretches a track's items by default, so the row still
+sets the height, and heights are equal on all six screens that carry a tile row
+— Dashboard, Handover, Care Notes, Medications, Residents and the reverted
+Dashboard at three widths. The §8 entry about a conversion re-scoping a
+declaration is what stopped that line going back in unread.
+
+`npm run verify` green: 1236/1236, hatch and layout guards passing.

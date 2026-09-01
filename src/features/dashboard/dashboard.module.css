@@ -40,31 +40,19 @@
  * Rows 2 and 3 — the charts
  * ------------------------------------------------------------------------ */
 
-/*
- * Flex rather than grid, and the ratios are exact.
- *
- * `1.85fr 1fr` and `1fr 1fr` are two panels side by side with nothing
- * aligning against them, so there is no second dimension to lose. With
- * `flex-basis: 0` the grow factors divide the free space in the same ratio the
- * tracks divided the container, and `min-width: 0` keeps a panel's content
- * from setting a floor the track never had.
- *
- * Converted because html.to.design builds Figma auto-layout from flex and has
- * no equivalent for a grid track. This is the cheap half of that: 76 of the
- * product's 122 grids are one-off rows, card grids or stacks like these. The
- * 42 that align columns down a list are not touched — there the shared track
- * definition is the alignment, and flex would size each row on its own.
- */
 .rowTwo,
 .rowThree {
-  display: flex;
+  display: grid;
   gap: var(--space-16);
   align-items: stretch;
 }
 
-.rowTwo > *,
-.rowThree > * {
-  min-width: 0;
+.rowTwo {
+  grid-template-columns: 1.85fr 1fr;
+}
+
+.rowThree {
+  grid-template-columns: 1fr 1fr;
 }
 
 .rowTwo > :first-child {
