@@ -12,28 +12,46 @@
  */
 
 /*
- * `repeat(auto-fit, minmax(170px, 1fr))` — equal tracks with a 170px floor, so
- * a row wraps rather than squeezing a tile below what its content needs.
+ * Flex-wrap rather than `repeat(auto-fit, minmax(170px, 1fr))`.
  *
- * This was flex for one commit, converted to suit a Figma importer on the
- * theory that grid was what clamped the import. It was not: the imported
- * dashboard held its arrangement, and the failure is the hatch. The conversion
- * is reverted, and with it a `--tile-chrome` compensator that existed only
- * because `box-sizing: border-box` clamps `flex-basis: 0` to padding plus
- * border, where a grid track has no such floor.
+ * The tiles carry a `flex-basis` of 0 and grow equally, which divides the row
+ * exactly as equal tracks did, and `min-width: var(--tile-min)` restores the
+ * 170px floor the `minmax()` was there for — so a row still wraps rather than
+ * squeezing a tile below what its content needs.
+ *
+ * Converted for html.to.design, which builds Figma auto-layout out of flex and
+ * has nothing to build from a grid track.
  */
+
 .tiles {
-  display: grid;
+  /** The floor a tile may not shrink below, from the old `minmax()`. */
+  --tile-min: 170px;
 
   /*
-   * The row decides the height; every tile takes it. Grid's default, stated
-   * because the tiles are one comparison and a tile that is taller for
-   * carrying a hatched block rather than a numeral reads as a difference in
-   * the data.
+   * A tile's own padding and borders.
+   *
+   * **`box-sizing: border-box` clamps `flex-basis: 0` to this**, so a tile's
+   * base size is never actually zero and the grow factors divide only what is
+   * left. Grid had no such floor — padding sits *inside* a track — which is
+   * why a spanning item cannot be reproduced by a grow factor alone. Derived
+   * from the same tokens the padding and border use, so it cannot drift from
+   * them.
+   */
+  --tile-chrome: calc(var(--space-16) * 2 + 2px);
+
+  display: flex;
+
+  /*
+   * The row decides the height; every tile takes it.
+   *
+   * Stated rather than left to the initial value, because the tiles are one
+   * comparison and a tile that is taller because its figure is a hatched block
+   * rather than a numeral reads as a difference in the data. It was `normal`
+   * and four screens rendered a ragged row.
    */
   align-items: stretch;
+  flex-wrap: wrap;
   gap: var(--space-16);
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 }
 
 /* Read-only. No hover, no pointer, no pressed state — nothing that suggests
@@ -53,19 +71,19 @@
    */
 
   /*
-   * Lets the grid track shrink to its share.
+   * One share of the row, with a floor.
    *
-   * Without it a track's floor is its content's min-content width, and the
-   * denominator pill below declared `nowrap` — so four tiles asked for more
-   * than the content column has at 1280 and the last one ran off the screen
-   * with "of 40 on record at Rosewood Court" cut mid-word. A clipped
-   * denominator is Rule 4 failing in layout rather than in a string.
-   *
-   * No `height`. Under grid the track stretches the item regardless, and a
-   * definite cross size is what exempted it from stretching when this was
-   * briefly flex.
+   * `flex-basis: 0` so the grow factors divide the row the way equal tracks
+   * did, and the floor is stated rather than inherited from content. It has to
+   * be stated: a flex item's automatic minimum is its min-content width, which
+   * is the same trap the grid track had — the denominator pill below declared
+   * `nowrap`, four tiles asked for more than the content column has at 1280,
+   * and the last one ran off the screen with "of 40 on record at Rosewood
+   * Court" cut mid-word. A clipped denominator is Rule 4 failing in layout
+   * rather than in a string.
    */
-  min-width: 0;
+  flex: 1 1 0;
+  min-width: var(--tile-min, 170px);
   padding: var(--space-16);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -73,10 +91,20 @@
   text-align: left;
 }
 
-/* The lead takes two columns. Same card, more room. */
+/*
+ * The lead takes two shares. Same card, more room.
+ *
+ * The basis is everything a spanning grid item used to absorb that a grow
+ * factor cannot: the gap between the two tracks it covered, and the second
+ * track's worth of tile chrome that `border-box` charges every flex item
+ * whether its basis is zero or not. With those stated the lead comes out at
+ * `2 × share + gap` and the row measures what it measured under grid, to the
+ * pixel — checked against the recorded widths, not assumed.
+ */
 .tileLead {
   composes: tile;
-  grid-column: span 2;
+  flex: 2 1 calc(var(--tile-chrome) * 2 + var(--space-16));
+  min-width: calc(var(--tile-min, 170px) * 2 + var(--space-16));
 }
 
 .tileHead {

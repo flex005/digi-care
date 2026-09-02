@@ -36,9 +36,20 @@ const CANONICAL_SVG = path.join(SRC, 'features/dashboard/charts.tsx')
 
 const SKIP_DIRECTORIES = new Set(['node_modules', 'assets', 'dist', 'coverage'])
 
+/**
+ * A line that is prose rather than code.
+ *
+ * The guard used to match the string anywhere, so a docblock *explaining* why
+ * the hatch has one owner counted as a second declaration of it. A guard that
+ * fires on its own documentation teaches people to word around it, which is
+ * how the next real copy gets in under a comment.
+ */
+const COMMENT = /^\s*(\/\*|\*|\/\/)/
+
 const FORBIDDEN = [
   {
-    pattern: /repeating-linear-gradient/,
+    // A declaration, not a mention.
+    pattern: /^\s*background(-image)?:\s*repeating-linear-gradient/,
     what: 'the diagonal hatch',
   },
   {
@@ -69,6 +80,23 @@ const FORBIDDEN_SVG = [
   { pattern: /patternUnits|patternTransform/, what: 'an SVG hatch pattern' },
 ]
 
+/**
+ * How many gradient declarations the owner file is allowed.
+ *
+ * **Two, and the number is the point.** One bands `--status-unrecorded-tint`
+ * for boxes — cells, chips, panels, tiles — where the treatment covers enough
+ * area to read as texture. One bands `--status-unrecorded` for chart regions
+ * 7–20px tall, where the tint measures 1.12:1 against the surface and a hatch
+ * nobody can see is a solid neutral fill: the one thing Rule 2 says this must
+ * never become, in the direction that hides a gap.
+ *
+ * This is not the guard weakening. Two sizes in one file is one owner; a copy
+ * in a feature stylesheet is drift, and that is still a finding.
+ */
+const OWNER_GRADIENTS = 2
+/** A declaration, not a mention. The docblocks name the property in prose. */
+const GRADIENT_DECLARATION = /^\s*background:\s*repeating-linear-gradient\(/
+
 const findings = []
 
 for await (const file of walk(SRC)) {
@@ -82,6 +110,7 @@ for await (const file of walk(SRC)) {
   const rules = isStyle ? FORBIDDEN : FORBIDDEN_SVG
   const lines = (await readFile(file, 'utf8')).split('\n')
   lines.forEach((line, index) => {
+    if (COMMENT.test(line)) return
     for (const { pattern, what } of rules) {
       if (pattern.test(line)) {
         findings.push({
@@ -93,6 +122,31 @@ for await (const file of walk(SRC)) {
       }
     }
   })
+}
+
+const ownerGradients = (await readFile(CANONICAL, 'utf8'))
+  .split('\n')
+  .filter((line) => GRADIENT_DECLARATION.test(line)).length
+
+if (ownerGradients !== OWNER_GRADIENTS) {
+  console.error(
+    `\n\u2716 hatch: ${path.relative(ROOT, CANONICAL)} declares ${ownerGradients} gradient` +
+      `${ownerGradients === 1 ? '' : 's'}, expected ${OWNER_GRADIENTS}.\n`,
+  )
+  console.error(
+    '  There are two on purpose, and the second is not a relaxation:',
+    '\n    .unrecorded      — bands --status-unrecorded-tint, 1.12:1, for boxes.',
+    '\n                       Correct across 170px, invisible across 7px.',
+    '\n    .unrecordedChart — bands --status-unrecorded, 3.43:1, for chart',
+    '\n                       regions 7-20px tall. Clears WCAG 1.4.11 (3:1).',
+    '\n',
+    '\n  A hatch nobody can see is a solid neutral fill, which Rule 2 forbids —',
+    '\n  so one size cannot serve both. Two sizes in one file is one owner.',
+    '\n  A third means a size nobody has justified; a copy in a feature',
+    '\n  stylesheet is drift and is reported separately above.',
+    '\n  PRD \u00a74.5, CLAUDE.md \u00a71.\n',
+  )
+  process.exit(1)
 }
 
 if (findings.length > 0) {
@@ -114,4 +168,7 @@ if (findings.length > 0) {
   process.exit(1)
 }
 
-console.log('✓ hatch — the unrecorded treatment has exactly one definition per medium')
+console.log(
+  `\u2713 hatch — one owner per medium: ${OWNER_GRADIENTS} CSS sizes in one file, ` +
+    'one SVG pattern in one component',
+)

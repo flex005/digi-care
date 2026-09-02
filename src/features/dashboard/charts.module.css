@@ -248,3 +248,131 @@
   stroke: var(--border-unrecorded);
   stroke-width: 1;
 }
+
+/* --------------------------------------------------------------------------
+ * The dose bars, in HTML rather than SVG
+ *
+ * **Because the hatch has to survive a Figma import and an SVG `<pattern>`
+ * does not.** html.to.design resolves no `url(#…)` reference, so a pattern
+ * fill arrives blank and a gap reads as a record — tested, see
+ * docs/FIGMA-HANDOFF.md. A `repeating-linear-gradient` is two colours at an
+ * angle with nothing to resolve, and it imports.
+ *
+ * The gap bands `--status-unrecorded` through `.unrecordedChart`, not the tint
+ * the boxes use. At 7px of bar the tint is 1.12:1 and invisible, which is a
+ * solid neutral fill wearing a pattern's name.
+ * ----------------------------------------------------------------------- */
+
+.plot {
+  position: relative;
+  height: 250px;
+  padding-left: var(--space-40);
+}
+
+/* Each line is positioned by its own value, so the axis cannot drift from it. */
+.gridline {
+  position: absolute;
+  right: 0;
+  left: var(--space-40);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.gridlineBase {
+  composes: gridline;
+  border-top-color: var(--border-strong);
+}
+
+.gridlineLabel {
+  position: absolute;
+  right: calc(100% + var(--space-8));
+  transform: translateY(-50%);
+  color: var(--ink-400);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+}
+
+/*
+ * Above the gridlines. They are absolutely positioned, so without a stacking
+ * context of its own this list paints under them and every bar is crossed by
+ * white lines — the SVG drew the grid first and the bars over it.
+ */
+.days {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+  list-style: none;
+}
+
+.day {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+/*
+ * The rounded cap belongs to whichever segment is on top, which is what the
+ * SVG did by choosing between a square and a curved path. `overflow: hidden`
+ * on the stack does the same thing without either segment knowing.
+ */
+.stack {
+  display: flex;
+  flex-direction: column;
+  width: 54px;
+  max-width: 70%;
+  overflow: hidden;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+/* Today is still running, so its bar is not a whole day yet. */
+.stackToday {
+  composes: stack;
+  outline: 1.5px dashed var(--status-critical);
+  outline-offset: 3px;
+}
+
+.barGapCss {
+  composes: unrecordedChart from '../../styles/unrecorded.module.css';
+  flex: 0 0 auto;
+}
+
+.barRecordedCss {
+  flex: 1 1 auto;
+  background: var(--purple-600);
+}
+
+.gapCount {
+  margin-bottom: var(--space-4);
+  color: var(--status-unrecorded-ink);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-extrabold);
+}
+
+.dayLabel {
+  margin-top: var(--space-8);
+  color: var(--ink-400);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+}
+
+/*
+ * The legend's hatch, in the same medium as the bars it explains.
+ *
+ * The chart size rather than the box size: at 12px the tint is 1.12:1 and the
+ * swatch reads as blank, which is what it did before this.
+ */
+.swatchHatch {
+  composes: unrecordedChart from '../../styles/unrecorded.module.css';
+  display: inline-block;
+  flex: 0 0 auto;
+  width: var(--space-12);
+  height: var(--space-12);
+  border: 1px solid var(--border-unrecorded);
+  border-radius: var(--radius-sm);
+}

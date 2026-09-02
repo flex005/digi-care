@@ -245,6 +245,88 @@ try {
     })
   }
 
+  /*
+   * The chart hatch, asserted where it can be seen.
+   *
+   * The bars are HTML with a CSS gradient, because an SVG `<pattern>` does not
+   * survive a Figma import. **jsdom cannot check that**: it applies no CSS, so
+   * `backgroundImage` is `none` there whatever the class says, and a unit test
+   * on it could not fail. A real browser resolves the cascade, which is the
+   * whole reason this file exists.
+   */
+  await go(page, '/')
+  await page.waitForTimeout(1400)
+  const hatch = await page.evaluate(() => {
+    const gaps = [...document.querySelectorAll('[data-bar-segment="gap"]')]
+    const recorded = [...document.querySelectorAll('[data-bar-segment="recorded"]')]
+    const painted = (el) => getComputedStyle(el).backgroundImage
+    /*
+     * The *chart* variant, not merely a gradient. The box variant bands
+     * `--status-unrecorded-tint` at 1.12:1, which is invisible across a 7px
+     * bar — so a guard that accepted any gradient would pass on exactly the
+     * regression this hatch exists to prevent.
+     */
+    const solid = getComputedStyle(document.documentElement)
+      .getPropertyValue('--status-unrecorded')
+      .trim()
+    const chartHatch = (el) => {
+      const image = painted(el)
+      if (!/repeating-linear-gradient/.test(image)) return false
+      const probe = document.createElement('span')
+      probe.style.color = solid
+      document.body.appendChild(probe)
+      const rgb = getComputedStyle(probe).color
+      probe.remove()
+      return image.includes(rgb)
+    }
+    return {
+      gaps: gaps.length,
+      hatched: gaps.filter(chartHatch).length,
+      recorded: recorded.length,
+      recordedHatched: recorded.filter((r) =>
+        /repeating-linear-gradient/.test(painted(r)),
+      ).length,
+      swatch: chartHatch(
+        document.querySelector('[class*="swatchHatch"]') ?? document.body,
+      ),
+    }
+  })
+  console.log(
+    `  ${hatch.hatched} of ${hatch.gaps} bar gaps hatched, ` +
+      `legend swatch hatched: ${hatch.swatch}`,
+  )
+  if (hatch.gaps === 0) {
+    findings.push({
+      route: '/',
+      why: 'no bar-gap segments rendered, so the hatch assertion swept nothing',
+      label: '[data-bar-segment="gap"]',
+      text: '',
+    })
+  } else if (hatch.hatched !== hatch.gaps) {
+    findings.push({
+      route: '/',
+      why: `${hatch.gaps - hatch.hatched} of ${hatch.gaps} bar gaps paint no hatch`,
+      label: '[data-bar-segment="gap"]',
+      text: 'a gap nobody recorded is drawn as a solid fill',
+    })
+  }
+  if (hatch.recordedHatched > 0) {
+    findings.push({
+      route: '/',
+      why: `${hatch.recordedHatched} recorded segments paint the hatch`,
+      label: '[data-bar-segment="recorded"]',
+      text: 'a recorded value is drawn as an absence',
+    })
+  }
+  if (!hatch.swatch) {
+    findings.push({
+      route: '/',
+      why: 'the legend swatch paints no hatch, so the key explains nothing',
+      label: '[class*="swatchHatch"]',
+      text: '',
+    })
+  }
+
   console.log(`  ${visited} screens crawled at ${MIN_WIDTH}px\n`)
 } finally {
   await browser.close()

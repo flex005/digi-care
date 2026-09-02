@@ -244,14 +244,26 @@ describe('the charts refuse what the screen refuses', () => {
      * survives greyscale and colour-blindness, and it is the same hatch every
      * other screen in the build uses.
      */
+    /*
+     * The bars are HTML now, and **their treatment cannot be asserted here.**
+     * jsdom applies no CSS: `getComputedStyle(gap).backgroundImage` is `none`
+     * whatever the class does, so an assertion on it could not fail — the
+     * §8 wrong-medium trap, in the file that would look like it had covered
+     * this. Asserting the class name instead is no better: `composes:` is a
+     * claim about cascade, and cascade has no representation a query reaches.
+     *
+     * So what is asserted here is the structure — a gap segment exists,
+     * distinct from the recorded one — and whether the hatch actually paints
+     * is asserted in a real browser by scripts/check-layout.mjs.
+     */
     const gaps = [...container.querySelectorAll('[data-bar-segment="gap"]')]
     expect(gaps.length).toBeGreaterThan(0)
-    for (const gap of gaps) {
-      expect(hatchedWithin(gap, 'fill'), gap.outerHTML.slice(0, 60)).toBe(true)
-    }
-    // And the recorded part of the same bar is a solid token, not a tint of it.
     const recorded = container.querySelector('[data-bar-segment="recorded"]')!
-    expect(recorded.getAttribute('fill')).toBeNull()
+    expect(recorded).toBeTruthy()
+    for (const gap of gaps) {
+      expect(gap.getAttribute('data-bar-segment')).toBe('gap')
+      expect(gap).not.toBe(recorded)
+    }
 
     /*
      * The donut's no-record arc and an incomplete ring's track are drawn only

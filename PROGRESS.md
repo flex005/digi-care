@@ -11940,3 +11940,55 @@ The single layout commit between that import and now is the grid revert, which
 I proposed. html.to.design builds auto-layout from flex and gap; grid has no
 equivalent. The evidence for "grid is fine" was an import taken while the
 dashboard was on flex.
+
+## The chart hatch now imports: bars and swatch in CSS, donut still lost
+
+**Flex restored.** `.tiles`, `.rowTwo` and `.rowThree` are back to flex, which
+is the configuration the successful import was taken on. `--tile-chrome` and
+`--tile-min` return, documented as export-driven and load-bearing rather than
+incidental.
+
+**A second hatch size, inside the owner.** `unrecorded.module.css` now declares
+`.unrecordedChart`, banding `--status-unrecorded` at **3.43:1** where
+`.unrecorded` bands the tint at **1.12:1**. WCAG 1.4.11 wants 3:1 for non-text
+contrast: the chart size clears it, the box size is a twelfth of the way there.
+The split is not new — the SVG pattern always banded the solid colour, for this
+exact reason. This makes it explicit in one medium and one file.
+
+`check-hatch` now requires **exactly two** gradient declarations in that file
+and names both in its failure message, so the next reader meets the reason
+rather than an unexplained exemption. Mutation-tested three ways: a third
+gradient fails, a missing one fails, a copy in a feature stylesheet fails.
+
+**The bars are HTML.** `DoseBars` was 115 lines of SVG and is now a flex row of
+stacked divs: `overflow: hidden` on the stack gives the rounded cap to whichever
+segment is on top, which is what choosing between two paths did. `PLOT_SHARE`
+scales bars and gridlines through one number, because a bar and a gridline that
+scale differently is an axis that lies. The legend swatch went with them.
+
+**The tests could not assert the treatment, and that was checked rather than
+assumed.** jsdom applies no CSS: a probe showed `backgroundImage` computing to
+`none` on a correctly-classed element, so an assertion on it there could never
+fail. Asserting the class name instead is no better — `composes:` is a claim
+about cascade. So the treatment is asserted in `check-layout.mjs`, in a real
+browser, and the unit test asserts structure and says why. The browser guard
+checks the **band colour**, not merely that a gradient is present: mutating the
+gap to the box tint leaves a gradient in place and is exactly the regression
+that matters, and it fails.
+
+**The donut arc and the ring tracks stay lost, permanently.** A linear gradient
+cannot follow a curve. `conic-gradient` gives radial spokes — a third treatment
+for one concept. A mask over an annulus needs a conic wedge for a 4.9% segment
+and is at least as exotic as the mechanism that already failed. Stated in
+FIGMA-HANDOFF.md as the remaining limit rather than left to be found.
+
+One thing kept deliberately: the tallest bar overshoots the top gridline by
+19px, because `top` is `max(due + stillToCome)` and a day's `recorded +
+noRecord` can exceed it. **The SVG did the same** — identical formula — so it is
+faithful rather than introduced. Worth a decision separately; a mechanism swap
+should not quietly change what a chart says.
+
+Three §8 entries added: an observation is evidence for what it observed, not
+the claim beside it; a number deciding an accessibility question cannot come
+from memory, and wrong numbers land where the argument was leaning; and a guard
+that fires on its own documentation teaches people to word around it.

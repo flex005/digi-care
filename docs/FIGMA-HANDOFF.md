@@ -1,9 +1,13 @@
 # Handing off to Figma — read this first
 
-**The importer drops the Dashboard's chart hatching.** Bar gaps, the donut's
-no-record arc and the ring tracks arrive as blank shapes, so on those charts
-*"nobody recorded this"* looks like a recorded value — the one failure this
-product exists to prevent, reproduced by a tool.
+**The importer drops the Dashboard's donut arc and ring-track hatching.** They
+arrive as blank shapes, so on those two graphics *"nobody recorded this"* looks
+like a recorded value — the one failure this product exists to prevent,
+reproduced by a tool.
+
+**The bars and the legend swatch are fixed.** They were SVG pattern fills and
+are now HTML with a CSS gradient, which the importer renders. What remains lost
+is the donut and the rings, and it is not fixable.
 
 **Everywhere else the hatch imports correctly.** The CSS hatch — every
 `<Unrecorded>` badge, chip, cell, panel, row and flag, the MAR grid's omitted
@@ -72,12 +76,30 @@ Specimen 14 also kills the `clipPath` fallback a second time, independently.
 
 Dashboard only:
 
+**Still lost**, Dashboard only:
+
 | element | selector | what it says |
 | --- | --- | --- |
-| 7 bar-gap segments | `[data-bar-segment="gap"]` | doses due and not recorded, per day |
 | donut arc | `[data-arc="no-record"]` | doses whose window closed with no record |
 | 2 ring tracks | `[data-ring-track="gap"]` | rounds with doses still unrecorded |
-| 2 legend swatches | chart legend, donut key | the key explaining the above |
+
+**Fixed** — these now import: the 7 bar-gap segments
+(`[data-bar-segment="gap"]`) and the 2 legend swatches.
+
+### Why the donut and the rings cannot be fixed the same way
+
+The bars were rectangles, so an HTML element with a
+`repeating-linear-gradient` reproduces them exactly. **A donut arc is a hatched
+band following a curve, and a linear gradient is linear.** It cannot bend.
+
+What was considered and rejected: a `conic-gradient` gives radial spokes, which
+is a different pattern and would be a third treatment for one concept; a CSS
+mask over an annulus needs a conic wedge for a 4.9% segment and is at least as
+exotic as the mechanism that already failed — we would be guessing again, which
+is what the probe exists to stop.
+
+So this is a permanent partial. **Redraw the donut's no-record arc and the ring
+tracks in Figma after import.** Nothing else needs touching.
 
 ## Why there is no fix yet
 

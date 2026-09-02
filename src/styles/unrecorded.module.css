@@ -52,6 +52,38 @@
 }
 
 /**
+ * THE CHART SIZE — the same hatch, banded in the solid colour.
+ *
+ * **Two sizes, one owner. This is the rule stated properly, not the guard
+ * weakening.** The treatment above bands `--status-unrecorded-tint` and is
+ * correct on a box: a cell, a chip, a panel, a tile. It is 1.12:1 against the
+ * surface, which reads as texture across 170px and reads as nothing across
+ * seven.
+ *
+ * A chart's gap regions are 7–20px tall. At that size the tint is invisible,
+ * and **a hatch nobody can see is a solid neutral fill** — the one thing Rule 2
+ * says this treatment must never become, in the direction that hides a gap
+ * rather than inventing one. So the chart bands `--status-unrecorded` instead,
+ * at 3.43:1, which clears WCAG 1.4.11's 3:1 for non-text contrast where the
+ * tint is a twelfth of the way there.
+ *
+ * The split is not new. It has always existed — the SVG `<pattern>` in
+ * charts.tsx banded the solid colour for exactly this reason, and this makes
+ * the same decision explicit in one medium and one file rather than implicit
+ * across two.
+ *
+ * Same 45°, same 6px rhythm. Only the band colour differs, and only because
+ * the size does.
+ */
+.unrecordedChart {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--status-unrecorded) 0 6px,
+    var(--bg-surface) 6px 12px
+  );
+}
+
+/**
  * Inline badge / pill form — profile header badge strip, chips, list rows.
  *
  * Sentence case, unlike <StatusPill>, which is uppercase and stays that way.

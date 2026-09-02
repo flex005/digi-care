@@ -162,20 +162,8 @@ function useHatchId(): string {
  * and it carries its own `<pattern>` because `url(#…)` does not resolve across
  * two `<svg>` elements anywhere but a browser.
  */
-export function HatchSwatch({ size = 12 }: { size?: number }) {
-  const id = useHatchId()
-  return (
-    <svg width={size} height={size} aria-hidden focusable="false">
-      <ChartDefs id={id} />
-      <rect
-        width={size}
-        height={size}
-        rx="2"
-        fill={`url(#${id})`}
-        className={styles.swatchEdge}
-      />
-    </svg>
-  )
+export function HatchSwatch() {
+  return <span className={styles.swatchHatch} aria-hidden />
 }
 
 /**
@@ -233,142 +221,78 @@ export function Sparkline({ series, tone }: { series: DaySeries; tone: string })
  * percentage with no denominator. The geometry stays honest and the figure is
  * printed.
  */
-/**
- * A bar with its top corners curved and its foot square on the baseline.
- *
- * `rx` on a `<rect>` rounds all four corners, which lifts the bar off its own
- * axis and rounds the seam between two stacked segments as well. The path
- * curves only the end that is actually the end of the bar.
- */
-function barPath(x: number, y: number, width: number, height: number, radius: number) {
-  const r = Math.max(0, Math.min(radius, width / 2, height))
-  return [
-    `M${x},${y + height}`,
-    `L${x},${y + r}`,
-    `Q${x},${y} ${x + r},${y}`,
-    `L${x + width - r},${y}`,
-    `Q${x + width},${y} ${x + width},${y + r}`,
-    `L${x + width},${y + height}`,
-    'Z',
-  ].join(' ')
-}
 
-/** Matches --radius-md at the chart's own scale. */
-const BAR_RADIUS = 6
+/**
+ * How much of the plot a full-height bar occupies, in percent.
+ *
+ * The remainder is headroom for the gap count that sits above each bar. **The
+ * gridlines use the same number**, which is what keeps the axis honest: the
+ * SVG version scaled both through `floor - fraction * (floor - ceiling)`, and
+ * a bar and a gridline that scale differently is an axis that lies.
+ */
+const PLOT_SHARE = 85
 
 export function DoseBars({ days }: { days: DoseDay[] }) {
-  const hatchId = useHatchId()
-  const width = 700
-  const height = 250
-  const left = 44
-  const floor = 200
-  const ceiling = 30
-
   const top = Math.max(...days.map((day) => day.due + day.stillToCome), 1)
-  const slot = (width - left - 10) / Math.max(days.length, 1)
-  const barWidth = Math.min(slot * 0.6, 54)
-  const centre = (index: number) => left + slot * index + slot / 2
-  const scale = (value: number) => (value / top) * (floor - ceiling)
-
-  const gridlines = [0, 0.25, 0.5, 0.75, 1]
+  const gridlines = [1, 0.75, 0.5, 0.25, 0]
 
   return (
-    <svg
-      className={styles.area}
-      viewBox={`0 0 ${width} ${height}`}
+    <div
+      className={styles.plot}
       role="img"
       aria-label={`Doses recorded against doses due, by day. ${days
         .map((day) => `${formatCount(day.recorded)} of ${formatCount(day.due)}`)
         .join('; ')}.`}
       data-bar-chart
     >
-      <ChartDefs id={hatchId} />
-      <g className={styles.grid}>
-        {gridlines.map((fraction) => (
-          <line
-            key={fraction}
-            x1={left}
-            x2={width - 10}
-            y1={floor - fraction * (floor - ceiling)}
-            y2={floor - fraction * (floor - ceiling)}
-          />
-        ))}
-      </g>
-      <g className={styles.axis}>
-        {gridlines.map((fraction) => (
-          <text key={fraction} x={8} y={floor - fraction * (floor - ceiling) + 4}>
+      {gridlines.map((fraction) => (
+        <div
+          key={fraction}
+          className={fraction === 0 ? styles.gridlineBase : styles.gridline}
+          style={{ bottom: `${fraction * PLOT_SHARE}%` }}
+        >
+          <span className={styles.gridlineLabel}>
             {formatCount(Math.round(top * fraction))}
-          </text>
-        ))}
-      </g>
+          </span>
+        </div>
+      ))}
 
-      {days.map((day, index) => {
-        const recorded = scale(day.recorded)
-        const gap = scale(day.noRecord)
-        const x = centre(index) - barWidth / 2
-        return (
-          <g key={day.date} data-bar-day={day.date}>
-            {/* Square-topped while the gap sits above it, curved when it is
-                the top of the bar itself. */}
-            <path
-              className={styles.barRecorded}
-              d={
-                day.noRecord > 0
-                  ? `M${x},${floor} L${x},${floor - recorded} L${x + barWidth},${floor - recorded} L${x + barWidth},${floor} Z`
-                  : barPath(x, floor - recorded, barWidth, recorded, BAR_RADIUS)
-              }
-              data-bar-segment="recorded"
-            />
-            {day.noRecord > 0 ? (
-              <path
-                d={barPath(x, floor - recorded - gap, barWidth, gap, BAR_RADIUS)}
-                fill={`url(#${hatchId})`}
-                data-bar-segment="gap"
-              />
-            ) : null}
-            {day.noRecord > 0 ? (
-              <text
-                className={styles.gapLabel}
-                x={centre(index)}
-                y={floor - recorded - gap - 7}
-                textAnchor="middle"
-                data-gap-label={day.date}
+      <ol className={styles.days}>
+        {days.map((day) => {
+          const total = day.recorded + day.noRecord
+          const height = (total / top) * PLOT_SHARE
+          /* The gap's share of the bar, not of the plot — it is stacked. */
+          const gapShare = total === 0 ? 0 : (day.noRecord / total) * 100
+          const today = day.daysBack === 0
+          return (
+            <li key={day.date} className={styles.day} data-bar-day={day.date}>
+              {day.noRecord > 0 ? (
+                <span className={styles.gapCount} data-gap-label={day.date}>
+                  {formatCount(day.noRecord)}
+                </span>
+              ) : null}
+              <div
+                className={today ? styles.stackToday : styles.stack}
+                style={{ height: `${height}%` }}
+                {...(today ? { 'data-today-mark': '' } : {})}
               >
-                {formatCount(day.noRecord)}
-              </text>
-            ) : null}
-            {/* Today is still running, so its bar is not a whole day yet. */}
-            {day.daysBack === 0 ? (
-              <rect
-                className={styles.barToday}
-                x={x - 3}
-                y={floor - recorded - gap - 3}
-                width={barWidth + 6}
-                height={recorded + gap + 3}
-                rx={BAR_RADIUS + 2}
-                data-today-mark
-              />
-            ) : null}
-          </g>
-        )
-      })}
-
-      <line
-        className={styles.baseline}
-        x1={left}
-        x2={width - 10}
-        y1={floor}
-        y2={floor}
-      />
-
-      <g className={styles.axis}>
-        {days.map((day, index) => (
-          <text key={day.date} x={centre(index)} y={floor + 22} textAnchor="middle">
-            {day.daysBack === 0 ? 'today' : day.date.slice(8, 10)}
-          </text>
-        ))}
-      </g>
-    </svg>
+                {day.noRecord > 0 ? (
+                  <div
+                    className={styles.barGapCss}
+                    style={{ height: `${gapShare}%` }}
+                    data-bar-segment="gap"
+                  />
+                ) : null}
+                <div className={styles.barRecordedCss} data-bar-segment="recorded" />
+              </div>
+              <span className={styles.dayLabel}>
+                {today ? 'today' : day.date.slice(8, 10)}
+              </span>
+            </li>
+          )
+        })}
+      </ol>
+    </div>
   )
 }
 
