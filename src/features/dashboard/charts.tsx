@@ -111,7 +111,9 @@ export function arcPath(
  * every `url(#…)` reference — pattern fills, pattern strokes and clipPaths
  * alike — so a hatched region arrives blank and reads as recorded. Drawing the
  * stripes as clipped `<rect>`s was costed at 65 nodes and rejected, because a
- * clipPath is the same dropped mechanism. Do not spend it again:
+ * clipPath is the same dropped mechanism — confirmed twice, once without a
+ * namespace and once with. Adding `xmlns` does not help; that was tested. Do
+ * not spend it again:
  * docs/FIGMA-HANDOFF.md has the evidence and the probe that produced it.
  */
 export function ChartDefs({ id }: { id: string }) {

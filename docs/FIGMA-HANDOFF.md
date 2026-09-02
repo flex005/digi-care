@@ -54,18 +54,19 @@ Established by `docs/figma-probe.html` — twelve labelled specimens containing
 no app code. **Specimens 1, 2, 3, 4 and 8 failed. 5, 6, 7, 9, 10, 11 and 12
 arrived.**
 
-### One claim here is still not established
+### This is tested, not inferred
 
-"The importer resolves no referenced definition" is a **diagnosis**, and the
-evidence only reaches *our own markup*. The app's chart `<svg>` elements carry
-no `xmlns`; re-parsed on their own, their root `namespaceURI` is `null` — they
-stop being SVG. The probe was written the same way and shares that defect. So
-what specimens 1–4 and 8 prove is that *namespace-less SVG loses its
-references*, which is not the same claim.
+It was inferred for a while, and the inference was checked. The app's chart
+`<svg>` elements carry no `xmlns`; re-parsed on their own their root
+`namespaceURI` is `null`, so they stop being SVG — and the probe, written the
+same way, shared that defect. That left an alternative reading: not that the
+importer drops references, but that *namespace-less markup* loses them.
 
-Specimens **13 and 14** — 1 and 8 again with `xmlns` added and nothing else —
-are in the probe and **untested**. If they arrive with their stripes, the fix
-is an attribute on nine `<svg>` elements and this page is wrong again.
+**Specimens 13 and 14 settled it.** They are 1 and 8 with `xmlns` added and
+nothing else changed. They arrived blank as well. The namespace was not the
+cause, and the diagnosis now stands on an experiment rather than a reading.
+
+Specimen 14 also kills the `clipPath` fallback a second time, independently.
 
 ## What is affected
 
@@ -82,7 +83,8 @@ Dashboard only:
 
 The stripe fallback — drawing the hatch as `<rect>`s clipped to the shape — was
 costed at 65 added nodes and **is dead**: a `clip-path="url(#…)"` is the same
-dropped mechanism, confirmed by specimen 8.
+dropped mechanism, confirmed by specimen 8 and again by specimen 14 with a
+namespace.
 
 Using the CSS hatch instead is being costed. It is viable for the bars and the
 swatches and **not for the donut arc or the ring tracks**, because a
@@ -102,7 +104,7 @@ Both directions, before it was right:
 3. **Now it is chart-only again**, from a direct observation: the "Not written
    up today" tile imports with its stripes intact.
 
-The lesson is recorded here rather than only in PROGRESS.md, because the next
-person to change this page will be tempted the same way: **state what was
-observed, name what was inferred, and let the inferred parts stay visibly
-unsettled.** The `xmlns` question above is one of those, still open.
+**State what was observed, name what was inferred, and let the inferred parts
+stay visibly unsettled** — then go and test them. The `xmlns` hypothesis sat on
+this page as an open question for exactly one round, and specimens 13 and 14
+closed it. Nothing on this page is inferred now.

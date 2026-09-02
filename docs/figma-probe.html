@@ -118,20 +118,19 @@
       Twelve mechanisms, one per row. Note which numbers arrive intact.
     </p>
     <p class="intro">
-      <b>Result, html.to.design, 01/09/2026:</b> 1, 2, 3, 4 and 8 were dropped.
-      5, 6, 7, 9, 10, 11 and 12 arrived. Every failure is a
-      <code>url(#&hellip;)</code> reference; nothing else failed. Specimen 11
-      arriving is what confines the loss to the charts &mdash; the CSS hatch
-      everywhere else in the product imports. See
-      <code>docs/FIGMA-HANDOFF.md</code>.
+      <b>Result, html.to.design:</b> 1, 2, 3, 4, 8, 13 and 14 were dropped. 5,
+      6, 7, 9, 10, 11 and 12 arrived. Every failure is a
+      <code>url(#&hellip;)</code> reference; nothing else failed.
     </p>
     <p class="intro">
-      <b>13 and 14 are new and untested.</b> They are specimens 1 and 8 again
-      with one attribute added: <code>xmlns</code>. Specimens 1&ndash;12 carry
-      none &mdash; legal inside an HTML document, invisible in a browser, and it
-      makes the markup stop being SVG when re-parsed on its own. If 13 and 14
-      arrive with their stripes and 1 and 8 do not, the failure is in our markup
-      rather than in the importer.
+      <b>13 and 14 ruled out the namespace.</b> They are 1 and 8 with
+      <code>xmlns</code> added and nothing else changed, and they arrived blank
+      too &mdash; so the missing namespace on our chart
+      <code>&lt;svg&gt;</code> elements was not the cause. The importer does not
+      resolve referenced definitions, and that is now tested rather than
+      inferred. 14 arriving blank kills the <code>clipPath</code> stripe
+      fallback a second time, independently. Specimen 11 arriving is what
+      confines the loss to the charts. See <code>docs/FIGMA-HANDOFF.md</code>.
     </p>
 
     <div class="row">

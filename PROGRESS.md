@@ -11872,3 +11872,24 @@ Two things fall out, both in §8 now:
 Specimens 13 and 14 are in `docs/figma-probe.html`, verified still intact after
 the document corrections: 1 and 8 carry no `xmlns`, 13 and 14 carry it, and
 nothing else differs. Awaiting one import.
+
+## The namespace hypothesis is ruled out by experiment
+
+Specimens 13 and 14 arrived blank, identical to 1 and 8. The missing `xmlns` on
+our chart `<svg>` elements was not the cause. **The importer does not resolve
+referenced definitions, and that is now tested rather than inferred** — the
+first time in this whole sequence that the central claim rests on an experiment
+rather than a reading.
+
+Specimen 14 also kills the `clipPath` stripe fallback a second time and
+independently: not only is a clipPath dropped, it is dropped with a namespace
+too. The 65-node fallback is dead twice over.
+
+Corrected in the probe's stated result, `FIGMA-HANDOFF.md` (the "still not
+established" section becomes "this is tested, not inferred") and `charts.tsx`.
+Nothing on those pages is inferred now.
+
+The cost of finding out was one HTML file and one import. The hypothesis was
+worth testing — it would have been an attribute on nine elements and would have
+recovered the donut as well as the bars — and it was wrong, which is what
+testing is for.
