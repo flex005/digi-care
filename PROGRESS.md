@@ -11840,3 +11840,35 @@ importer resolves no referenced definition" is inferred; the evidence only
 reaches our own markup, whose chart `<svg>` elements carry no `xmlns` and stop
 being SVG when re-parsed alone. Specimens 13 and 14 test exactly that and are
 untested.
+
+## The token finding, recorded before the test rather than after
+
+Worth keeping whichever way the xmlns test goes.
+
+The hatch exists in two implementations and they differ **deliberately**: the
+CSS gradient bands `--status-unrecorded-tint` (`#f2f1f6`, near-white, laid over
+a surface); the SVG pattern bands `--status-unrecorded` (`#8e86a8`).
+`charts.tsx` carries the reason — at ten pixels of bar the tint is white, and a
+hatch nobody can see is a solid neutral fill, which is the one thing Rule 2
+says the treatment must never become.
+
+So "the charts should just use the CSS hatch, since that one imports" looked
+free and was not. The bar gaps are 7–20px tall. The swap would have reproduced
+on screen the exact defect the SVG pattern was introduced to prevent, in the
+direction that hides a gap rather than inventing one — and it would have been
+introduced *while fixing an export problem*, which is the last place anybody
+would look for it.
+
+Two things fall out, both in §8 now:
+
+- **A second implementation of one concept is either drift or a decision, and
+  you cannot tell which without reading why it exists.** No recorded reason
+  means drift, and it should be collapsed. A recorded reason names the property
+  a swap will cost.
+- **`check-hatch` forbidding a second gradient is the guard working.** The
+  tempting repair — a stronger gradient for the charts — cannot be made
+  quietly. The cost has to be argued instead of absorbed.
+
+Specimens 13 and 14 are in `docs/figma-probe.html`, verified still intact after
+the document corrections: 1 and 8 carry no `xmlns`, 13 and 14 carry it, and
+nothing else differs. Awaiting one import.
