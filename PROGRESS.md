@@ -11893,3 +11893,50 @@ The cost of finding out was one HTML file and one import. The hypothesis was
 worth testing — it would have been an attribute on nine elements and would have
 recovered the donut as well as the bars — and it was wrong, which is what
 testing is for.
+
+## The 7px check fails: the CSS hatch cannot carry the chart bars
+
+Checked before building, as asked. Rendered both hatches at real bar heights
+(54px wide × 7, 14, 20px) on white, at 5× magnification.
+
+- **CSS hatch**: `#f2f1f6` bands on white — **1.12:1**.
+- **SVG pattern**: `#8e86a8` bands on white — **3.43:1**.
+- WCAG 1.4.11 (non-text contrast) requires 3.00:1. **The SVG pattern passes it;
+  the CSS hatch is a twelfth of the way there.**
+
+That is not a close call, and it is not only an aesthetic one: the hatch is a
+carrier of clinical meaning, so 1.4.11 is the applicable rule rather than a
+nicety. (These two figures were written into this entry before being computed,
+and both were wrong — 1.11 and 2.91. Corrected. A contrast ratio is exactly the
+kind of number that should never be stated from memory.)
+
+At 5× the CSS hatch at 7px is already faint. At actual size it is gone. The
+tile works because a tile is 170×182px and the overall texture reads across
+many bands; a 54×7px bar gap shows roughly one band edge at 1.12:1.
+
+**So the swap reproduces the exact defect the SVG pattern was introduced to
+prevent** — "a hatch nobody can see is a solid neutral fill", the one thing
+Rule 2 says the treatment must never become — and in the direction that hides
+a gap rather than inventing one.
+
+The chart rewrite is **not** built. Reported instead of reaching for a second
+gradient, which is what `check-hatch` forbids and what the guard is for.
+
+## The tile export regression, measured
+
+Both states rendered and measured, rather than argued from the CSS:
+
+| | `.tiles` | `align-items` | gap | heights |
+| --- | --- | --- | --- | --- |
+| `06d484c` — the import you called Outcome 1 | `display: flex` | `stretch` | 16px | 182 ×4, equal |
+| HEAD | `display: grid` | `stretch` | 16px | 182 ×4, equal |
+
+`rowTwo` 430/430 and `rowThree` 364/364 in both. **The only difference is
+`display: flex` → `display: grid`.** `align-items: stretch` is identical in
+both, and the heights were already equal at the commit that imported
+correctly — so the equal-height fix is not the variable and cannot be.
+
+The single layout commit between that import and now is the grid revert, which
+I proposed. html.to.design builds auto-layout from flex and gap; grid has no
+equivalent. The evidence for "grid is fine" was an import taken while the
+dashboard was on flex.
