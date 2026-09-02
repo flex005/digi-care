@@ -33,18 +33,12 @@
  * Under prefers-reduced-motion nothing changes here; the hatch is static
  * by design.
  *
- * **It does not survive a Figma import, and that is not fixable here.**
- * html.to.design does not render `repeating-linear-gradient`, so every box
- * carrying this treatment — 49 sites, 19 stylesheets, 84 files — imports as a
- * plain settled box. The SVG half in charts.tsx is dropped too, by a different
- * mechanism. A gap becomes indistinguishable from a record on every screen,
- * which is the Evidence Invariant failing at the last step.
- *
- * The required `label` on <Unrecorded> is what stops that being silent: the
- * text imports, so the gaps are still readable word by word. They are not
- * visible at a glance, which is the whole job this pattern does.
- *
- * Do not redraw either half to suit the importer. See docs/FIGMA-HANDOFF.md.
+ * **This gradient survives a Figma import; the SVG half does not.**
+ * html.to.design renders `repeating-linear-gradient`, so every box carrying
+ * this treatment arrives hatched. What it drops is `url(#…)`, which is how the
+ * charts in features/dashboard/charts.tsx fill and stroke their hatch — so the
+ * loss is confined to the Dashboard's bar gaps, donut arc and ring tracks.
+ * See docs/FIGMA-HANDOFF.md.
  */
 
 .unrecorded {

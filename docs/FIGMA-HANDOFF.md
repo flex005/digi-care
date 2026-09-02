@@ -1,134 +1,108 @@
 # Handing off to Figma — read this first
 
-**A Figma frame imported from this app is not a picture of the product.**
+**The importer drops the Dashboard's chart hatching.** Bar gaps, the donut's
+no-record arc and the ring tracks arrive as blank shapes, so on those charts
+*"nobody recorded this"* looks like a recorded value — the one failure this
+product exists to prevent, reproduced by a tool.
 
-The importer drops every form of the unrecorded hatch, in both media. In an
-imported frame, *"nobody has recorded this"* renders as a plain settled box —
-indistinguishable from a recorded value. That is the exact failure this product
-was built to prevent, reproduced at the last step by a tool.
+**Everywhere else the hatch imports correctly.** The CSS hatch — every
+`<Unrecorded>` badge, chip, cell, panel, row and flag, the MAR grid's omitted
+doses, never-assessed risks, not-sought consents — arrives with its stripes.
 
-It is not confined to the charts. **It reaches every screen.**
-
-Anything shown to a stakeholder from these frames misrepresents the design in
-the one way that matters most: it shows a record that looks complete when it is
-not.
+So an imported frame is usable, with one specific hole in it. This page says
+where the hole is.
 
 ---
 
 ## What to do
 
-1. **Do not present an imported frame as the product.** Not in a review, not in
-   a deck, not as a screenshot. Show the running app, or a screenshot of it.
-2. **If frames must be used, redraw the hatching in Figma first**, working from
-   the running app rather than from the import. There is no way to tell from
-   the frame alone which boxes were hatched.
-3. **Treat every plain box in an imported frame as unverified.** It may be a
-   recorded value or a gap whose treatment was dropped. The frame cannot tell
-   you, and neither can anyone reading it.
+1. **Redraw the hatching on the Dashboard charts in Figma**, from the running
+   app. Nothing else needs touching.
+2. **Treat a plain fill inside a chart as unverified.** Outside the charts, a
+   plain box is genuinely a plain box.
+3. **Do not present the Dashboard charts from an imported frame** without that
+   redraw. The bar gaps and the donut's no-record share are precisely the parts
+   that go missing, and they are the parts a reader looks at.
 
-## Why this is the worst possible thing for this product to lose
+## Why it matters where it does
 
 The hatch is not decoration. It is the only treatment in the system that says
 *nobody has looked at this yet*, as distinct from *somebody looked and the
-answer was no*. In a care record those are opposites, and a blank that could
-mean either is the defect the entire product is built around (CLAUDE.md §1, the
-Evidence Invariant).
+answer was no*. In a care record those are opposites (CLAUDE.md §1).
 
-Dropping it does not degrade the design gracefully. It inverts the one claim
-the product exists to make. A frame showing a resident with no falls assessment
-looks identical to one showing a resident assessed as low risk.
-
-**The Evidence Invariant does not survive this import.**
-
-## One thing that does survive, and its limit
-
-`<Unrecorded>` takes `label` as a **required** prop — by design, so the pattern
-can never be the sole carrier of meaning. **That text imports correctly.** An
-imported frame still reads "Falls risk — not assessed" in words.
-
-So the record is not silently complete; it is complete *at a glance*, and only
-a reader going label by label will find the gaps. That is enough to reconstruct
-the truth and nowhere near enough to present from, because nobody reads a frame
-that way — and the at-a-glance reading is the entire job the hatch does.
-
-Where the hatch had no label beside it — chart regions, the donut's no-record
-arc, ring tracks — there is nothing left at all.
+On the Dashboard, the hatched regions carry doses due and not recorded, and the
+share of today's doses whose window closed with nothing written. Losing the
+treatment there does not degrade the chart — it inverts it. A day with
+forty unrecorded doses draws the same as a day with none.
 
 ## The technical cause
 
-**html.to.design resolves no referenced SVG definition, and does not render CSS
-gradient backgrounds.**
+**html.to.design does not resolve referenced SVG definitions.** Anything
+addressed as `url(#…)` is dropped.
 
-| mechanism | where it is used | result |
+| mechanism | where | result |
 | --- | --- | --- |
-| `fill="url(#pattern)"` | chart bar caps, legend swatches | dropped — shape arrives unfilled |
-| `stroke="url(#pattern)"` | donut arc, ring tracks | dropped — stroke arrives unpainted |
-| `clip-path="url(#clip)"` | (the proposed fallback) | dropped — clip ignored, contents lost |
-| `repeating-linear-gradient` | **every hatched box in the product** | dropped — arrives plain |
+| `fill="url(#pattern)"` | bar gap caps, legend swatches | dropped — arrives unfilled |
+| `stroke="url(#pattern)"` | donut arc, ring tracks | dropped — arrives unpainted |
+| `clip-path="url(#clip)"` | (the proposed fallback) | dropped — clip ignored |
+| `repeating-linear-gradient` | every hatched box outside the charts | **imports correctly** |
 
-**Everything else imports correctly**: `<path>`, `<circle>`, `<rect>` with
-`rx`, solid fills and strokes, colours, text, font weights, and layout —
-including flex and CSS grid.
+Everything else imports: `<path>`, `<circle>`, `<rect>` with `rx`, solid fills
+and strokes, colours, text, font weights, and layout including flex and grid.
 
-Established by `docs/figma-probe.html`: twelve labelled specimens containing no
-app code, imported once. **Specimens 1, 2, 3, 4, 8 and 11 failed. 5, 6, 7, 9,
-10 and 12 arrived.**
+Established by `docs/figma-probe.html` — twelve labelled specimens containing
+no app code. **Specimens 1, 2, 3, 4 and 8 failed. 5, 6, 7, 9, 10, 11 and 12
+arrived.**
 
-Not separately established: whether the `1.5px dashed` border on `.unrecorded`
-survives when its gradient does not. Do not rely on it either way — a dashed
-outline was never sufficient on its own, which is why the treatment is a
-pattern plus a label rather than a border.
+### One claim here is still not established
+
+"The importer resolves no referenced definition" is a **diagnosis**, and the
+evidence only reaches *our own markup*. The app's chart `<svg>` elements carry
+no `xmlns`; re-parsed on their own, their root `namespaceURI` is `null` — they
+stop being SVG. The probe was written the same way and shares that defect. So
+what specimens 1–4 and 8 prove is that *namespace-less SVG loses its
+references*, which is not the same claim.
+
+Specimens **13 and 14** — 1 and 8 again with `xmlns` added and nothing else —
+are in the probe and **untested**. If they arrive with their stripes, the fix
+is an attribute on nine `<svg>` elements and this page is wrong again.
 
 ## What is affected
 
-**Both halves of the hatch, so effectively the whole product.**
+Dashboard only:
 
-The CSS half — `src/styles/unrecorded.module.css`, a `repeating-linear-gradient`
-— reaches **49 sites across 19 feature stylesheets**, in six variants (`badge`,
-`cell`, `panel`, `row`, `chip`, `flag`), rendered by **84 files across 17
-feature modules**: activities, care-plan, compliance, consent, dashboard,
-documents, goals, group, handover, incidents, medications, notes, reports,
-residents, reviews, risk, team.
+| element | selector | what it says |
+| --- | --- | --- |
+| 7 bar-gap segments | `[data-bar-segment="gap"]` | doses due and not recorded, per day |
+| donut arc | `[data-arc="no-record"]` | doses whose window closed with no record |
+| 2 ring tracks | `[data-ring-track="gap"]` | rounds with doses still unrecorded |
+| 2 legend swatches | chart legend, donut key | the key explaining the above |
 
-Concretely, and not exhaustively: the MAR grid's omitted dose cells; every
-never-assessed risk template; not-sought consents; care plan domains never
-started; documents with no expiry decision; residents with no care note;
-"Insufficient evidence" wherever a figure cannot carry a claim; every
-`<Unrecorded>` badge, chip, cell, panel, row and flag anywhere it appears.
+## Why there is no fix yet
 
-The SVG half — `src/features/dashboard/charts.tsx` — is the Dashboard only:
-7 bar-gap segments (`[data-bar-segment="gap"]`), the donut's no-record arc
-(`[data-arc="no-record"]`), 2 ring tracks (`[data-ring-track="gap"]`), and the
-2 legend swatches that explain them.
+The stripe fallback — drawing the hatch as `<rect>`s clipped to the shape — was
+costed at 65 added nodes and **is dead**: a `clip-path="url(#…)"` is the same
+dropped mechanism, confirmed by specimen 8.
 
-## Why there is no code change
+Using the CSS hatch instead is being costed. It is viable for the bars and the
+swatches and **not for the donut arc or the ring tracks**, because a
+`repeating-linear-gradient` is linear and cannot follow a curved band. Any
+partial fix therefore recovers the bars and leaves the donut, and that has to
+be stated rather than discovered.
 
-The obvious fix for the SVG half is to stop referencing a definition: draw the
-stripes as ordinary `<rect>`s clipped to the shape. It was costed at **65 added
-nodes** for the nine fill uses, and **it does not work** — a
-`clip-path="url(#…)"` is the same referenced-definition mechanism, and specimen
-8 confirmed the importer drops it too. The fallback would have traded one
-dropped reference for another and arrived at the same blank shape, 65 nodes
-heavier. The probe is why that cost was one HTML file rather than a build.
+## This page has been wrong twice
 
-There is no fix at all for the CSS half. A `repeating-linear-gradient` is how
-the hatch is drawn in every box in the product; replacing it would mean
-rendering tens of thousands of striped elements as SVG, in a product where the
-hatch appears on nearly every screen.
+Both directions, before it was right:
 
-Changing the app to suit the importer would mean drawing its most load-bearing
-visual worse for every real user, in order to serve a handoff step. That trade
-is not available.
+1. **First it was inferred.** The scope was written as chart-only from the
+   probe, without asking whether specimen 11 had arrived.
+2. **Then it was "corrected" to product-wide** on a misreading of a report,
+   which was worse — a confident, specific, wrong claim in five files, and the
+   specificity made it more trusted rather than less.
+3. **Now it is chart-only again**, from a direct observation: the "Not written
+   up today" tile imports with its stripes intact.
 
-## The honest options
-
-1. **Do not hand off imported frames as the design.** Use the running app as
-   the reference and Figma only for work that does not depend on the hatch.
-2. **Redraw the hatching in Figma after every import**, from the running app.
-   Manual, repeated, and correct.
-3. **Use a different import route** — one that rasterises rather than
-   reconstructs, so the hatch arrives as pixels. It loses editability, which is
-   the whole point of importing, but it does not lie about the record.
-
-What is not an option is presenting an unmodified imported frame as a picture
-of this product.
+The lesson is recorded here rather than only in PROGRESS.md, because the next
+person to change this page will be tempted the same way: **state what was
+observed, name what was inferred, and let the inferred parts stay visibly
+unsettled.** The `xmlns` question above is one of those, still open.

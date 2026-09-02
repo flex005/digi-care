@@ -11808,3 +11808,35 @@ Dashboard at three widths. The §8 entry about a conversion re-scoping a
 declaration is what stopped that line going back in unread.
 
 `npm run verify` green: 1236/1236, hatch and layout guards passing.
+
+## Correction, again: the scope is chart-only after all
+
+The imported "Not written up today" tile arrives **with its diagonal stripes
+intact**. Specimen 11 passed. `repeating-linear-gradient` imports correctly, and
+the loss is confined to the Dashboard's SVG charts — bar gaps, the donut's
+no-record arc, the ring tracks, the two legend swatches.
+
+All five documents are corrected back: FIGMA-HANDOFF.md rewritten, the README
+blockquote, `unrecorded.module.css`, `charts.tsx` and the probe's stated result.
+
+**This claim has now been wrong in both directions before being right**, and
+that is recorded on the page itself rather than only here:
+
+1. **Inferred** — chart-only, written from the probe without asking whether
+   specimen 11 had arrived.
+2. **"Corrected" to product-wide** — on a misreading of a report. Worse than
+   the first: a confident, specific, wrong claim in five files, where the
+   specificity made it more trusted rather than less.
+3. **Chart-only again** — from a direct observation of the imported tile.
+
+The first was my inference. The second was my misreading of a correction. Both
+times the failure was the same: treating a sentence about one thing as covering
+another, and writing the result down with more confidence than the evidence
+carried. What finally settled it was somebody looking at a specific element in
+the import and saying what it did.
+
+**And the diagnosis is still not established, which the page now says.** "The
+importer resolves no referenced definition" is inferred; the evidence only
+reaches our own markup, whose chart `<svg>` elements carry no `xmlns` and stop
+being SVG when re-parsed alone. Specimens 13 and 14 test exactly that and are
+untested.
