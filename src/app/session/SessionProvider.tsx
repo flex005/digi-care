@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import type { IsoDateTime, Site, SiteId, StaffMember } from '@/data/types'
 import { organisation, staffOkonkwo } from '@/data/fixtures/organisation'
 import { now as appNow } from '@/data/fixtures/clock'
-import { configuredSites } from '@/data/access/settings-store'
+import { configuredSites, organisationAsConfigured } from '@/data/access/settings-store'
 import { endSession } from '@/data/access/session-losses'
 import { SessionContext, TimeZoneContext, type SignInState } from './context'
 
@@ -30,6 +30,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [configured, setConfigured] = useState(0)
 
   const sites = useMemo(() => configuredSites(), [configured])
+  /*
+   * Through the settings store for the same reason the sites are: the setup
+   * wizard names the organisation, and a name read straight from the fixture
+   * would leave that step writing something nothing shows.
+   */
+  const configuredOrganisation = useMemo(
+    () => organisationAsConfigured(organisation),
+    [configured],
+  )
   const activeSite = sites.find((site) => site.id === activeSiteId) ?? sites[0]
   if (!activeSite) throw new Error('No sites configured')
 
@@ -54,7 +63,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      organisation,
+      organisation: configuredOrganisation,
       sites,
       reloadSites: () => setConfigured((count) => count + 1),
       activeSite,
@@ -70,7 +79,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
        */
       currentUser: signIn.kind === 'signed_in' ? signIn.member.ref : staffOkonkwo,
     }),
-    [activeSite, sites, signIn, signInAs, signOut],
+    [activeSite, sites, configuredOrganisation, signIn, signInAs, signOut],
   )
 
   return (

@@ -1,5 +1,5 @@
 import { held as heldItem, type SessionHolding } from './session-holding'
-import type { Site, SiteId } from '../types'
+import type { Organisation, Site, SiteId } from '../types'
 import { INSUFFICIENT_EVIDENCE_THRESHOLD, MIN_POPULATION_FOR_A_RATE } from '../types'
 import { sites as fixtureSites } from '../fixtures/organisation'
 import { DUE_SOON_DAYS, REVIEW_INTERVAL_MONTHS } from '@/lib/review-interval'
@@ -248,6 +248,38 @@ export function setSiteTimeZone(id: SiteId, timeZone: string): void {
   siteOverrides.set(id, { ...siteOverrides.get(id), timeZone })
 }
 
+// ---------------------------------------------------------------------------
+// The organisation
+// ---------------------------------------------------------------------------
+
+/**
+ * The organisation's name, as it stands this session. Phase 23.
+ *
+ * **Added with its readers, not ahead of them.** The setup wizard's first step
+ * names the organisation, and a name the wizard wrote that nothing then read
+ * would be `review-interval-months` again — a control claiming an effect with
+ * none. The session supplies the organisation through `organisationAsConfigured`,
+ * so the two screens that print it, the team list and the group overview, show
+ * what was written.
+ *
+ * **The name and nothing else.** `Organisation` holds an id and a name. AM
+ * v2.0's first step also asks for an address, a country, a care setting type, a
+ * CQC registration number and a primary contact, and none of those is a field
+ * in this build; adding them is a change to a fixture type, which is asked
+ * rather than done.
+ */
+let organisationName: string | undefined
+
+export function organisationAsConfigured(organisation: Organisation): Organisation {
+  return organisationName === undefined
+    ? organisation
+    : { ...organisation, name: organisationName }
+}
+
+export function setOrganisationName(name: string): void {
+  organisationName = name.trim() === '' ? undefined : name.trim()
+}
+
 /**
  * What this store would lose.
  *
@@ -260,12 +292,17 @@ export function settingsHoldings(): SessionHolding[] {
   return [
     ...heldItem('figures you changed in Settings', changedFigures().length),
     ...heldItem('home names or timezones you changed', siteOverrides.size),
+    ...heldItem(
+      'the organisation name you changed',
+      organisationName === undefined ? 0 : 1,
+    ),
   ]
 }
 
 /** Emptied on sign out, and by tests. */
 export function resetSessionSettings(): void {
   siteOverrides.clear()
+  organisationName = undefined
   for (const entry of FIGURES) entry.value = entry.fallback
 }
 

@@ -13692,3 +13692,84 @@ site.
 the file.** Four fetches of a 1.3 MB bundle, one cut short, one string reported
 missing. The same bundle downloaded once matched all four, and the local size
 against `content-length` is what settled it.
+
+# Phase 23 — the organisation setup wizard, built after Phase 24
+
+## How it went missing
+
+At the end of Phase 22 I said I would build the setup wizard next. Frank's next
+message was Phase 24, I built that, and when he asked whether Phase 23 was
+done he confirmed it on my word. The gap was visible the whole time: the
+history runs from `7407078` (Phase 22) straight to `62e4333` (Phase 24). **A
+plan agreed in conversation and a commit in the history are different facts,
+and only one of them is evidence.** Built now; Phase 24 does not depend on it,
+so the order cost nothing but it would have if it had.
+
+## One owner for everything it writes
+
+The wizard stores no values of its own. Step 1 names the organisation through a
+new `setOrganisationName` in the settings store; step 2 names the home and sets
+its zone through `setSiteName` and `setSiteTimeZone`, the same writers the
+Settings screen uses; step 3 turns templates on and off through Phase 22's
+`setActive`; step 4 renders Phase 18's `InviteDrawer` itself rather than a form
+made to look like it. `setup-store` holds only which steps somebody confirmed or
+skipped, which is what "resumes where it was left" needs.
+
+**The organisation name had to arrive with its readers.** `Organisation` was
+read straight from the fixture, so a name the wizard wrote would have been
+shown nowhere — `review-interval-months` again. The session now supplies it
+through `organisationAsConfigured`, and the team list and group overview, the
+two screens that print it, read that.
+
+**The first mutation of that guard landed and the guard did not fire**, and this
+note had already said it did — written from the plan, before the run. Reverting
+the session to the fixture left all nine tests green. See the correction below.
+
+## What step 1 does not hold, named on the step
+
+AM v2.0 asks for an address, a country, a care setting type, a CQC registration
+number and a primary contact. `Organisation` is an id and a name, so none of
+these has anywhere to go, and adding them is a fixture type change under §9.
+The step says so rather than dropping them silently. **Flagged for Frank.**
+
+## Two states at setup, not four
+
+At setup no resident has an assessment against any template, so a template is
+carried out or it is not. The four-state rendering exists because turning one
+off *later* changes what an existing record says, and that cannot happen to a
+home with no records. The step says what retiring one later will mean: same
+setting, from Settings, at a moment when it reaches back. Mutation-tested by
+making the toggle stop writing the owner: the guard reading `isActive` fires.
+
+## "First login only" is not claimed
+
+There are no accounts and nothing persists, so a "has run" flag would describe
+the tab rather than the organisation. The wizard is reached from the Settings
+screen by whoever holds `set_up_organisation`, says first that nothing
+remembers whether it has run, and resumes within a session at the first step
+nobody confirmed or skipped. Steps 1 and 2 refuse to be skipped.
+
+**It is a child of the settings shell**, which the top-level reachability guard
+does not descend into, so its own test proves the link from Settings exists and
+points at the route.
+
+## Correction: the organisation guard could not fail
+
+It typed "Thornfield Care Group" and asserted the session showed "Thornfield
+Care Group". That is the fixture organisation's own name, so the assertion was
+true before the wizard did anything — and stayed true with the session
+disconnected from the settings store, which is the exact defect the test
+existed to catch. All nine tests stayed green on that mutation.
+
+Two things went wrong, and the second is the one worth keeping. The first is
+the §8 entry about an assertion satisfied by a value that was already there.
+**The second is that the note above claimed the mutation fired before the
+mutation had run** — written from the intention, in the same edit as the test.
+It was caught only because the mutation was actually run and its output read.
+
+Fixed by renaming to a value the fixture does not hold and asserting the
+session shows something else *before* the act, so the reference can disagree.
+
+Re-run after the fix: the same mutation, confirmed landed, now fails
+`names the organisation where every screen reads it`, and the restored tree is
+green. The template guard fired on its first mutation.

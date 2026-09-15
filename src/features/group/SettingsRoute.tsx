@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
@@ -88,6 +89,19 @@ export function SettingsRoute() {
           {activeSite.name}. Nothing here survives a reload, like every other write in
           this build, which is why every screen says when one of these has been changed.
         </p>
+        {/*
+         * The way into the setup wizard. AM v2.0 runs it on the first Admin's
+         * first sign-in; with no accounts that moment does not exist here, so
+         * it is reached from the screen whose settings it writes, by whoever
+         * holds the act.
+         */}
+        {viewer.may('set_up_organisation') ? (
+          <p className={styles.pageSubtitle}>
+            <Link to="../setup" relative="path" data-open-setup>
+              Open organisation setup
+            </Link>
+          </p>
+        ) : null}
       </header>
 
       <Card>

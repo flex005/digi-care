@@ -435,6 +435,20 @@ export const ADMIN_ACTS = [
     phrase: 'Seeing every home in the organisation at once',
     why: 'A manager works in the homes they are assigned to. Reading them side by side is a view of the organisation rather than of a home.',
   },
+  {
+    /*
+     * AM v2.0's AUTH-05 runs the wizard for the first Admin only. Every write
+     * it makes goes through an owner another act already gates — the site
+     * name, the template settings, the invitation — so this act is about the
+     * screen, and it refuses a manager the whole screen rather than half of it.
+     */
+    id: 'set_up_organisation',
+    module: '/settings',
+    route: '/settings/setup',
+    what: 'Set up the organisation',
+    phrase: 'Setting up the organisation',
+    why: 'Naming the organisation, its first home, what that home carries out and who joins it first are the decisions for the person the service is registered to. A manager is invited into a service somebody has already set up.',
+  },
 ] as const satisfies readonly AdminAct[]
 
 export type AdminActId = (typeof ADMIN_ACTS)[number]['id']
