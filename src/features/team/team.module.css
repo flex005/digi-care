@@ -738,3 +738,85 @@
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-line);
 }
+
+/* Homes on the staff profile. TM-04, Phase 18. */
+.siteList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.siteRow {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.siteOn,
+.siteOff {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.siteOn {
+  color: var(--ink-900);
+}
+
+.siteOff {
+  color: var(--ink-500);
+}
+
+.siteMeta {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-regular);
+  color: var(--ink-500);
+}
+
+.siteLast {
+  max-width: 44ch;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  color: var(--ink-500);
+}
+
+/* TM-01's filters, and the claim that carries them. Phase 18. */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-20);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.searchField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 12rem;
+}
+
+.filterClaim {
+  padding: var(--space-8) var(--space-20);
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.noMatches {
+  padding: var(--space-20);
+  color: var(--ink-700);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  max-width: 60ch;
+}

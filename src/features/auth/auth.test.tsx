@@ -56,10 +56,16 @@ function makeRouter(path: string) {
         ),
       },
       {
-        path: '/me',
+        /*
+         * A real protected route rather than an arbitrary one. This was `/me`,
+         * which stopped existing when the shift dashboard was deleted, and a
+         * gate test naming a screen that is not there proves the redirect for
+         * a path nobody can reach either way.
+         */
+        path: '/me/permissions',
         element: (
           <RequireSignIn>
-            <p>my dashboard</p>
+            <p>a screen behind the gate</p>
           </RequireSignIn>
         ),
       },
@@ -332,10 +338,16 @@ describe('signing in chooses the home, because the home decides the clock', () =
   })
 
   it('lets the product render only once somebody has signed in', async () => {
-    const { container } = renderAt('/me')
+    const { container } = renderAt('/me/permissions')
     // Redirected, and nothing of the product rendered on the way.
     await waitFor(() => expect(container.querySelector('[data-sign-in]')).toBeTruthy())
-    expect(container.textContent).not.toContain('my dashboard')
+    /*
+     * A string nothing else on the sign-in screen can contain. "my account"
+     * was the first try and it matched "I have been invited and need to set up
+     * my account" in the real copy: a substring assertion naming a value the
+     * way `querySelector('ul')` names an element.
+     */
+    expect(container.textContent).not.toContain('a screen behind the gate')
   })
 })
 

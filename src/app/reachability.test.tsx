@@ -263,7 +263,6 @@ describe('every sidebar item agrees with the router', () => {
       from: '/',
       why: 'the status kitchen sink, opened by typing the URL at the end of a phase',
     },
-    { path: '/me', from: '/', why: 'the account menu in the top bar' },
     /*
      * The authentication screens. They are siblings of the shell rather than
      * children of it, because there is no sidebar on a screen somebody reaches
@@ -277,15 +276,19 @@ describe('every sidebar item agrees with the router', () => {
     },
     {
       path: '/sign-out',
-      from: '/me',
-      why: 'the account menu, and the staff dashboard',
+      from: '/',
+      why: 'the account menu in the top bar, and the account page',
     },
     {
       path: '/invitation',
       from: '/sign-in',
       why: 'the "I have been invited" link, which stands in for the email a real deployment would send',
     },
-    { path: '/me/permissions', from: '/me', why: 'a control on the staff dashboard' },
+    {
+      path: '/me/permissions',
+      from: '/',
+      why: 'the account menu in the top bar; it is the account page, and every refusal links to it',
+    },
     { path: '/residents/new', from: '/residents', why: 'Add resident on the list' },
     {
       path: '/documents/expiry',

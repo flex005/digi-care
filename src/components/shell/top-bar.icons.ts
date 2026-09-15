@@ -10,7 +10,6 @@ import type { IconName } from '@/components/icon/registry.names.generated'
  * CLAUDE.md §3.
  */
 export const accountMenuIcons = {
-  myDashboard: 'users/user-circle',
   whatICanDo: 'users/user-shield-01',
   signOut: 'login-logout/logout-01',
 } satisfies Record<string, IconName>

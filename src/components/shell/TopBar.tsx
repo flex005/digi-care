@@ -38,7 +38,6 @@ export interface TopBarProps {
   userName: string
   userRoleLabel: string
   /** Opens this person's own screen: their shift, not the home's. */
-  onMyDashboard: () => void
   /** One row of the permission matrix: what this person's role reaches. */
   onMyPermissions: () => void
   /**
@@ -57,7 +56,6 @@ export function TopBar({
   alertCount,
   userName,
   userRoleLabel,
-  onMyDashboard,
   onMyPermissions,
   onSignOut,
 }: TopBarProps) {
@@ -166,13 +164,15 @@ export function TopBar({
              * signing out discards it — so the item goes to a confirmation
              * naming what would go rather than doing it on a menu click.
              */}
-            <DropdownMenuItem onSelect={() => onMyDashboard()}>
-              <Icon name={accountMenuIcons.myDashboard} size={16} aria-hidden />
-              My dashboard
-            </DropdownMenuItem>
+            {/*
+             * **One item where there were two.** "My dashboard" opened a
+             * screen built for somebody working a shift, and it is gone; what
+             * was worth keeping on it — role, homes, access and this session —
+             * is on the account page, which is what this item opens.
+             */}
             <DropdownMenuItem onSelect={() => onMyPermissions()}>
               <Icon name={accountMenuIcons.whatICanDo} size={16} aria-hidden />
-              What I can do
+              My account and access
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => onSignOut()}>

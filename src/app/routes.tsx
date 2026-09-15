@@ -68,7 +68,6 @@ import { SignOutRoute } from '@/features/auth/SignOutRoute'
 import { InvitationRoute } from '@/features/auth/InvitationRoute'
 import { InvitationIndexRoute } from '@/features/auth/InvitationIndexRoute'
 import { InvitationAccessRoute } from '@/features/auth/InvitationAccessRoute'
-import { MyDashboardRoute } from '@/features/me/MyDashboardRoute'
 import { MyPermissionsRoute } from '@/features/me/MyPermissionsRoute'
 import { RequireSignIn } from './session/RequireSignIn'
 import { NotFound } from './NotFound'
@@ -113,9 +112,20 @@ export const router = createBrowserRouter([
       // none of its figures.
       { index: true, element: <DashboardRoute /> },
       { path: 'residents', element: <ResidentsRoute /> },
-      // One person's own screen, and not the site Dashboard. That one is the
-      // home's; this is one shift, with no counts of anybody's work on it.
-      { path: 'me', element: <MyDashboardRoute /> },
+      /*
+       * **`/me` is gone and `/me/permissions` is the account page.** The
+       * dashboard it used to be was built for somebody working a shift: the
+       * next round with a button to open it, a shift pill, what they flagged
+       * and were waiting on. Care workers do not sign into this platform and
+       * an Admin does not run a medication round, and AM v2.0 has no personal
+       * dashboard at all. Three of its four sections duplicated the site
+       * Dashboard or inverted a queue that already exists; the fourth was an
+       * account page, and it is here.
+       *
+       * It stays outside every module deliberately. The auditor has no access
+       * to Settings, so an account page living there would lock them out of
+       * their own access.
+       */
       { path: 'me/permissions', element: <MyPermissionsRoute /> },
       // Phase 16. Admission is the only screen in the build that creates a
       // resident, and what it creates is a person and a set of gaps.

@@ -18,6 +18,8 @@ import { Icon } from '@/components/icon/Icon'
 import { formatDate } from '@/lib/format'
 import { NotAPerformanceRecord, Standing } from './TeamParts'
 import { AssignmentSection } from './AssignmentSection'
+import { SitesSection } from './SitesSection'
+import { useViewer } from '@/app/session/use-viewer'
 import { RECENT_ACTS, staffActivity } from './staff-activity'
 import styles from './team.module.css'
 
@@ -35,12 +37,30 @@ import styles from './team.module.css'
  * wrong; they are wrong without the framing the report gives them, so they
  * live there with their period and denominators stated.
  */
+/**
+ * Why somebody's access ended, in the four ways it does. AM v2.0 TM-05.
+ *
+ * A closed list rather than free text, because the reason is read back beside
+ * their name for as long as the record exists and "left" and "suspended
+ * pending an investigation" are different facts about a person. Free text here
+ * would be a field somebody fills with the date.
+ */
+const REMOVAL_REASONS = [
+  'left the service',
+  'role changed and a new account is needed',
+  'a security concern',
+  'another reason, recorded elsewhere',
+] as const
+
 export function StaffDetailRoute() {
   const { staffId } = useParams()
   const { currentUser } = useSession()
   const format = useSiteFormat()
   const [version, setVersion] = useState(0)
+  const viewer = useViewer()
   const [confirming, setConfirming] = useState(false)
+  const [removalReason, setRemovalReason] = useState('')
+  const [typedConfirm, setTypedConfirm] = useState('')
   const [suspending, setSuspending] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [reason, setReason] = useState('')
@@ -76,6 +96,8 @@ export function StaffDetailRoute() {
     setStanding(member.id, standing)
     setVersion((count) => count + 1)
     setConfirming(false)
+    setRemovalReason('')
+    setTypedConfirm('')
   }
 
   return (
@@ -103,7 +125,21 @@ export function StaffDetailRoute() {
             </p>
           </div>
           <div className={styles.heroActions}>
-            {member.standing.kind === 'never_given_access' ? (
+            {/*
+             * **Every act on this header is the registered person's**, and a
+             * manager reads the page without them. AM v2.0's TM-01 gives a
+             * manager the staff list in read-only and none of the acts on it;
+             * knowing who is on the team is what they need, and deciding it is
+             * not theirs.
+             */}
+            {!viewer.may('manage_team') ? (
+              <p className={styles.hint} data-staff-read-only>
+                Your role is {viewer.roleName}, which reads this record and changes
+                nothing on it.
+              </p>
+            ) : null}
+            {viewer.may('manage_team') &&
+            member.standing.kind === 'never_given_access' ? (
               <Button
                 data-invite
                 onClick={() => {
@@ -115,7 +151,7 @@ export function StaffDetailRoute() {
               </Button>
             ) : null}
 
-            {hasAccessNow ? (
+            {!viewer.may('manage_team') ? null : hasAccessNow ? (
               <>
                 <Button
                   variant="secondary"
@@ -157,7 +193,7 @@ export function StaffDetailRoute() {
               Permissions
             </Link>
 
-            {isAddedThisSession(member.id) ? (
+            {viewer.may('manage_team') && isAddedThisSession(member.id) ? (
               <Button variant="ghost" onClick={() => setDeleting(true)} data-delete>
                 Delete
               </Button>
@@ -204,6 +240,8 @@ export function StaffDetailRoute() {
          * moment it sits above a list of records, the two read as one claim
          * about a person.
          */}
+        <SitesSection member={member} onChanged={() => setVersion((c) => c + 1)} />
+
         <AssignmentSection member={member} />
 
         {/* Above the activity, never below it. */}
@@ -379,12 +417,13 @@ export function StaffDetailRoute() {
               </Button>
               <Button
                 variant="primary"
+                disabled={removalReason === '' || typedConfirm.trim() !== 'CONFIRM'}
                 data-confirm-remove
                 onClick={() =>
                   change({
                     kind: 'no_longer_has_access',
                     on: todayIso(),
-                    reason: 'access removed from the team screen',
+                    reason: removalReason,
                     by: currentUser,
                   })
                 }
@@ -394,6 +433,56 @@ export function StaffDetailRoute() {
             </>
           }
         >
+          {/*
+           * **A reason from a list, and the reason goes on the record.** It was
+           * the string "access removed from the team screen", which describes
+           * where somebody clicked rather than why anybody left: a record whose
+           * reason names the screen is a record with no reason in it. AM v2.0's
+           * TM-05 asks for four, and they are the four because they are
+           * different things — somebody leaving and somebody being stopped are
+           * not the same standing, however the same the click is.
+           */}
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>Why is access being removed?</span>
+            <div className={styles.roleChoices} data-removal-reasons>
+              {REMOVAL_REASONS.map((reason) => (
+                <label
+                  key={reason}
+                  className={removalReason === reason ? styles.choiceOn : styles.choice}
+                  data-removal-reason={reason}
+                >
+                  <input
+                    type="radio"
+                    name="removal-reason"
+                    checked={removalReason === reason}
+                    onChange={() => setRemovalReason(reason)}
+                  />
+                  {reason}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/*
+           * **Typing the word, which is AM v2.0's TM-05 and is not ceremony.**
+           * Every other confirmation in this build is a click, because every
+           * other one is reversible or is a record somebody can correct with a
+           * second record. This one ends somebody's access while they may be
+           * mid-shift, and a click lands in the same place a mis-aimed click
+           * does.
+           */}
+          <label className={styles.field}>
+            <span className={styles.fieldLabel}>
+              Type CONFIRM to remove {member.ref.fullName.split(' ')[0]}&rsquo;s access
+            </span>
+            <input
+              type="text"
+              value={typedConfirm}
+              onChange={(event) => setTypedConfirm(event.target.value)}
+              data-field="confirm-removal"
+            />
+          </label>
+
           {/* What does not change is the part somebody needs to be told. */}
           <p className={styles.confirmBody} data-confirm-unchanged>
             <b>Nothing on the record changes.</b> Every care note, dose and signature{' '}

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { render, waitFor, within } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import { axe } from 'vitest-axe'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionContext, type Session } from '@/app/session/context'
@@ -7,12 +7,16 @@ import { SessionProvider } from '@/app/session/SessionProvider'
 import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
 import type { IsoDateTime, StaffMember } from '@/data/types'
 import { now as appNow } from '@/data/fixtures/clock'
-import { organisation, staffOkonkwo } from '@/data/fixtures/organisation'
+import {
+  organisation,
+  staffFitzgerald,
+  staffHalloran,
+  staffOkonkwo,
+} from '@/data/fixtures/organisation'
 import { configuredSites } from '@/data/access/settings-store'
-import { memberById, teamMembers } from '@/data/access/team-store'
+import { memberById } from '@/data/access/team-store'
 import { endSession } from '@/data/access/session-losses'
 import { PERMISSION_MODULES, levelFor } from '@/features/team/permissions'
-import { MyDashboardRoute } from './MyDashboardRoute'
 import { MyPermissionsRoute } from './MyPermissionsRoute'
 
 /**
@@ -53,11 +57,10 @@ function signedInAs(member: StaffMember) {
   }
 }
 
-function renderMe(member: StaffMember, path = '/me') {
+function renderMe(member: StaffMember, path = '/me/permissions') {
   const Provider = signedInAs(member)
   const router = createMemoryRouter(
     [
-      { path: '/me', element: <MyDashboardRoute /> },
       { path: '/me/permissions', element: <MyPermissionsRoute /> },
       { path: '/sign-out', element: <p>sign out</p> },
       { path: '/medications/round', element: <p>the round</p> },
@@ -76,112 +79,21 @@ function renderMe(member: StaffMember, path = '/me') {
   )
 }
 
-const carer = teamMembers().find(
-  (member) => member.role === 'care_worker' && member.standing.kind === 'has_access',
-)!
-const manager = memberById(staffOkonkwo.id)!
+/*
+ * **A deputy manager, not a care worker.** This file rendered the account page
+ * as a care worker, who does not sign into this platform at all: the Care
+ * Worker product is theirs. A screen tested through somebody who could never
+ * open it is asserting a rendering rather than a thing anybody sees.
+ */
+const reader = memberById(staffHalloran.id)!
 
-const settled = (container: HTMLElement, selector = '[data-my-dashboard]') =>
+const settled = (container: HTMLElement, selector = '[data-my-permissions]') =>
   // selector-ok: the marker is the caller’s own attribute selector, chosen per test
   waitFor(() => expect(container.querySelector(selector)).toBeTruthy())
 
-describe('the screen is one person’s, and it is not a score', () => {
-  it('carries no count of what this person recorded', async () => {
-    const { container } = renderMe(carer)
-    await settled(container)
-
-    /*
-     * The three tiles are: the home's next round, what this person flagged and
-     * did not get an answer to, and what nobody has written up. None of them
-     * is a total of their output, and there is no fourth.
-     */
-    const tiles = [...container.querySelectorAll('[data-tile]')].map((tile) =>
-      tile.getAttribute('data-tile'),
-    )
-    expect(tiles).toEqual(['next-round', 'waiting', 'not-written-up'])
-
-    // And the list of what they did carries no total above or below it.
-    const panel = container.querySelector('[data-not-held="no-counts"]')!
-    expect(panel.textContent).toMatch(/no counts of your work/i)
-    expect(panel.textContent).toMatch(/no rota/i)
-  })
-
-  it('lists what they recorded, each linking to the record itself', async () => {
-    const { container } = renderMe(manager)
-    await settled(container)
-
-    const acts = [...container.querySelectorAll('[data-act]')]
-    if (acts.length === 0) {
-      // A real state, and it says what it means: this build holds only what was
-      // written here, and it has no rota to say whether anybody was on.
-      expect(container.querySelector('[data-nothing-today]')).toBeTruthy()
-      return
-    }
-    for (const act of acts) {
-      const link = within(act as HTMLElement).getByRole('link')
-      expect(link.getAttribute('href')).toMatch(/^\/residents\//)
-    }
-  })
-
-  it('shows this person, never whoever was last looked at', async () => {
-    const { container } = renderMe(carer)
-    await settled(container)
-
-    /*
-     * Subject identity comes from the session, not from navigation history.
-     * The screen is named for one person and everything on it is theirs.
-     */
-    const page = container.querySelector('[data-my-dashboard]')!
-    expect(page.getAttribute('data-my-dashboard')).toBe(carer.id)
-
-    /*
-     * Whose screen this is, read off the line that says so rather than off the
-     * page text: Adaeze Okonkwo appears further down as the person who granted
-     * this carer access, which is a standing carrying its author and not the
-     * subject of the screen.
-     */
-    const whose = page.querySelector('[data-my-dashboard] > div, header') ?? page
-    expect(whose.textContent).toContain(carer.ref.fullName)
-    expect(page.querySelector('[data-standing]')!.textContent).toContain(
-      staffOkonkwo.fullName,
-    )
-  })
-})
-
-describe('the only tile counting an absence takes the hatch', () => {
-  it('hatches what nobody has written up, and carries its denominator', async () => {
-    const { container } = renderMe(carer)
-    await settled(container)
-
-    const gap = container.querySelector('[data-tile="not-written-up"]')!
-    expect(gap.getAttribute('data-state')).toBe('unrecorded')
-    expect(gap.className).toMatch(/unrecorded/)
-
-    // Rule 4: no bare count. The figure names what it is out of.
-    expect(gap.textContent).toMatch(/of \d+ residents/)
-  })
-
-  it('does not claim the residents are anybody’s in particular', async () => {
-    const { container } = renderMe(carer)
-    await settled(container)
-
-    /*
-     * There is no rota in this build, so a tile saying "your residents" would
-     * be inventing an allocation nobody made — and putting somebody's name
-     * against a gap they were never given.
-     */
-    const gap = container.querySelector('[data-tile="not-written-up"]')!
-    expect(gap.textContent).toMatch(/not allocated to anybody/i)
-    expect(gap.textContent).not.toMatch(/your residents|on your list/i)
-
-    const round = container.querySelector('[data-tile="next-round"]')!
-    expect(round.querySelector('[data-no-allocation]')).toBeTruthy()
-  })
-})
-
 describe('what I can do is one row of the manager’s matrix', () => {
   it('reads every level through the same function the matrix does', async () => {
-    const { container } = renderMe(carer, '/me/permissions')
+    const { container } = renderMe(reader, '/me/permissions')
     await settled(container, '[data-my-permissions]')
 
     /*
@@ -193,13 +105,14 @@ describe('what I can do is one row of the manager’s matrix', () => {
       const row = container.querySelector(`[data-module="${module.id}"]`)
       expect(row, module.id).toBeTruthy()
       expect(row!.querySelector('[data-level]')!.getAttribute('data-level')).toBe(
-        levelFor(carer.role, module.id),
+        levelFor(reader.role, module.id),
       )
     }
   })
 
   it('lists every module, including the ones this role cannot open', async () => {
-    const { container } = renderMe(carer, '/me/permissions')
+    const subject = memberById(staffFitzgerald.id)!
+    const { container } = renderMe(subject, '/me/permissions')
     await settled(container, '[data-my-permissions]')
 
     // Absence from a list is the same bug as a blank cell: a module missing
@@ -208,8 +121,15 @@ describe('what I can do is one row of the manager’s matrix', () => {
       PERMISSION_MODULES.length,
     )
     const denied = PERMISSION_MODULES.filter(
-      (module) => levelFor(carer.role, module.id) === 'no_access',
+      (module) => levelFor(subject.role, module.id) === 'no_access',
     )
+    /*
+     * **The auditor, because they are the only viewer this is true of.** A
+     * deputy manager has at least read everywhere, so rendering this test
+     * through one would assert a list of no-access modules that is empty and
+     * pass on a screen showing nothing. Of the three roles that sign into this
+     * platform, only the auditor is refused a module: Settings.
+     */
     expect(denied.length).toBeGreaterThan(0)
     for (const module of denied) {
       expect(
@@ -220,7 +140,7 @@ describe('what I can do is one row of the manager’s matrix', () => {
   })
 
   it('says nothing is enforced before the first row', async () => {
-    const { container } = renderMe(carer, '/me/permissions')
+    const { container } = renderMe(reader, '/me/permissions')
     await settled(container, '[data-my-permissions]')
 
     const order = [...container.querySelectorAll('[data-not-enforced], [data-module]')]
@@ -228,31 +148,64 @@ describe('what I can do is one row of the manager’s matrix', () => {
     expect(order.length).toBeGreaterThan(PERMISSION_MODULES.length)
   })
 
-  it('says plainly that staff records are not held here, in both places', async () => {
+  it('says plainly that staff records are not held here', async () => {
     /*
-     * Twice on purpose. Somebody looking for their own training record should
-     * be told rather than left to conclude it is empty — which is the same
-     * failure as a blank cell, one level up.
+     * It was in two places while `/me` existed, because somebody looking for
+     * their own training record should be told rather than left to conclude it
+     * is empty — the same failure as a blank cell, one level up. One place now,
+     * and this is the place: the account page is where somebody comes to read
+     * what is held about them.
      */
-    const dashboard = renderMe(carer)
-    await settled(dashboard.container)
-    expect(
-      dashboard.container.querySelector('[data-not-held="no-counts"]'),
-    ).toBeTruthy()
-
-    const permissions = renderMe(carer, '/me/permissions')
-    await settled(permissions.container, '[data-my-permissions]')
-    const block = permissions.container.querySelector(
-      '[data-not-held="staff-records"]',
-    )!
+    const { container } = renderMe(reader)
+    await settled(container, '[data-my-permissions]')
+    const block = container.querySelector('[data-not-held="staff-records"]')!
     expect(block.textContent).toMatch(/training, supervision, appraisal and induction/i)
     expect(block.textContent).toMatch(/not held in diGi-Care/i)
+  })
+
+  it('carries the four facts that came off the deleted dashboard', async () => {
+    const { container } = renderMe(reader)
+    await settled(container, '[data-my-permissions]')
+
+    /*
+     * Unrolled rather than looped over a list of selectors. A query built from
+     * a variable is specific to a reader and opaque to the selector guard,
+     * which cannot see what the string holds, and the failure now says which
+     * fact is missing rather than printing a selector.
+     */
+    expect(container.querySelector('[data-my-homes]'), 'homes').toBeTruthy()
+    expect(container.querySelector('[data-standing]'), 'access standing').toBeTruthy()
+    expect(
+      container.querySelector('[data-session-started]'),
+      'when this session started',
+    ).toBeTruthy()
+    // And the password control that says why it does nothing, rather than an
+    // absent control somebody would go looking for.
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-no-password]')!.disabled,
+    ).toBe(true)
+  })
+
+  it("renders no count of the reader's own work, and says why", async () => {
+    /*
+     * **The refusal and the absence, not the refusal alone.** The `/me` version
+     * of this asserted that the sentence was printed; adding a total beside it
+     * would have left the test green. What is asserted here is the property:
+     * nothing on the page is a figure about this person.
+     */
+    const { container } = renderMe(reader)
+    await settled(container, '[data-my-permissions]')
+
+    const page = container.querySelector('[data-my-permissions]')!
+    expect(page.querySelector('[data-numeric]')).toBeNull()
+    expect(page.textContent).toMatch(/no counts of your work/i)
+    expect(page.textContent).toMatch(/no rota/i)
   })
 })
 
 describe('accessibility', () => {
   it('has no violations', async () => {
-    const { container } = renderMe(carer)
+    const { container } = renderMe(reader)
     await settled(container)
     expect(await axe(container)).toHaveNoViolations()
   }, 30000)

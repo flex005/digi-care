@@ -13089,3 +13089,107 @@ TM-01's filters and the Manager's read-only list, TM-04 assigning a Manager to
 sites, TM-05 deactivation with a reason and a typed confirmation, and deleting
 `/me` with its four facts moving onto `/me/permissions` and the two renderings
 of standing collapsing into one.
+
+# Phase 18, finished — the team screens, and /me deleted
+
+## TM-01 to TM-05
+
+**The filters, and the claim under them carries the filter.** Search, home,
+role and standing. The tallies above the list count the whole team and never
+the filtered set: "4 never set up" under a role filter would be four of the
+care workers, read as four of everybody. So they are computed before filtering
+and the filtered count is stated separately against its denominator, and the
+empty state says the filters are the reason rather than the team.
+
+**TM-04 is what Sandra Chen turned out to be.** Homes on the staff profile, add
+and remove, one role across all of them. Removing the last home is refused
+rather than allowed: somebody on the team works somewhere, and an empty list
+would be a third meaning for a field whose job is to say which homes. The
+control that would empty it does not appear, and says why.
+
+**TM-05's reason is a closed list, and the old one named the screen.** Removing
+access wrote `reason: 'access removed from the team screen'` — a record whose
+reason says where somebody clicked rather than why anybody left. Four reasons
+now, because "left the service" and "a security concern" are different facts
+about a person that stay on the record for as long as it exists. Typing CONFIRM
+is AM v2.0's and it is not ceremony: every other confirmation in this build is
+reversible or correctable with a second record, and this one ends somebody's
+access while they may be mid-shift.
+
+**Every act on the staff profile is gated on `manage_team`**, a fifth admin
+act. A manager reads the team and decides nothing on it, which is AM v2.0's
+TM-01 exactly.
+
+## /me is gone
+
+Three of its four sections were a shift worker's: the next round with a button
+to open it, the shift pill, what they flagged and were waiting on, and a count
+of residents nobody had written up — which duplicated the site Dashboard's KPI
+card. The fourth was an account page and it is now `/me/permissions`.
+
+**Not under Settings, for a concrete reason**: the auditor has `no_access` to
+Settings, so an account page there would lock them out of their own access. The
+route belongs to no module, which is what makes it every role's, and it is
+where every refusal already links.
+
+**Standing had two renderings and now has one.** `standingSentence`, a function
+in `/me`, said the same fact as `TeamParts.Standing`, a component on the team
+screens. Deleting the screen is the moment collapsing it costs nothing.
+
+The account menu has one item where it had two, and the gate test in
+`auth.test.tsx` now names a route that exists — it used `/me` as an arbitrary
+protected path, and a gate test naming a screen that is not there proves a
+redirect for somewhere nobody can reach either way. Its stub string then
+collided with the sign-in screen's own copy: "my account" matched "I have been
+invited and need to set up my account", which is a substring assertion naming a
+value the way `querySelector('ul')` names an element.
+
+## The audit was wrong about two of its three, and that is the finding
+
+Frank asked for the three sentence-held refusals to be fixed. Two did not need
+it:
+
+- **Compliance** strips every panel from the page and asserts no `%` survives
+  in what is left, *and* asserts the sentence.
+- **The staff profile** asserts no `[data-numeric]` is anywhere on the page,
+  *and* asserts the sentence.
+- **`/me`** pinned its three tiles by identity, so no fourth tile could be a
+  total, and asserted the sentence — but never asserted that the activity panel
+  carried no figure. It was the weakest of the three and it died with the
+  screen; the account page that replaced it asserts the property.
+
+**The audit reported all three as defective because it searched for the
+refusal's wording and checked that a test mentioned it, rather than reading
+what the test asserted.** That is the same defect as a guard reporting its
+activity rather than its coverage, committed inside an audit for that defect.
+Recorded in §8 with the rule that follows: auditing whether a check exists is
+not auditing what it checks.
+
+## Is §1's no-bare-counts rule checkable? Costed
+
+**The count half: no, and the reason is not effort.** A number in JSX is
+syntactically recognisable and says nothing about whether it is an aggregate.
+`{grid.rows.length} medications` on the MAR chart describes what is visibly on
+the screen — its denominator is in the reader's eyes. `{covered} medications`
+would be a claim about evidence. **Identical AST, opposite meanings**, and no
+property of the source separates them: the difference is what the number is a
+claim *about*. There are 320 `data-numeric` sites and several hundred more
+numbers in JSX, so any syntactic rule produces hundreds of findings that are
+mostly legitimate — the exception-list failure this build has already reached
+three times, at a scale where it would be wallpaper on the first run.
+
+**The percentage half: yes, narrowly, and it is worth building.** A rendered
+`%` is far rarer and far sharper. There are exactly two in feature code today —
+`ComplianceParts` and `GroupOverviewRoute` — and both carry a denominator. A
+guard could require that a component rendering `%` also renders a covered-of-
+total pair, and it would start with zero exceptions and fail the day somebody
+adds a bare percentage. That is the half of §1 that does the most damage when
+broken: a bare count invites a question, and a bare percentage answers one.
+
+**One caveat, and it is why this is a proposal rather than a commit.** The
+group overview satisfies the rule without going through `Aggregate` at all: the
+denominator is in a sibling span. So the check cannot be "percentages come from
+`Aggregate`" — it has to be "a `%` has a denominator near it", and *near* is a
+rendering fact rather than a syntactic one. Within one component is a
+reasonable approximation and it is an approximation, which is the thing §8 warns
+about. Frank's call.

@@ -301,6 +301,29 @@ export function setResidentAssignment(
 
 let assignmentChanges = 0
 
+/**
+ * Which homes somebody works at. AM v2.0 TM-04, Phase 18.
+ *
+ * **Never empty.** Somebody on the team record works somewhere, and an empty
+ * list would be a third meaning for a field whose job is to say which homes
+ * rather than whether any. Removing the last one is refused rather than
+ * allowed and rendered as a gap, because it is not a gap: it is a state
+ * nothing in the product knows how to read.
+ */
+export function setSites(id: StaffId, siteIds: SiteId[]): StaffMember {
+  const member = members.find((entry) => entry.id === id)
+  if (member === undefined) throw new Error(`No member of staff with id ${id}`)
+  if (siteIds.length === 0)
+    throw new Error(
+      `${member.ref.fullName} has to work somewhere. Removing their last home would leave a record nothing on any screen knows how to read; remove their access instead, which is a decision with a name on it.`,
+    )
+  member.siteIds = [...siteIds]
+  siteChanges += 1
+  return member
+}
+
+let siteChanges = 0
+
 export function teamHoldings(): SessionHolding[] {
   return [
     ...held('people you put on the team', added),
@@ -314,6 +337,7 @@ export function teamHoldings(): SessionHolding[] {
      * mentioned it.
      */
     ...held('resident assignments you set', assignmentChanges),
+    ...held('home assignments you changed', siteChanges),
   ]
 }
 
@@ -323,6 +347,7 @@ export function resetSessionTeam(): void {
   added = 0
   standingChanges = 0
   assignmentChanges = 0
+  siteChanges = 0
 }
 
 // ---------------------------------------------------------------------------

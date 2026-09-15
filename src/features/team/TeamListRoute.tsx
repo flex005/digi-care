@@ -4,6 +4,7 @@ import { useSession } from '@/app/session/use-session'
 import { Avatar, Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { STAFF_ROLE_NAMES } from '@/data/types'
+import type { SiteId, StaffRole, StaffStanding } from '@/data/types'
 import { teamMembers } from '@/data/access/team-store'
 import { Tally, standingCounts } from './TeamManagement'
 import { InviteDrawer } from './InviteDrawer'
@@ -27,8 +28,32 @@ export function TeamListRoute() {
   const { organisation } = useSession()
   const viewer = useViewer()
   const [, setVersion] = useState(0)
-  const members = teamMembers()
-  const counts = standingCounts(members)
+  const [search, setSearch] = useState('')
+  const [siteFilter, setSiteFilter] = useState<'all' | SiteId>('all')
+  const [roleFilter, setRoleFilter] = useState<'all' | StaffRole>('all')
+  const [standingFilter, setStandingFilter] = useState<'all' | StaffStanding['kind']>(
+    'all',
+  )
+
+  const all = teamMembers()
+  /*
+   * **The tallies count the whole team, never the filtered set.** A claim over
+   * a filtered set carries the filter or it is false (CLAUDE.md §1), and the
+   * tallies are a claim about this organisation: "4 never set up" under a role
+   * filter would be four of the care workers, read as four of everybody. So
+   * they are computed before filtering and the filtered count is stated
+   * separately, against its denominator.
+   */
+  const counts = standingCounts(all)
+  const wanted = search.trim().toLowerCase()
+  const members = all.filter(
+    (member) =>
+      (wanted === '' || member.ref.fullName.toLowerCase().includes(wanted)) &&
+      (siteFilter === 'all' || member.siteIds.includes(siteFilter)) &&
+      (roleFilter === 'all' || member.role === roleFilter) &&
+      (standingFilter === 'all' || member.standing.kind === standingFilter),
+  )
+  const filtered = members.length !== all.length
   const siteName = (id: string) =>
     sites.find((site) => site.id === id)?.name ?? 'Site not on record'
 
@@ -36,22 +61,22 @@ export function TeamListRoute() {
     <div className={styles.page} data-team-list>
       <header className={styles.pageHead}>
         <div className={styles.tallies} data-team-tallies>
-          <Tally label="On the team" value={members.length} of={organisation.name} />
+          <Tally label="On the team" value={all.length} of={organisation.name} />
           <Tally
             label="With access"
             value={counts.has_access}
-            of={`of ${members.length}`}
+            of={`of ${all.length}`}
           />
           <Tally
             label="Suspended"
             value={counts.suspended}
-            of={`of ${members.length}`}
+            of={`of ${all.length}`}
             tone="caution"
           />
           <Tally
             label="Never set up"
             value={counts.never_given_access}
-            of={`of ${members.length}`}
+            of={`of ${all.length}`}
             tone="gap"
           />
         </div>
@@ -94,6 +119,88 @@ export function TeamListRoute() {
             </Link>
           </div>
         </div>
+
+        {/*
+         * AM v2.0's TM-01 filters. The claim under them names the filter,
+         * because a list of three under a heading that says the team has
+         * seventeen people is a claim about the home that is an artefact of
+         * the view.
+         */}
+        <div className={styles.filterBar} data-team-filters>
+          <label className={styles.searchField}>
+            <span className={styles.fieldLabel}>Search by name</span>
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              data-field="team-search"
+            />
+          </label>
+
+          <label className={styles.searchField}>
+            <span className={styles.fieldLabel}>Home</span>
+            <select
+              value={siteFilter}
+              onChange={(event) => setSiteFilter(event.target.value as 'all' | SiteId)}
+              data-filter="site"
+            >
+              <option value="all">Every home</option>
+              {sites.map((site) => (
+                <option key={site.id} value={site.id}>
+                  {site.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className={styles.searchField}>
+            <span className={styles.fieldLabel}>Role</span>
+            <select
+              value={roleFilter}
+              onChange={(event) =>
+                setRoleFilter(event.target.value as 'all' | StaffRole)
+              }
+              data-filter="role"
+            >
+              <option value="all">Every role</option>
+              {(Object.keys(STAFF_ROLE_NAMES) as StaffRole[]).map((role) => (
+                <option key={role} value={role}>
+                  {STAFF_ROLE_NAMES[role]}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className={styles.searchField}>
+            <span className={styles.fieldLabel}>Access</span>
+            <select
+              value={standingFilter}
+              onChange={(event) =>
+                setStandingFilter(event.target.value as 'all' | StaffStanding['kind'])
+              }
+              data-filter="standing"
+            >
+              <option value="all">Any standing</option>
+              <option value="has_access">Has access</option>
+              <option value="never_given_access">Never set up</option>
+              <option value="suspended">Suspended</option>
+              <option value="no_longer_has_access">No longer has access</option>
+            </select>
+          </label>
+        </div>
+
+        <p className={styles.filterClaim} data-filter-claim>
+          {filtered
+            ? `Showing ${members.length} of ${all.length} on the team. The figures above are the whole team, not this list.`
+            : `All ${all.length} on the team.`}
+        </p>
+
+        {members.length === 0 ? (
+          <p className={styles.noMatches} data-no-matches>
+            Nobody on the team matches these filters. That is a fact about the filters
+            rather than about the team: {all.length} people are on the record.
+          </p>
+        ) : null}
 
         <ul className={styles.rows}>
           {members.map((member) => (

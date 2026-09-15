@@ -138,7 +138,6 @@ export function AppShell() {
                   alertCount={0}
                   userName={currentUser.displayName}
                   userRoleLabel={STAFF_ROLE_NAMES[currentUser.role]}
-                  onMyDashboard={() => navigate('/me')}
                   onMyPermissions={() => navigate('/me/permissions')}
                   onSignOut={() => navigate('/sign-out')}
                 />
