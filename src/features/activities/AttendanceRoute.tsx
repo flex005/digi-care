@@ -21,6 +21,8 @@ import { useSession } from '@/app/session/use-session'
 import { formatCount, pluralise } from '@/lib/format'
 import { tally } from './session-state'
 import { CancelSession } from './CancelSession'
+import { EditSession } from './EditSession'
+import { now as appNow } from '@/data/fixtures/clock'
 import { useViewer } from '@/app/session/use-viewer'
 import styles from './activities.module.css'
 import { staffLabel } from '@/data/access/team-store'
@@ -128,7 +130,20 @@ function Grid({ data, onChanged }: { data: Loaded; onChanged: () => void }) {
           {activity.place} · planned by {activity.plannedBy.displayName}
         </p>
         {activity.standing.kind === 'planned' && viewer.canRecordIn('/activities') ? (
-          <CancelSession activity={activity} onCancelled={onChanged} />
+          <div className={styles.sessionActions}>
+            {/*
+             * Changing it only before it starts: once it has begun, its time is
+             * what attendance is recorded against.
+             */}
+            {activity.startsAt > appNow().toISOString() ? (
+              <EditSession
+                activity={activity}
+                timeZone={format.timeZone}
+                onEdited={onChanged}
+              />
+            ) : null}
+            <CancelSession activity={activity} onCancelled={onChanged} />
+          </div>
         ) : null}
       </div>
 

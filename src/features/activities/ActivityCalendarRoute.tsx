@@ -9,7 +9,9 @@ import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
-import { formatCount, pluralise } from '@/lib/format'
+import { formatCount, formatDateTime, pluralise } from '@/lib/format'
+import { useViewer } from '@/app/session/use-viewer'
+import { PlanSession } from './PlanSession'
 import { zonedDate } from '@/lib/format'
 import { sessionState, unrecordedSessions } from './session-state'
 import type { SessionState } from './session-state'
@@ -40,9 +42,13 @@ export function ActivityCalendarRoute() {
   const [range, setRange] = useState<Range>('week')
   const [arrangement, setArrangement] = useState<Arrangement>('calendar')
   const [offset, setOffset] = useState(0)
+  const viewer = useViewer()
+  /* Bumped when a session is planned, to re-read the calendar with it on. */
+  const [version, setVersion] = useState(0)
+  const [justPlanned, setJustPlanned] = useState<Activity | undefined>(undefined)
 
   const load = useCallback(() => getActivities(activeSite.id), [activeSite.id])
-  const resource = useResource<Loaded>(load, [activeSite.id])
+  const resource = useResource<Loaded>(load, [activeSite.id, version])
 
   return (
     <SiteTimeZone timeZone={activeSite.timeZone}>
@@ -87,8 +93,40 @@ export function ActivityCalendarRoute() {
               ]}
               onChange={setArrangement}
             />
+
+            {/* Absent rather than disabled for anybody who cannot record here. */}
+            {resource.kind === 'ready' && viewer.canRecordIn('/activities') ? (
+              <PlanSession
+                siteId={activeSite.id}
+                timeZone={activeSite.timeZone}
+                residents={resource.data.residents}
+                onPlanned={(activity) => {
+                  setJustPlanned(activity)
+                  setVersion((count) => count + 1)
+                }}
+              />
+            ) : null}
           </div>
         </div>
+
+        {/*
+         * Where it went, because it may be in a week this calendar is not
+         * showing, and a session that vanished on saving reads as one that
+         * did not save.
+         */}
+        {justPlanned !== undefined ? (
+          <p className={styles.plannedNote} data-just-planned>
+            Planned{' '}
+            <Link to={justPlanned.id} className={styles.backLink}>
+              {justPlanned.name}
+            </Link>{' '}
+            for{' '}
+            <span data-numeric>
+              {formatDateTime(justPlanned.startsAt, activeSite.timeZone)}
+            </span>
+            , with your name on it.
+          </p>
+        ) : null}
 
         {resource.kind === 'loading' ? (
           <p className={styles.loading} role="status">

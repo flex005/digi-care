@@ -101,7 +101,6 @@ export function InvitationRoute() {
 
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
-  const [jobTitle, setJobTitle] = useState('')
   const [pin, setPin] = useState('')
   const [pinConfirm, setPinConfirm] = useState('')
 
@@ -298,24 +297,15 @@ export function InvitationRoute() {
               that guarantee from the system to whoever runs it.
             </p>
 
-            <h2>About you</h2>
-            <div className={styles.field}>
-              <label className={styles.k} htmlFor="invitation-job-title">
-                Job title
-              </label>
-              <input
-                id="invitation-job-title"
-                type="text"
-                value={jobTitle}
-                onChange={(event) => setJobTitle(event.target.value)}
-                data-field="job-title"
-              />
-              <p className={styles.hint}>
-                What you call the job. It is not your role:{' '}
-                {STAFF_ROLE_NAMES[member.role]} is what decides what you can open, and
-                only an admin changes it.
-              </p>
-            </div>
+            {/*
+             * **No job title.** AM v2.0's AUTH-03 asks for one, and this screen
+             * collected it and kept it nowhere: `StaffMember` holds a name, a
+             * role, homes and a standing, and nothing else. A field somebody
+             * fills in that disappears is a control that does nothing, so it is
+             * absent until a screen needs a job title, which is when it earns a
+             * field — the same ruling as the organisation fields the setup wizard
+             * does not ask for.
+             */}
           </div>
         )}
 

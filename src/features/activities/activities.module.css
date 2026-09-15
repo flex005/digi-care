@@ -658,6 +658,66 @@
   line-height: var(--text-body-line);
 }
 
+/*
+ * Planning and changing a session. Phase 25.
+ */
+.sessionForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.sessionForm input[type='text'],
+.sessionForm input[type='date'],
+.sessionForm input[type='time'] {
+  padding: var(--space-8);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-size);
+}
+
+.sessionTimes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  align-items: flex-end;
+}
+
+.inviteList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-height: 16rem;
+  overflow-y: auto;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.inviteOption {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.sessionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.plannedNote {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
 .cancelled {
   display: flex;
   flex-direction: column;
