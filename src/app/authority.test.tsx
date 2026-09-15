@@ -17,7 +17,9 @@ import { navItems } from './nav-items.icons'
 import {
   ADMIN_ACTS,
   PERMISSION_MODULES,
+  SIGN_IN_ROLES,
   accountabilityOf,
+  canSignIn,
   levelFor,
   mayDo,
   moduleForPath,
@@ -38,28 +40,24 @@ import {
 const ROLES = Object.keys(STAFF_ROLE_NAMES) as StaffRole[]
 
 /**
- * A role somebody can actually sign in as, which is not all seven.
+ * A role somebody can actually be, on this platform.
  *
- * **Found by this guard on its first run, and it is a finding rather than a
- * test problem.** Laura Bennett is the only activities coordinator in the
- * fixtures and her standing is `never_given_access` — she is the lapsed
- * invitation the invitation screen needs. So the role has a row in the matrix,
- * three exceptions of its own, and nobody who can be it: the whole of that
- * role's view of the product is unreachable, which is the standing check about
- * a fixture reaching every branch, applied to a person rather than to a cell.
+ * **Two conditions, and they are different facts.** `SIGN_IN_ROLES` says which
+ * roles are viewers of this product at all: three of the six, because care
+ * workers, senior carers and activities coordinators use the Care Worker app
+ * and appear here only as people an Admin manages. The second condition is
+ * whether the fixtures give that role somebody with access, which is the
+ * standing check about a branch nothing reaches, applied to a person.
  *
- * Declared here with its reason rather than skipped quietly, and checked in
- * both directions below, so the day somebody gives that role access this list
- * fails instead of silently covering less than it says.
+ * The earlier version of this declaration named the activities coordinator as
+ * a role nobody could sign in as, and treated it as a finding. It was not one:
+ * she is not a user of this platform, and the fixture that looked like a gap
+ * was the scope being wrong rather than the data. The finding that remains is
+ * the one worth keeping: **a viewer role with nobody to be is a view of the
+ * product that nothing can render.**
  */
-const CANNOT_BE_SIGNED_IN_AS: { role: StaffRole; why: string }[] = [
-  {
-    role: 'activities_coordinator',
-    why: 'Laura Bennett is the only one, and her standing is never_given_access because she is the lapsed invitation the invitation screen renders',
-  },
-]
-
 const signable = (role: StaffRole) =>
+  canSignIn(role) &&
   teamMembers().some(
     (member) => member.role === role && member.standing.kind === 'has_access',
   )
@@ -104,14 +102,22 @@ function renderShellAs(role: StaffRole, path: string) {
 
 describe('the sidebar shows a role what it holds', () => {
   it('leaves out the modules a role has no access to', async () => {
-    const { container } = renderShellAs('care_worker', '/')
+    /*
+     * **The auditor is the live case, and after the scope correction it is the
+     * only one.** Of the three roles that sign in here, only the auditor has
+     * `no_access` to anything: Settings. This was written against a care
+     * worker, who cannot sign into this platform at all, so it was asserting
+     * the filter through somebody who would never meet it.
+     */
+    const { container } = renderShellAs('auditor', '/')
 
     await waitFor(() =>
-      expect(container.querySelector('a[href="/compliance"]')).toBeNull(),
+      expect(container.querySelector('a[href="/settings"]')).toBeNull(),
     )
-    // And the items it does hold are there, so the assertion above is about
+    // And the items they do hold are there, so the assertion above is about
     // the filter rather than about a rail that failed to render.
     expect(container.querySelector('a[href="/care-notes"]')).toBeTruthy()
+    expect(container.querySelector('a[href="/compliance"]')).toBeTruthy()
   })
 
   it('shows the same modules to the registered manager', async () => {
@@ -126,7 +132,12 @@ describe('the sidebar shows a role what it holds', () => {
   it('agrees with the levels for every role and every module', async () => {
     for (const role of SIGNABLE_ROLES) {
       const { container, unmount } = renderShellAs(role, '/')
-      await waitFor(() => expect(container.querySelector('nav')).toBeTruthy())
+      await waitFor(() =>
+        // The rail names itself; a bare `nav` would take whichever one is first.
+        expect(
+          container.querySelector('nav[aria-label="Main navigation"]'),
+        ).toBeTruthy(),
+      )
 
       for (const item of navItems.filter((entry) => entry.enabled)) {
         const link = container.querySelector(`a[href="${item.path}"]`)
@@ -143,15 +154,15 @@ describe('the sidebar shows a role what it holds', () => {
 
 describe('a module a role cannot open does not open', () => {
   it('refuses the module rather than rendering it', async () => {
-    renderShellAs('care_worker', '/compliance')
+    renderShellAs('auditor', '/settings')
 
     expect(await screen.findByText(/is not part of your access/i)).toBeVisible()
     // Named, so the reader knows which door they are at.
-    expect(screen.getByText(/Compliance is not one of the modules/i)).toBeVisible()
+    expect(screen.getByText(/Settings is not one of the modules/i)).toBeVisible()
   })
 
   it('opens the same module for a role that holds it', async () => {
-    renderShellAs('registered_manager', '/compliance')
+    renderShellAs('registered_manager', '/settings')
 
     await waitFor(() =>
       expect(screen.queryByText(/is not part of your access/i)).toBeNull(),
@@ -248,29 +259,42 @@ describe('the declarations hold together', () => {
     expect(orphans, `no role can open these: ${orphans.join(', ')}`).toEqual([])
   })
 
-  it('names every role nobody can sign in as, and no others', () => {
-    const declared = new Set(CANNOT_BE_SIGNED_IN_AS.map((entry) => entry.role))
-
-    // A role that became signable and is still listed: the list would be
-    // narrowing coverage for a reason that no longer holds.
-    for (const entry of CANNOT_BE_SIGNED_IN_AS) {
-      expect(
-        signable(entry.role),
-        `${entry.role} is listed as unsignable and somebody with access now holds it`,
-      ).toBe(false)
-    }
-
-    // And the direction that matters more: a role that quietly lost its last
-    // active holder disappears from every rendering assertion in this file.
-    const undeclared = ROLES.filter((role) => !signable(role) && !declared.has(role))
+  it('gives every viewer role somebody to be', () => {
+    /*
+     * A viewer role with no holder is a whole view of the product that nothing
+     * can render, and no screen test would ever say so. Stated against its
+     * denominator rather than as a tick, because a number falling is the
+     * regression somebody has to be able to see.
+     */
+    const unheld = SIGN_IN_ROLES.filter((role) => !signable(role))
     expect(
-      undeclared,
-      `nobody can sign in as these and nothing says why: ${undeclared.join(', ')}`,
+      unheld,
+      `these roles sign into this platform and nobody holds one: ${unheld.join(', ')}`,
     ).toEqual([])
+    expect(SIGNABLE_ROLES.length).toBe(SIGN_IN_ROLES.length)
+  })
 
-    // Stated against its denominator rather than as a bare tick, because the
-    // number falling is the regression somebody has to be able to see.
-    expect(SIGNABLE_ROLES.length).toBe(ROLES.length - CANNOT_BE_SIGNED_IN_AS.length)
+  it('keeps the roles that are subjects rather than viewers out of sign-in', () => {
+    /*
+     * **The distinction this platform kept re-deriving wrongly**, asserted in
+     * both directions. A care worker is all over this product and never signs
+     * into it; the matrix still carries their row, because it is an Admin's
+     * view of the people they manage.
+     */
+    const subjects = ROLES.filter((role) => !canSignIn(role))
+    expect(subjects.sort()).toEqual(
+      ['activities_coordinator', 'care_worker', 'senior_carer'].sort(),
+    )
+    for (const role of subjects) {
+      expect(
+        PERMISSION_MODULES.every((module) => levelFor(role, module.id) !== undefined),
+        `${role} is not a viewer and must still have a full matrix row`,
+      ).toBe(true)
+    }
+    // And the viewers are the three the sign-in screen offers.
+    expect([...SIGN_IN_ROLES].sort()).toEqual(
+      ['auditor', 'deputy_manager', 'registered_manager'].sort(),
+    )
   })
 
   it('gives every role somewhere to land after signing in', () => {

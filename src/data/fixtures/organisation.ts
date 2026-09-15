@@ -1,9 +1,15 @@
 /**
  * Organisation, sites and staff. PRD §5.2.
  *
- * 14 staff across the seven roles, including one deactivated — records
- * outlive access (PRD §5.3), and a care note authored by someone who has
- * since left must still render its author.
+ * 15 staff, every role in the model held by at least one of them, including
+ * one deactivated — records outlive access (PRD §5.3), and a care note
+ * authored by somebody who has since left must still render its author.
+ *
+ * The count was "14 across the seven roles" and both figures were wrong: 15
+ * people, and six roles since `organisation_admin` turned out to be an
+ * undocumented split of `registered_manager`. A docblock cannot derive a
+ * number, so the property worth stating is the one a guard can hold, and
+ * `authority.test.tsx` holds it: no role is left without somebody.
  */
 
 import type { Organisation, Site, StaffRef } from '../types'
@@ -84,11 +90,22 @@ export const staffAdebayo = makeStaff(
   'Folake Adebayo',
   'senior_carer',
 )
+/**
+ * The registered manager at Ashgrove Lodge.
+ *
+ * **She was the only `organisation_admin`, and that role turned out to be an
+ * undocumented split of this one.** Collapsing it left her needing a role, and
+ * a second registered manager at Rosewood would be wrong on the facts: a
+ * service is registered to one. Ashgrove had no manager at all and one care
+ * worker, which was a fixture wrong on the facts in the other direction, so
+ * she is Ashgrove's. It also gives Phase 18 a second governance user to assign
+ * sites to, which is the work that needs one.
+ */
 export const staffClarke = makeStaff(
   'r-clarke',
   'R. Clarke',
   'Ruth Clarke',
-  'organisation_admin',
+  'registered_manager',
 )
 export const staffEze = makeStaff('n-eze', 'N. Eze', 'Ngozi Eze', 'care_worker')
 export const staffPatel = makeStaff(

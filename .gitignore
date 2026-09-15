@@ -36,3 +36,5 @@ src/assets/icons-generated/
 *.sln
 *.sw?
 
+.vercel
+.env*

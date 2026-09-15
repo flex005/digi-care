@@ -8,6 +8,8 @@
 
 **This document governs the frontend build only.** Where it and a source PRD disagree on UI behaviour, this document wins; where they disagree on product intent, the source PRD wins and this document gets corrected.
 
+**And it governs one product.** diGi-Care Admin & Manager is the whole of what this repo builds. `CW_PRD.docx` (Care Worker), `FAM_PRD.docx` (Family Portal) and `SA_PRD.docx` (Superadmin) are **separate products with their own UIs**, not other views of this one, and nothing in them is in scope here except where this platform *manages* them: inviting and assigning a care worker, and setting up Family Portal access from Phase 21. §1's role table below predates this and reads as though four roles use the desktop app; the governance roles are the users, and the rest appear in this product as subjects of records rather than as viewers.
+
 **Build scope:** Desktop manager application. Frontend only — no backend, no API, no auth. All data comes from typed fixtures.
 **Out of scope for this build:** mobile care-worker views, and the Family Portal itself. Both are separate builds. **Managing the Family Portal from this one is in scope from Phase 21** — who may see a resident's updates, on what basis, and which care notes are shared — because that is an act a manager performs here even though the surface it affects is elsewhere.
 

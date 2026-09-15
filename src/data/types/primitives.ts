@@ -29,9 +29,27 @@ export type CapacityAssessmentId = `cap-${string}`
 export type GoalId = `goal-${string}`
 export type GoalProgressNoteId = `gpn-${string}`
 
-/** The seven roles in the model. PRD §1. */
+/**
+ * The six roles in the model. PRD §1.
+ *
+ * **`organisation_admin` was here and is gone, and removing it undid a split
+ * rather than taking a decision.** PRD §1's first row reads "Registered
+ * Manager / Organisation Admin" — one role with two names — and this union
+ * split that row into two members. Nothing anywhere recorded why: no docblock,
+ * no PROGRESS entry, no line in any PRD. It appeared in five places, two of
+ * them cells in the permission table that gave it `read` on fifteen modules
+ * and `approve` on Settings, which is a coherent idea that nobody ever wrote
+ * down as one.
+ *
+ * The third reading, that it was the cross-site Admin, is redundant: AM v2.0's
+ * Sandra Chen is an Admin *assigned to five sites*, and multi-site is an
+ * assignment rather than a role — the `siteIds` change Phase 18 makes anyway.
+ *
+ * **Three of the six are not viewers of this platform**, and that is a
+ * different fact from what they can do. See `SIGN_IN_ROLES` in
+ * `features/team/permissions.ts`, which is the one place that says which.
+ */
 export type StaffRole =
-  | 'organisation_admin'
   | 'registered_manager'
   | 'deputy_manager'
   | 'senior_carer'
@@ -49,7 +67,6 @@ export type StaffRole =
  * role without naming it is a compile error.
  */
 export const STAFF_ROLE_NAMES: Record<StaffRole, string> = {
-  organisation_admin: 'Organisation admin',
   registered_manager: 'Registered manager',
   deputy_manager: 'Deputy manager',
   senior_carer: 'Senior carer',

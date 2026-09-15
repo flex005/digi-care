@@ -4,6 +4,10 @@ Rules that hold in every session. Read `FRONTEND_PRD.md` for the full spec; this
 
 **Project:** diGi-Care — care management platform, desktop manager app, frontend only. No backend, no API, no auth. All data from typed fixtures in `src/data/`.
 
+**Scope — who this platform is for.** diGi-Care Admin & Manager is the **only** product in this repo, and its users are the governance roles: the Admin and the Manager. **Care Worker, Family Portal and Super Admin are separate products with their own PRDs and their own UIs.** They are not views of this one and they are not built here.
+
+The distinction that keeps getting re-derived wrongly, so it is written down once: **a role can appear in this product as a subject without being a viewer of it.** An Admin invites care workers, assigns them, deactivates them and reads what they recorded — so care workers appear throughout Team Management, the activity log, every author byline and the permission matrix. None of that makes them users of this platform. Before putting a role somewhere, ask which of the two it is: *somebody who signs in here*, or *somebody this product holds a record about*. Only the first belongs on the sign-in screen, and only the first can be the reason a branch exists.
+
 **Stack:** Vite 8 · React 19 · TypeScript strict · React Router 7 (data router API) · Radix primitives (hand-authored) · plain CSS + CSS Modules over custom properties · `vite-plugin-svgr`.
 
 ---

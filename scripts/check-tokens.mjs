@@ -23,6 +23,7 @@
  */
 
 import { readdir, readFile } from 'node:fs/promises'
+import { stripCssComments } from './lib/strip-comments.mjs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -59,10 +60,12 @@ for await (const file of walk(SRC)) {
    * Comments blanked, line count preserved. `tokens.css` explains the rule in
    * prose that says `var(--token)`, and a guard that fires on its own
    * documentation teaches people to word around it (§8).
+   *
+   * A scanner rather than a regex, for the reason the selector guard found the
+   * hard way: a regex cannot tell a comment from a string containing one, and
+   * when it gets it wrong it blanks real code and reports a tick.
    */
-  const source = raw.replace(/\/\*[\s\S]*?\*\//g, (block) =>
-    block.replace(/[^\n]/g, ' '),
-  )
+  const source = stripCssComments(raw)
   const lines = source.split('\n')
   /* Properties this file declares for itself, anywhere in it. */
   const local = new Set(

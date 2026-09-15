@@ -95,12 +95,17 @@ export function NoteDetail() {
                 </div>
               ) : !viewer.canRecordIn('/care-notes') ? (
                 /*
-                 * **The sentence names the role rather than assuming it.** It
-                 * read "You are a read-only auditor", which was true while the
-                 * only way into read-only was a control labelled auditor. An
-                 * organisation admin reads Care Notes too, and telling them
-                 * they are an auditor is a screen inventing a fact about the
-                 * person reading it. One owner supplies the wording.
+                 * **The sentence names the role rather than assuming it**, and
+                 * it is the auditor today. It read "You are a read-only
+                 * auditor" as a literal, which was true while the only way
+                 * into read-only was a control labelled auditor, and would
+                 * have gone quietly wrong the first time a second read-only
+                 * role existed. It nearly did: the justification written here
+                 * a phase ago named the organisation admin, a role that has
+                 * since turned out to be an undocumented split and no longer
+                 * exists. The wording comes from one owner precisely so that
+                 * neither the role nor the reason has to be right in this
+                 * file.
                  */
                 <p className={styles.immutabilityBody}>
                   {viewer.whyReadOnly('/care-notes')} Nothing on this note can be

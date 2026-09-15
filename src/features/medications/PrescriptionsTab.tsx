@@ -62,13 +62,14 @@ export function PrescriptionsTab() {
          * The same distinction as "not held here": a gap somebody can close,
          * against one nothing on any screen can.
          *
-         * Not rendered at all under read-only, because an auditor has zero
-         * write and a disabled button implies a capability they will never have.
+         * Not rendered at all for the auditor, the one role signing into this
+         * platform with zero write, because a disabled button implies a
+         * capability they will never have.
          *
          * **What would make this writable**: v4 of the source PRD adds a
          * Clinician role, and PRN authorisation is named as one of its acts.
-         * That is what this is waiting on. Phase 17 kept the build's seven
-         * roles on purpose, so the answer is recorded rather than acted on.
+         * That is what this is waiting on. The role model here is deliberately
+         * this build's own, so the answer is recorded rather than acted on.
          */}
         {viewer.canRecordIn('/medications') ? (
           <Tooltip content="Prescribing is a prescriber's act. diGi-Care has no prescriber, no directions model and no interaction checking, so it records prescriptions rather than making them.">

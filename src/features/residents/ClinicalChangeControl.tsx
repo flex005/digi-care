@@ -63,8 +63,8 @@ export function ClinicalChangeControl({
    * it.** v4 of the source PRD adds a Clinician role that this build's
    * `StaffRole` does not have: clinical leads and nurses, with medication
    * protocols, PRN authorisation and clinical assessments. That is the role
-   * this refusal is waiting on. Phase 17 kept the build's seven roles on
-   * purpose, so the answer is recorded rather than acted on. The question
+   * this refusal is waiting on. The role model here is deliberately this
+   * build's own, so the answer is recorded rather than acted on. The question
    * "why can nobody record this" has an answer, and it is a role rather than
    * a screen.
    */

@@ -12826,3 +12826,127 @@ every error in the bound.
 the screen's own. It predates this phase and it is an accessibility defect
 rather than a cosmetic one. Not touched here because it is not this phase's
 work.
+
+# Scope correction before Phase 18 — one platform, three viewers
+
+Frank: this repo builds diGi-Care Admin & Manager and nothing else. Care Worker,
+Family Portal and Superadmin are separate products with their own PRDs and their
+own UIs, not other views of this one.
+
+## The mapping question, answered from the build rather than the names
+
+**`organisation_admin` was never decided.** It appeared in five places — the
+union, the name map, one fixture, and two cells in the permission table — with
+no docblock, no PROGRESS entry and no line in any PRD. And `FRONTEND_PRD.md` §1
+row one reads **"Registered Manager / Organisation Admin"**: one role with two
+names, which this union split in two.
+
+What the table said about it, computed rather than recalled: `read` on fifteen
+of sixteen modules, `approve` on Settings. A non-clinical account that reads the
+whole record and configures the service. That is a coherent idea and nobody
+wrote it down as one; it was inferred from two cells.
+
+Admin is `registered_manager`, Manager is `deputy_manager`, and AM v2.0 agrees:
+its Manager is "Deputy/Senior Manager", a senior *manager* and not a senior
+carer. **Sandra Chen is not a third role** — she is an Admin assigned to five
+sites, and multi-site is an assignment rather than a role, which is the
+`siteIds` change Phase 18 makes anyway.
+
+So the collapse undoes a split rather than taking a decision, and it is recorded
+that way in `primitives.ts`.
+
+**Ruth Clarke was the only holder.** A second registered manager at Rosewood
+would be wrong on the facts — a service is registered to one — and Ashgrove
+Lodge had no manager at all and one care worker, which is a fixture wrong on the
+facts in the other direction. She is Ashgrove's registered manager, which also
+gives Phase 18 a second governance user to assign sites to.
+
+## Auditor stays, and the reason is the distinction itself
+
+A care worker has another product. **An auditor has none.** PRD §1 gives
+external auditors and CQC inspectors full read and zero write during an
+inspection, which makes them a viewer of this platform rather than a leftover.
+
+It is also load-bearing. Of the three roles that sign in here, the auditor is
+**the only one with `no_access` to anything** (Settings) and **the only one that
+is read-only in the clinical modules**. Take them out and two mechanisms built
+in Phase 17 lose every live case at once: the sidebar filter stops filtering for
+anybody, and the module half of the refusal screen becomes unreachable. The five
+read-only branches go with them.
+
+That was nearly the outcome: the Phase 17 plan had the read-only branches held
+by `organisation_admin`, and collapsing it would have left them with no holder
+had the auditor gone in the same pass.
+
+## `SIGN_IN_ROLES`, and the sentence the matrix was missing
+
+The viewer list has one owner, used by the sign-in screen and by the guard.
+Three roles sign in; the other three appear throughout this platform as people
+an Admin manages and as the authors of records, and never open it.
+
+**The matrix keeps every row and now says which claim it is making**: *this is
+what the people you manage can do, not a list of who uses this platform.* Rows
+unchanged, sixteen modules regardless of viewer. Without that sentence a table
+of roles reads as a list of users by default, which is how the scope was
+re-derived wrongly in the first place.
+
+## The guard was reading a third of a file and printing a tick
+
+`check-selector-specificity.mjs` stripped comments with
+`/\/\*[\s\S]*?\*\//g`. `authority.test.tsx` contains
+
+    .filter((path) => !path.includes(':') && path !== '/*')
+
+excluding the router's catch-all route — a **string containing a comment
+token**, which the regex cannot tell from a comment. It paired that `/*` with a
+terminator ninety-three lines later and blanked everything between, including
+four queries the guard exists to check. It printed "every query is scoped,
+named, or identified" over a file it had read a third of.
+
+**The tell was that it gave two verdicts on an identical line.** The same
+`container.querySelector('nav')` passed before today's edits and failed after
+them, because moving a docblock moved where the hole fell. Nothing about that
+line changed. Had the edits gone the other way it would have stayed hidden.
+
+`scripts/lib/strip-comments.mjs` replaces it with a scanner that knows whether
+it is inside a comment, a string, a template literal or a regex, and throws if
+it ever changes the length of the source, because every guard using it maps
+findings back to line numbers. There is a separate CSS scanner: the JavaScript
+one treats `/` after `(` as a regex, and `url(/assets/x.svg)` is that shape.
+`check-tokens.mjs` had inherited the same regex and now uses it.
+
+Three cases mutation-tested: a string containing a comment token stays visible,
+a regex containing one stays visible, and a real comment is still blanked. The
+one true finding it then surfaced was fixed rather than excused — the rail names
+itself, and a bare `nav` takes whichever one is first.
+
+## Copy that was wrong rather than odd
+
+- `signingCodeFor`'s argument was about a shared medication trolley, which is a
+  care worker at the point of administration. It holds here for a different
+  reason, now stated: on this platform the four digits sit in front of a manager
+  countersigning somebody else's round, finalising a domain, and signing a
+  handover.
+- Sign-in: "the email address your manager invited you with" and "which home are
+  you working at today" became "your invitation was sent to" and "signing in
+  to".
+- The five read-only branches name the auditor as the holder rather than as an
+  example. One of them cited the organisation admin as the reason its wording
+  had to be derived — a justification naming a role that no longer exists, two
+  hours after it was written. The mechanism was right and the reason had gone
+  stale, which is the argument for deriving it in the first place.
+
+## A guard that hardcoded the work rather than the rule
+
+`fixtures.test.ts` asserted `new Set(staff.map(s => s.role)).size === 7`. The
+collapse turned it red and the one-character fix was to type `6`. What the
+fixtures actually owe is that no role in the model is left without somebody to
+hold it, so it reads `STAFF_ROLE_NAMES` and cannot go stale against it.
+
+## Still open
+
+- **`/me` is costed in the report and not yet touched.** It was built for a
+  shift worker and AM v2.0 has no personal dashboard at all.
+- The invitation fixtures are a care worker and an activities coordinator —
+  both non-viewers. Phase 18 needs outstanding invitations for roles that can
+  sign in here.

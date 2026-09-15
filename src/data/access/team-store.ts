@@ -16,6 +16,7 @@ import {
   staffBennett,
   staffDeactivated,
   staffOkonkwo,
+  staffClarke,
   staffPatel,
 } from '../fixtures/organisation'
 import { daysAgo, toIsoDate } from '../fixtures/generate'
@@ -29,7 +30,7 @@ import { daysAgo, toIsoDate } from '../fixtures/generate'
  * access)" beside an author reads it from here, at render time.
  */
 
-const ASHGROVE = new Set<StaffId>([staffPatel.id])
+const ASHGROVE = new Set<StaffId>([staffPatel.id, staffClarke.id])
 
 /**
  * Who has access, and who does not.
@@ -303,9 +304,16 @@ function shortName(fullName: string): string {
  *
  * **A signature has to establish who, not that somebody clicked.** The round
  * already asked for four digits and checked only that four had been typed,
- * which proves a person was standing there and nothing about which person: on
- * a shared trolley that is the shared-login failure with a keypad in front of
- * it.
+ * which proves a person was standing there and nothing about which person.
+ *
+ * The argument was written about a shared medication trolley, which is a care
+ * worker at the point of administration and belongs to the Care Worker
+ * product. It holds here for a different reason and the reason is worth
+ * stating rather than inheriting: on this platform the four digits sit in
+ * front of a manager countersigning somebody else's round, finalising a care
+ * plan domain, and signing a handover. A countersignature that establishes
+ * only that somebody was at the keyboard is the thing a countersignature
+ * exists to prevent.
  *
  * Derived from the staff id rather than stored, because this build has no
  * accounts and no secrets to keep. It is deliberately *not* a security

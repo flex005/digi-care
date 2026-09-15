@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { STAFF_ROLE_NAMES, type StaffRole } from '@/data/types'
 import { CONSENT_TYPES, CARE_PLAN_DOMAINS, RISK_ASSESSMENT_TEMPLATES } from '../types'
 import type { CarePlanVersion } from '../types'
 import { recordCompleteness, staleRecords } from '../completeness'
@@ -43,7 +44,7 @@ describe('fixture volume: PRD §5.2', () => {
     expect(residents.filter((r) => r.siteId === 'site-ashgrove-lodge')).toHaveLength(4)
   })
 
-  it('has 15 staff across the seven roles, including one deactivated', () => {
+  it('holds every role in the model, and one deactivated member', () => {
     /*
      * Fifteen rather than the fourteen §5.2 first specified. The fifteenth is
      * Funke Adeyinka, invited two days ago and not yet accepted: the live
@@ -51,9 +52,26 @@ describe('fixture volume: PRD §5.2', () => {
      * reachability rule — a branch nobody can get to without first doing
      * something else is not built. Frank corrected the figure in the PRD
      * rather than have the fixture obey a stale one.
+     *
+     * **The role count was `7` typed into the assertion, and collapsing
+     * `organisation_admin` turned it red.** The change was legitimate and the
+     * one-character fix would have been to type `6`, which is the §8 defect
+     * exactly: a number that measures the work rather than the rule, edited
+     * each time the work moves. What the fixtures actually owe is that no role
+     * in the model is left without somebody holding it, so the assertion reads
+     * the declaration and cannot go stale against it.
      */
     expect(staff).toHaveLength(15)
-    expect(new Set(staff.map((s) => s.role)).size).toBe(7)
+
+    const held = new Set(staff.map((member) => member.role))
+    const unheld = (Object.keys(STAFF_ROLE_NAMES) as StaffRole[]).filter(
+      (role) => !held.has(role),
+    )
+    expect(
+      unheld,
+      `no member of staff holds: ${unheld.join(', ')}, so nothing in the product renders one`,
+    ).toEqual([])
+
     expect(staff.filter((s) => !s.isActive)).toHaveLength(1)
   })
 

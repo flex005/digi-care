@@ -134,10 +134,12 @@ export function SignaturePanel({
             }
           />
 
-          {/* Signing a handover is the approve act in this module, not a write:
-              it is somebody putting their name to the shift that is ending.
-              A senior carer holds it, and it is the whole of what the role is
-              for. */}
+          {/*
+           * Signing a handover is the approve act in this module rather than a
+           * write: somebody puts their name to the shift that is ending. Of
+           * the roles that sign into this platform the auditor is the one
+           * without it, which is the whole of what read-only means.
+           */}
           {!viewer.canApproveIn('/handover') ? null : (
             <>
               <Button size="large" onClick={() => setConfirming(true)}>

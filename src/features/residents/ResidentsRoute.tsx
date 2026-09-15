@@ -144,9 +144,10 @@ export function ResidentsRoute() {
             Sort by oldest care note to find the residents nobody has written up.
           </p>
         </div>
-        {/* Live from Phase 16. Still absent under read-only rather than
-            disabled — an auditor has zero write (PRD §1), and a disabled
-            button implies a capability they will never have. */}
+        {/* Live from Phase 16. Absent rather than disabled for the auditor,
+            who is the one role signing into this platform with zero write
+            (PRD §1): a disabled button implies a capability they will never
+            have. */}
         {viewer.canRecordIn('/residents') ? (
           <Button
             variant="primary"

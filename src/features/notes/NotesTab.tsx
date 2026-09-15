@@ -133,8 +133,14 @@ export function NotesTab() {
         <CardHeader
           title="Care notes"
           actions={
-            // PRD §1: a role that reads this module has zero write in it.
-            // Not a disabled button — the control is not theirs to have.
+            /*
+             * **The auditor, and in this product that is who this branch is
+             * for.** PRD §1 gives an external auditor or a CQC inspector full
+             * read and zero write during an inspection, and they are the only
+             * role signing in here that cannot write a care note. Not a
+             * disabled button: zero write is not a permission they might be
+             * granted, so the control is not theirs to have.
+             */
             !viewer.canRecordIn('/care-notes') ? null : (
               <NoteComposer
                 resident={resident}

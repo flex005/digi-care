@@ -54,6 +54,25 @@ export function PermissionMatrixRoute() {
           and anybody can sign in as anybody, and access control that lives in a browser
           is a suggestion. A real deployment enforces this on a server.
         </p>
+        {/*
+         * **What the rows are, which the table never said.** Six roles are
+         * listed and three of them sign into this platform: the other three
+         * are care workers, senior carers and activities coordinators, who use
+         * the Care Worker product. Their rows are here because this is the
+         * platform where an Admin manages them, so what they can do is
+         * something an Admin needs to see. That is a legitimate reason for the
+         * rows and it is a different claim from "these are the people who use
+         * this product", which is how a table of roles reads by default.
+         */}
+        <p className={styles.notEnforcedBody} data-matrix-subject>
+          <b>
+            This is what the people you manage can do, not a list of who uses this
+            platform.
+          </b>{' '}
+          Three of these roles sign in here: the Admin, the Manager and the auditor. The
+          rest work in the Care Worker app and appear on this screen because managing
+          them is done from this one.
+        </p>
       </div>
 
       <Card>

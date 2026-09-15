@@ -70,6 +70,7 @@
  * quietly grow.
  */
 import { readFileSync, globSync } from 'node:fs'
+import { stripComments } from './lib/strip-comments.mjs'
 
 /** Roots that mean "the document" rather than a thing the test chose. */
 const PAGE_ROOTS = ['screen', 'document']
@@ -166,21 +167,16 @@ const isPageLevel = (source) =>
   source.includes('RouterProvider') ||
   source.includes('AppShell')
 
-/**
- * Blank out comments, keeping every newline so line numbers still hold.
- *
- * A docblock explaining which selector went wrong last time contains that
- * selector, and the check reported it — the note about the defect read as the
- * defect. Found by this check flagging its own case study in goals.test.tsx.
+/*
+ * The comment stripper lives in `lib/strip-comments.mjs` now, and it is a
+ * scanner rather than a regex. The regex that was here could not tell a
+ * comment from a string containing one: `path !== '/*'` in an
+ * `authority.test.tsx` route filter paired with a block-comment terminator ninety-three lines
+ * later and blanked every query between them, so this check reported a tick
+ * over a third of a file it had not read. It gave two different verdicts on an
+ * identical line depending on what somebody had done to an unrelated docblock.
  */
-function withoutComments(source) {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, (block) => block.replace(/[^\n]/g, ' '))
-    .replace(
-      /(^|[^:])\/\/[^\n]*/g,
-      (line, lead) => lead + ' '.repeat(line.length - lead.length),
-    )
-}
+const withoutComments = stripComments
 
 /** Collapse whitespace while keeping, for every character, its source line. */
 function collapseWithLines(source) {

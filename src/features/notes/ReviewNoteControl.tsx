@@ -63,9 +63,12 @@ export function ReviewNoteControl({
   const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState('')
 
-  // Marking a flagged note reviewed is the approve act in Care Notes: it is
-  // signing off somebody else's work. Not a disabled button — the control is
-  // not theirs to have.
+  /*
+   * Marking a flagged note reviewed is the approve act in Care Notes: signing
+   * off somebody else's work. Withheld from the auditor, who is the one role
+   * signing into this platform with zero write, and not as a disabled button:
+   * the control is not theirs to have.
+   */
   if (!viewer.canApproveIn('/care-notes')) return null
   if (note.review.kind === 'not_flagged') return null
 

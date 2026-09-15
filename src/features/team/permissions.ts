@@ -72,7 +72,6 @@ const ALL: StaffRole[] = Object.keys(STAFF_ROLE_NAMES) as StaffRole[]
  * the interesting part and a 112-cell literal hides them.
  */
 const BASE: Record<StaffRole, PermissionLevel> = {
-  organisation_admin: 'read',
   registered_manager: 'approve',
   deputy_manager: 'approve',
   senior_carer: 'record',
@@ -92,7 +91,6 @@ const BASE: Record<StaffRole, PermissionLevel> = {
  */
 const EXCEPTIONS: Partial<Record<StaffRole, Partial<Record<string, PermissionLevel>>>> =
   {
-    organisation_admin: { '/settings': 'approve' },
     care_worker: {
       /*
        * Editing a resident's record is a manager act. The baseline said
@@ -308,7 +306,6 @@ export type Accountability = 'registered_person' | 'not_registered'
  * Dashboard.
  */
 const ACCOUNTABLE: Record<StaffRole, Accountability> = {
-  organisation_admin: 'registered_person',
   registered_manager: 'registered_person',
   deputy_manager: 'not_registered',
   senior_carer: 'not_registered',
@@ -318,6 +315,35 @@ const ACCOUNTABLE: Record<StaffRole, Accountability> = {
 }
 
 export const accountabilityOf = (role: StaffRole): Accountability => ACCOUNTABLE[role]
+
+/**
+ * Which roles are viewers of this platform, as against subjects of its records.
+ *
+ * **The distinction this product kept re-deriving wrongly.** diGi-Care Admin &
+ * Manager is one product; Care Worker, Family Portal and Superadmin are
+ * separate products with their own UIs. A care worker therefore appears all
+ * over this one — invited in Team Management, assigned to residents, named as
+ * the author of thousands of records, given a row in the permission matrix —
+ * and never signs into it. Being in the product is not being a user of it.
+ *
+ * So the sign-in screen offers these three and only these three. The auditor
+ * is here on purpose and is not an oversight: an external auditor or a CQC
+ * inspector has no other product to use, PRD §1 gives them full read and zero
+ * write during an inspection, and they are the only role that reaches the
+ * read-only rendering of five screens. Take them out and the read-only state
+ * stops existing anywhere in the build.
+ *
+ * **Every other role keeps its matrix row.** The matrix is an Admin's view of
+ * the people they manage, which is a different claim from a list of viewers,
+ * and the screen now says which of the two it is making.
+ */
+export const SIGN_IN_ROLES: StaffRole[] = [
+  'registered_manager',
+  'deputy_manager',
+  'auditor',
+]
+
+export const canSignIn = (role: StaffRole): boolean => SIGN_IN_ROLES.includes(role)
 
 /**
  * The acts that belong to the registered person rather than to a level.

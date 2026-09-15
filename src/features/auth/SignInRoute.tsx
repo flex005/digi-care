@@ -9,7 +9,7 @@ import { staffOsei } from '@/data/fixtures/organisation'
 import { teamMembers } from '@/data/access/team-store'
 import { pluralise } from '@/lib/format'
 import { STAFF_ROLE_NAMES } from '@/data/types'
-import { PERMISSION_ROLES } from '@/features/team/permissions'
+import { SIGN_IN_ROLES } from '@/features/team/permissions'
 import { addressFor, memberForAddress } from './addresses'
 import { PROTOTYPE_STATEMENT, PROTOTYPE_WARNING } from './prototype-statement'
 import styles from './auth.module.css'
@@ -81,7 +81,7 @@ export function SignInRoute() {
                 the same word. */}
             <h1 className={styles.authTitle}>Sign in</h1>
             <p className={styles.lede}>
-              Use the email address your manager invited you with.
+              Use the email address your invitation was sent to.
             </p>
 
             <div className={styles.form}>
@@ -116,7 +116,7 @@ export function SignInRoute() {
               </div>
 
               <div className={styles.field}>
-                <span className={styles.k}>Which home are you working at today?</span>
+                <span className={styles.k}>Which home are you signing in to?</span>
                 <div className={styles.siteChoice}>
                   {sites.map((entry) => {
                     const chosen = entry.id === siteId
@@ -145,7 +145,8 @@ export function SignInRoute() {
                 </div>
                 <p className={styles.hint}>
                   Chosen here rather than afterwards, because it decides the timezone
-                  every record you write today will carry.
+                  every record you write today will carry, and the home whose record you
+                  are about to read.
                 </p>
               </div>
 
@@ -159,12 +160,17 @@ export function SignInRoute() {
                * the same affordance `/dev/states` is: a demonstration control,
                * labelled as one.
                *
-               * **A role nobody holds says so.** The activities coordinator is
-               * in the permission matrix with three exceptions of her own, and
-               * the only one in the fixtures never had access set up, so
-               * nobody can be her. Leaving the row out would make that look
-               * like a role that does not exist rather than one nobody can
-               * reach.
+               * **Three roles, and not the six in the model.** Care workers,
+               * senior carers and activities coordinators are users of the
+               * Care Worker product rather than of this one. They appear all
+               * over this platform as people an Admin manages and as the
+               * authors of records, and they never sign into it. The auditor
+               * does: they have no other product to use, and PRD §1 gives them
+               * full read and zero write during an inspection.
+               *
+               * **A role somebody holds but nobody can be still says so**
+               * rather than being dropped, because a missing row reads as a
+               * role that does not exist rather than one nobody can reach.
                */}
               <div className={styles.field}>
                 {/*
@@ -177,10 +183,11 @@ export function SignInRoute() {
                  * does not get to reopen.
                  */}
                 <span className={styles.k}>
-                  Who would you like to sign in as? Each one sees a different product.
+                  Who would you like to sign in as? Each one reads this platform
+                  differently.
                 </span>
                 <ul className={styles.whoList} data-who-list>
-                  {PERMISSION_ROLES.map((entry) => {
+                  {SIGN_IN_ROLES.map((entry) => {
                     const who = members.find(
                       (member) =>
                         member.role === entry && member.standing.kind === 'has_access',
