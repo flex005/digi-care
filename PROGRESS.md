@@ -13773,3 +13773,36 @@ session shows something else *before* the act, so the reference can disagree.
 Re-run after the fix: the same mutation, confirmed landed, now fails
 `names the organisation where every screen reads it`, and the restored tree is
 green. The template guard fired on its first mutation.
+
+# Closing check: what the build says on screen that it does not back up
+
+Writing the account in `docs/AM_PRD_STATUS.md`, every status claim was checked
+against the code rather than recalled — the rule written into §8 an hour
+earlier. Six claims made during Phases 21 to 24 did not survive. Five are on
+screen.
+
+- **Admission's documents step says a DNAR form "can be filed here"** and the
+  form has no upload control. Phase 24 was reported as filing the document and
+  leaving the decision unrecorded; only the second half was built.
+- **Admission's steps do not gate.** A step strip was added over one long form,
+  so all five sections render at once, and "Contact and GP" is labelled
+  Required while nothing in it is.
+- **The invite drawer says to change a person's role on their own page.** The
+  staff profile shows the role and has no control for it.
+- **Settings says custom care plan domains "are added"** — there is nowhere to
+  add one. Custom domains were approved in the plan and never built.
+- **The invitation screen collects a job title and stores it nowhere**: a
+  control that does nothing, of the kind Phase 22 found in the review interval.
+- **`recordConsent` has no caller.** Phase 21 finished the consent act in code
+  and no screen records a consent, so Family Portal access works only for
+  residents whose `family_portal` consent the fixtures already hold.
+
+Also not built and previously implied: activity session create and edit (the
+store exists, no screen), care plan finalisation with the signing code, and the
+paired rendering on the care plan and consent screens (only the risk list has
+it).
+
+**Each was reported as done in chat at the time, and none was caught by a test**:
+the tests assert what was built, and these were things said about what was
+built. The tell was only available by searching for the control a sentence
+promised. All are listed in the status document as defects to fix.
