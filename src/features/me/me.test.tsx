@@ -48,8 +48,6 @@ function signedInAs(member: StaffMember) {
       signInAs: () => {},
       signOut: () => {},
       currentUser: member.ref,
-      accessMode: 'read_write',
-      setAccessMode: () => {},
     }
     return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
   }

@@ -2,6 +2,7 @@ import { NavLink, useMatch } from 'react-router-dom'
 import { Icon } from '@/components/icon/Icon'
 import { Tooltip } from '@/components/primitives'
 import { navItems, navSections, shellIcons } from '@/app/nav-items.icons'
+import { useViewer } from '@/app/session/use-viewer'
 import { Logo } from '@/components/brand/Logo'
 import type { NavItem } from '@/app/nav-items.icons'
 import { NavBadge, type NavCount } from './NavBadge'
@@ -131,6 +132,8 @@ function SidebarItem({
 }
 
 export function Sidebar({ collapsed, onToggleCollapsed, counts }: SidebarProps) {
+  const viewer = useViewer()
+
   return (
     <nav
       className={[styles.sidebar, collapsed ? styles.collapsed : '']
@@ -176,7 +179,21 @@ export function Sidebar({ collapsed, onToggleCollapsed, counts }: SidebarProps) 
 
       <div className={styles.scroll}>
         {navSections.map((section) => {
-          const items = navItems.filter((item) => item.section === section.id)
+          /*
+           * **Filtered by the viewer, and a whole section disappears when it
+           * empties.** Administration holds one item, so a care worker sees no
+           * heading rather than a heading with nothing under it.
+           *
+           * `navItems` itself is never filtered: it is the declaration the
+           * permission matrix counts its modules from, and a rail that shrinks
+           * to what one role can see would shrink the matrix's denominator with
+           * it. The matrix has to keep all sixteen and mark the absence, or it
+           * cannot answer the only question it is for.
+           */
+          const items = navItems.filter(
+            (item) =>
+              item.section === section.id && viewer.level(item.path) !== 'no_access',
+          )
           if (items.length === 0) return null
 
           return (

@@ -89,9 +89,42 @@ let weeksTotal
 
 try {
   const page = await browser.newPage({ viewport: { width: MIN_WIDTH, height: 900 } })
+  /*
+   * **Signed in as the registered manager, and never as whoever the form
+   * happens to prefill.**
+   *
+   * It clicked straight through the prefilled address, which is a care
+   * worker's. That was harmless for sixteen phases and stopped being harmless
+   * in Phase 17, when the rail started filtering by role: as a care worker the
+   * crawl can no longer reach Compliance, Reports or Settings, because it
+   * follows links and those links are not drawn. The count would not have said
+   * so. The crawl caps at MAX_SCREENS and had been hitting the cap, so it
+   * reported the same 70 screens while covering a smaller product, and the
+   * success line would have kept claiming the whole of it.
+   *
+   * That is the §8 class about a guard whose message outlives its coverage,
+   * and the reason it is written out here: the fix is one line, and the way it
+   * was found is the part worth keeping.
+   */
   await page.goto(`http://localhost:${PORT}/sign-in`, { waitUntil: 'networkidle' })
+  await page.fill('[data-field="email"]', 'a.okonkwo@rosewoodcourt.example')
   await page.click('[data-sign-in-submit]')
   await page.waitForSelector('main', { timeout: 15000 })
+
+  /*
+   * And the crawl proves it got the role it asked for rather than assuming it.
+   * Settings is in the rail for the registered manager and for nobody below a
+   * deputy, so its absence here means the sign-in did not take.
+   */
+  const railHasSettings = await page.evaluate(
+    () => document.querySelector('nav a[href="/settings"]') !== null,
+  )
+  if (!railHasSettings) {
+    console.error(
+      '✖ layout: signed in, and the rail has no Settings item. The crawl is running as a role that cannot reach the administrative screens, so its coverage is smaller than its success line claims.',
+    )
+    process.exit(1)
+  }
 
   const seen = new Set(['/sign-in', '/sign-out'])
   const queue = ['/']

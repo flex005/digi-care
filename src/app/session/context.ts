@@ -1,5 +1,4 @@
 import { createContext } from 'react'
-import type { AccessMode } from '@/data/access/resource'
 import type {
   IsoDateTime,
   Organisation,
@@ -62,10 +61,18 @@ export interface Session {
    * out: every route outside the two authentication screens redirects.
    */
   currentUser: StaffRef
-  /** Read-only is a property of the viewer, not of the data. PRD §1. */
-  accessMode: AccessMode
-  setAccessMode: (mode: AccessMode) => void
 }
+
+/*
+ * **`accessMode` used to live here and is gone.** It was a global
+ * `read_write | read_only` on the session, and it was the second answer to a
+ * question `levelFor` already answered per module: it could not express
+ * "records care notes, reads settings", so it had to pick one. By Phase 16 no
+ * control set it, five screens branched on it, and none of those branches could
+ * be reached by anybody using the product. Two rules for one question, and the
+ * dead one was the one nobody noticed. The screens ask `useViewer()` about
+ * their own module now, and the auditor reaches what was unreachable.
+ */
 
 export const SessionContext = createContext<Session | undefined>(undefined)
 

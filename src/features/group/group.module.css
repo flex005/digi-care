@@ -587,3 +587,29 @@
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
 }
+
+/*
+ * Settings as a manager reads them. Phase 17.
+ *
+ * **A value, not a disabled input.** A greyed-out field is a control somebody
+ * might have, which is the treatment this build reserves for a thing that is
+ * temporarily unavailable. Configuring the service is never this role's, so
+ * the setting renders as what it is: a fact about the home.
+ *
+ * No status colour on either. Nothing here is a finding.
+ */
+.readOnlyNote {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  max-width: 72ch;
+  margin-bottom: var(--space-8);
+}
+
+.readOnlyValue {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}

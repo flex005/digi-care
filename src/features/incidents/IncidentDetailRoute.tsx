@@ -24,6 +24,7 @@ import { assertNever } from '@/lib/assert-never'
 import { BodyMap } from '@/assets/body-map/BodyMap'
 import { regionLabel } from '@/assets/body-map/regions'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import {
   flagClearedBy,
@@ -671,6 +672,7 @@ function NotificationBlock({
   onDecide: (step: DecideStep) => void
 }) {
   const format = useSiteFormat()
+  const viewer = useViewer()
   const decision = incident.notification
 
   /*
@@ -720,15 +722,34 @@ function NotificationBlock({
             label="Required, and not yet notified"
             detail={`${decision.decided.by.displayName} decided on ${format.dateTime(decided(decision.decided.at))} that this must be notified. There is nothing in the record to show that it was.`}
           />
+          {/*
+           * **Deciding is the manager's, telling the CQC is the registered
+           * person's, and the two sit one above the other on this screen.**
+           * The buttons above stay for a deputy manager, because the decision
+           * is part of reviewing the incident. This one does not.
+           *
+           * It is replaced rather than merely removed. The state it sits under
+           * is a duty nobody can prove was met, so a manager reading it needs
+           * to know who closes it; a control that silently is not there would
+           * leave them looking for a button on a screen about an obligation.
+           */}
           <div className={styles.notificationActions}>
-            <Button
-              variant="secondary"
-              size="small"
-              data-decide="notified"
-              onClick={() => onDecide('notified')}
-            >
-              Record the notification
-            </Button>
+            {viewer.may('statutory_notification') ? (
+              <Button
+                variant="secondary"
+                size="small"
+                data-decide="notified"
+                onClick={() => onDecide('notified')}
+              >
+                Record the notification
+              </Button>
+            ) : (
+              <p className={styles.byline} data-act-withheld="statutory_notification">
+                Telling the CQC is the registered person&rsquo;s act. Your role is{' '}
+                {viewer.roleName}, which can see that this is owed and cannot record
+                that it was done.
+              </p>
+            )}
           </div>
         </div>
       )

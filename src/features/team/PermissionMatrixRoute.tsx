@@ -34,13 +34,25 @@ export function PermissionMatrixRoute() {
         <h1 className={styles.pageTitle}>Permissions</h1>
       </header>
 
+      {/*
+       * **This paragraph said the opposite until Phase 17, and it was true
+       * when it was written.** It is the staleness case exactly: a statement
+       * on a screen nobody re-reads, correct for fifteen phases, and made
+       * false by a change somewhere else. What replaces it draws the line that
+       * actually matters now, because "these levels do something" and "these
+       * levels are security" are a long way apart and the gap is where
+       * somebody gets hurt.
+       */}
       <div className={styles.notEnforced} data-not-enforced data-state="unrecorded">
-        <p className={styles.notEnforcedTitle}>Nothing here is enforced.</p>
+        <p className={styles.notEnforcedTitle}>
+          These levels decide what renders. They are not security.
+        </p>
         <p className={styles.notEnforcedBody}>
-          There is a sign-in screen and it checks nothing: any details sign you in, and
-          no screen anywhere checks a level set here. What follows describes what a real
-          deployment would enforce. It is not a control, and changing it would change
-          nothing, which is why there is nothing to change.
+          A module a role has no access to does not open, and a control a role has no
+          level for is not drawn. What that prevents is somebody doing the wrong thing
+          by accident. It prevents nothing else: the sign-in screen still checks nothing
+          and anybody can sign in as anybody, and access control that lives in a browser
+          is a suggestion. A real deployment enforces this on a server.
         </p>
       </div>
 

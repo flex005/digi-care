@@ -30,7 +30,7 @@ export function MyPermissionsRoute() {
         </p>
       </header>
 
-      <RolePermissions role={currentUser.role} who={currentUser.fullName} />
+      <RolePermissions staffRole={currentUser.role} who={currentUser.fullName} />
     </div>
   )
 }

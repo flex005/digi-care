@@ -1,3 +1,5 @@
+import { SessionProvider } from '@/app/session/SessionProvider'
+import { SignInAs } from '@/test/sign-in-as'
 import { describe, expect, it } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
@@ -22,6 +24,20 @@ const COUNTS: Partial<Record<string, NavCount>> = {
   },
 }
 
+/**
+ * The rail, rendered as somebody.
+ *
+ * **Every assertion in this file became a statement about a role in Phase
+ * 17.** The rail is filtered by what the viewer holds, so "renders every one"
+ * is now "renders every one for this role", and the role has to be named or
+ * the file is quietly asserting whatever the default happens to be. The
+ * registered manager is the one who holds all sixteen, which is what keeps
+ * these assertions about the declaration rather than about a filter.
+ *
+ * The claim that the *declaration* keeps all sixteen whoever is looking is
+ * asserted in `authority.test.tsx`, against the permission matrix, because
+ * that is where it would do damage if it stopped being true.
+ */
 function renderSidebar(collapsed = false, at = '/residents') {
   const router = createMemoryRouter(
     [
@@ -35,9 +51,12 @@ function renderSidebar(collapsed = false, at = '/residents') {
     { initialEntries: [at] },
   )
   return render(
-    <TooltipProvider>
-      <RouterProvider router={router} />
-    </TooltipProvider>,
+    <SessionProvider>
+      <TooltipProvider>
+        <SignInAs as="registered_manager" />
+        <RouterProvider router={router} />
+      </TooltipProvider>
+    </SessionProvider>,
   )
 }
 

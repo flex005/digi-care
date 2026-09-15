@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
-import { useSession } from '@/app/session/use-session'
+import { SignInAs } from '@/test/sign-in-as'
 import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
 import { GAP_NOTE_IDS, careNotesFor } from '@/data/fixtures/care-notes'
 import { NOW, atTime, daysAhead } from '@/data/fixtures/generate'
@@ -33,16 +33,6 @@ afterEach(() => {
   resetSessionNotes()
   vi.restoreAllMocks()
 })
-
-/** Flips the session to read-only from inside the provider. */
-function BecomeAuditor() {
-  const { setAccessMode } = useSession()
-  return (
-    <button type="button" onClick={() => setAccessMode('read_only')}>
-      become auditor
-    </button>
-  )
-}
 
 function renderNotes(path: string, extra?: React.ReactNode) {
   const router = createMemoryRouter(
@@ -441,18 +431,34 @@ describe('closing the supervisory loop', () => {
     expect(screen.queryByRole('button', { name: /^Undo review/i })).toBeNull()
   }, 20000)
 
+  /*
+   * **Reached by signing in, not by setting a flag.** This asserted a session
+   * mode that no control in the product could set, so it was proving a branch
+   * nobody could reach. The auditor reaches it now, and the pair below is what
+   * makes either half evidence: a control absent for everybody is not a
+   * permission, it is a missing button.
+   */
   it('offers a read-only auditor neither control', async () => {
-    const user = userEvent.setup()
     renderNotes(
       `/residents/res-okafor/notes/${GAP_NOTE_IDS.flaggedNotReviewed}`,
-      <BecomeAuditor />,
+      <SignInAs as="auditor" />,
     )
-    await screen.findByRole('button', { name: 'become auditor' })
-    await user.click(screen.getByRole('button', { name: 'become auditor' }))
 
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: /^Mark reviewed/i })).toBeNull(),
     )
+  }, 20000)
+
+  it('offers the same note a senior carer the control to review it', async () => {
+    renderNotes(
+      `/residents/res-okafor/notes/${GAP_NOTE_IDS.flaggedNotReviewed}`,
+      <SignInAs as="senior_carer" />,
+    )
+
+    // Countersigning is what the role is for. The matrix said `record` here
+    // for sixteen phases, which would have hidden this control from the one
+    // person whose job it is.
+    expect(await screen.findByRole('button', { name: /^Mark reviewed/i })).toBeVisible()
   }, 20000)
 })
 
@@ -663,24 +669,34 @@ describe('the composer', () => {
   }, 30000)
 
   it('offers no composer to a read-only auditor', async () => {
-    // The top bar's account menu is not mounted here, so the mode is flipped
-    // through the session directly. What is under test is the gating, not the
-    // control that reaches it.
-    const user = userEvent.setup()
-    renderNotes('/residents/res-okafor/notes', <BecomeAuditor />)
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Write a care note' })).toBeVisible(),
+    const { container } = renderNotes(
+      '/residents/res-okafor/notes',
+      <SignInAs as="auditor" />,
     )
 
-    await user.click(screen.getByRole('button', { name: 'become auditor' }))
-
+    /*
+     * **The record first, then the absence.** An assertion that a control is
+     * missing is satisfied by a screen that has not rendered at all, so the
+     * notes have to be on the page before the missing composer means anything.
+     * Reading them is the whole of an auditor's business here, which makes the
+     * wait the second half of the test rather than scaffolding for it.
+     */
+    await waitFor(() =>
+      expect(container.querySelectorAll('article, li').length).toBeGreaterThan(0),
+    )
     // Not a disabled button. PRD §1: zero write is not a permission an auditor
     // might be granted.
-    await waitFor(() =>
-      expect(
-        screen.queryByRole('button', { name: 'Write a care note' }),
-      ).not.toBeInTheDocument(),
-    )
+    expect(
+      screen.queryByRole('button', { name: 'Write a care note' }),
+    ).not.toBeInTheDocument()
+  }, 30000)
+
+  it('offers the composer to a care worker on the same tab', async () => {
+    renderNotes('/residents/res-okafor/notes', <SignInAs as="care_worker" />)
+
+    expect(
+      await screen.findByRole('button', { name: 'Write a care note' }),
+    ).toBeVisible()
   }, 30000)
 })
 

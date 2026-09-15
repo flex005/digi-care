@@ -17,6 +17,7 @@ import { Settled } from '@/components/status'
 import { SHIFT_NAMES } from '@/lib/shift'
 import { formatDate } from '@/lib/format'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { HandoverStatusBadge } from './HandoverStatusBadge'
 import { LastNoteLine } from './LastNoteLine'
@@ -59,7 +60,8 @@ import styles from './handover.module.css'
  */
 
 export function HandoverRoute() {
-  const { activeSite, accessMode } = useSession()
+  const { activeSite } = useSession()
+  const viewer = useViewer()
   /*
    * Not reviewed leads, and it is the tab that opens. Urgent is information
    * you have already received either way; not reviewed is the only group still
@@ -320,7 +322,7 @@ export function HandoverRoute() {
                               </div>
 
                               <div className={styles.rowAction}>
-                                {accessMode === 'read_only' ? null : (
+                                {!viewer.canRecordIn('/handover') ? null : (
                                   <StatusDialog
                                     handoverId={session.id}
                                     resident={resident}

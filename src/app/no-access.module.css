@@ -1,0 +1,51 @@
+/*
+ * A refusal is not a finding, and it does not get the treatment of one.
+ *
+ * No hatch and no status colour: nothing here is missing from the record and
+ * nothing is wrong. Spending the alarm vocabulary on a screen somebody simply
+ * does not hold is how the vocabulary stops working where there is a finding
+ * (CLAUDE.md §8, the moved-clock notice). This is a quiet page that states a
+ * fact and offers the way to read the rest of it.
+ */
+.page {
+  max-width: 44rem;
+  padding: var(--space-32) 0;
+}
+
+.title {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+  margin-bottom: var(--space-16);
+}
+
+.body {
+  color: var(--ink-700);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  margin-bottom: var(--space-12);
+  max-width: 60ch;
+}
+
+.why {
+  color: var(--ink-700);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  margin-bottom: var(--space-12);
+  max-width: 60ch;
+  border-left: 2px solid var(--border-subtle);
+  padding-left: var(--space-12);
+}
+
+.actions {
+  margin-top: var(--space-24);
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.link {
+  color: var(--purple-600);
+  font-weight: var(--weight-semibold);
+}

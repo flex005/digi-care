@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
+import { SignInAs } from '@/test/sign-in-as'
 import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
 import type { CareNote, IsoDateTime } from '@/data/types'
 import { residentsBySite } from '@/data/fixtures/residents'
@@ -61,15 +62,6 @@ function carriesDenominatorFor(figure: Element | null, total: number) {
   expect(figure?.textContent).toMatch(new RegExp(`\\b${total}\\b`))
   expect(figure?.textContent).toMatch(/residents/i)
   expect(figure?.textContent).toMatch(/Court|Lodge/)
-}
-
-function BecomeAuditor() {
-  const { setAccessMode } = useSession()
-  return (
-    <button type="button" onClick={() => setAccessMode('read_only')}>
-      become auditor
-    </button>
-  )
 }
 
 /** Ashgrove is the thin site, and nothing is waiting on a senior there. */
@@ -549,16 +541,32 @@ describe('the queue can be worked down', () => {
 
 describe('a review can be taken back', () => {
   it('offers an auditor no way to review', async () => {
-    const { container } = renderCareNotes(<BecomeAuditor />)
+    const { container } = renderCareNotes(<SignInAs as="auditor" />)
     await loaded()
-    const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'become auditor' }))
 
     // PRD §1: zero write. Not a disabled button — the control is not theirs.
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: /^Mark reviewed/i })).toBeNull(),
     )
     expect(container.querySelectorAll('[data-layout="row"]').length).toBeGreaterThan(0)
+  }, 20000)
+
+  it('offers a senior carer the review the auditor cannot have', async () => {
+    renderCareNotes(<SignInAs as="senior_carer" />)
+    await loaded()
+
+    /*
+     * The queue is many flagged notes, so this is a count rather than an
+     * element: `findByRole` throws on more than one, which is the library
+     * refusing an ambiguous name and is the right behaviour. What is asserted
+     * is that the control is drawn at all for this role, against the assertion
+     * above that it is drawn for nobody in the auditor's session.
+     */
+    await waitFor(() =>
+      expect(
+        screen.queryAllByRole('button', { name: /^Mark reviewed/i }).length,
+      ).toBeGreaterThan(0),
+    )
   }, 20000)
 })
 

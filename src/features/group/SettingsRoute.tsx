@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { Card } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { formatCount } from '@/lib/format'
@@ -52,6 +53,16 @@ const CLOCK_CHOICES: { value: string; label: string; what: string }[] = [
 
 export function SettingsRoute() {
   const { activeSite, reloadSites } = useSession()
+  const viewer = useViewer()
+  /*
+   * **Read-only rather than absent, and that is AM v2.0 asking for the right
+   * thing.** A manager who cannot see the round times or the timezone cannot
+   * tell whether a screen is wrong or configured, so the settings are readable
+   * by anybody who can open the module and changeable by the registered
+   * person. Absence is for a control whose existence is not the reader's
+   * business; this is a control whose *value* is very much their business.
+   */
+  const mayConfigure = viewer.may('configure_service')
   const [, setVersion] = useState(0)
   const bump = () => setVersion((count) => count + 1)
 
@@ -63,6 +74,14 @@ export function SettingsRoute() {
     <div className={styles.page} data-settings>
       <header>
         <h1 className={styles.pageTitle}>Settings</h1>
+        {mayConfigure ? null : (
+          <p className={styles.readOnlyNote} data-settings-read-only>
+            <b>These are read-only for you.</b> Your role is {viewer.roleName};
+            configuring the service belongs to the person it is registered to. Every
+            value below is what this home is actually running on, which is what you need
+            to read a screen correctly.
+          </p>
+        )}
         <p className={styles.pageSubtitle}>
           {activeSite.name}. Nothing here survives a reload, like every other write in
           this build, which is why every screen says when one of these has been changed.
@@ -79,33 +98,48 @@ export function SettingsRoute() {
 
           <label className={styles.field}>
             <span className={styles.fieldLabel}>Name</span>
-            <input
-              type="text"
-              defaultValue={activeSite.name}
-              data-setting="site-name"
-              onBlur={(event) => {
-                setSiteName(activeSite.id, event.target.value.trim() || activeSite.name)
-                reloadSites()
-              }}
-            />
+            {mayConfigure ? (
+              <input
+                type="text"
+                defaultValue={activeSite.name}
+                data-setting="site-name"
+                onBlur={(event) => {
+                  setSiteName(
+                    activeSite.id,
+                    event.target.value.trim() || activeSite.name,
+                  )
+                  reloadSites()
+                }}
+              />
+            ) : (
+              <span className={styles.readOnlyValue} data-setting-value="site-name">
+                {activeSite.name}
+              </span>
+            )}
           </label>
 
           <label className={styles.field}>
             <span className={styles.fieldLabel}>Timezone</span>
-            <select
-              value={activeSite.timeZone}
-              data-setting="site-timezone"
-              onChange={(event) => {
-                setSiteTimeZone(activeSite.id, event.target.value)
-                reloadSites()
-              }}
-            >
-              {TIME_ZONES.map((zone) => (
-                <option key={zone} value={zone}>
-                  {zone}
-                </option>
-              ))}
-            </select>
+            {mayConfigure ? (
+              <select
+                value={activeSite.timeZone}
+                data-setting="site-timezone"
+                onChange={(event) => {
+                  setSiteTimeZone(activeSite.id, event.target.value)
+                  reloadSites()
+                }}
+              >
+                {TIME_ZONES.map((zone) => (
+                  <option key={zone} value={zone}>
+                    {zone}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className={styles.readOnlyValue} data-setting-value="site-timezone">
+                {activeSite.timeZone}
+              </span>
+            )}
           </label>
         </section>
 
@@ -128,17 +162,26 @@ export function SettingsRoute() {
                   </div>
                   <label className={styles.figureField}>
                     <span className={styles.fieldLabel}>{figure.unit}</span>
-                    <input
-                      type="number"
-                      defaultValue={figure.value}
-                      data-setting={figure.id}
-                      onBlur={(event) => {
-                        const next = Number(event.target.value)
-                        if (Number.isFinite(next) && next > 0)
-                          setFigure(figure.id, next)
-                        bump()
-                      }}
-                    />
+                    {mayConfigure ? (
+                      <input
+                        type="number"
+                        defaultValue={figure.value}
+                        data-setting={figure.id}
+                        onBlur={(event) => {
+                          const next = Number(event.target.value)
+                          if (Number.isFinite(next) && next > 0)
+                            setFigure(figure.id, next)
+                          bump()
+                        }}
+                      />
+                    ) : (
+                      <span
+                        className={styles.readOnlyValue}
+                        data-setting-value={figure.id}
+                      >
+                        {formatCount(figure.value)}
+                      </span>
+                    )}
                   </label>
                   <p className={styles.figureDefault}>
                     {figure.value === figure.fallback ? (

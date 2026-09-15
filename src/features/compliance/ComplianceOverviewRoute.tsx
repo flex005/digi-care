@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { Icon } from '@/components/icon/Icon'
 import { Unrecorded } from '@/components/status'
 import { formatCount, pluralise } from '@/lib/format'
@@ -32,6 +33,7 @@ import styles from './compliance.module.css'
  */
 export function ComplianceOverviewRoute() {
   const { activeSite } = useSession()
+  const viewer = useViewer()
   const panels = usePanels()
   const data = useComplianceData()
 
@@ -62,10 +64,19 @@ export function ComplianceOverviewRoute() {
             Statutory notifications
             <Icon name="arrows-sharp/arrow-right-01-sharp" size={16} aria-hidden />
           </Link>
-          <Link to="pack" className={styles.headLink} data-pack-link>
-            Inspection pack
-            <Icon name="arrows-sharp/arrow-right-01-sharp" size={16} aria-hidden />
-          </Link>
+          {/*
+           * **Absent rather than disabled, and absent rather than a link to a
+           * refusal.** The route refuses a role that does not hold the act,
+           * which is what makes typing the URL honest; a link that leads there
+           * would be a control that exists to say no. The act is named on
+           * /me/permissions for anybody who goes looking.
+           */}
+          {viewer.may('inspection_pack') ? (
+            <Link to="pack" className={styles.headLink} data-pack-link>
+              Inspection pack
+              <Icon name="arrows-sharp/arrow-right-01-sharp" size={16} aria-hidden />
+            </Link>
+          ) : null}
         </div>
       </header>
 

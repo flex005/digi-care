@@ -8,6 +8,8 @@ import { residentsBySite } from '@/data/fixtures/residents'
 import { staffOsei } from '@/data/fixtures/organisation'
 import { teamMembers } from '@/data/access/team-store'
 import { pluralise } from '@/lib/format'
+import { STAFF_ROLE_NAMES } from '@/data/types'
+import { PERMISSION_ROLES } from '@/features/team/permissions'
 import { addressFor, memberForAddress } from './addresses'
 import { PROTOTYPE_STATEMENT, PROTOTYPE_WARNING } from './prototype-statement'
 import styles from './auth.module.css'
@@ -145,6 +147,72 @@ export function SignInRoute() {
                   Chosen here rather than afterwards, because it decides the timezone
                   every record you write today will carry.
                 </p>
+              </div>
+
+              {/*
+               * **Who you can be, because from Phase 17 it decides what the
+               * product is.** The form prefills one address and the rail, the
+               * screens and the controls now differ by role, so a reader who
+               * does not know that Marie Halloran is the deputy manager cannot
+               * see the manager's view at all. A view reachable only by
+               * knowing a derived email address is not built (§8), and this is
+               * the same affordance `/dev/states` is: a demonstration control,
+               * labelled as one.
+               *
+               * **A role nobody holds says so.** The activities coordinator is
+               * in the permission matrix with three exceptions of her own, and
+               * the only one in the fixtures never had access set up, so
+               * nobody can be her. Leaving the row out would make that look
+               * like a role that does not exist rather than one nobody can
+               * reach.
+               */}
+              <div className={styles.field}>
+                {/*
+                 * **One label line and no paragraph**, because `auth.test.tsx`
+                 * holds this form to fewer than three paragraphs and it is
+                 * right to: the screen carried five of them once and they read
+                 * as a wall. The honest sentence about there being no accounts
+                 * is already one click away behind the recovery link, which is
+                 * the decision this screen took in Phase 16 and this control
+                 * does not get to reopen.
+                 */}
+                <span className={styles.k}>
+                  Who would you like to sign in as? Each one sees a different product.
+                </span>
+                <ul className={styles.whoList} data-who-list>
+                  {PERMISSION_ROLES.map((entry) => {
+                    const who = members.find(
+                      (member) =>
+                        member.role === entry && member.standing.kind === 'has_access',
+                    )
+                    const address = who && site ? addressFor(who, site) : undefined
+                    return (
+                      <li key={entry}>
+                        {address === undefined ? (
+                          <span className={styles.whoNone} data-who-unavailable={entry}>
+                            {STAFF_ROLE_NAMES[entry]}
+                            <span className={styles.whoWhy}>
+                              nobody on this team has access as one, so this view cannot
+                              be opened
+                            </span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className={
+                              email === address ? styles.whoOn : styles.whoButton
+                            }
+                            data-who={entry}
+                            onClick={() => setEmail(address)}
+                          >
+                            {STAFF_ROLE_NAMES[entry]}
+                            <span className={styles.whoWhy}>{who!.ref.fullName}</span>
+                          </button>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
               </div>
 
               {/*

@@ -496,3 +496,82 @@
   background: var(--status-positive-tint);
   color: var(--status-positive-ink);
 }
+
+/*
+ * The four acts that belong to the registered person, on the screen where
+ * somebody reads their own access.
+ *
+ * **Neither state takes a status colour.** Not holding an act is not a finding
+ * and not a gap: nothing is missing from the record, and the alarm vocabulary
+ * spent here is vocabulary that stops working where there is a finding.
+ */
+.permActs {
+  margin-top: var(--space-24);
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-16);
+}
+
+.permActsTitle {
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-900);
+  margin-bottom: var(--space-4);
+}
+
+.permActsNote {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  color: var(--ink-500);
+  margin-bottom: var(--space-12);
+  max-width: 68ch;
+}
+
+.permActList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.permActRow {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: var(--space-12);
+  align-items: baseline;
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.permActYes,
+.permActNo {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.permActYes {
+  color: var(--ink-900);
+}
+
+.permActNo {
+  color: var(--ink-500);
+}
+
+.permActWhat {
+  display: block;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  color: var(--ink-900);
+  font-weight: var(--weight-semibold);
+}
+
+.permActWhy {
+  display: block;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  color: var(--ink-500);
+  max-width: 72ch;
+}

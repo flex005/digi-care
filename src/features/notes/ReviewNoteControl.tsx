@@ -8,6 +8,7 @@ import {
 } from '@/data/access/client'
 import { AlertDialog, Button } from '@/components/primitives'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import styles from './notes.module.css'
 
 /**
@@ -56,14 +57,16 @@ export function ReviewNoteControl({
   onChanged: (outcome: 'recorded' | 'undone') => void
   size?: 'default' | 'inline'
 }) {
-  const { currentUser, accessMode } = useSession()
+  const { currentUser } = useSession()
+  const viewer = useViewer()
   const format = useSiteFormat()
   const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState('')
 
-  // PRD §1: an auditor has zero write. Not a disabled button — the control is
+  // Marking a flagged note reviewed is the approve act in Care Notes: it is
+  // signing off somebody else's work. Not a disabled button — the control is
   // not theirs to have.
-  if (accessMode === 'read_only') return null
+  if (!viewer.canApproveIn('/care-notes')) return null
   if (note.review.kind === 'not_flagged') return null
 
   const stamp = `${format.instantDate(note.recordedAt)} ${format.time(note.recordedAt)}`

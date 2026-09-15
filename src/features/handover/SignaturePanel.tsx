@@ -5,6 +5,7 @@ import type { HandoverId, HandoverSignature, IsoDateTime } from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
 import { signHandover } from '@/data/access/client'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { SHIFT_NAMES } from '@/lib/shift'
 import type { Shift } from '@/data/types'
 import { AlertDialog, Button } from '@/components/primitives'
@@ -57,7 +58,8 @@ export function SignaturePanel({
    */
   onSigned: (summary: { title: string; description: string }) => void
 }) {
-  const { currentUser, accessMode } = useSession()
+  const { currentUser } = useSession()
+  const viewer = useViewer()
   const format = useSiteFormat()
   const [confirming, setConfirming] = useState(false)
   /* Cleared whenever the dialog closes: a code left in a field on a device the
@@ -132,7 +134,11 @@ export function SignaturePanel({
             }
           />
 
-          {accessMode === 'read_only' ? null : (
+          {/* Signing a handover is the approve act in this module, not a write:
+              it is somebody putting their name to the shift that is ending.
+              A senior carer holds it, and it is the whole of what the role is
+              for. */}
+          {!viewer.canApproveIn('/handover') ? null : (
             <>
               <Button size="large" onClick={() => setConfirming(true)}>
                 {side === 'outgoing' ? 'Sign as handing over' : 'Sign as taking over'}

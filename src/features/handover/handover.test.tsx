@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
+import { SignInAs } from '@/test/sign-in-as'
 import { useSession } from '@/app/session/use-session'
 import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
 import { residentsBySite } from '@/data/fixtures/residents'
@@ -26,15 +27,6 @@ afterEach(() => {
   resetHandoverSession()
   vi.restoreAllMocks()
 })
-
-function BecomeAuditor() {
-  const { setAccessMode } = useSession()
-  return (
-    <button type="button" onClick={() => setAccessMode('read_only')}>
-      become auditor
-    </button>
-  )
-}
 
 /** Ashgrove is the thin site: four residents, and nobody urgent on it. */
 function GoToAshgrove() {
@@ -570,11 +562,8 @@ describe('the stale state', () => {
 describe('read-only', () => {
   it('offers an auditor no way to review or sign', async () => {
     const user = userEvent.setup()
-    const { container } = renderHandover(<BecomeAuditor />)
+    const { container } = renderHandover(<SignInAs as="auditor" />)
     await ready(container)
-    expect(screen.getAllByRole('button', { name: 'Review' }).length).toBeGreaterThan(0)
-
-    await user.click(screen.getByRole('button', { name: 'become auditor' }))
 
     await waitFor(() =>
       expect(
@@ -587,6 +576,24 @@ describe('read-only', () => {
     expect(screen.queryAllByRole('button', { name: 'Change' })).toHaveLength(0)
     // The record itself is still fully readable, across all four tabs.
     expect((await everyResidentOnTheBoard(container, user)).size).toBe(28)
+  }, 30000)
+
+  /**
+   * The other direction, and the reason the test above is evidence.
+   *
+   * A control that is absent for every role is a missing button rather than a
+   * permission, and nothing in the assertion above can tell the two apart. The
+   * senior carer is the case that matters: signing the handover is the act PRD
+   * §1 gives the role, and the matrix withheld it until Phase 17.
+   */
+  it('offers a senior carer the signature the auditor cannot have', async () => {
+    const { container } = renderHandover(<SignInAs as="senior_carer" />)
+    await ready(container)
+
+    expect(
+      await screen.findByRole('button', { name: 'Sign as handing over' }),
+    ).toBeVisible()
+    expect(screen.getAllByRole('button', { name: 'Review' }).length).toBeGreaterThan(0)
   }, 30000)
 })
 

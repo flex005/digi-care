@@ -28,5 +28,10 @@ export type AsyncResource<T> =
   | { kind: 'ready'; data: T; fetchedAt: IsoDateTime }
   | { kind: 'error'; message: string; retry: () => void }
 
-/** Read-only is a property of the viewer, not of the data. PRD §1. */
-export type AccessMode = 'read_write' | 'read_only'
+/*
+ * `AccessMode` was declared here and is gone. It said read-only is a property
+ * of the viewer rather than of the data, which is true and is now answered by
+ * `levelFor` per module: a viewer is not read-only everywhere, they are
+ * read-only in the modules they cannot write in, and one global flag could not
+ * say which. Phase 17.
+ */

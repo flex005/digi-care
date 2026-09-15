@@ -1,10 +1,12 @@
 import type { StaffRole } from '@/data/types'
 import { Card } from '@/components/primitives'
 import {
+  ADMIN_ACTS,
   PERMISSION_LABELS,
   PERMISSION_MEANS,
   PERMISSION_MODULES,
   levelFor,
+  mayDo,
 } from '@/features/team/permissions'
 import styles from './me.module.css'
 
@@ -25,22 +27,32 @@ import styles from './me.module.css'
  * they are accepting before they accept it, not after.
  */
 export function RolePermissions({
-  role,
+  staffRole: role,
   who,
 }: {
-  role: StaffRole
+  /**
+   * **`staffRole` rather than `role`.** jsx-a11y reads any prop called `role`
+   * as an ARIA role and fails on a literal, which meant this component could
+   * only ever be handed a variable: the first test to pass "deputy_manager"
+   * directly broke the build. A prop that can only be given an expression is a
+   * prop with a trap in it, and the word costs nothing.
+   */
+  staffRole: StaffRole
   /** Whose access this is, named. A permission list with no subject is a leaflet. */
   who: string
 }) {
   return (
     <div className={styles.perms} data-role-permissions={role}>
       {/*
-       * Still before the first row, and now one line. A list of permissions is
-       * the most convincing thing on any screen and this one decides nothing,
-       * so the statement stays — the paragraph explaining it does not.
+       * Still before the first row. A list of permissions is the most
+       * convincing thing on any screen, and what this one is owed is the
+       * distinction rather than a flat denial: from Phase 17 these levels
+       * decide what the reader sees, and they are still not security.
        */}
       <p className={styles.notEnforced} data-not-enforced data-state="unrecorded">
-        <b>Nothing here is enforced.</b> No screen checks a level set on this page.
+        <b>These levels decide what you see, and they are not security.</b> Sign-in
+        checks nothing, so anybody can sign in as anybody. A real deployment enforces
+        this on a server rather than in a browser.
       </p>
 
       <Card>
@@ -77,6 +89,49 @@ export function RolePermissions({
             )
           })}
         </ul>
+
+        {/*
+         * **The acts that are not levels, and this is where absence is
+         * answerable.** Phase 17 makes Admin-only controls absent rather than
+         * disabled, which is what Frank asked for and which creates a problem
+         * of its own: a control that is simply not drawn tells the reader
+         * nothing, and absence from a list is the same bug as a blank cell
+         * (CLAUDE.md §1). So the four acts are listed for every role, held or
+         * not, each with the reason it belongs where it does. A manager who
+         * goes looking for the inspection pack finds it named here rather than
+         * concluding the product lost it.
+         */}
+        <section className={styles.permActs} data-admin-acts>
+          <h3 className={styles.permActsTitle}>
+            Four acts belong to the registered person
+          </h3>
+          <p className={styles.permActsNote}>
+            The provider and the registered manager are the two people a service is
+            registered to. These four are theirs, whatever level anybody else holds in
+            the module they sit in.
+          </p>
+          <ul className={styles.permActList}>
+            {ADMIN_ACTS.map((act) => {
+              const held = mayDo(role, act.id)
+              return (
+                <li
+                  key={act.id}
+                  className={styles.permActRow}
+                  data-act={act.id}
+                  data-held={held ? 'yes' : 'no'}
+                >
+                  <span className={held ? styles.permActYes : styles.permActNo}>
+                    {held ? 'Yours' : 'Not yours'}
+                  </span>
+                  <span>
+                    <b className={styles.permActWhat}>{act.what}</b>
+                    <span className={styles.permActWhy}>{act.why}</span>
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
 
         {/*
          * The inert treatment, and the second of the two places it appears.

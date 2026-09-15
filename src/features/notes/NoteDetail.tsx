@@ -7,7 +7,7 @@ import { useResource } from '@/data/access/use-resource'
 import { Button, Card, CardHeader, Toast } from '@/components/primitives'
 import { StatusPill } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
-import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { NoteCard } from './NoteCard'
 import { CorrectionDialog } from './CorrectionDialog'
 import { ReviewNoteControl } from './ReviewNoteControl'
@@ -31,7 +31,7 @@ import styles from './notes.module.css'
 export function NoteDetail() {
   const { resident, site } = useOutletContext<ResidentProfile>()
   const { noteId } = useParams<{ noteId: string }>()
-  const { accessMode } = useSession()
+  const viewer = useViewer()
 
   const load = useCallback(() => getCareNote((noteId ?? '') as CareNoteId), [noteId])
   const [reviewed, setReviewed] = useState(0)
@@ -93,12 +93,18 @@ export function NoteDetail() {
                     Open the correction
                   </Link>
                 </div>
-              ) : accessMode === 'read_only' ? (
-                // PRD §1: an auditor has zero write. Not a disabled button —
-                // the control is not theirs to have.
+              ) : !viewer.canRecordIn('/care-notes') ? (
+                /*
+                 * **The sentence names the role rather than assuming it.** It
+                 * read "You are a read-only auditor", which was true while the
+                 * only way into read-only was a control labelled auditor. An
+                 * organisation admin reads Care Notes too, and telling them
+                 * they are an auditor is a screen inventing a fact about the
+                 * person reading it. One owner supplies the wording.
+                 */
                 <p className={styles.immutabilityBody}>
-                  You are a read-only auditor. Nothing on this note can be written from
-                  this account.
+                  {viewer.whyReadOnly('/care-notes')} Nothing on this note can be
+                  written from this account.
                 </p>
               ) : (
                 <>

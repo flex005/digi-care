@@ -1,10 +1,15 @@
 # diGi-Care — Frontend Build PRD
 
-**Source of truth for product scope:** `diGi_Care_PRD_v3.docx` (Ezekiel Dada).
-**This document governs the frontend build only.** Where the two disagree on UI behaviour, this document wins; where they disagree on product intent, the source PRD wins and this document gets corrected.
+**Source of truth for product scope, and there are now three documents rather than one.** Named plainly here because the line below said `diGi_Care_PRD_v3.docx` for sixteen phases while two newer documents existed, and a stale pointer at the top of a spec is how somebody reads the wrong one as authoritative:
+
+- `diGi Care PRD v3.docx` (Ezekiel Dada) — **what Phases 0 to 16 were built against.** Everything in §6 below traces to it.
+- `diGi_Care_PRD_v4.docx` — a later, wider document: five care settings, a seven-role model that is not this build's seven, and modules this build does not have (bed management, discharge planning, GPS-verified domiciliary visits). **Not the spec for the current work**, and where it is cited below it is cited by name.
+- `AM_PRD (1).docx`, "Admin & Manager, v2.0, aligned to diGi-Care Prototype Screens" — **what Phases 17 to 24 are being built against.** It is the newest of the three, it is the only one written with this prototype in front of it, and its own dashboard arithmetic is computed over this build's constants. Where it disagrees with v4, it wins: newer, and specified at the level of screens.
+
+**This document governs the frontend build only.** Where it and a source PRD disagree on UI behaviour, this document wins; where they disagree on product intent, the source PRD wins and this document gets corrected.
 
 **Build scope:** Desktop manager application. Frontend only — no backend, no API, no auth. All data comes from typed fixtures.
-**Out of scope for this build:** mobile care-worker views, Family Portal. Both are specified at product level in the source PRD and will be separate builds.
+**Out of scope for this build:** mobile care-worker views, and the Family Portal itself. Both are separate builds. **Managing the Family Portal from this one is in scope from Phase 21** — who may see a resident's updates, on what basis, and which care notes are shared — because that is an act a manager performs here even though the surface it affects is elsewhere.
 
 ---
 

@@ -70,9 +70,11 @@ export interface StaffMember {
  * and approving somebody else's — finalising a care plan, countersigning a
  * handover, closing an incident.
  *
- * **Nothing enforces any of this.** Signing in checks nothing and no screen
- * reads a level set here, and both screens that render these levels say so
- * before they render a row.
+ * **These decide what renders, and they are not security.** From Phase 17 the
+ * shell reads them: a module a role has no access to does not open and a
+ * control a role has no level for is not drawn. Sign-in still checks nothing,
+ * so anybody can sign in as anybody, and both screens that render these levels
+ * say exactly that before they render a row.
  */
 export type PermissionLevel = 'no_access' | 'read' | 'record' | 'approve'
 

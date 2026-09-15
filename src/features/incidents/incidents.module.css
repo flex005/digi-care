@@ -230,7 +230,7 @@
   padding: var(--space-12) var(--space-16);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  background-color: var(--bg-sunken);
+  background-color: var(--bg-surface-sunken);
 }
 
 .subjectWho {
@@ -350,7 +350,7 @@
   padding: var(--space-12);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  background-color: var(--bg-sunken);
+  background-color: var(--bg-surface-sunken);
 }
 
 .mapCaption {
@@ -744,7 +744,7 @@
    because a column of green would drown the two that are not. */
 .flagDone {
   border: 1px solid var(--border-subtle);
-  background-color: var(--bg-sunken);
+  background-color: var(--bg-surface-sunken);
   color: var(--ink-700);
 }
 

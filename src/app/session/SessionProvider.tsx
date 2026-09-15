@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
-import type { AccessMode } from '@/data/access/resource'
 import type { IsoDateTime, Site, SiteId, StaffMember } from '@/data/types'
 import { organisation, staffOkonkwo } from '@/data/fixtures/organisation'
 import { now as appNow } from '@/data/fixtures/clock'
@@ -23,7 +22,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
    * would be the second control on the screen that does nothing.
    */
   const [signIn, setSignIn] = useState<SignInState>({ kind: 'signed_out' })
-  const [accessMode, setAccessMode] = useState<AccessMode>('read_write')
   /*
    * Bumped when site settings change, because the name and the zone are read
    * from the settings store rather than straight from the fixtures — and the
@@ -71,10 +69,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
        * while signed out, so nothing in the app reads it.
        */
       currentUser: signIn.kind === 'signed_in' ? signIn.member.ref : staffOkonkwo,
-      accessMode,
-      setAccessMode,
     }),
-    [activeSite, sites, accessMode, signIn, signInAs, signOut],
+    [activeSite, sites, signIn, signInAs, signOut],
   )
 
   return (

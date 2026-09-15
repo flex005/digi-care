@@ -515,7 +515,7 @@
   align-items: center;
   padding: var(--space-16) var(--space-20);
   border-radius: var(--radius-md);
-  background-color: var(--bg-sunken);
+  background-color: var(--bg-surface-sunken);
   text-align: center;
 }
 

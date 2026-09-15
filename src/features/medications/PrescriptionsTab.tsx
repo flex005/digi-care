@@ -5,7 +5,8 @@ import { medicationsFor } from '@/data/fixtures/medications'
 import { Button, Card, Tooltip } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
-import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { formatCount, formatRelative, pluralise } from '@/lib/format'
 import { hasUnenforceable, requirementsFor } from './requirements'
 import { joinTimes, quantityWithUnit } from './units'
@@ -32,7 +33,7 @@ import styles from './medications.module.css'
  */
 export function PrescriptionsTab() {
   const { resident } = useOutletContext<ResidentProfile>()
-  const { accessMode } = useSession()
+  const viewer = useViewer()
 
   const prescriptions = medicationsFor(resident.id)
   const controlled = prescriptions.filter((med) => med.isControlledDrug).length
@@ -63,8 +64,13 @@ export function PrescriptionsTab() {
          *
          * Not rendered at all under read-only, because an auditor has zero
          * write and a disabled button implies a capability they will never have.
+         *
+         * **What would make this writable**: v4 of the source PRD adds a
+         * Clinician role, and PRN authorisation is named as one of its acts.
+         * That is what this is waiting on. Phase 17 kept the build's seven
+         * roles on purpose, so the answer is recorded rather than acted on.
          */}
-        {accessMode === 'read_write' ? (
+        {viewer.canRecordIn('/medications') ? (
           <Tooltip content="Prescribing is a prescriber's act. diGi-Care has no prescriber, no directions model and no interaction checking, so it records prescriptions rather than making them.">
             <span>
               <Button

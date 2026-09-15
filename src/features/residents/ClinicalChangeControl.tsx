@@ -58,6 +58,15 @@ export function ClinicalChangeControl({
    * Absent for a decision this build cannot honestly record — a resuscitation
    * decision and an ADRT both need a clinician's signature and a document
    * reference — and present for one it can, which is an allergy.
+   *
+   * **What would make this writable, so the next reader does not re-derive
+   * it.** v4 of the source PRD adds a Clinician role that this build's
+   * `StaffRole` does not have: clinical leads and nurses, with medication
+   * protocols, PRN authorisation and clinical assessments. That is the role
+   * this refusal is waiting on. Phase 17 kept the build's seven roles on
+   * purpose, so the answer is recorded rather than acted on. The question
+   * "why can nobody record this" has an answer, and it is a role rather than
+   * a screen.
    */
   onConfirmed?: () => void
 }) {

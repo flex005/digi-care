@@ -1029,7 +1029,7 @@
 /* An answered row settles into the sunken surface. Quiet, because a dose with
    an answer is done — the rows still needing one are the finding. */
 .doseAnswered {
-  background-color: var(--bg-sunken);
+  background-color: var(--bg-surface-sunken);
 }
 
 .doseAbout {
@@ -1240,7 +1240,7 @@
  */
 .prn {
   border-top: 1px solid var(--border-subtle);
-  background-color: var(--bg-sunken);
+  background-color: var(--bg-surface-sunken);
 }
 
 .prnHead {
@@ -1387,7 +1387,7 @@
   align-items: baseline;
   padding: var(--space-12);
   border-radius: var(--radius-sm);
-  background-color: var(--bg-sunken);
+  background-color: var(--bg-surface-sunken);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
 }
@@ -1747,7 +1747,7 @@
 
 .ledgerHeadCell {
   padding: var(--space-8) var(--space-24);
-  background-color: var(--bg-sunken);
+  background-color: var(--bg-surface-sunken);
   color: var(--ink-500);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
@@ -1940,7 +1940,7 @@
 
 .doseTagRoute {
   border: 1px solid var(--border-subtle);
-  background-color: var(--bg-sunken);
+  background-color: var(--bg-surface-sunken);
   color: var(--ink-500);
 }
 
@@ -2140,7 +2140,7 @@
 .exportNote {
   padding: var(--space-12);
   border-radius: var(--radius-md);
-  background-color: var(--bg-sunken);
+  background-color: var(--bg-surface-sunken);
   color: var(--ink-700);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-line);

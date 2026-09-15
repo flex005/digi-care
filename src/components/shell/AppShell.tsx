@@ -1,10 +1,13 @@
 import { STAFF_ROLE_NAMES } from '@/data/types'
 import { useMemo, useState } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { ChangedFiguresBanner } from '@/features/group/ChangedFiguresBanner'
 import { MovedClockBanner } from '@/features/group/MovedClockBanner'
 import { TooltipProvider, ToastProvider, ToastViewport } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ADMIN_ACTS, moduleForPath } from '@/features/team/permissions'
+import { NoAccess } from '@/app/NoAccess'
 import { residents } from '@/data/fixtures/residents'
 import { incidents } from '@/data/fixtures/incidents'
 import type { NavCount } from './NavBadge'
@@ -34,6 +37,32 @@ export function AppShell() {
    * still branch on it; nothing can currently reach those branches.
    */
   const { sites, activeSite, setActiveSite, currentUser } = useSession()
+  const viewer = useViewer()
+  const { pathname } = useLocation()
+
+  /**
+   * Whether this screen is one the viewer holds. Phase 17.
+   *
+   * **Here rather than on each route**, because a gate written per route is a
+   * gate somebody forgets on the next one, and the phase's whole argument is
+   * that one question gets one owner. The shell already knows the path and the
+   * role; nothing else has to be told.
+   *
+   * The act is checked before the module, so a deputy manager who types the
+   * inspection pack's URL is told the pack is not theirs rather than that
+   * Compliance is not theirs, which would be false. Paths belonging to no
+   * module are every role's: `/me`, `/me/permissions`, and `/dev/states`.
+   */
+  const refused = useMemo(() => {
+    const act = ADMIN_ACTS.find((entry) => entry.route === pathname)
+    if (act !== undefined && !viewer.may(act.id)) return { act, moduleId: undefined }
+
+    const moduleId = moduleForPath(pathname)
+    if (moduleId !== undefined && viewer.level(moduleId) === 'no_access')
+      return { act: undefined, moduleId }
+
+    return undefined
+  }, [pathname, viewer])
   const [collapsed, setCollapsed] = useState(false)
   /* Dropped by a route that needs the width — see wide-screen.ts. */
   const [wide, setWide] = useState(false)
@@ -137,7 +166,11 @@ export function AppShell() {
                    */}
                   <MovedClockBanner />
                   <ChangedFiguresBanner />
-                  <Outlet />
+                  {refused === undefined ? (
+                    <Outlet />
+                  ) : (
+                    <NoAccess moduleId={refused.moduleId} act={refused.act} />
+                  )}
                 </div>
               </main>
             </div>

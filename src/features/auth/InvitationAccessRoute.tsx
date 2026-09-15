@@ -39,7 +39,7 @@ export function InvitationAccessRoute() {
         </p>
       </header>
 
-      <RolePermissions role={member.role} who={member.ref.fullName} />
+      <RolePermissions staffRole={member.role} who={member.ref.fullName} />
     </div>
   )
 }

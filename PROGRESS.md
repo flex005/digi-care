@@ -11992,3 +11992,837 @@ Three §8 entries added: an observation is evidence for what it observed, not
 the claim beside it; a number deciding an accessibility question cannot come
 from memory, and wrong numbers land where the argument was leaning; and a guard
 that fires on its own documentation teaches people to word around it.
+
+# Planning the whole of the remaining Admin & Manager scope
+
+Nothing below is built. This is the plan Frank asked for before any of it starts.
+
+## Where this plan comes from, and one thing to correct in it
+
+**The comparison is not in the repo.** I worked from `AM_PRD (1).docx` — "Admin &
+Manager, UX Flow & Screen Specification, v2.0, aligned to the diGi-Care
+prototype screens", 29 numbered screens — read against the build, plus Frank's
+four answers. Where my "not built" set differs from the comparison's, the
+comparison is the one to trust and this plan is the one to correct.
+
+**`docs/FRONTEND_PRD.md` names its source as `diGi_Care_PRD_v3.docx`.** There is
+now a v4, and four role-specific PRDs beside it: AM (admin and manager), CW
+(care worker), FAM (family), SA (superadmin). The pointer at the top of our own
+PRD is a year of scope out of date, and it is exactly the kind of line nobody
+re-reads. Worth correcting whatever is decided about the plan below.
+
+## The four answers, and what each one costs
+
+**1. Admin vs Manager is real, and absence rather than disablement.** This is
+the largest structural change in the remaining work and Frank's reading of the
+order is right. The argument is stronger than "every later screen has to know
+which view it is in", though, and the stronger form is what decides the phase:
+
+The build already has a second mechanism for this. `accessMode`
+(`'read_write' | 'read_only'`) is threaded through the session and five screens
+branch on it — care notes, the note detail, the review control, the handover
+signature panel, prescriptions, the residents list. **No control anywhere sets
+it**, and `AppShell.tsx` says so in a comment: the account menu's "View as" was
+removed and those branches are currently unreachable. Only tests call
+`setAccessMode`.
+
+So adding a role gate would give this build *two* answers to "what can this
+person do here", one of which is dead. That is the proxy-drift defect in §8 with
+the two rules already written. The phase is therefore not "add a role flag"; it
+is **give viewer capability one owner**, have `accessMode` derive from it rather
+than sit beside it, and give the auditor role the way in that those five
+branches have never had.
+
+**2. Family Portal management is in scope; the portal is a separate platform.**
+That line is clean for FAM-01 (recording who may see what, and on what basis)
+and blurred for FAM-02 and FAM-03, where what we build is a *claim about another
+system*: "shared with family" and "the family sees this within seconds". Those
+are recordable as decisions with an author and a time; they are not verifiable
+here, and the copy has to say which of the two it is.
+
+**3. Admission matches the PRD's five steps.** This overturns Phase 16's
+"six fields and one question" argument, which was not a shortcut — it was a
+decision with a reason ("anything more asks somebody to guess on the day they
+know least"). Overturning it is fine; dropping it silently is not, so Phase 24
+below replaces the argument rather than deleting it.
+
+**4. Medications, Handover, Goals and Reviews are not in question.** Taken as
+read. Nothing below touches them except where a role gate lands on a control
+that already exists.
+
+## What can be built honestly, and what would be a control that does nothing
+
+Frank asked for this stated once, in the plan, rather than argued screen by
+screen. The test is the one the export stubs already pass: **does the act change
+something a reader can then see, in this session?**
+
+### Honest — a real record, with the build's standing caveat that it is gone on reload
+
+- The role split itself. The session already holds a `StaffMember` with a role;
+  absence of a control is real absence.
+- Every team-management write. `team-store.ts` already has `addMember`,
+  `inviteMember`, `suspendMember`, `removeMember`, `setStanding` in session.
+- Incident acknowledgement and the manager's review. `ManagerReview` and the
+  cumulative `IncidentStatus` union already exist; nothing writes them.
+- Creating, editing and cancelling an activity session.
+- Family Portal access as a *record*: who, relationship, level, and the basis.
+- Sharing a care note, as a record of a disclosure decision with an author.
+- Site settings **only where the figure is read at render** — the timezone, the
+  home's name, `DUE_SOON_DAYS`, the review interval, the population floor. The
+  existing settings screen already draws this line and states it.
+- Admission across five steps. Every field the PRD asks for already exists on
+  `Resident`; the form would be writing fields that currently start unrecorded.
+- Session expiry and auto sign-out. A real timer, and it really would destroy
+  the session's work — the sign-out losses machinery is already built. This is
+  the one authentication feature in the whole section with teeth.
+
+### Drawn honestly, authenticating nothing — the whole of section A
+
+- **OTP.** Six digits, a timer, a resend. Nothing sends an email and nothing
+  verifies one. Either every code passes or none do, and either is a lie unless
+  the screen says which.
+- **Password rules and the strength bar.** Real string validation protecting
+  nothing.
+- **The 4-digit medication PIN at account setup.** Sharper than the rest, and it
+  needs a decision. `signingCodeFor(staffId)` already exists and is used by the
+  medication round, the handover signature and the CD register; it is
+  *derived from the staff id on purpose*, so that a signature identifies one
+  person. A PIN chosen at setup either (a) is ignored, which puts a dead control
+  in front of a clinical signature, or (b) replaces the derivation for the
+  session, which is honest and means the code the round asks for changes when
+  you set it. (b) is better and is a decision, not a default.
+- **Single active session.** Unrepresentable: one tab, no server, nothing to
+  terminate.
+- **Active sessions list, and terminating another staff member's sessions.** A
+  list of devices and IP addresses would be fabricated records in a governance
+  screen. The honest version is one row — this session — saying why it is one.
+- **Forgot password.** Sends nothing.
+- **The audit log's IP address and device fingerprint.** Same refusal, and the
+  same argument Phase 13 used to remove a column: a figure nobody can check
+  reads as evidence. The existing session activity log carries author, act and
+  time, which is what this build actually holds.
+- **"LAST ACTIVE" on the team list.** Nothing records it. Hatch it or drop the
+  column; do not invent a date per staff member.
+- **Compliance alert "since your last login".** There is no last login, and once
+  there is one it is this session's, so the banner would always say "since you
+  signed in" — a different claim wearing the same words.
+- **Inspection pack download, report export, GDPR data export ZIP.** Already
+  stubbed with a reason. The PRD's versions add a form and a progress bar in
+  front of the same stub, which is *more* dead control, not less. Recommend
+  leaving all three as they are.
+- **Every CROSS-PORTAL row in the PRD.** "The care worker sees a banner", "the
+  family sees it within seconds", "the Superadmin sees the status change".
+  Nothing to build; at most one sentence saying what would happen elsewhere.
+
+## Resident assignment: what changes, and where
+
+The build has no allocation, deliberately. `/me`'s third tile says "Nobody has
+written up … of 28 residents at Rosewood Court, today. Not allocated to
+anybody, including you", and the comment above it records why. Phase 13 removed
+a "doses with no record" column for the same reason: an omission is a dose
+*nobody* recorded, so it carries nobody's name.
+
+The PRD assumes assignment throughout — TM-02's invite drawer, TM-03's staff
+profile, RES-01's "care workers assigned to this resident see a banner". Adding
+it changes these things, in this order of how much they matter:
+
+1. **The field needs a closed union, not a list.** The PRD says: *if left blank,
+   the care worker sees all residents at their site.* That is a blank meaning
+   two things — "assigned to everybody" and "nobody has decided" — which is
+   Rule 1, exactly. It has to be `{kind:'assigned'; residents}` |
+   `{kind:'all_residents_at_site'; decidedBy; on}` | `{kind:'never_set'}`, and
+   the third takes the hatch. This is a `StaffMember` shape change, so it is a
+   stop-and-ask under §9.
+
+2. **`/me`'s third tile loses its argument for assigned staff.** "Not allocated
+   to anybody, including you" is false the moment somebody is allocated. The
+   tile would have to split: residents assigned to you with nothing written
+   today — which is the accusation the build refused — and the rest. The
+   original reasoning survives only for the `never_set` member. **This is the
+   single thing to look at hardest before saying yes.**
+
+3. **The staff report's removed column comes back into question.** It was
+   removed because a gap carries nobody's name. With allocation, a gap on an
+   assigned resident *does* carry a name — which is precisely when the column
+   becomes attributable and precisely when it becomes a performance record on a
+   screen built to refuse being one. Allocation does not merely re-open the
+   column; it re-opens the argument about the screen.
+
+4. **`StaffDetailRoute`'s "no counts on this page" survives, but a list
+   appears.** Six residents beside another person's one is a workload comparison
+   with no denominator — the same shape, a third time.
+
+5. **Nothing about permissions changes.** Assignment is not a permission level;
+   a care worker assigned to nobody still has `record` on care notes. Two
+   mechanisms that must not be conflated, or we are back to the drift in the
+   first section of this plan.
+
+6. **Nothing about compliance or reports changes.** Coverage denominators are
+   per resident, not per worker. Worth saying explicitly so nobody "improves"
+   them later.
+
+7. **In this build, assignment records something with no consumer.** It scopes a
+   care worker's list, and there is no care worker view here. That is honest —
+   but it means the only screens where it shows are `/me` and any screen that
+   counts a gap against a person, which are exactly the two the build decided
+   not to have.
+
+**Recommendation:** record it (TM-02, TM-03), let it decide nothing on any
+screen that counts gaps, and make `/me`'s wording conditional on the union
+member rather than replaced.
+
+## The order, and what blocks what
+
+### Phase 17 — The viewer
+
+**Contains.** One owner for "what can this person do here", derived from the
+signed-in member's role. `accessMode` becomes a derivation of it rather than a
+second switch, which gives the five dead `read_only` branches their first way
+in (the auditor). Admin-only controls become absent rather than disabled:
+today that is the inspection pack, statutory notifications, the settings
+figures, admission and the group overview. `/me/permissions` becomes the place a
+Manager finds out a capability exists and is not theirs — because absence from a
+list is the same bug as a blank cell, and that screen is already the honest
+answer to it.
+
+**Depends on.** Nothing. Everything else depends on it.
+
+**Size.** Medium. One new module, edits to perhaps eight screens, and two guard
+changes that are the real work: `reachability.test.tsx` runs bidirectionally
+(every route has a nav entry, every entry has a route) and becomes a per-role
+claim; `PERMISSION_MODULES` derives from the sidebar, so a role-dependent
+sidebar moves the permission matrix's own denominator. **The matrix must keep
+all sixteen modules and mark absence, never shrink to what the viewer can see.**
+
+**Contradicts.** (a) The present-but-disabled convention. That convention was
+about *time* — a screen that will exist in a later phase — and this is about
+*authority*, a screen that will never exist for you. Different facts, and they
+should not share a treatment; §6's "one shape, one meaning" cuts both ways here.
+(b) The dead `read_only` branches: either the role reaches them or they go.
+Leaving them unreachable after building a role model is the worse of the three
+options.
+
+### Phase 18 — Team as an act
+
+**Contains.** TM-01 to TM-05: filters on the staff list, the invite drawer, the
+staff profile's sites-and-access section, assigning a Manager to sites,
+deactivation with a reason and a typed confirmation. The resident-assignment
+decision above lands here or not at all.
+
+**Depends on.** 17, entirely — this whole module is Admin-only with a
+Manager read-only view, which is the first real test of the phase before it.
+
+**Size.** Medium to large. The stores exist; the screens do not.
+
+**Contradicts.** `StaffMember.siteId` is singular and TM-01 has a SITES ASSIGNED
+column while TM-04 assigns a Manager to several. That is a fixture type change
+(§9, stop and ask) and it touches every per-site filter and the group overview.
+"LAST ACTIVE" is a fact nothing holds. "Cannot be undone without contacting
+support" is true of a product with a backend; here it is gone on reload.
+
+### Phase 19 — Authentication and session, stubbed as a section
+
+**Contains.** AUTH-03 to AUTH-08: account setup with password rules and the PIN,
+OTP, forgot password, the session expiry banner and auto sign-out, and the
+active-sessions screen that has one row. Plus the two Admin-only dashboard
+banners, which land here rather than in 17 because one needs live invitations
+(18) and the other needs a last-login (this phase).
+
+**Depends on.** 17 for where OTP lands — Admin goes to the setup wizard, Manager
+to the dashboard — and 18 for the invitation loop's other end.
+
+**Size.** Medium, and most of it is copy rather than logic. The existing
+per-screen prototype banner is the pattern and it already exists.
+
+**Contradicts.** Nothing structural; it is the section where almost every
+control does nothing, which is why it is written down once above rather than
+argued five times. The one live decision is the PIN.
+
+### Phase 20 — Manager acts the build renders but cannot perform
+
+**Contains.** INC-01, the incident acknowledgement and the manager's review
+(account, root cause, actions, preventive measures, status transition) — the CQC
+notification decision is already built and needs only its Admin gate. And
+ACT-01, creating, editing and cancelling an activity session.
+
+**Depends on.** 17 for the Admin-only half of the incident screen. Nothing else.
+It is the most self-contained phase in the list and the one that adds real
+writes to two modules that can currently only be read.
+
+**Size.** Medium. One form of substance, one drawer, two session stores.
+
+**Contradicts.** Cancelling a session with attendance already recorded, where
+the PRD says a dialog asks before *removing* the records. Records in this build
+are not removed. A cancelled session keeps what was recorded and is marked
+cancelled. The family-notification toggle belongs on this form and is built in
+21, because what it writes is a message to a portal that does not exist yet.
+
+### Phase 21 — Family Portal management
+
+**Contains.** FAM-01, access for a named family member with a level and a basis.
+FAM-02, sharing and un-sharing a care note. FAM-03, the family message on an
+incident. And the two things the PRD does not have screens for, named here
+rather than discovered later: **who writes the daily update** (the PRD's own
+Open Question 3, and it is the most prominent card in the family app) and
+**where a family message lands** (the FAM PRD says "messages go to team inbox";
+no Admin or Manager screen in the AM PRD is that inbox).
+
+**Depends on.** 17 (neither capability is Admin-only, per the PRD's own table —
+so this is the first phase that must *not* gate), 20 for the incident form, and
+the consent module as it stands.
+
+**Size.** Large, and larger still if the daily update and the inbox are in.
+
+**Contradicts.** Three things, one of them serious. (a) The basis for access —
+resident consent, LPA, best interest — is the `family_portal` consent type and
+the capacity gate, both already built. Asking for it again on this form is two
+owners of one fact, which is the §8 rule the pharmacy cycle's repeated strength
+found. The access record should *read* the consent decision and refuse where
+there is none. (b) Un-sharing must not erase that a note was shared: a
+disclosure is a clinical fact with an author and a time, and making its history
+mutable is the immutability rule in a new place. (c) "Full updates" versus
+"Basic updates" describes the contents of a platform we are not building.
+
+### Phase 22 — Site settings and the configuration model
+
+**Contains.** SETT-01: medication round times and the window, the pharmacy cycle
+toggle, which risk templates and care plan domains and consent types are active,
+review frequencies, notification settings, Family Portal defaults, the
+compliance framework, data export.
+
+**Depends on.** 17. It is the largest contradiction surface in the plan and
+should be last of the configuration work, not first.
+
+**Size.** Large, and most of the size is argument rather than screens.
+
+**Contradicts.** The existing settings screen states the rule that decides most
+of this: **settable if and only if it is read at render.** Round times, the
+window and template activation are baked into fixture generation, so a toggle
+cannot un-write 174 completed assessments or remove a finalised domain from 28
+residents. Two options and they should be chosen deliberately: state them as
+fixed at generation, with their values, the way the current screen does — or
+have the generator read them, which regenerates every figure on every screen
+mid-session. Worse: **custom consent types break the mechanism that makes
+forgetting impossible.** `ConsentRecord` is a mapped type over eight keys, and
+`risks` a record over nine templates, and the care plan an array iterated from a
+constant — Phase 16 found that a resident missing any of them does not compile.
+A user-extensible list turns that into `Record<string, …>` and the compile-time
+guarantee dies for all eight, not just the new one. Recommend refusing custom
+types, or holding them in a second list that cannot weaken the first.
+Stop-and-ask either way. The non-UK compliance framework selector is out of
+scope: the whole compliance module is CQC-shaped (§9 open item 5).
+
+### Phase 23 — Organisation setup wizard
+
+**Contains.** AUTH-05, four steps: organisation, first site, which risk
+templates are active, first invitation.
+
+**Depends on.** 22 for steps 2 and 3, and 18 for step 4. **Building it before 22
+means building the configuration model twice** — the wizard is the first-run
+face of the settings screen, not a separate thing. This is the clearest
+blocking relationship in the plan.
+
+**Size.** Small once 22 exists.
+
+**Contradicts.** "Runs once, on first login" has nothing to persist in, so it
+runs every time. Honest, and it makes the wizard a demo screen rather than a
+first-run screen; say so on it.
+
+### Phase 24 — Admission, five steps
+
+**Contains.** RES-01 rebuilt: personal details, contact and GP, clinical
+overview, risk flags, care plan domains and assessments with target dates. Steps
+1 and 2 required to save, 3 to 5 resumable afterwards.
+
+**Depends on.** 22 (step 5 selects from the domains and templates that are
+active, which is the settings model) and 18 if assignment is in. Last for the
+same reason Phase 16 was last: everything it writes into has to exist first.
+
+**Size.** Medium. No type changes — `Resident` already carries NHS number,
+pronouns, diagnoses, dietary requirements, GP, next of kin and the risk flags.
+The work is the form, the resume state and the guard.
+
+**Contradicts.** Four things. (a) Phase 16's argument that six fields is the
+honest maximum. It has to be replaced rather than dropped: the steps 3 to 5
+fields must each keep an unrecorded member and the form must not read as
+pressure to answer, which is the rule the allergies source already established.
+(b) **The DNAR upload in step 4.** The build refuses to write a resuscitation
+decision because it needs a clinician's signature and a document reference and
+we capture neither. An upload gives us the second and not the first. Filing the
+document and recording the decision are two facts, and the form has to say that
+it is doing one of them. (c) Steps 1 and 2 saving before 3 to 5 exist means the
+record is part-recorded the next time somebody opens it — which is the ordinary
+state, per §8, and the suite has to be written against it rather than against
+empty. (d) The Phase 16 guard asserts field by field that admission produces
+Ismail Sowande. Five steps moves what admission produces, so that guard's
+subject moves with it — and §8 says an assertion edited to let a change land is
+the tell. It needs its reason recorded in the test when it changes.
+
+## Not in the plan, deliberately
+
+- COMP-02's generator form, the report export dialog and the settings data
+  export. All three put chrome in front of an existing honest stub.
+- Every CROSS-PORTAL row.
+- The invitation and OTP emails themselves — artefacts of a mail system, not
+  screens of this app.
+- Anything in the CW, FAM or SA PRDs beyond what an Admin or Manager does from
+  this portal.
+
+## Decisions needed before Phase 17 starts
+
+1. **Resident assignment: in or out**, and if in, whether `/me`'s third tile
+   splits. (Recommendation above: in as a record, deciding nothing that counts.)
+2. **`StaffMember` gains multiple sites** — a fixture type change, and TM-01 and
+   TM-04 do not work without it.
+3. **The medication PIN**: dead control, or it replaces `signingCodeFor` for the
+   session.
+4. **Custom consent types and custom care plan domains**: refused, or the mapped
+   type is given up.
+5. **Round times and template activation**: stated as fixed at generation, or
+   the generator reads them and every figure moves mid-session.
+6. **The daily update and the family message inbox**: in scope for this build,
+   or named as the Family Portal's own work.
+
+## The six decisions, settled
+
+Frank's answers, recorded with what each one costs and what it changed in the
+plan above.
+
+**1. Resident assignment: in, and it governs what a care worker sees and
+nothing else.** A closed union with `never_set` hatched; a gap is never
+attributed to whoever was assigned. The `/me` rewording is below.
+
+**2. `StaffMember` gains multiple sites: yes.** See the conflict between the
+source documents, below — the two of them disagree about whether the role
+varies per site, and the answer changes the shape of the field.
+
+**3. The PIN replaces the derivation for the session.** Consequence, stated
+plainly because it is a real loss and not a technicality: `signingCodeFor` is a
+pure function of the staff id, so today **no two members of staff can have the
+same signing code, by construction**. A chosen PIN makes collision possible.
+With one signed-in user in this build nothing can go wrong; what changes is the
+guarantee's *kind* — "a signature identifies one person" stops being a property
+the compiler holds and becomes a property of whatever a real deployment does
+about duplicate PINs. That belongs in the handover note to whoever builds the
+backend, not in a comment here.
+
+**4. Custom consent types: refused.** `ConsentRecord` is a mapped type over
+`CONSENT_TYPES`, and the guarantee is not merely that nothing is forgotten: a
+capacity assessment names the consent type it was made for, so a blanket
+capacity decision is unexpressible and a consent cannot reference an assessment
+that does not name its type. A `Record<string, ConsentStatus>` keeps compiling
+and stops proving any of it. Recorded as a departure from AM v2.0 SETT-01, with
+that reasoning, in the manner of the two departures already recorded (EOLC, and
+Mental Capacity leaving the risk assessments).
+
+**5. Round times read-only, template activation settable.** Both with a caveat
+that turned out to matter — see the two sections below.
+
+**6. The daily update and the family inbox: out.** They come with the family
+PRD or not at all. Noted while checking versions: **v4 answers the AM PRD's own
+open question about who writes the daily update** — "a daily summary written or
+approved by a senior carer" — so the answer exists and is simply not this
+build's to implement.
+
+## Which of these documents is current
+
+Frank asked before eight phases get built against a superseded spec. What is on
+this machine, by the export timestamp inside each file:
+
+| Document | Exported | Words | Version in header |
+| --- | --- | --- | --- |
+| `diGi_Care_PRD_v4.docx` | 10/09/2026 | 10,541 | v4.0 |
+| `AM_PRD.docx` | 11/09/2026 | 5,127 | none |
+| `CW_PRD.docx` | 11/09/2026 | 5,886 | none |
+| `FAM_PRD.docx` | 11/09/2026 | 2,943 | none |
+| `SA_PRD.docx` | 11/09/2026 | 3,345 | none |
+| `AM_PRD (1).docx` | **15/09/2026** | 7,599 | **v2.0** |
+
+**A caveat on those dates, because they are a kind of instant and it matters
+which kind.** Every one of these files carries revision 1 and no author, which
+means each is a fresh export rather than a document with a history. The
+timestamp is when the file was *produced*, not when its content was written.
+The ordering is still informative; the individual dates are not evidence of
+anything else.
+
+**AM v2.0 is current, and it is the only one of the five that has seen this
+build.** Three independent confirmations, rather than the date alone:
+
+1. It is the same document as `AM_PRD.docx`, restructured from 12 numbered
+   sections into 29 numbered screens and 2,400 words longer. Same scope, later
+   form.
+2. Its header says "Aligned to diGi-Care Prototype Screens", and it **quotes
+   this build's own copy verbatim** — "Never sought is not refusal and it is not
+   permission" (which it marks as exact UI copy that must appear on the page,
+   and which was written in `ConsentDashboardRoute.tsx`), "nobody has said
+   whether these expire", the reports population floor of 8, the activities
+   summary card. It was written downstream of the prototype.
+3. **Its own dashboard figures are computed over this build's constants.** Risk
+   assessments 174/252 is 28 residents × **9** templates; care plan domains
+   217/280 is 28 × 10; consents 182/224 is 28 × 8. All three match the code.
+
+So: build phases 17 to 24 against AM v2.0. It is the newest, it is the most
+detailed, and it is the only one written with the build in front of it.
+
+**But it is not consistent with itself, or with v4, in four places**, and three
+of them land inside the eight phases.
+
+### Nine templates or ten, and the wizard is where it bites
+
+AM v2.0's dashboard arithmetic uses nine (252 = 28 × 9). Its settings screen
+and its setup wizard both say ten: "all 10 pre-selected by default", "which of
+the 10 risk assessment templates are active". The build has nine, as a
+**recorded and approved departure** — the Mental Capacity Act two-stage test
+was removed from the risk assessments in Phase 5 because it is a capacity
+determination and not a risk, and forcing it into a union whose job is to
+produce a risk level would make it say something it does not say, then feed
+that into the badge strip.
+
+So Phase 23's wizard must list nine and say why, and Phase 22's template toggles
+likewise. Restoring the tenth to satisfy the prose would reintroduce, as a
+configuration default, the exact thing that departure removed.
+
+**And `CLAUDE.md` §1 still says "All ten risk assessment templates are listed".**
+That wording predates the departure and is now wrong in the file that exists to
+be right. Not edited here: §9 says wording outside §8 comes from Frank.
+
+### Role per site, or one role across sites
+
+This is the one that changes decision 2's field shape, and the two documents
+disagree:
+
+- **v4 §1.2**: "User: belongs to one or more sites **with a role per site**. A
+  Quality Manager may have read-only access to all sites under the
+  organisation."
+- **AM v2.0 TM-04**: "A Manager's role is **consistent across all assigned
+  sites** — cannot be Admin at one site and Manager at another."
+
+AM v2.0 is newer and is the screen-level spec, so it wins: `StaffMember` gains
+`siteIds` and keeps one `role`. Worth noting which way the error is cheap.
+Building one-role-many-sites and later needing role-per-site is a second type
+change through every per-site filter; building role-per-site now and never
+needing it is a pair on every row that always agrees. Neither is free and the
+first is the one AM v2.0 asks for.
+
+Note also that v4's example for role-per-site is a **Quality Manager with
+read-only access across all sites** — which is this build's `auditor` in all but
+name, and Sandra Chen in AM v2.0's persona list is a Quality Manager with
+cross-site *Admin*. Two documents, two Quality Managers, two access levels.
+
+### Three role models, not one
+
+- **The build**: organisation_admin, registered_manager, deputy_manager,
+  senior_carer, care_worker, activities_coordinator, auditor.
+- **v4**: Admin/Registered Manager, Manager/Senior Carer, Care Worker,
+  Clinician, Family/Authorised Rep, Hospital Admin, Superadmin.
+- **AM v2.0**: Admin and Manager as the two governance roles, and the invite
+  drawer offers Care Worker, Senior Carer, Manager.
+
+Three sevens, three memberships. v4 drops the auditor and the activities
+coordinator and adds a clinician, a hospital admin and a family role; AM v2.0
+does not contradict the build's seven, it simply says less. **Phase 17 uses the
+build's seven and changes nothing about the union**, because the permission
+matrix is 7 × 16 and every role in it is reachable in the fixtures. Changing
+`StaffRole` is a fixture type change under §9 and there is no reason to take it
+on inside this work. Flagged because v4 will eventually want it, and the
+clinician in particular is a real gap: PRN authorisation and the resuscitation
+decision both currently refuse to write for want of exactly that role.
+
+### v4 widens the product past what this build is shaped for
+
+v4 specifies bed management, ward views, discharge planning, MDT collaboration,
+GPS-verified domiciliary visits, lone worker alerts, and mental-health
+instruments (HoNOS, PHQ-9). None of it is in AM v2.0's 29 screens and none of it
+is in scope. It does strengthen the recommendation already made about Phase 22:
+the compliance framework selector is not a label, it is the visible end of a
+setting that decides which modules a site has at all.
+
+## `/me`'s third tile: the proposed rewording
+
+Current:
+
+> **Nobody has written up** · 1 · of 28 residents at Rosewood Court, today.
+> Not allocated to anybody, including you.
+
+The second sentence is a claim about the **fixtures** — that no allocation
+exists — which is why adding assignment makes it false. The replacement is a
+claim about the **rule**, which cannot go false when the data changes:
+
+> **Nobody has written up** · 1 · of 28 residents at Rosewood Court, today.
+> Counted for the home. Assignment decides what a care worker sees, never whose
+> gap this is.
+
+Two properties worth having deliberately. It is true before Phase 18 and after
+it, so the tile does not need editing twice. And it states the constraint Frank
+attached to decision 1 on the screen where somebody would be most tempted to
+break it, which is better than recording it only here.
+
+**The round tile above it needs a smaller edit.** It currently says "Nobody is
+allocated to rounds in this build, so this is the home's next round rather than
+one assigned to you." That stays true after Phase 18 — assignment is
+resident-level, not round-level — but "nobody is allocated" will read as though
+no allocation exists anywhere. It becomes "Rounds are not allocated to anybody,
+so this is the home's next round rather than one assigned to you."
+
+**And the tests read the attribute, not the sentence.** Both tiles already carry
+`data-tile` and the first carries `data-no-allocation`; §8's entry about a test
+that identifies a state by the characters it renders is exactly this situation,
+since a copy change is what killed `rooms.indexOf('—')`.
+
+## Custom care plan domains: what they cost
+
+Frank asked rather than assuming symmetry with consent, and the answer is
+different, for a reason worth stating: **consent's guarantee lives in the type,
+and the care plan's lives in iteration.**
+
+`carePlan` is `CarePlanDomainRecord[]` — an array, not a mapped type. There is
+no compile-time completeness here to lose. What holds the ten together is that
+generators build from `CARE_PLAN_DOMAINS`, screens iterate it, and
+`needs.test.tsx` asserts every domain appears exactly once. A custom domain
+added to that list is carried by the same machinery automatically.
+
+**One mechanism is already built for this and it was built for a real case.**
+`needs-sections.ts` computes the leftover section: `NEED_GROUPS` claims nine of
+the ten domains, `end_of_life` belongs to none of them, and rather than
+hardcode it, any domain no group claims lands in a final section, because
+absence from a list is the same bug as a blank cell. A custom domain nobody
+mapped to a need group lands there too, correctly, with no work.
+
+So the costs are three, and none of them is the one consent has:
+
+1. **`CarePlanDomainId` stops being a closed union.** Seven places name a domain
+   by id — the activities plan drawer reads `social_emotional` for preferences,
+   `PostIncidentReviewTarget` carries a `domainId`, goals, the risk instrument,
+   the needs groups. Each needs an answer to "what if this one is custom", and
+   in most of them the answer is "it is not, and that is fine". Real work,
+   bounded, and the compiler finds every site.
+2. **Per-site domains break a cross-site comparison, and this is the real
+   cost.** AM v2.0 scopes custom domains to a site. The group overview compares
+   homes and the compliance denominator is residents × domains: if Rosewood has
+   ten and Oak Lodge has twelve, "217 of 280" and the group's coverage figures
+   are over different populations rendered as one comparison. That is Rule 4 at
+   the level the aggregate entry in §8 describes — a denominator moved from
+   inside the record. Solvable by stating the domain count per site and refusing
+   a cross-site rate where the sets differ. Design work, not a toggle.
+3. **Adding a domain moves every figure downward, immediately.** Twenty-eight
+   residents acquire an unwritten domain the moment somebody adds one. That is
+   correct — nobody has written it — and it needs saying on the screen that adds
+   one, the way admission's footer already states what admitting does to every
+   figure in the product.
+
+**Recommendation: allow them**, site-scoped, with the denominator stated per
+site and the cross-site rate refused where domain sets differ. The asymmetry
+with consent is not inconsistency: one trade gives up a clinical guarantee held
+by the compiler, the other gives up a closed union in seven known places.
+
+## Deactivating a risk template: what happens to existing assessments
+
+They cannot vanish, and that is held by the type rather than by care: `risks` is
+`Record<RiskTemplateId, RiskStatus>`, so every resident holds a status for every
+template whether or not the home uses it. Nothing to delete and nothing to
+migrate.
+
+**The danger is not the record, it is that `not_assessed` acquires a second
+meaning.** `RiskStatus` has exactly two members — `not_assessed` and `assessed`
+— and after deactivation `not_assessed` would mean either "nobody has done this"
+or "this home does not do this". That is the blank-means-two-things defect
+arriving inside a union member, which is the one place in this build it has
+never been allowed.
+
+**So the deactivation is held on the template, not on the resident**, and the
+screen renders the pair. The resident's record keeps meaning precisely what it
+meant; the home supplies the other axis:
+
+| | Template active | Template deactivated |
+| --- | --- | --- |
+| `not_assessed` | Hatched. A gap, as now. | Plain text: not used at this home. **Not hatched** — hatching would claim a gap the home has decided is not one. |
+| `assessed` | As now. | The record stays, quiet, with its author, score and date, and says the home no longer uses this assessment. Never hidden, never deleted. |
+
+Two consequences to build rather than discover. **The coverage denominator moves
+for a reason that is not care**: 28 × 9 becomes 28 × however many are active, so
+the toggle states what it will do to the figure before it is thrown, the same
+way admission does. And **activation is the mirror image** — switching a
+template on adds 28 unrecorded assessments, all of them genuine gaps from that
+moment, none of them a failure by anybody who worked before it.
+
+This also answers the general form of decision 5: "settable if and only if read
+at render" is necessary and not sufficient. Template activation is read at
+render, and it still needed a second rendering rule before it could be offered,
+because the setting changes what an existing state *means*.
+
+## One field admission needs that the build does not have
+
+Correcting the plan above, which said Phase 24 needs no type change. It needs
+one: **AM v2.0's Step 1 asks for gender, and `Resident` has no such field.** It
+carries `pronouns` as a `Recorded<string>`, which is a different fact and cannot
+stand in for it.
+
+That is a fixture type change under §9, and it is not a mechanical one: gender
+and sex are different fields with different clinical uses, the answer has an
+unrecorded case that must not default, and this build already has a rule about
+a value whose other half is missing. It wants Frank's answer before Phase 24,
+not a guess at it.
+
+# Phase 17 — the viewer
+
+What renders is decided by the role of the person signed in, from one owner, and
+the five read-only branches that nothing could reach now have somebody who
+reaches them.
+
+## What was built
+
+**`permissions.ts` answers two questions and they are asked in series.** The
+first is the level, which already existed: what can this role do to a record in
+this module. The second is new: whose authority do they hold. A deputy manager
+has `approve` on Compliance and should, because deciding whether the CQC must be
+told is part of reviewing an incident — and they still cannot file the
+notification, because filing is not a bigger version of approving somebody's
+work. No level expresses that, so `Accountability` does, with two members and a
+`Record` over all seven roles so an eighth cannot be added without somebody
+deciding.
+
+**A middle tier was written and deleted the same hour.** `'site'` authority, for
+a deputy manager and a senior carer, decided nothing for anybody because all
+four acts need `registered_person` — a level that narrows nothing and still
+reads as a rule, which is the dead `/team` exception arrived at while writing
+its replacement.
+
+**Four acts, each naming the module it sits in**, so an act cannot be held in a
+module the role cannot open. That cap is what keeps this from being a second
+permission table: a care worker is refused by the level before accountability is
+consulted at all. Two of the four are whole screens (the inspection pack, the
+group overview) and two are controls inside screens the role otherwise reads
+(recording that the CQC was told, changing what the home runs on) — which is the
+shape AM v2.0 asks for on Compliance, where a manager sees every finding and
+files nothing.
+
+**The gate is in the shell, once.** It knows the path and the role, and nothing
+else has to be told. The act is checked before the module so that a deputy
+manager typing the pack's URL is told the pack is not theirs rather than that
+Compliance is not theirs, which would be false and would send them to ask for
+the wrong thing.
+
+**`accessMode` is gone.** The compiler found all eleven call sites. Seven
+screens now name their own module and ask, and four test files that were
+asserting a branch nobody could reach now sign in as somebody.
+
+## What signing in as a role found
+
+**Three cells in the matrix were wrong, in the direction nobody looks.** PRD §1
+defines the senior carer as the role that countersigns care notes, countersigns
+medication and runs handovers, and the matrix gave them `record` in all three,
+because the baseline said `record` and nothing widened it. Countersigning is the
+whole of what the role is for and the table said they could not. It is the Phase
+15 finding again from the other end: that one read "Record" against a module
+where nobody writes, this one read "Record" against the three modules the role
+exists to approve in. **A cell that is too small is as wrong as one that is too
+large, and neither is visible while nothing reads the table.**
+
+**Nobody can sign in as an activities coordinator.** Laura Bennett is the only
+one in the fixtures and her standing is `never_given_access`, because she is the
+lapsed invitation the invitation screen renders. So the role has a matrix row,
+three exceptions of its own and no holder: the whole of that view is
+unreachable. It is declared in `authority.test.tsx` with its reason and checked
+in both directions rather than skipped quietly, and it is on the sign-in screen,
+where the row says nobody on this team has access as one. **Frank's call whether
+that stays a gap or gets a second coordinator in Phase 18.**
+
+**The layout guard's coverage shrank and its success line did not.** It clicked
+through the sign-in form's prefilled address, which is a care worker's. Harmless
+for sixteen phases; from this one the rail filters, so the crawl could no longer
+reach Compliance, Reports or Settings, and it follows links. The count would not
+have said so: the crawl caps at 70 screens and had been hitting the cap, so it
+reported the same 70 while covering a smaller product. It signs in as the
+registered manager now and fails outright if the rail comes back without
+Settings, which was mutation-tested by pointing it at the care worker again.
+
+## `check-tokens.mjs`
+
+**Four custom properties were used in this phase and none of them exists.**
+`--text-small-size`, `--text-small-line`, `--ink-600`, `--radius-8`. Nothing
+failed: stylelint's colour rule sees a `var()` and is satisfied, `tsc` does not
+read CSS, the build succeeded, 1,258 tests passed, and the elements rendered at
+whatever they inherited. §4 says the type scale is closed and colour reaches a
+component only as a token; a misspelled token is a silent departure from both
+that looks exactly like compliance.
+
+The shape is mechanical, so it is a script rather than an entry. **It found ten
+pre-existing references to `--bg-sunken`** across incidents, medications and
+risk — a token that has never existed, so three modules have been rendering
+"sunken" panels with no background at all since the phases that wrote them. The
+real token is `--bg-surface-sunken`. Mutation-tested by reintroducing a dead
+name; it fails with the name and the line.
+
+It blanks comments before scanning, because `tokens.css` explains the rule in
+prose containing `var(--token)` and a guard that fires on its own documentation
+teaches people to word around it.
+
+## The act needed two phrasings, and a screenshot is what said so
+
+The refusal page rendered `act.what` into a heading and produced **"Generate an
+inspection pack is not part of your access"**. That is `INCIDENT_TYPES.phrase`
+to the letter — a label that reads correctly in a column and wrongly in a
+sentence — and the call site is not where it gets fixed. Acts carry `what` for a
+list and `phrase` for a sentence. Nothing in the DOM was wrong; it took looking
+at the picture.
+
+## Two assertions that could not fail, caught while writing them
+
+Both were the same shape and both were mine. `expect(pack link).toBeNull()` ran
+before the compliance screen had loaded, so it was satisfied by a page with
+nothing on it; the same for the care notes composer. The fix in both is to wait
+for something the role *does* see and then assert the absence — and in the
+compliance case the thing they see is the notifications link, which is also the
+point, because it is what makes the missing pack a statement about the act
+rather than about the module.
+
+## Mutations run
+
+Five, each producing a different set of failures, which is what says they are
+real rather than one build error reported five times.
+
+| Mutation | What failed |
+| --- | --- |
+| Sidebar filter removed | the rail leaves out no module; the per-role agreement loop |
+| Act gate removed from the shell | the pack opens for a deputy manager |
+| Module gate removed from the shell | Compliance opens for a care worker |
+| `mayDo` stops consulting accountability | five, including every screen-level act test |
+| Accountability table corrupted (the registered persons marked not registered) | five, different five: the pack refuses the person who holds it |
+
+The last two are the pair worth keeping: one asks whether the gate runs, the
+other whether the table it consults is right, and only the second is about
+whether the answer is correct. A property test over a declared bound inherits
+every error in the bound.
+
+## Also in this phase
+
+- Every claim that nothing is enforced is corrected in three places. It was true
+  when written and false from this phase, which is the staleness entry exactly;
+  what replaces it draws the line that matters now, because "these levels decide
+  what renders" and "these levels are security" are a long way apart and the gap
+  is where somebody gets hurt.
+- **The sign-in screen offers the seven roles.** From this phase the role
+  decides what the product is, so a view reachable only by knowing that Marie
+  Halloran is the deputy manager is not reachable. The row for the activities
+  coordinator states that nobody can be her. It is one label line and no
+  paragraph, because `auth.test.tsx` holds this form to fewer than three and it
+  is right to.
+- `RolePermissions` takes `staffRole` rather than `role`: jsx-a11y reads any
+  prop named `role` as an ARIA role and fails on a literal, so the component
+  could only ever be handed a variable. A prop with a trap in it, and the word
+  costs nothing.
+- The clinician answer is recorded beside both refusals that are waiting on it,
+  in `ClinicalChangeControl.tsx` and `PrescriptionsTab.tsx`.
+- CLAUDE.md §1 now says nine risk assessment templates. It said ten from Phase 3
+  to Phase 17, which is the staleness entry happening to the file that contains
+  it. AGENTS.md is re-synced from it.
+- `docs/FRONTEND_PRD.md` names all three source documents and which phases each
+  one governs, and its out-of-scope line now says that managing the Family
+  Portal is in scope from Phase 21 while the portal itself is not.
+
+## Small finding, not fixed
+
+`/settings/figures` renders two `<h1>`s reading "Settings": the shell's title and
+the screen's own. It predates this phase and it is an accessibility defect
+rather than a cosmetic one. Not touched here because it is not this phase's
+work.

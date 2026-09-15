@@ -15,6 +15,7 @@ import {
 import { ReviewBadge, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import type { TableColumn } from '@/components/primitives'
 import { ResidentsFilterBar } from './ResidentsFilterBar'
@@ -96,7 +97,8 @@ function useSimulation(): Simulation {
 }
 
 export function ResidentsRoute() {
-  const { sites, activeSite, accessMode } = useSession()
+  const { sites, activeSite } = useSession()
+  const viewer = useViewer()
   const navigate = useNavigate()
   const simulation = useSimulation()
 
@@ -145,7 +147,7 @@ export function ResidentsRoute() {
         {/* Live from Phase 16. Still absent under read-only rather than
             disabled — an auditor has zero write (PRD §1), and a disabled
             button implies a capability they will never have. */}
-        {accessMode === 'read_write' ? (
+        {viewer.canRecordIn('/residents') ? (
           <Button
             variant="primary"
             onClick={() => navigate('/residents/new')}
@@ -208,7 +210,7 @@ export function ResidentsRoute() {
             title={`No residents at ${siteLabel} yet`}
             body="Nobody has been admitted here. This is not a filter result. The site is empty."
             actions={
-              accessMode === 'read_write' ? (
+              viewer.canRecordIn('/residents') ? (
                 <Button onClick={() => navigate('/residents/new')} data-admit-link>
                   Add resident
                 </Button>

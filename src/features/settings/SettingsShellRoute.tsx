@@ -1,3 +1,5 @@
+import { useViewer } from '@/app/session/use-viewer'
+import type { AdminActId } from '@/features/team/permissions'
 import { Outlet } from 'react-router-dom'
 import { ScreenTabs, type ScreenTab } from '@/components/shell/ScreenTabs'
 import styles from './settings-shell.module.css'
@@ -15,17 +17,34 @@ import styles from './settings-shell.module.css'
  * change, and so there is one declaration of what this module contains for
  * `reachability.test.tsx` to check the router against in both directions.
  */
+/**
+ * All three, always, as the declaration the reachability guard reads.
+ *
+ * **What a role sees is a filter over this and never a shorter list.** A tab
+ * strip built per role would be a second declaration of what the module
+ * contains, and the guard would then be checking the router against whichever
+ * role it happened to construct.
+ */
 export const SETTINGS_TABS: ScreenTab[] = [
   { label: 'Team', path: '.', end: true },
   { label: 'Homes', path: 'homes' },
   { label: 'Settings', path: 'figures' },
 ]
 
+/** The act a tab needs, where it needs one. Homes is the group overview. */
+const TAB_ACTS: Partial<Record<string, AdminActId>> = { homes: 'group_overview' }
+
 export function SettingsShellRoute() {
+  const viewer = useViewer()
+  const tabs = SETTINGS_TABS.filter((tab) => {
+    const act = TAB_ACTS[tab.path]
+    return act === undefined || viewer.may(act)
+  })
+
   return (
     <div className={styles.module} data-settings-shell>
       <h1 className={styles.pageTitle}>Settings</h1>
-      <ScreenTabs label="Settings" tabs={SETTINGS_TABS} />
+      <ScreenTabs label="Settings" tabs={tabs} />
       <Outlet />
     </div>
   )

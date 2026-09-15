@@ -6,7 +6,8 @@ import { getCareNotes } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Button, Card, CardHeader } from '@/components/primitives'
 import { NeverWrittenUp } from '@/components/status'
-import { useSession, useTimeZone } from '@/app/session/use-session'
+import { useTimeZone } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import type { IsoDateTime } from '@/data/types'
 import { buildTimeline } from './timeline'
 import { WindowEdge } from './WindowEdge'
@@ -47,7 +48,7 @@ import styles from './notes.module.css'
  */
 export function NotesTab() {
   const { resident, site } = useOutletContext<ResidentProfile>()
-  const { accessMode } = useSession()
+  const viewer = useViewer()
   const { residentId } = useParams<{ residentId: string }>()
   const timeZone = useTimeZone()
 
@@ -132,9 +133,9 @@ export function NotesTab() {
         <CardHeader
           title="Care notes"
           actions={
-            // PRD §1: an auditor has zero write. Not a disabled button — the
-            // control is not theirs to have.
-            accessMode === 'read_only' ? null : (
+            // PRD §1: a role that reads this module has zero write in it.
+            // Not a disabled button — the control is not theirs to have.
+            !viewer.canRecordIn('/care-notes') ? null : (
               <NoteComposer
                 resident={resident}
                 site={site}
