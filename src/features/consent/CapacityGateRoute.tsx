@@ -1,9 +1,19 @@
 import { useState } from 'react'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
-import type { ConsentTypeId } from '@/data/types'
+import type {
+  AnyConsent,
+  CapacityAssessment,
+  ConsentMethod,
+  ConsentTypeId,
+  DecisionAuthority,
+  IsoDate,
+} from '@/data/types'
 import { CONSENT_TYPES } from '@/data/types'
 import type { ResidentProfile } from '@/data/access/client'
-import { Button, Card, SelectedMark } from '@/components/primitives'
+import { recordConsent } from '@/data/access/client'
+import { useSession } from '@/app/session/use-session'
+import { now as appNow } from '@/data/fixtures/clock'
+import { Button, Card, SelectedMark, Toast } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { formatCount, pluralise } from '@/lib/format'
@@ -50,6 +60,29 @@ export function CapacityGateRoute() {
   const [diagnostic, setDiagnostic] = useState('')
   const [functional, setFunctional] = useState('')
   const [scope, setScope] = useState<ConsentTypeId[]>([])
+
+  /*
+   * **The second half of the screen, which did not exist until Phase 25.**
+   * The gate collected an assessment and its Continue button went nowhere, so
+   * the Consent module could withdraw a consent and never record one — and the
+   * Family Portal, which will not name anybody until a consent is on file, only
+   * worked for residents whose consent the fixtures already held. Five screens
+   * described a capacity to record and nothing performed it.
+   */
+  const { currentUser } = useSession()
+  const [stage, setStage] = useState<'capacity' | 'decision'>('capacity')
+  const [outcome, setOutcome] = useState<'given' | 'refused' | 'unanswered'>(
+    'unanswered',
+  )
+  const [method, setMethod] = useState<ConsentMethod | ''>('')
+  const [refusalNote, setRefusalNote] = useState('')
+  const [authorityKind, setAuthorityKind] = useState<
+    'best_interests' | 'lpa_holder' | 'unanswered'
+  >('unanswered')
+  const [consulted, setConsulted] = useState('')
+  const [rationale, setRationale] = useState('')
+  const [recorded, setRecorded] = useState<'no' | 'yes'>('no')
+  const [failure, setFailure] = useState('')
 
   if (!type) {
     return (
@@ -262,12 +295,425 @@ export function CapacityGateRoute() {
               </>
             )}
           </p>
-          <Button size="large" disabled={waiting.length > 0} data-continue>
+          <Button
+            size="large"
+            disabled={waiting.length > 0 || stage === 'decision'}
+            data-continue
+            onClick={() => setStage('decision')}
+          >
             Continue
           </Button>
         </div>
       </Card>
+
+      {stage === 'decision' ? (
+        <DecisionStep
+          residentName={resident.fullLegalName}
+          preferredName={resident.preferredName}
+          typeName={type.name}
+          lacksCapacity={answer === 'lacks_capacity'}
+          existing={resident.consents[type.id as ConsentTypeId] as AnyConsent}
+          lpa={
+            resident.importantPeople.lpaHolder.kind === 'recorded'
+              ? resident.importantPeople.lpaHolder.value
+              : undefined
+          }
+          outcome={outcome}
+          setOutcome={setOutcome}
+          method={method}
+          setMethod={setMethod}
+          refusalNote={refusalNote}
+          setRefusalNote={setRefusalNote}
+          authorityKind={authorityKind}
+          setAuthorityKind={setAuthorityKind}
+          consulted={consulted}
+          setConsulted={setConsulted}
+          rationale={rationale}
+          setRationale={setRationale}
+          recorded={recorded}
+          failure={failure}
+          onRecord={() => {
+            const on = appNow().toISOString().slice(0, 10) as IsoDate
+            /*
+             * **One cast, at the edge where data arrives, with the check it
+             * replaces done at run time.** The consent type comes from the
+             * URL, so the compile-time scoping `CapacityAssessment<K>` holds
+             * for a literal cannot hold here: `K` is whichever of the eight
+             * the address named. What the type guarantees statically — that
+             * the assessment covers this consent — is checked below instead,
+             * and a record that failed it would not be written.
+             */
+            const typeId = type.id as ConsentTypeId
+            const covers = Object.fromEntries(covered.map((id) => [id, true]))
+            if (covers[typeId] !== true) {
+              setFailure(
+                'This assessment does not name the decision it would authorise.',
+              )
+              return
+            }
+            const assessment = {
+              id: `cap-${resident.id}-${typeId}-${on}` as const,
+              residentId: resident.id,
+              finding:
+                answer === 'lacks_capacity'
+                  ? {
+                      kind: 'lacks_capacity' as const,
+                      diagnosticTest: diagnostic.trim(),
+                      functionalTest: functional.trim(),
+                    }
+                  : { kind: 'has_capacity' as const },
+              covers,
+              assessedOn: on,
+              assessedBy: currentUser,
+              note:
+                answer === 'lacks_capacity'
+                  ? `${diagnostic.trim()} ${functional.trim()}`
+                  : `Assessed as having capacity for ${type.name.toLowerCase()}.`,
+            } as unknown as CapacityAssessment<ConsentTypeId>
+
+            const lpa =
+              resident.importantPeople.lpaHolder.kind === 'recorded'
+                ? resident.importantPeople.lpaHolder.value
+                : undefined
+            const authority: DecisionAuthority<ConsentTypeId> =
+              answer === 'has_capacity'
+                ? { kind: 'the_resident', assessment }
+                : authorityKind === 'lpa_holder' && lpa !== undefined
+                  ? {
+                      kind: 'lpa_holder',
+                      assessment,
+                      who: lpa.name,
+                      documentId: lpa.documentId,
+                    }
+                  : {
+                      kind: 'best_interests',
+                      assessment,
+                      consulted: splitConsulted(consulted),
+                      rationale: rationale.trim(),
+                    }
+
+            void recordConsent({
+              residentId: resident.id,
+              consentType: typeId,
+              outcome:
+                outcome === 'given'
+                  ? { kind: 'given', method: method as ConsentMethod }
+                  : { kind: 'refused', note: refusalNote.trim() },
+              authority,
+              by: currentUser,
+              on,
+            })
+              .then(() => {
+                setFailure('')
+                setRecorded('yes')
+              })
+              .catch((error: unknown) =>
+                setFailure(error instanceof Error ? error.message : String(error)),
+              )
+          }}
+        />
+      ) : null}
+
+      <Toast
+        open={recorded === 'yes'}
+        onOpenChange={(open) => (open ? undefined : setRecorded('no'))}
+        tone="positive"
+        title="Consent decision recorded"
+        description={`Recorded against ${resident.fullLegalName}, with the assessment it rests on. Held in memory only and gone on reload.`}
+      />
     </div>
+  )
+}
+
+/** "Dr Rahman, her son Tunde" or one per line, never empty. */
+function splitConsulted(text: string): [string, ...string[]] {
+  const names = text
+    .split(/[\n,]+/)
+    .map((name) => name.trim())
+    .filter(Boolean)
+  const [first, ...rest] = names
+  return [first ?? '', ...rest]
+}
+
+/**
+ * What was decided, and on whose authority.
+ *
+ * **The authority is not chosen freely; the capacity answer decides it.**
+ * Somebody with capacity decides for themselves, so the only authority offered
+ * is theirs. Somebody without it has a decision made for them, by a
+ * best-interests process that names who was consulted or by the holder of a
+ * health and welfare LPA — and the LPA route is offered only where one is on
+ * file, because a financial LPA cannot consent to care, and offering it and
+ * failing would put the rule in an error message instead of on the screen.
+ */
+function DecisionStep(props: {
+  residentName: string
+  preferredName: string
+  typeName: string
+  lacksCapacity: boolean
+  existing: AnyConsent
+  lpa: { name: string; lpaType: 'health_and_welfare' | 'financial' } | undefined
+  outcome: 'given' | 'refused' | 'unanswered'
+  setOutcome: (value: 'given' | 'refused') => void
+  method: ConsentMethod | ''
+  setMethod: (value: ConsentMethod) => void
+  refusalNote: string
+  setRefusalNote: (value: string) => void
+  authorityKind: 'best_interests' | 'lpa_holder' | 'unanswered'
+  setAuthorityKind: (value: 'best_interests' | 'lpa_holder') => void
+  consulted: string
+  setConsulted: (value: string) => void
+  rationale: string
+  setRationale: (value: string) => void
+  recorded: 'no' | 'yes'
+  failure: string
+  onRecord: () => void
+}) {
+  const decided = props.existing.kind === 'given' || props.existing.kind === 'refused'
+  const lpaUsable =
+    props.lpa !== undefined && props.lpa.lpaType === 'health_and_welfare'
+
+  const waiting: string[] = []
+  if (props.outcome === 'unanswered') waiting.push('what was decided')
+  if (props.outcome === 'given' && props.method === '') waiting.push('how it was given')
+  if (props.outcome === 'refused' && props.refusalNote.trim() === '')
+    waiting.push('what was said')
+  if (props.lacksCapacity) {
+    if (props.authorityKind === 'unanswered') waiting.push('who decided')
+    if (props.authorityKind === 'best_interests') {
+      if (props.consulted.trim() === '') waiting.push('who was consulted')
+      if (props.rationale.trim() === '')
+        waiting.push('why this is in their best interests')
+    }
+  }
+
+  if (decided) {
+    return (
+      <Card>
+        <div className={styles.section} data-already-decided>
+          <p className={styles.question}>
+            {props.residentName} already has a decision on record for{' '}
+            {props.typeName.toLowerCase()}.
+          </p>
+          <p className={styles.questionHint}>
+            A second one would overwrite somebody&rsquo;s answer. Withdrawing a consent
+            is how it stops standing, and it is done from the consent itself.
+          </p>
+        </div>
+      </Card>
+    )
+  }
+
+  return (
+    <Card>
+      <div className={styles.section} data-decision-step>
+        <p className={styles.stageNumber}>What was decided</p>
+        <div className={styles.options} role="radiogroup" aria-label="Decision">
+          {(
+            [
+              ['given', 'Given'],
+              ['refused', 'Refused'],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={props.outcome === id}
+              className={[
+                styles.option,
+                props.outcome === id ? styles.optionSelected : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              data-outcome={id}
+              onClick={() => props.setOutcome(id)}
+            >
+              <span className={styles.optionTitle}>{label}</span>
+            </button>
+          ))}
+        </div>
+
+        {props.outcome === 'given' ? (
+          <div className={styles.stage}>
+            <p className={styles.stageNumber}>How it was given</p>
+            <div className={styles.options} role="radiogroup" aria-label="Method">
+              {(
+                [
+                  ['verbal', 'Said aloud'],
+                  ['written', 'In writing'],
+                  ['digital_signature', 'Signed digitally'],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={props.method === id}
+                  className={[
+                    styles.option,
+                    props.method === id ? styles.optionSelected : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  data-method={id}
+                  onClick={() => props.setMethod(id)}
+                >
+                  <span className={styles.optionTitle}>{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {props.outcome === 'refused' ? (
+          <div className={styles.stage}>
+            <label className={styles.stageQuestion} htmlFor="refusal-note">
+              What was said
+            </label>
+            <p className={styles.stageHint}>
+              A refusal is a record, not a failure, and it keeps the words.
+            </p>
+            <textarea
+              id="refusal-note"
+              className={styles.textarea}
+              value={props.refusalNote}
+              onChange={(event) => props.setRefusalNote(event.target.value)}
+              data-field="refusal-note"
+            />
+          </div>
+        ) : null}
+      </div>
+
+      <div className={styles.section} data-authority-step>
+        <p className={styles.stageNumber}>On whose authority</p>
+        {props.lacksCapacity ? (
+          <>
+            <p className={styles.questionHint}>
+              {props.preferredName} lacks capacity for this decision, so it is made for
+              them rather than by them.
+            </p>
+            <div className={styles.options} role="radiogroup" aria-label="Authority">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={props.authorityKind === 'best_interests'}
+                className={[
+                  styles.option,
+                  props.authorityKind === 'best_interests' ? styles.optionSelected : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                data-authority="best_interests"
+                onClick={() => props.setAuthorityKind('best_interests')}
+              >
+                <span className={styles.optionTitle}>A best-interests decision</span>
+                <span className={styles.optionHint}>
+                  Made for them after consulting the people who know them.
+                </span>
+              </button>
+              {lpaUsable ? (
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={props.authorityKind === 'lpa_holder'}
+                  className={[
+                    styles.option,
+                    props.authorityKind === 'lpa_holder' ? styles.optionSelected : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  data-authority="lpa_holder"
+                  onClick={() => props.setAuthorityKind('lpa_holder')}
+                >
+                  <span className={styles.optionTitle}>
+                    {props.lpa?.name}, under a health and welfare LPA
+                  </span>
+                  <span className={styles.optionHint}>
+                    The attorney decides, against the document already on file.
+                  </span>
+                </button>
+              ) : null}
+            </div>
+            {lpaUsable ? null : (
+              <p className={styles.questionHint} data-no-lpa-route>
+                {props.lpa === undefined
+                  ? 'No lasting power of attorney is on file, so an attorney cannot be the authority.'
+                  : 'The LPA on file is financial, and a financial attorney cannot consent to care.'}
+              </p>
+            )}
+            {props.authorityKind === 'best_interests' ? (
+              <>
+                <div className={styles.stage}>
+                  <label className={styles.stageQuestion} htmlFor="consulted">
+                    Who was consulted
+                  </label>
+                  <p className={styles.stageHint}>
+                    One per line. A best-interests decision reached without consulting
+                    anybody is not a best-interests decision.
+                  </p>
+                  <textarea
+                    id="consulted"
+                    className={styles.textarea}
+                    value={props.consulted}
+                    onChange={(event) => props.setConsulted(event.target.value)}
+                    data-field="consulted"
+                  />
+                </div>
+                <div className={styles.stage}>
+                  <label className={styles.stageQuestion} htmlFor="rationale">
+                    Why this is in their best interests
+                  </label>
+                  <textarea
+                    id="rationale"
+                    className={styles.textarea}
+                    value={props.rationale}
+                    onChange={(event) => props.setRationale(event.target.value)}
+                    data-field="rationale"
+                  />
+                </div>
+              </>
+            ) : null}
+          </>
+        ) : (
+          <p className={styles.questionHint} data-authority="the_resident">
+            {props.preferredName} has capacity for this decision, so it is theirs. No
+            other authority is offered, because none applies.
+          </p>
+        )}
+      </div>
+
+      <div className={styles.foot}>
+        <p className={styles.footState} data-decision-state>
+          {props.recorded === 'yes' ? (
+            <strong>Recorded against {props.residentName}.</strong>
+          ) : waiting.length > 0 ? (
+            <>
+              <strong>Waiting on:</strong> {waiting.join(' · ')}.
+            </>
+          ) : (
+            <>
+              This records the decision and the assessment it rests on, for{' '}
+              {props.residentName}. Held in memory only in this build.
+            </>
+          )}
+          {props.failure === '' ? null : (
+            <>
+              <br />
+              <span data-record-failure>{props.failure}</span>
+            </>
+          )}
+        </p>
+        <Button
+          size="large"
+          disabled={waiting.length > 0 || props.recorded === 'yes'}
+          data-record-consent
+          onClick={props.onRecord}
+        >
+          Record this decision
+        </Button>
+      </div>
+    </Card>
   )
 }
 
