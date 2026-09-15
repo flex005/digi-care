@@ -13806,3 +13806,127 @@ it).
 the tests assert what was built, and these were things said about what was
 built. The tell was only available by searching for the control a sentence
 promised. All are listed in the status document as defects to fix.
+
+# Phase 25 — making the five on-screen claims true, and how they got there
+
+Frank's addition, and it is the right one: the account of how these happened
+has two halves. **They were written as done** — each sentence or field went in
+with the intention, and each phase was reported complete. **And nothing
+asked** — each report was confirmed on its own word, the same failure as Phase
+23, where a plan agreed in conversation stood in for a commit in the history.
+Frank named the second half as his. Neither half alone produces a defect that
+survives five phases; together they do.
+
+## Consent recording, first, because Family Portal access depends on it
+
+The capacity gate's Continue button went nowhere. It now opens a decision step
+in the same screen: what was decided (given with a method, or refused with what
+was said), and on whose authority. **The capacity answer decides the
+authority** — somebody with capacity decides for themselves and nothing else is
+offered; somebody without it has a best-interests decision naming who was
+consulted and why, or an attorney, offered only where a health and welfare LPA
+is on file. `recordConsent`, written in Phase 21 with no caller, is what it
+calls.
+
+One cast, at the route boundary: the consent type comes from the URL, so the
+compile-time scoping that `CapacityAssessment<K>` gives a literal cannot apply,
+and the check it replaces — that the assessment covers the decision — is done
+at run time before anything is written. That is the legitimate half of the §8
+cast entry: a cast where data arrives, with its check stated beside it.
+
+Tests read the record back through the resident store rather than the form,
+and one renders the Family Portal section for a resident whose consent was
+just recorded: the form that refused to appear now appears. Mutated twice —
+making the record button write nothing fails three tests; offering the attorney
+for any LPA fails the fourth.
+
+## Is the new class checkable
+
+Costed with a phrase search and recorded in §8: ten matches, three real, seven
+false, and two of the five defects unreachable by any phrase. Not a guard.
+
+## The other four, and the two behind them
+
+**Admission's steps.** The strip marked five steps, two required, over one
+long page. Nothing gated and nothing on step 2 was required. Now one step
+renders at a time, and the steps after the first open once step 1 is answered.
+The labels now match the form: step 1 is required, and the other four can
+wait. **Step 2 is labelled as able to wait, which departs from the PRD.** AM
+v2.0 marks Contact and GP required. The build never required it, and making
+the label true was the smaller change. Whether step 2 should require a next of
+kin or a GP is Frank's call and is not taken here.
+
+The tests no longer read a label's text. They check behaviour: a step labelled
+required holds back the step after it while blank, and a step labelled as able
+to wait can be passed with every field empty while admission stays possible.
+
+**The DNAR form.** The flags step now has the control its sentence named.
+Choosing a format files a DNAR form on the new resident's record, under Legal
+and authority as the fixtures file every DNAR, once admission succeeds. The
+resuscitation decision stays unrecorded, and the test asserts both halves. The
+file itself is not kept, and the step says so beside the control, as the
+document library's upload does. The Phase 24 test for the sentence now also
+asserts the control is beside it.
+
+**The invite drawer** no longer sends anybody to a page to change a role. It
+says homes can be changed there and that changing a role is not built.
+**Settings** no longer says custom domains "are added". It says adding one is
+not built, and gives the agreed rules for when it is.
+
+**The job title** field is gone from the invitation screen. `StaffMember` has
+nowhere to keep one, and a field that stores nothing is a control that does
+nothing. It returns when a screen needs a job title, the same ruling as the
+organisation fields the setup wizard does not ask for.
+
+**Planning and changing a session.** The calendar has a Plan a session dialog
+calling `planSession`, shown only to somebody who can record in Activities.
+It requires at least one invited resident, an end after the start, and a start
+that has not passed. Times are read on the home's clock. The session screen has
+Change this session, calling `editSession`, offered only before the session
+starts, because once it has begun its time is what attendance is recorded
+against. It changes the name, place and times. Who planned it stays, and who is
+invited cannot be changed because the store has no way to change it.
+
+## Mutations
+
+Seven, each confirmed landed before the verdict was read, each restored:
+
+| Broken | Failed |
+| --- | --- |
+| Admission sections not gated | shows one step at a time |
+| Step 2 labelled required | labels a step required only when it cannot be left blank |
+| DNAR never filed | files a DNAR form on admission |
+| Planning writes nothing | puts it in the store the calendar reads |
+| Zone offset dropped from the time conversion | the planning test and the editing test |
+| Editing writes nothing | changes the name and place |
+| Edit offered after a session started | offers no change to a session that has already started |
+
+Consent recording's two mutations are recorded above.
+
+## The explanation, checked afterwards
+
+The §8 entry for this phase said the five defects got past the tests "because
+the tests assert what the screen renders". That was written without being
+checked. Checked against the committed tests at `db40e55`, it holds for one:
+`admission.test.tsx` found the DNAR sentence. No test touched the step strip,
+the invite drawer's sentence, the custom domains note or the job title field.
+The entry is corrected, and a new §8 entry records how it was caught. Frank's
+message credited the check as already done, and looking for it found it had
+not been.
+
+**No copy-promise guard.** A guard scoped as eight verbs and eight nouns was
+proposed back as mine. It was not: the transcripts of this project contain it
+only in Frank's message. Frank withdrew it. The §8 note that it is not checkable
+stands, and the stronger reason is the two defects a verb-plus-noun rule would
+have missed, the mislabelled step and the job title field.
+
+## Verification
+
+Commits `1e3e624`, `e58260d` and `4e19caf`, in Frank's order: consent, the
+four sentences, the two behind them. The first `npm run verify` failed 7 tests
+in files this phase did not touch, at a load average of about 20. Those seven
+files passed alone (206 of 206). The second run passed every stage: 73 files,
+1,323 tests, all eleven guard scripts, and the layout crawl, which reached 70
+screens at 1280px. The live bundle on `digi-care-zeta.vercel.app` was
+downloaded once. Its size matched its `content-length` of 1,435,115 bytes, and
+it contains strings from this phase and from Phase 23.
