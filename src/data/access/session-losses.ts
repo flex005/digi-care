@@ -7,6 +7,7 @@ import { activityHoldings, resetSessionActivities } from './activity-store'
 import { disclosureHoldings, resetSessionDisclosures } from './family-disclosure-store'
 import { familyAccessHoldings, resetSessionFamilyAccess } from './family-access-store'
 import { incidentHoldings, resetSessionIncidents } from './incident-store'
+import { resetSessionSiteConfig, siteConfigHoldings } from './site-config-store'
 import { noteHoldings, resetSessionNotes } from './note-store'
 import { notificationHoldings, resetSessionNotifications } from './notification-store'
 import { residentHoldings, resetSessionResidents } from './resident-store'
@@ -51,6 +52,7 @@ const SOURCES: (() => SessionHolding[])[] = [
   disclosureHoldings,
   familyAccessHoldings,
   incidentHoldings,
+  siteConfigHoldings,
   noteHoldings,
   marHoldings,
   handoverHoldings,
@@ -99,6 +101,7 @@ export const sessionHasWrites = (): boolean => sessionLosses().length > 0
 export function endSession(): void {
   resetSessionNotes()
   resetSessionIncidents()
+  resetSessionSiteConfig()
   resetSessionActivities()
   resetSessionDisclosures()
   resetSessionFamilyAccess()

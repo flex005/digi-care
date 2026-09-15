@@ -27,6 +27,7 @@ import type { ClearingToken } from '@/data/access/review-flag-store'
 import { flagsClosedBy, riskTemplateName } from '@/data/access/review-flags'
 import { pluralise } from '@/lib/format'
 import { nextReviewFrom } from '@/lib/review-interval'
+import { reviewIntervalMonths } from '@/data/access/settings-store'
 import { PlaceholderBanner } from './PlaceholderBanner'
 import {
   CHANGE_WORD,
@@ -532,7 +533,10 @@ function CompareBlock({
 
               <li>
                 The next review moves to{' '}
-                <span data-numeric>{format.date(nextReviewFrom(now))}</span>.
+                <span data-numeric>
+                  {format.date(nextReviewFrom(now, reviewIntervalMonths()))}
+                </span>
+                .
               </li>
             </ul>
           </div>

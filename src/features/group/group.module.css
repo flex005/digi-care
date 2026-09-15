@@ -613,3 +613,83 @@
   font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * Which questions a home asks. Phase 22.
+ *
+ * Nothing here is a status: a template the home does not use is a decision,
+ * not a finding and not a gap, so no RAG and no hatch. The row reads as a
+ * sentence about what the setting means rather than as an on/off badge.
+ */
+.toggles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  list-style: none;
+  padding: 0;
+  margin: var(--space-8) 0 0;
+}
+
+.toggleRow {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.toggleState {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  order: 2;
+  text-align: right;
+}
+
+/*
+ * What this settings screen does not configure. Phase 22.
+ *
+ * Inert throughout: no hatch, because none of this is a gap anybody can close,
+ * and no status colour, because nothing here is a finding. It reads as prose
+ * about the product rather than as a list of things that are wrong.
+ */
+.absentList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  list-style: none;
+  padding: 0;
+  margin: var(--space-8) 0 0;
+}
+
+.absentRow {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  gap: var(--space-16);
+  align-items: baseline;
+  padding-bottom: var(--space-12);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.absentWhy {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.absentTitle {
+  display: block;
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+}
+
+.absentBody {
+  display: block;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  max-width: 72ch;
+}

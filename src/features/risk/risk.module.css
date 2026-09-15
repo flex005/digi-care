@@ -803,3 +803,18 @@
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
 }
+
+/*
+ * A template this home no longer carries out. Phase 22.
+ *
+ * Plain text and no treatment: a decision, not a finding and not a gap. The
+ * hatch would say nobody has looked, and would invite somebody to answer a
+ * question the home has decided not to ask.
+ */
+.retiredNote {
+  display: block;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  max-width: 40ch;
+}

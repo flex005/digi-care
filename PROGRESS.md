@@ -13521,3 +13521,91 @@ paragraph.
 **An incident with no resident subject renders no family message at all.** Some
 are about a member of staff or a visitor: `subjectResidentId` says `'none'`
 rather than guessing, and there is nobody whose family this is.
+
+# Phase 22 — the configuration model, and the axis that was wrong
+
+## The distinction the phase is built on
+
+"Settable if and only if read at render" was the wrong axis. **A setting is
+either a claim about the future or a term in a claim the record already
+makes**, and only the second needs a second rendering rule. That is why the
+four-state treatment does not spread by symmetry.
+
+Review frequency is the first kind: a completed review carries the date it
+falls due next, and changing the interval moves nothing already written.
+Template activation is the second: `RiskStatus` has two members, and turning a
+template off makes `not_assessed` mean either *nobody has done this* or *this
+home does not do this* — the setting reaches back and changes what a record
+already on file is saying.
+
+Recorded in §8, with the two corollaries this phase paid for.
+
+## The finding that came out of asking
+
+**`review-interval-months` was a control that claimed an effect and had
+none.** Its card read "applies to reviews completed from now on; dates already
+in the record do not move" — a careful, specific sentence about a value with
+**zero readers**. `nextReviewFrom` used the constant directly.
+
+Worse than a dead control, because specificity is what makes a control
+trusted. `nextReviewFrom(at, months)` takes the interval and the three call
+sites pass `reviewIntervalMonths()`. It cannot be read inside
+`lib/review-interval`, because `settings-store` imports that module and the
+cycle would resolve to a blank record rather than an error — and the call sites
+are the right place anyway, being the moment the next date is decided.
+
+Every other figure was genuinely wired: 21 readers, 7, 2, 2, 1.
+
+## Refused rather than engineered around
+
+**Round times.** Every `Medication.roundTimes` and every MAR record was
+generated against them, and `clock.ts` reads them before any fixture loads. A
+pending change with an effective date was considered and is a scheduling
+feature: no scheduler, no job, no persistence, so the date would be a promise
+nobody keeps — a control that does nothing in a more convincing costume. They
+render read-only with the whole reason, beside the window, which is fixed for
+the same reason.
+
+## Four sections absent, named, and in the inert treatment
+
+Notification settings and data export are absent because there is no server to
+do the thing at all. The Family Portal switch and the pharmacy cycle toggle are
+absent because they would reach back and break records.
+
+**Two reasons, not one**, and each entry says which applies: a reader acts
+differently on "this needs a backend" than on "this needs a decision about
+existing records". Collapsing them into one list of four would lose that.
+
+Named rather than omitted, because somebody who has read SETT-01 will scroll
+for them. Inert rather than hatched: none is a gap anybody can close. And no
+promise of a later phase — that is what the sidebar said about Reviews for nine
+phases after Reviews shipped.
+
+Data export got the Phase 21 test and failed it: a subject access request has a
+statutory clock, so somebody who believed they had started one would not start
+the real one.
+
+## The row was half-treated, and a test caught it
+
+The state chip went plain for a retired template and **`LevelPill` kept
+hatching**, so the row still read as a gap through its other column. Fixed by
+rendering nothing there — the chip beside it already says the assessment is not
+carried out here, and two treatments for one fact is the volume problem the
+file's own comment names one column over.
+
+It was caught because the assertion is about the **absence of the treatment**
+rather than the presence of the copy: `expect(row.querySelector('[data-state="unrecorded"]')).toBeNull()`
+sees every hatch in the row, wherever it comes from.
+
+Mutation-tested both ways: the plain rendering reverted to hatched fires, and
+counting retired templates in the "never assessed" figure fires.
+
+## Also
+
+The claim over the list carries the filter. "5 of 9 risks have never been
+assessed" counts only what this home asks, and says how many are not counted
+and why — a gap that is an artefact of a setting rather than of the record is
+the filtered-set rule arriving through a configuration instead of a control.
+
+Default family access level is a claim about the future and is settable: every
+member already named carries the level they were granted.

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { ConfiguredLists } from './ConfiguredLists'
+import { NotConfiguredHere } from './NotConfiguredHere'
 import { Card } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { formatCount } from '@/lib/format'
@@ -202,6 +204,16 @@ export function SettingsRoute() {
             ))}
           </ul>
         </section>
+
+        {mayConfigure ? (
+          <ConfiguredLists
+            siteId={activeSite.id}
+            siteName={activeSite.name}
+            onChanged={bump}
+          />
+        ) : null}
+
+        <NotConfiguredHere />
 
         <section className={styles.settingsSection} data-settings-section="clock">
           <h2 className={styles.settingsTitle}>The instant the record is drawn at</h2>

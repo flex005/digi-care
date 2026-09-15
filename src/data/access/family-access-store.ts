@@ -57,6 +57,29 @@ export const ACCESS_LEVELS: {
   },
 ]
 
+/**
+ * What a new family member is offered first. AM v2.0 SETT-01, Phase 22.
+ *
+ * **A claim about the future, and the only Family Portal setting that is
+ * one.** A default applies to the next decision and touches no existing one:
+ * every member already named carries the level they were granted, and changing
+ * this moves none of them. So it needs no second rendering rule and no pair.
+ *
+ * The site-wide on/off switch AM v2.0 also asks for is refused, and the reason
+ * is the opposite of this: it would make every recorded consent unusable from
+ * a screen that looks like preferences, which is worse than a dead control.
+ */
+let defaultLevel: FamilyAccessLevel = 'basic'
+
+export const defaultAccessLevel = (): FamilyAccessLevel => defaultLevel
+
+export function setDefaultAccessLevel(level: FamilyAccessLevel): void {
+  defaultLevel = level
+  defaultChanges += 1
+}
+
+let defaultChanges = 0
+
 const members: FamilyMember[] = []
 let granted = 0
 let removed = 0
@@ -109,6 +132,7 @@ export function familyAccessHoldings(): SessionHolding[] {
   return [
     ...held('family members you gave access to', granted),
     ...held('family members you removed', removed),
+    ...held('changes to the default access level', defaultChanges),
   ]
 }
 
@@ -117,4 +141,6 @@ export function resetSessionFamilyAccess(): void {
   members.length = 0
   granted = 0
   removed = 0
+  defaultLevel = 'basic'
+  defaultChanges = 0
 }

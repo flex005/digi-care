@@ -3,6 +3,7 @@ import type { Site, SiteId } from '../types'
 import { INSUFFICIENT_EVIDENCE_THRESHOLD, MIN_POPULATION_FOR_A_RATE } from '../types'
 import { sites as fixtureSites } from '../fixtures/organisation'
 import { DUE_SOON_DAYS, REVIEW_INTERVAL_MONTHS } from '@/lib/review-interval'
+import { ROUND_TIMES, ROUND_WINDOW_MINUTES } from '@/data/fixtures/rounds'
 import { GAP_THRESHOLD_WAKING_MINUTES, MEDICATION_LOOKAHEAD_HOURS } from '@/lib/shift'
 
 /**
@@ -120,6 +121,41 @@ const FIGURES: AdjustableFigure[] = [
     fallback: REVIEW_INTERVAL_MONTHS,
     fixedAtGeneration: false,
     seenOn: 'Reviews, Care Plans, Risk Assessments',
+  },
+  {
+    /*
+     * **Round times, refused rather than engineered around.** AM v2.0's
+     * SETT-01 makes them configurable, and they cannot be: every
+     * `Medication.roundTimes` and every MAR record in the fixtures was
+     * produced against these four, and `clock.ts` reads them before any
+     * fixture module loads to decide whether a round is running. Changing them
+     * would move the windows under records already written.
+     *
+     * A pending change with an effective date was considered and is a
+     * scheduling feature: this build has no scheduler, no job and no
+     * persistence, so the date would be a promise nobody keeps — a control
+     * that does nothing in a more convincing costume than most.
+     */
+    id: 'round-times',
+    label: 'The times this home gives medication',
+    effect:
+      'Fixed at fixture generation: every dose and every MAR record was produced against these four times, and the clock reads them to decide whether a round is running. Changing them would move the windows under records already on the chart. A change that takes effect later needs something to make it take effect, and this build has no scheduler.',
+    unit: ROUND_TIMES.join(' · '),
+    value: ROUND_TIMES.length,
+    fallback: ROUND_TIMES.length,
+    fixedAtGeneration: true,
+    seenOn: 'The MAR chart, the round, the Dashboard',
+  },
+  {
+    id: 'round-window-minutes',
+    label: 'How long a round stays open',
+    effect:
+      'Fixed at fixture generation, for the same reason as the round times: the MAR was produced against this window, so changing it would relabel doses rather than move them.',
+    unit: 'minutes',
+    value: ROUND_WINDOW_MINUTES,
+    fallback: ROUND_WINDOW_MINUTES,
+    fixedAtGeneration: true,
+    seenOn: 'The round, the Dashboard',
   },
   {
     id: 'medication-lookahead-hours',

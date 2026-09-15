@@ -24,9 +24,29 @@ export const REVIEW_INTERVAL_MONTHS = 6
  * expressed in months and 6 × 30 is not six months. `setMonth` rolls a 31st
  * into the following month, which is the behaviour a diary has.
  */
-export function nextReviewFrom(at: IsoDateTime | IsoDate): IsoDate {
+export function nextReviewFrom(
+  at: IsoDateTime | IsoDate,
+  /**
+   * **Passed in rather than read here, and the reason is a cycle.**
+   * `settings-store` imports this module's constant, so this module cannot
+   * import the settings store back: the cycle would resolve to a blank record
+   * rather than an error.
+   *
+   * It is also the right place for it. Reading a setting belongs where a
+   * screen draws, and the three call sites are components finalising a domain
+   * or completing an assessment — the moment the next date is decided.
+   *
+   * **The default is what this was doing silently.** Until Phase 22 the
+   * constant was read directly here and `reviewIntervalMonths()` had no
+   * readers at all: the settings screen offered a control whose card said
+   * "applies to reviews completed from now on" and which applied to nothing.
+   * A control that claims a specific effect and has none is worse than a dead
+   * one, because the specificity is what makes it trusted.
+   */
+  months: number = REVIEW_INTERVAL_MONTHS,
+): IsoDate {
   const date = new Date(at.length === 10 ? `${at}T00:00:00.000Z` : at)
-  date.setUTCMonth(date.getUTCMonth() + REVIEW_INTERVAL_MONTHS)
+  date.setUTCMonth(date.getUTCMonth() + months)
   return date.toISOString().slice(0, 10) as IsoDate
 }
 

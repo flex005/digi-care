@@ -8,6 +8,7 @@ import { useSiteFormat } from '@/app/session/use-session'
 import {
   ACCESS_LEVELS,
   type FamilyAccessLevel,
+  defaultAccessLevel,
   familyFor,
   grantAccess,
   removeAccess,
@@ -45,7 +46,9 @@ export function FamilyAccessSection({
   const format = useSiteFormat()
   const [name, setName] = useState('')
   const [relationship, setRelationship] = useState('')
-  const [level, setLevel] = useState<FamilyAccessLevel>('basic')
+  /* The home's default, which is a setting. It applies to this decision and
+     to no decision already made. */
+  const [level, setLevel] = useState<FamilyAccessLevel>(defaultAccessLevel())
 
   const consent = resident.consents.family_portal as AnyConsent
   const members = familyFor(resident.id)

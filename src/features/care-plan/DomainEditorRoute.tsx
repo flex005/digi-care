@@ -32,6 +32,7 @@ import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { pluralise } from '@/lib/format'
 import { nextReviewFrom } from '@/lib/review-interval'
+import { reviewIntervalMonths } from '@/data/access/settings-store'
 import { OwedReviews } from './OwedReviews'
 import {
   EMPTY_PLAN,
@@ -255,7 +256,11 @@ function Editor({
                 <strong>Every field is written.</strong> Finalising signs{' '}
                 {previous === 'none' ? 'version 1' : `version ${versions + 1}`} of{' '}
                 {domainName.toLowerCase()} for {profileName} and moves the next review
-                to <span data-numeric>{format.date(nextReviewFrom(now))}</span>.
+                to{' '}
+                <span data-numeric>
+                  {format.date(nextReviewFrom(now, reviewIntervalMonths()))}
+                </span>
+                .
               </>
             ) : (
               <>
@@ -373,7 +378,10 @@ function Editor({
             ))}
             <span>
               The next review moves to{' '}
-              <span data-numeric>{format.date(nextReviewFrom(now))}</span>.
+              <span data-numeric>
+                {format.date(nextReviewFrom(now, reviewIntervalMonths()))}
+              </span>
+              .
             </span>
             <span>
               Held in memory only for this session and gone on reload. There is no
@@ -494,7 +502,7 @@ function Editor({
         text,
         by: currentUser,
         on: now.slice(0, 10) as IsoDate,
-        nextReviewOn: nextReviewFrom(now),
+        nextReviewOn: nextReviewFrom(now, reviewIntervalMonths()),
       })
       const clearing = await recordReviewFlagsCleared({
         residentId: resident.id,
