@@ -20,6 +20,9 @@ export type {
 
 export { STAFF_ROLE_NAMES } from './primitives'
 
+export type { FamilyAccessLevel, FamilyMember } from './family'
+export { ACCESS_LEVELS } from './family'
+
 export type {
   MarCellState,
   MarEscalation,

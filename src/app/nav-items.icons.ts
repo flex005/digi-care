@@ -151,6 +151,14 @@ export const navItems: NavItem[] = [
     section: 'governance',
   },
   {
+    label: 'Family Portal',
+    path: '/family',
+    icon: 'users/user-sharing',
+    phase: 26,
+    enabled: true,
+    section: 'governance',
+  },
+  {
     label: 'Documents',
     path: '/documents',
     icon: 'legal/legal-document-01',

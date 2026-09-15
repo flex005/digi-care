@@ -53,11 +53,12 @@ import IconSearch_Search from '@/assets/icons-generated/search/search.svg?react'
 import IconSearch_Search02 from '@/assets/icons-generated/search/search-02.svg?react'
 import IconSettings_Setting02 from '@/assets/icons-generated/settings/setting-02.svg?react'
 import IconUsers_UserMultiple from '@/assets/icons-generated/users/user-multiple.svg?react'
+import IconUsers_UserSharing from '@/assets/icons-generated/users/user-sharing.svg?react'
 import IconUsers_UserShield01 from '@/assets/icons-generated/users/user-shield-01.svg?react'
 import IconUsers_UserSwitch from '@/assets/icons-generated/users/user-switch.svg?react'
 
 /**
- * Only the 45 icons actually used in source. Importing all of them
+ * Only the 46 icons actually used in source. Importing all of them
  * would compile every icon in the set into the bundle.
  *
  * Partial because it is keyed by the full IconName union. A missing entry
@@ -110,6 +111,7 @@ export const iconRegistry: Partial<
   'search/search-02': IconSearch_Search02,
   'settings/setting-02': IconSettings_Setting02,
   'users/user-multiple': IconUsers_UserMultiple,
+  'users/user-sharing': IconUsers_UserSharing,
   'users/user-shield-01': IconUsers_UserShield01,
   'users/user-switch': IconUsers_UserSwitch,
 }

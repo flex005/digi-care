@@ -91,6 +91,7 @@ describe('family access leans on the consent rather than recording it again', ()
       residentId: resident.id,
       name: 'Sarah Whitcombe',
       relationship: 'daughter',
+      email: 'sarah.whitcombe@example.com',
       level: 'full',
       by: staffOkonkwo,
     })
@@ -223,6 +224,7 @@ describe('family access is a list of who may see things now', () => {
       residentId: resident.id,
       name: 'Sarah Whitcombe',
       relationship: 'daughter',
+      email: '',
       level: 'basic',
       by: staffOkonkwo,
     })

@@ -1870,6 +1870,78 @@ patch('broadbent', (resident) => ({
   },
 }))
 
+/** Gap 12 — Family Portal consent withdrawn while people are still named.
+ *  **A permission outliving its authorisation.** The resident tab only lists
+ *  named people while the consent stands, so at the moment somebody needs to
+ *  take access away, the people holding it are invisible on the screen that
+ *  names them. The module queue exists to make that visible, and it needs a
+ *  fixture reaching the state or the finding has nothing to show. */
+const withdrawnFamilyPortal = (
+  residentId: ResidentId,
+  said: string,
+  agoDays: number,
+  gavenDaysAgo: number,
+): ConsentStatus<'family_portal'> => ({
+  kind: 'withdrawn',
+  on: toIsoDate(daysAgo(agoDays)),
+  note: said,
+  previouslyGivenOn: toIsoDate(daysAgo(gavenDaysAgo)),
+  recordedBy: staffOkonkwo,
+  by: {
+    kind: 'the_resident',
+    assessment: {
+      id: `cap-${residentId}-family-portal` as CapacityAssessmentId,
+      residentId,
+      finding: { kind: 'has_capacity' },
+      covers: { family_portal: true },
+      assessedOn: toIsoDate(daysAgo(agoDays)),
+      assessedBy: staffOkonkwo,
+      note: 'Asked her directly, on her own. She was clear and gave her reasons.',
+    },
+  },
+  /*
+   * **What the withdrawal did not undo, and not a second copy of the list.**
+   * How many people are still named is the family access store's fact, and
+   * restating it here would be two owners of one count — the pharmacy-cycle
+   * defect in a consent record. What belongs here is the disclosure log, which
+   * is append-only by design.
+   */
+  remains: [
+    {
+      name: 'Care notes already shared with the family',
+      explanation:
+        'Sharing decisions recorded before the withdrawal stay in the disclosure log. Withdrawing the consent stops anything new; it does not unsay what was shared.',
+      count: { kind: 'unchanged' },
+    },
+  ],
+})
+
+patch('kavanagh', (resident) => ({
+  ...resident,
+  consents: {
+    ...resident.consents,
+    family_portal: withdrawnFamilyPortal(
+      resident.id,
+      'Asked for the portal to be switched off after a family disagreement.',
+      9,
+      430,
+    ),
+  },
+}))
+
+patch('thorne', (resident) => ({
+  ...resident,
+  consents: {
+    ...resident.consents,
+    family_portal: withdrawnFamilyPortal(
+      resident.id,
+      'Said he would rather his family rang the home than read anything online.',
+      21,
+      300,
+    ),
+  },
+}))
+
 export const residents: Resident[] = generated
 
 export const residentsBySite = (siteId: SiteId): Resident[] =>
@@ -1892,6 +1964,7 @@ export const GAP_RESIDENTS = {
   staleCarePlanDomain: 'res-adeyemi',
   flaggedAndCorrectionNote: 'res-okafor',
   deactivatedStaffAuthor: 'res-pemberton',
+  withdrawnFamilyPortalConsent: 'res-kavanagh',
 } as const
 
 export { staffDeactivated, staffNwosu }

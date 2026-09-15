@@ -213,3 +213,164 @@
   font-size: var(--text-body-size);
   line-height: var(--text-body-line);
 }
+
+/*
+ * The module screen. Phase 26, in the queue shape every other module uses:
+ * the finding leads, the list is ordered by what makes it a finding, and
+ * every row names its resident.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+  padding: var(--space-24);
+}
+
+.pageTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--weight-bold);
+}
+
+.findings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+}
+
+.findingLead,
+.findingSecondary {
+  display: flex;
+  gap: var(--space-12);
+  align-items: flex-start;
+  flex: 1 1 22rem;
+  padding: var(--space-16);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.findingLead {
+  border-color: var(--status-caution);
+  background: var(--status-caution-tint);
+}
+
+.findingFigure {
+  color: var(--ink-900);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-line);
+  font-weight: var(--weight-bold);
+}
+
+.findingBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.findingTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.findingDetail {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  max-width: 52ch;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  padding: var(--space-16) var(--space-16) 0;
+}
+
+.filterTab {
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  color: var(--ink-700);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+  cursor: pointer;
+}
+
+.filterTabActive {
+  border-color: var(--purple-600);
+  background: var(--purple-50);
+  color: var(--purple-600);
+  font-weight: var(--weight-semibold);
+}
+
+.rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-12) var(--space-16);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.rowWho {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+}
+
+.rowMeta {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.memberEmail {
+  display: block;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.loading {
+  color: var(--ink-700);
+  font-size: var(--text-body-size);
+  padding: var(--space-24);
+}
+
+.errorTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--space-8);
+}
+
+.errorBody {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  max-width: 60ch;
+  margin-bottom: var(--space-12);
+}
+
+/* The resident tab's panel, the shape every other profile tab uses. */
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+  padding: var(--space-20) 0;
+}

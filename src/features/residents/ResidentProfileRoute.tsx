@@ -55,6 +55,7 @@ export const TABS = [
   { label: 'Care Plan', path: 'care-plan', end: false, screen: 10, built: true },
   { label: 'Goals', path: 'goals', end: false, screen: 11, built: true },
   { label: 'Consent', path: 'consent', end: false, screen: 12, built: true },
+  { label: 'Family Portal', path: 'family', end: false, screen: 12, built: true },
   { label: 'Documents', path: 'documents', end: false, screen: 13, built: true },
 ]
 

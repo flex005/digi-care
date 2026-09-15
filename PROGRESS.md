@@ -13946,3 +13946,71 @@ The status doc now states that principle once, over the four admission
 departures it covers: step 2, the DNAR decision, target dates, and gender left
 not recorded. The earlier note in this file calling step 2 Frank's call is
 superseded by this entry.
+
+# Phase 26 — Family Portal as a module
+
+Frank's scope: its own resident tab and a cross-resident screen, the shape
+medications, care plans and risk assessments already use.
+
+## What the screen leads on, and why it is not "nobody named"
+
+The lead is **consent given and nobody named**: permission granted and never
+used. "Residents with nobody named" would have merged four opposite states —
+never asked, refused, awaiting a decision, and agreed-but-unused — and for a
+refusal nobody named is the *correct* state. Counting it would recruit
+recorded negatives into a missing-evidence figure, which is the defect the
+documents chart taught this build one module along. The denominator is
+residents whose consent is given, per site, and the residents with no consent
+on file are stated beside it rather than dropped silently.
+
+The second finding is a different claim and is never added to the first:
+**people still named where the consent no longer stands**. It is a permission
+outliving its authorisation. The tab used to render the list only while the
+consent stood, so a withdrawal made everybody holding access invisible at
+exactly the moment somebody needed to remove them. The tab now shows them,
+with Remove, and without a form to name anybody new.
+
+## The fixtures exist because the finding would otherwise be undetectable
+
+Family members lived only in the session, so on a first load the lead would
+have read the whole denominator every time — a figure that cannot fall, which
+a reader cannot tell from a broken one. `src/data/fixtures/family.ts` seeds
+nine people across six residents, and `residents.ts` gains two withdrawn
+Family Portal consents (Doris Kavanagh, Reginald Thorne) applied as patches
+after generation, so no draw shifts in the seeded stream. Three populations now
+exist: consent given with people named, consent given with nobody named, and
+consent withdrawn with people still named. Emails are recorded for some and
+not for others, because nobody having taken an address is its own state.
+
+## The three fixes, folded in
+
+**The duplicate id.** Ids came from `members.length + 1`, so removing somebody
+and naming another produced two people with one id, and Remove took whichever
+came first — the wife instead of the nephew, watched happening before the fix.
+Ids now come from a counter that only goes up, prefixed `fam-s-` so a session
+record can never collide with a fixture one either.
+
+**Email.** `Recorded<string>` rather than a string: a blank would make "nobody
+has taken an address" and "they have no email" the same fact. Nothing sends to
+it, and the field says so.
+
+**More than one person.** No test had ever named a second person, which is how
+the id defect survived. The new test names three, removes one, names a fourth
+and removes them, asserting who is left by name.
+
+## The constraint is guarded, not stated
+
+`scripts/check-family-writes.mjs` fails if anything under `src/features/family`
+calls `recordConsent`, `withdrawConsent` or `editResidentField`, or imports the
+resident store. The consent has one owner: the Consent tab. It reads with the
+shared comment scanner, and states the file count it reached rather than
+printing a tick over whatever it happened to read.
+
+## Mutations
+
+| Broken | Result |
+| --- | --- |
+| Id built from the length of the list again | `keeps three people apart, and removes the person whose button was pressed` failed |
+| A `recordConsent` call added to `FamilyTab` | the guard failed, naming `FamilyTab.tsx:29` |
+
+Both confirmed landed before the verdict was read, and both restored.

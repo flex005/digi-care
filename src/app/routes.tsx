@@ -34,6 +34,8 @@ import { CarePlanQueueRoute } from '@/features/care-plan/CarePlanQueueRoute'
 import { GoalQueueRoute } from '@/features/goals/GoalQueueRoute'
 import { ActivityCalendarRoute } from '@/features/activities/ActivityCalendarRoute'
 import { ConsentDashboardRoute } from '@/features/consent/ConsentDashboardRoute'
+import { FamilyQueueRoute } from '@/features/family/FamilyQueueRoute'
+import { FamilyTab } from '@/features/family/FamilyTab'
 import { ConsentTab } from '@/features/consent/ConsentTab'
 import { CapacityGateRoute } from '@/features/consent/CapacityGateRoute'
 import { WithdrawalRoute } from '@/features/consent/WithdrawalRoute'
@@ -159,6 +161,9 @@ export const router = createBrowserRouter([
       // Phase 10. The dashboard is the queue; one consent is reached from a
       // row, and the capacity gate stands in front of recording it.
       { path: 'consent', element: <ConsentDashboardRoute /> },
+      // Phase 26. The queue leads on residents who agreed to the Family Portal
+      // and have nobody named; who is named is a tab on the resident.
+      { path: 'family', element: <FamilyQueueRoute /> },
       // Phase 11. The organisation library is the module; expiry tracking is
       // the queue under it, and a resident's own library is a profile tab.
       { path: 'documents', element: <OrganisationLibraryRoute /> },
@@ -290,6 +295,9 @@ export const router = createBrowserRouter([
             element: <ConsentTab />,
           },
           { path: 'consent/:consentType', element: <CapacityGateRoute /> },
+          // Phase 26. Who may see this resident's updates. The consent that
+          // authorises it stays on the Consent tab, which owns it.
+          { path: 'family', element: <FamilyTab /> },
           { path: 'consent/:consentType/withdraw', element: <WithdrawalRoute /> },
           { path: 'documents', element: <DocumentsTab /> },
           { path: 'notes', element: <NotesTab /> },

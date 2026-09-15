@@ -215,6 +215,16 @@ const OFFERS: Record<string, { records: string | false; approves: string | false
     records: 'seeking and withdrawing consent',
     approves: 'recording a capacity decision',
   },
+  '/family': {
+    /*
+     * Naming somebody is the write. **Deciding whether the family may see
+     * anything is not offered here**: that is the resident's `family_portal`
+     * consent, recorded through the capacity gate under `/consent`, and a
+     * second act here would be a second record of one fact.
+     */
+    records: 'naming somebody who may see a resident’s updates, and removing them',
+    approves: false,
+  },
   '/documents': {
     records: 'filing a document and deciding its expiry',
     approves: false,
