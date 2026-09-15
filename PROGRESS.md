@@ -13609,3 +13609,86 @@ the filtered-set rule arriving through a configuration instead of a control.
 
 Default family access level is a claim about the future and is settable: every
 member already named carries the level they were granted.
+
+# Phase 24 — admission, five steps, and three departures from the PRD
+
+## Three departures, all from reading the model rather than the document
+
+**1. Step 4 files a DNAR and does not record the decision.** The PRD assumes
+attaching the form makes the decision. Phase 1 modelled a resuscitation
+decision as carrying a clinician and a date because that is what a DNAR is, and
+Phase 20 refused to write one for want of the first. A step that recorded the
+decision because a file was attached would make the document the decision,
+which is what the model was built to refuse. So: the form is filed, the
+decision stays `no_decision_recorded`, and the step says so where the upload
+happens rather than after it — because a header reading "no decision recorded"
+will look wrong to somebody who has just uploaded a DNAR unless they were told
+first. The result is the state Documents was built for: a document on file with
+the record that should point at it still empty.
+
+**2. Step 5 sets no dates at all.** The PRD sets an initial review date per
+domain and a target date per assessment. A review date on a domain nobody has
+written puts a deadline on a plan that does not exist, and the Reviews queue
+already leads on never-written. And a target for a *first* assessment is a
+different kind of instant from `ReviewState`'s "when does this fall due again":
+`not_assessed` carries no fields, so storing one there would be the
+clamp-on-the-wrong-kind-of-instant defect, and the Reviews queue deliberately
+excludes never-assessed risks with the exclusion named on screen — a Phase 7
+decision. The step says that the gap is visible on every screen until somebody
+does it, which is stronger than a date nothing enforces.
+
+**3. Gender is four answers and an absence**, not a free-text field. "Prefers
+not to say" is a recorded answer and sits beside the other three: somebody who
+declined was asked and chose, and somebody nobody has asked is a hole in the
+record. A string cannot tell an empty box from a declined answer, which is why
+the closed union is what makes the distinction expressible at all. Sex is not
+added: it has clinical uses and no screen here has one.
+
+## What a resident saved after step 2 looks like
+
+Ismail Sowande, and nothing new was needed. Every field steps 3 to 5 fill
+already starts `unrecorded`, `not_assessed`, `not_sought` or `not_started`, and
+the Phase 16 guard asserts it field by field against him by name.
+
+## The guard that had to move, and why it was not edited to pass
+
+`asks for no clinical field except allergies` was the six-field principle in
+test form. The five steps overrule it, so the assertion had to change — and §8
+says a test edited to let a change land was testing the wrong thing.
+
+It is not edited to pass. **The reasoning did not disappear when the fields
+arrived; it became a different rule**: nothing past step 2 is required. That is
+what is asserted now, and it is stronger than what it replaced, which would
+have passed on a form that had the fields and demanded them some other way.
+
+## One field broke two residents' pronouns
+
+The fixtures generate from one seeded stream. A `gender` draw inserted beside
+`pronouns` — where the field belongs on the record — shifted every draw after
+it, and two residents ended up with a communication need written in pronouns
+they do not use.
+
+**The file warns about exactly this**, one function further up, and the warning
+was read during this phase. It was attached to `makeCarePlan`; the case arrived
+at `gender`. Folded into the existing §8 entry as a fourth occurrence, with what
+it adds: a warning attached to one instance does not protect the class, and the
+only reliable place for it is where the act happens. The reasoning now sits at
+the draw.
+
+What caught it was a pronoun guard failing on a change with nothing to do with
+pronouns, and nothing in the diff pointed at it. **A warning is read by whoever
+happens to look; a guard fires at whoever happens to break it.**
+
+## Two verification findings, both in §8
+
+**The subject of a check can be wrong and the answer still correct.** Six
+phases of deploy verification greped `digi-care.vercel.app`, a stale
+deployment, while the product is served from `digi-care-zeta.vercel.app`. Every
+run was honest and every one reported work as not live while it was live. The
+URL came from a `vercel.json` rewrite rather than from the person who opens the
+site.
+
+**A grep over a truncated download answers correctly about a file that is not
+the file.** Four fetches of a 1.3 MB bundle, one cut short, one string reported
+missing. The same bundle downloaded once matched all four, and the local size
+against `content-length` is what settled it.

@@ -44,7 +44,12 @@ import type {
   StaffRef,
   SupportLevel,
 } from '../types'
-import { CARE_PLAN_DOMAINS, CONSENT_TYPES, RISK_ASSESSMENT_TEMPLATES } from '../types'
+import {
+  CARE_PLAN_DOMAINS,
+  CONSENT_TYPES,
+  GENDER_ANSWERS,
+  RISK_ASSESSMENT_TEMPLATES,
+} from '../types'
 import { SCORED_TEMPLATES } from '@/features/risk/instrument'
 import { pronounise } from './pronouns'
 import {
@@ -1216,6 +1221,8 @@ function makeResident(person: Person, siteId: SiteId, index: number): Resident {
     // moment images arrive the on_file branch lights up with no code change.
     photo: { kind: 'not_on_file' },
 
+    /* Drawn last, below. See the note beside the draw. */
+    gender: UNRECORDED,
     pronouns: rng.chance(richness)
       ? recorded(person.pronouns, rng.pick(managers), admittedOn)
       : UNRECORDED,
@@ -1388,9 +1395,30 @@ function makeResident(person: Person, siteId: SiteId, index: number): Resident {
    * plan review reading "completed" over domains nobody had written — Grace
    * Adeyemi's read completed over a mobility domain two months overdue.
    */
+  const review = makeCarePlanReview(rng, rng.chance(richness), built.carePlan)
+
+  /*
+   * **Gender is drawn last, after every other draw, and that is not a style
+   * choice.** These fixtures come from one seeded stream, so a draw inserted
+   * anywhere shifts every draw after it: putting this beside `pronouns`, where
+   * it belongs on the record, moved thirty-two residents' data and two of them
+   * ended up with a communication need written in pronouns they do not use.
+   * The file already warns about this one function further up, and the warning
+   * did not prevent it — the tell was a pronoun guard failing on a change that
+   * had nothing to do with pronouns.
+   *
+   * **All four answers are drawn, "prefers not to say" included, because it is
+   * an answer and not a gap.** A fixture set where nobody ever declines leaves
+   * unrendered the one branch the type exists to distinguish: a declined
+   * answer has to be visible looking settled beside an unasked one looking
+   * hatched, or the distinction lives only in the code.
+   */
   return {
     ...built,
-    carePlanReview: makeCarePlanReview(rng, rng.chance(richness), built.carePlan),
+    gender: rng.chance(richness)
+      ? recorded(rng.pick([...GENDER_ANSWERS]).id, rng.pick(managers), admittedOn)
+      : UNRECORDED,
+    carePlanReview: review,
   }
 }
 

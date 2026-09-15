@@ -5,7 +5,9 @@ import type {
   IsoDateTime,
   CarePlanDomainRecord,
   ConsentRecord,
+  GenderAnswer,
   IsoDate,
+  Recorded,
   Resident,
   ResidentId,
   RiskStatus,
@@ -116,6 +118,30 @@ export interface AdmissionInput {
   room: string
   allergies: AllergyStatus
   admittedBy: StaffRef
+
+  /*
+   * ---------------------------------------------------------------------
+   * Everything below is steps 2 to 5, and every one of them is optional.
+   *
+   * **Steps 1 and 2 are required and the rest are not, which is the PRD's
+   * shape and also the honest one.** The six-field form this replaces was
+   * built on the argument that anything more asks somebody to guess on the
+   * day they know least. The five steps overrule that and the reasoning
+   * does not disappear: it becomes the rule that no field past step 2 is
+   * required, and that a blank is recorded as unrecorded rather than as an
+   * empty string, so every screen renders it as the gap it is from the
+   * first minute.
+   * ---------------------------------------------------------------------
+   */
+  gender?: GenderAnswer
+  nhsNumber?: string
+  pronouns?: string
+  primaryLanguage?: string
+  /** Step 3. The field a form will get a guess for, if it insists. */
+  primaryDiagnosis?: string
+  dietaryRequirements?: string
+  nextOfKin?: { name: string; relationship: string; phone: string }
+  gp?: { name: string; practice: string; phone: string }
 }
 
 /**
@@ -131,6 +157,19 @@ const NO_LIST: { kind: 'not_recorded' } = { kind: 'not_recorded' }
 
 /** The moment of admission, stamped once so every field on it agrees. */
 const now = () => appNow().toISOString() as IsoDateTime
+
+/**
+ * An optional answer, recorded with its author or left as the gap.
+ *
+ * **Blank and absent are the same thing here and that is deliberate.** A field
+ * somebody skipped and a field somebody cleared are both "nobody has recorded
+ * this", which is one fact; the distinction a form could draw between them is
+ * about the form rather than about the resident.
+ */
+function said<T extends string>(value: T | undefined, by: StaffRef): Recorded<T> {
+  if (value === undefined || value.trim() === '') return UNRECORDED
+  return { kind: 'recorded', value, recordedBy: by, recordedAt: now() }
+}
 
 function blankRisks(): Record<RiskTemplateId, RiskStatus> {
   const risks = {} as Record<RiskTemplateId, RiskStatus>
@@ -176,8 +215,15 @@ export function admitResident(input: AdmissionInput): Resident {
     dateOfBirth: input.dateOfBirth,
     admittedOn: input.admittedOn,
     photo: { kind: 'not_on_file' },
-    pronouns: UNRECORDED,
-    nhsNumber: UNRECORDED,
+    /*
+     * **One helper for every optional field, and a blank is `unrecorded`.**
+     * The alternative is an empty string, which renders as a filled field
+     * containing nothing and is the blank this product exists to refuse: a
+     * reader cannot tell it from a value somebody typed and deleted.
+     */
+    gender: said(input.gender, input.admittedBy),
+    pronouns: said(input.pronouns, input.admittedBy),
+    nhsNumber: said(input.nhsNumber, input.admittedBy),
     room:
       input.room.trim() === ''
         ? UNRECORDED

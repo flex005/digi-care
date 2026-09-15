@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { render, waitFor, within } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
@@ -268,17 +268,70 @@ describe('accessibility', () => {
 })
 
 describe('the form offers nothing it cannot honestly record', () => {
-  it('asks for no clinical field except allergies', async () => {
+  /**
+   * **This asserted that no clinical field existed, and the rule changed.**
+   *
+   * It was the six-field principle in test form: anything past a name and a
+   * home asks somebody to guess on the day they know least, so the fields were
+   * absent and the guard held them absent. AM v2.0's five steps overrule that
+   * and Frank approved it, so the assertion had to move — and the §8 rule
+   * about a test edited to let a change land applies with full force here.
+   *
+   * So it is not edited to pass. **The reasoning did not disappear when the
+   * fields arrived; it became a different rule**, and that rule is what is
+   * asserted now: nothing past step 2 is required. A form that required a
+   * diagnosis on admission day would get one invented, and an invented
+   * diagnosis is indistinguishable from a recorded one for as long as the
+   * record lasts. The new assertion is stronger than the old one, because the
+   * old one would have passed on a form that had the fields and demanded them
+   * in some other way.
+   */
+  it('requires nothing past step 2, whatever it now asks', async () => {
+    const user = userEvent.setup()
     const { container } = renderForm()
     await settled(container)
 
     const page = container.querySelector('[data-admission]') as HTMLElement
-    for (const word of [/diagnos/i, /medication/i, /resuscitation/i, /next of kin/i]) {
-      // Each of these appears in the gap list and nowhere as a control.
-      expect(
-        within(page).queryByRole('textbox', { name: word }),
-        String(word),
-      ).toBeNull()
+
+    // The five steps' own fields are on the page, which is the change.
+    for (const field of ['primary-diagnosis', 'kin-name', 'gp-name', 'pronouns']) {
+      expect(page.querySelector(`[data-field="${field}"]`), field).toBeTruthy()
     }
+
+    // And answering only step 1 and the allergies question is enough to admit.
+    await user.type(page.querySelector('[data-field="full-legal-name"]')!, 'Ada Nwosu')
+    await user.type(page.querySelector('[data-field="date-of-birth"]')!, '1939-04-02')
+    await user.click(page.querySelector('[data-allergy-choice="not_known"] input')!)
+
+    await waitFor(() =>
+      expect(page.querySelector<HTMLButtonElement>('[data-admit]')!.disabled).toBe(
+        false,
+      ),
+    )
+  }, 20000)
+
+  it('says on the step that filing a DNAR does not record the decision', async () => {
+    const { container } = renderForm()
+    await settled(container)
+
+    /*
+     * On the step rather than after it. A resident admitted with a DNAR filed
+     * still renders "no decision recorded" on their header, and that will look
+     * wrong to somebody who has just uploaded one unless they are told first.
+     */
+    const said = container.querySelector('[data-dnar-note]')!
+    expect(said.textContent).toMatch(/does not record the decision/i)
+    expect(said.textContent).toMatch(/signature of the clinician/i)
+  })
+
+  it('sets no target date, and says why that is stronger than one', async () => {
+    const { container } = renderForm()
+    await settled(container)
+
+    const said = container.querySelector('[data-no-dates]')!
+    expect(said.textContent).toMatch(/stronger than a date/i)
+    // The gap is visible everywhere until somebody does it, which is the
+    // argument for not adding a deadline nothing enforces.
+    expect(said.textContent).toMatch(/for as long as they last/i)
   })
 })

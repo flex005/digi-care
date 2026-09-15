@@ -111,6 +111,7 @@ export type {
   CommunicationPreference,
   ContactDetails,
   FuturePlans,
+  GenderAnswer,
   GpRecord,
   ImportantPeople,
   ImportantPerson,
@@ -126,6 +127,7 @@ export type {
   SocialWorker,
   StockCount,
 } from './resident'
+export { GENDER_ANSWERS } from './resident'
 
 export type {
   CareNoteCategoryId,

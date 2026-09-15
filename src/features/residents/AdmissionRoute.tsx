@@ -4,11 +4,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import type {
   Allergy,
   AllergyStatus,
+  GenderAnswer,
   IsoDate,
   IsoDateTime,
   SiteId,
   StaffRef,
 } from '@/data/types'
+import { GENDER_ANSWERS } from '@/data/types'
 import { admit } from '@/data/access/client'
 import { ADMISSION_GAPS, ALLERGY_SOURCES } from '@/data/access/resident-store'
 import { useSession } from '@/app/session/use-session'
@@ -30,9 +32,43 @@ import styles from './admission.module.css'
  */
 type AllergyAnswer = 'unanswered' | 'recorded' | 'none_known' | 'not_known'
 
+/**
+ * The five steps. AM v2.0's RES-01, and which of them a person has to answer.
+ *
+ * **Steps 1 and 2 are required and the other three are not**, which is the
+ * source PRD's shape and also the honest one: a name, a date of birth and a
+ * home are knowable on the day, and a diagnosis frequently is not. A form that
+ * requires one on admission day will get one invented, and an invented
+ * diagnosis is indistinguishable from a recorded one for as long as the record
+ * lasts.
+ */
+const STEPS = [
+  { id: 'who', name: 'Personal details', required: true },
+  { id: 'contact', name: 'Contact and GP', required: true },
+  { id: 'clinical', name: 'Clinical overview', required: false },
+  { id: 'flags', name: 'Risk flags and documents', required: false },
+  { id: 'plan', name: 'Care plan and assessments', required: false },
+] as const
+
 export function AdmissionRoute() {
   const { sites, activeSite, currentUser } = useSession()
   const navigate = useNavigate()
+
+  const [step, setStep] = useState(0)
+
+  /* Steps 2 to 5. Every one optional, every blank an unrecorded field. */
+  const [gender, setGender] = useState<GenderAnswer | ''>('')
+  const [pronouns, setPronouns] = useState('')
+  const [nhsNumber, setNhsNumber] = useState('')
+  const [primaryLanguage, setPrimaryLanguage] = useState('')
+  const [kinName, setKinName] = useState('')
+  const [kinRelationship, setKinRelationship] = useState('')
+  const [kinPhone, setKinPhone] = useState('')
+  const [gpName, setGpName] = useState('')
+  const [gpPractice, setGpPractice] = useState('')
+  const [gpPhone, setGpPhone] = useState('')
+  const [primaryDiagnosis, setPrimaryDiagnosis] = useState('')
+  const [dietaryRequirements, setDietaryRequirements] = useState('')
 
   const [fullLegalName, setFullLegalName] = useState('')
   const [preferredName, setPreferredName] = useState('')
@@ -80,6 +116,28 @@ export function AdmissionRoute() {
         by: currentUser,
       }),
       admittedBy: currentUser,
+
+      /*
+       * **Everything from step 2 on, and every one of them may be blank.** A
+       * blank is passed through as absent and the store records it as
+       * unrecorded rather than as an empty string: a cleared field and a
+       * skipped field are the same fact about this resident, and neither is a
+       * value somebody typed.
+       */
+      gender: gender === '' ? undefined : gender,
+      pronouns,
+      nhsNumber,
+      primaryLanguage,
+      primaryDiagnosis,
+      dietaryRequirements,
+      nextOfKin:
+        kinName.trim() === ''
+          ? undefined
+          : { name: kinName, relationship: kinRelationship, phone: kinPhone },
+      gp:
+        gpName.trim() === ''
+          ? undefined
+          : { name: gpName, practice: gpPractice, phone: gpPhone },
     }).then((resident) => {
       navigate(`/residents/${resident.id}`)
     })
@@ -95,11 +153,37 @@ export function AdmissionRoute() {
       <header>
         <h1 className={styles.pageTitle}>Admit a resident</h1>
         <p className={styles.pageSubtitle}>
-          Six things that identify a person, and one that is dangerous not to ask.
-          Everything else about them starts unrecorded, and this form says where each of
-          those is recorded rather than asking somebody to guess on the day they know
-          least.
+          Five steps, and only the first two are required. Everything after them can be
+          left for the day somebody knows the answer: a blank here is recorded as nobody
+          having recorded it, and every screen shows it as the gap it is from the first
+          minute.
         </p>
+
+        {/*
+         * **The step indicator says which are required, which is the whole of
+         * the disagreement with the form this replaces.** That one asked six
+         * fields on the argument that anything more asks somebody to guess on
+         * the day they know least. The five steps overrule it; the reasoning
+         * survives as the rule that nothing past step 2 is required and that a
+         * guess is never the easier answer than a blank.
+         */}
+        <ol className={styles.steps} data-steps>
+          {STEPS.map((entry, index) => (
+            <li
+              key={entry.id}
+              className={step === index ? styles.stepOn : styles.step}
+              data-step={entry.id}
+              data-current={step === index ? 'yes' : undefined}
+            >
+              <button type="button" onClick={() => setStep(index)}>
+                <span className={styles.stepName}>{entry.name}</span>
+                <span className={styles.stepNeed}>
+                  {entry.required ? 'Required' : 'Can wait'}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
       </header>
 
       <Card>
@@ -325,6 +409,245 @@ export function AdmissionRoute() {
               ) : null}
             </div>
           </div>
+        </section>
+
+        {/*
+         * Steps 2 to 5. Every field optional, and each step says what leaving
+         * it blank means rather than leaving somebody to infer it.
+         */}
+        <section className={styles.section} data-section="identity-more">
+          <h2 className={styles.sectionTitle}>More about them</h2>
+          <p className={styles.sectionNote}>
+            None of this is required. Anything left blank is recorded as nobody having
+            recorded it, which is what it is.
+          </p>
+
+          <div className={styles.two}>
+            <div className={styles.field}>
+              <span className={styles.fieldLabel}>Gender</span>
+              {/*
+               * **"Prefers not to say" sits with the other three, not with the
+               * blank.** Somebody who declined was asked and chose; somebody
+               * nobody has asked is a hole in the record. Both look like
+               * nothing being known and only one of them is still owed.
+               */}
+              <div className={styles.choices} data-gender-choices>
+                {GENDER_ANSWERS.map((entry) => (
+                  <label
+                    key={entry.id}
+                    htmlFor={`gender-${entry.id}`}
+                    className={styles.choice}
+                    data-gender-option={entry.id}
+                  >
+                    <input
+                      id={`gender-${entry.id}`}
+                      type="radio"
+                      name="gender"
+                      checked={gender === entry.id}
+                      onChange={() => setGender(entry.id)}
+                    />
+                    {entry.label}
+                  </label>
+                ))}
+              </div>
+              {gender === '' ? (
+                <span className={styles.hint} data-gender-blank>
+                  Nobody has asked yet, which is different from somebody preferring not
+                  to say.
+                </span>
+              ) : null}
+            </div>
+
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Pronouns</span>
+              <input
+                type="text"
+                value={pronouns}
+                onChange={(event) => setPronouns(event.target.value)}
+                data-field="pronouns"
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>NHS number</span>
+              <input
+                type="text"
+                value={nhsNumber}
+                onChange={(event) => setNhsNumber(event.target.value)}
+                data-field="nhs-number"
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Main language</span>
+              <input
+                type="text"
+                value={primaryLanguage}
+                onChange={(event) => setPrimaryLanguage(event.target.value)}
+                data-field="primary-language"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className={styles.section} data-section="contact">
+          <h2 className={styles.sectionTitle}>Who to ring, and their GP</h2>
+          <div className={styles.two}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Next of kin</span>
+              <input
+                type="text"
+                value={kinName}
+                onChange={(event) => setKinName(event.target.value)}
+                data-field="kin-name"
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Their relationship</span>
+              <input
+                type="text"
+                value={kinRelationship}
+                onChange={(event) => setKinRelationship(event.target.value)}
+                data-field="kin-relationship"
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Their telephone number</span>
+              <input
+                type="tel"
+                value={kinPhone}
+                onChange={(event) => setKinPhone(event.target.value)}
+                data-field="kin-phone"
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>GP</span>
+              <input
+                type="text"
+                value={gpName}
+                onChange={(event) => setGpName(event.target.value)}
+                data-field="gp-name"
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Practice</span>
+              <input
+                type="text"
+                value={gpPractice}
+                onChange={(event) => setGpPractice(event.target.value)}
+                data-field="gp-practice"
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Practice telephone number</span>
+              <input
+                type="tel"
+                value={gpPhone}
+                onChange={(event) => setGpPhone(event.target.value)}
+                data-field="gp-phone"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className={styles.section} data-section="clinical">
+          <h2 className={styles.sectionTitle}>What is known clinically</h2>
+          {/*
+           * **The field a form will get a guess for.** A diagnosis is often not
+           * known on the day somebody arrives, and the discharge summary may be
+           * days behind them. Saying so here is what makes blank the easier
+           * answer than a plausible guess, which is the whole argument the
+           * six-field form was built on.
+           */}
+          <p className={styles.sectionNote} data-diagnosis-note>
+            If the discharge summary has not arrived, leave this blank. A diagnosis
+            entered on the day somebody knows least is indistinguishable from a recorded
+            one for as long as the record lasts, and every screen will show this as
+            unrecorded until somebody knows.
+          </p>
+          <div className={styles.two}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Primary diagnosis</span>
+              <input
+                type="text"
+                value={primaryDiagnosis}
+                onChange={(event) => setPrimaryDiagnosis(event.target.value)}
+                data-field="primary-diagnosis"
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Dietary requirements</span>
+              <input
+                type="text"
+                value={dietaryRequirements}
+                onChange={(event) => setDietaryRequirements(event.target.value)}
+                data-field="dietary-requirements"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className={styles.section} data-section="flags">
+          <h2 className={styles.sectionTitle}>Risk flags and documents</h2>
+
+          {/*
+           * **Filing a DNAR is not recording the decision, and this is where
+           * that has to be said.** AM v2.0's step 4 asks for the document and
+           * treats attaching it as making the decision. It is not: a
+           * resuscitation decision carries a clinician's signature and a
+           * document reference, and this build captures neither — which is
+           * exactly why Phase 16 and Phase 20 both refused to write one.
+           * Supplying the document supplies the second of the two.
+           *
+           * So the upload is a document, and the header will still read "no
+           * decision recorded" afterwards. That will look wrong to somebody who
+           * has just uploaded a DNAR unless they are told first, which is why
+           * this sits on the step rather than after it.
+           */}
+          <p className={styles.sectionNote} data-dnar-note>
+            <b>A DNAR form can be filed here and it does not record the decision.</b> A
+            resuscitation decision carries the signature of the clinician who made it;
+            this product holds documents and does not capture signatures, so filing the
+            form leaves the decision unrecorded and this resident&rsquo;s header will
+            say so. That is the honest state: a document on file, and the record that
+            should point at it still empty. The decision is recorded under Future plans,
+            by somebody who can attest to it.
+          </p>
+
+          <p className={styles.sectionNote} data-flags-note>
+            The five risk flags are not asked here either. Every one of the nine
+            assessments starts never assessed, which is not the same as low risk, and
+            the badge strip on this resident&rsquo;s header will say so from the first
+            minute. Answering them is completing an assessment, not ticking a box on an
+            admission form.
+          </p>
+        </section>
+
+        <section className={styles.section} data-section="plan">
+          <h2 className={styles.sectionTitle}>Care plan and assessments</h2>
+          {/*
+           * **No target dates, and this is a departure from the PRD.** Its step
+           * 5 sets an initial review date for each domain and a target date for
+           * each assessment. Neither is written here.
+           *
+           * A review date on a domain nobody has written would put a deadline
+           * on a plan that does not exist, and the Reviews queue already leads
+           * on never-written for that reason. And a target for a first
+           * assessment is a different kind of instant from `ReviewState`'s
+           * "when does this fall due again" — storing it there would be the
+           * clamp-on-the-wrong-kind-of-instant defect, and storing it anywhere
+           * else means a deadline nothing enforces.
+           */}
+          <p className={styles.sectionNote} data-no-dates>
+            <b>Nothing here is given a date, and that is stronger than a date.</b> All
+            ten care plan domains start unwritten and all nine assessments start never
+            assessed. Every screen in the product shows those gaps for as long as they
+            last: the care plan queue leads on domains nobody has written, the
+            assessment list leads on risks nobody has assessed, and the header badge
+            strip carries them beside this person&rsquo;s name. A target date would add
+            a deadline nothing enforces on top of a gap that is already visible
+            everywhere.
+          </p>
         </section>
 
         {/* The phase's argument, not a courtesy. */}

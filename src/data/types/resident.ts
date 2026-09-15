@@ -397,6 +397,23 @@ export interface StockCount {
 // The resident
 // ---------------------------------------------------------------------------
 
+/**
+ * The four answers somebody can give. Never a further list beyond these.
+ *
+ * "Another way" is deliberately not a taxonomy. A list of further options is
+ * something somebody picks from on the day they know least, which puts words
+ * in their mouth; a person who wants to say more says it in their own words,
+ * in the record rather than in an enum.
+ */
+export const GENDER_ANSWERS = [
+  { id: 'woman', label: 'Woman' },
+  { id: 'man', label: 'Man' },
+  { id: 'another_way', label: 'Another way' },
+  { id: 'prefers_not_to_say', label: 'Prefers not to say' },
+] as const
+
+export type GenderAnswer = (typeof GENDER_ANSWERS)[number]['id']
+
 export interface Resident {
   id: ResidentId
   siteId: SiteId
@@ -409,6 +426,26 @@ export interface Resident {
 
   // Identity that may genuinely not have been recorded yet.
   photo: PhotoStatus
+  /**
+   * Gender. Phase 24.
+   *
+   * **"Prefers not to say" is a recorded answer and sits beside the other
+   * three, never merged with the gap.** Somebody who declined was asked and
+   * chose; somebody nobody has asked is a hole in the record. That is Rule 3
+   * on the field where conflating them is most tempting, because both render
+   * as nothing being known and only one of them is a question still owed.
+   *
+   * **A closed union rather than free text**, which is what makes that
+   * distinction expressible at all: a string cannot tell an empty box from a
+   * declined answer.
+   *
+   * **Separate from `pronouns`, beside it, and separate from sex, which this
+   * build does not hold.** Sex has clinical uses — screening, dosing,
+   * reference ranges — and no screen here has one. A field nobody has decided
+   * how to protect is how a care system starts holding data it was not built
+   * for.
+   */
+  gender: Recorded<GenderAnswer>
   pronouns: Recorded<string>
   nhsNumber: Recorded<string>
   room: Recorded<string>

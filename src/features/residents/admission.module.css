@@ -266,3 +266,66 @@
   color: var(--ink-900);
   font-weight: var(--weight-bold);
 }
+
+/*
+ * The five steps, and the note under each heading. Phase 24.
+ *
+ * **The step strip says which are required and nothing else.** It is not a
+ * progress bar: nothing is "complete", because three of the five steps are
+ * answerable later and a screen that showed them as incomplete would be
+ * calling a deliberate blank a failure. Plain, no status colour, no ticks.
+ */
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  list-style: none;
+  padding: 0;
+  margin: var(--space-12) 0 0;
+}
+
+.step,
+.stepOn {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.stepOn {
+  border-color: var(--purple-600);
+  background: var(--purple-50);
+}
+
+.step button,
+.stepOn button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-8) var(--space-12);
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stepName {
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.stepNeed {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.sectionNote {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  max-width: 72ch;
+  margin-bottom: var(--space-12);
+}
