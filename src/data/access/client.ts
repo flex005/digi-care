@@ -11,7 +11,10 @@ import type {
   Activity,
   ActivityId,
   AnyConsent,
+  ConsentMethod,
+  ConsentStatus,
   ConsentTypeId,
+  DecisionAuthority,
   DownstreamEffect,
   RiskLevel,
   RiskScore,
@@ -1081,6 +1084,76 @@ export function withdrawConsent(input: {
   return logged(updated, {
     module: 'Consent',
     what: `Withdrew ${input.consentType.replace(/_/g, ' ')} consent for ${updated.fullLegalName}`,
+    to: `/residents/${updated.id}/consent`,
+    by: input.by,
+  })
+}
+
+/**
+ * Recording a consent decision. PRD §6.6e, Phase 10, finished in Phase 21.
+ *
+ * **The module could only take consent away.** `withdrawConsent` has existed
+ * since Phase 10 and nothing has ever been able to record one as given,
+ * refused or sought: the capacity gate collected an assessment and wrote
+ * nothing. It was found by asking what AM v2.0's Family Portal setup screen
+ * writes — the answer is this consent, and the act did not exist.
+ *
+ * Recorded here as Phase 10 work finished late rather than as Phase 21 scope,
+ * so the phase notes stay true about what each phase actually delivered.
+ *
+ * **The authority carries its own assessment, which is why there is no
+ * assessment store.** `DecisionAuthority` holds a `CapacityAssessment<K>`
+ * whose `covers` must name this consent type, so an assessment made about
+ * photography cannot authorise a family-portal consent and the compiler is
+ * what says so. Nothing needs to look the assessment up later; it is part of
+ * the record it authorised.
+ */
+export function recordConsent<K extends ConsentTypeId>(input: {
+  residentId: ResidentId
+  consentType: K
+  outcome: { kind: 'given'; method: ConsentMethod } | { kind: 'refused'; note: string }
+  authority: DecisionAuthority<K>
+  by: StaffRef
+  on: IsoDate
+}): Promise<Resident> {
+  const resident = residentById(input.residentId)
+  if (!resident) return reject(`No resident with id ${input.residentId}`)
+
+  const current = resident.consents[input.consentType] as AnyConsent
+  if (current.kind === 'given' || current.kind === 'refused')
+    return reject(
+      `${resident.fullLegalName} already has a ${input.consentType.replace(/_/g, ' ')} decision on record. A second one would overwrite somebody's answer; withdrawing is how a consent stops standing.`,
+    )
+
+  const status: ConsentStatus<K> =
+    input.outcome.kind === 'given'
+      ? {
+          kind: 'given',
+          on: input.on,
+          method: input.outcome.method,
+          recordedBy: input.by,
+          by: input.authority,
+        }
+      : {
+          kind: 'refused',
+          on: input.on,
+          note: input.outcome.note,
+          recordedBy: input.by,
+          by: input.authority,
+        }
+
+  editResidentField(input.residentId, {
+    consents: {
+      ...resident.consents,
+      [input.consentType]: status,
+    } as Resident['consents'],
+  })
+
+  const updated = residentById(input.residentId)
+  if (!updated) return reject(`No resident with id ${input.residentId}`)
+  return logged(updated, {
+    module: 'Consent',
+    what: `Recorded ${input.consentType.replace(/_/g, ' ')} consent as ${input.outcome.kind} for ${updated.fullLegalName}`,
     to: `/residents/${updated.id}/consent`,
     by: input.by,
   })

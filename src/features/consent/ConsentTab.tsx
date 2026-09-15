@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import type { AnyConsent, ConsentTypeId } from '@/data/types'
 import { CONSENT_TYPES } from '@/data/types'
@@ -8,6 +9,7 @@ import { Icon } from '@/components/icon/Icon'
 import { formatCount } from '@/lib/format'
 import { ConsentAuthority, EffectCountValue } from './ConsentParts'
 import { CONSENT_MEANS } from './consent-meaning'
+import { FamilyAccessSection } from '@/features/family/FamilyAccessSection'
 import styles from './consent.module.css'
 
 /**
@@ -25,6 +27,13 @@ import styles from './consent.module.css'
  */
 export function ConsentTab() {
   const { resident } = useOutletContext<ResidentProfile>()
+  /*
+   * Bumped when a family member is named or removed. The store is this
+   * session's and the section reads it on render, so a counter is what makes
+   * the list agree with what somebody just did.
+   */
+  const [, setVersion] = useState(0)
+  const onChanged = () => setVersion((count: number) => count + 1)
 
   const rows = CONSENT_TYPES.map((type) => ({
     type,
@@ -95,6 +104,14 @@ export function ConsentTab() {
           ))}
         </ul>
       </Card>
+      {/*
+       * **FAM-01, on the Consent tab, which is where AM v2.0 puts it and where
+       * it belongs.** The basis for family access is this resident's
+       * `family_portal` consent, so the screen that names family members sits
+       * beside the record that authorises them rather than in a module of its
+       * own — two places would be two records of one fact.
+       */}
+      <FamilyAccessSection resident={resident} onChanged={onChanged} />
     </div>
   )
 }

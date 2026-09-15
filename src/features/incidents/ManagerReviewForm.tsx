@@ -6,6 +6,7 @@ import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
 import { acknowledge, close, recordReview } from '@/data/access/incident-store'
 import { decisionFor } from '@/data/access/notification-store'
+import { FamilyMessage } from '@/features/family/FamilyMessage'
 import styles from './incidents.module.css'
 
 /**
@@ -150,6 +151,20 @@ export function ManagerReviewForm({
           </div>
         )
       })}
+
+      {/*
+       * **FAM-03, and the field Phase 20 correctly refused.** It arrives with
+       * its writer, which is the rule that refusal established: an unwritten
+       * `Recorded<T>` renders hatched, and a gap invites completion with a
+       * control that does not exist.
+       *
+       * **It is not a field on `ManagerReview`.** A family message is a
+       * disclosure, not a review finding, and putting it beside the root cause
+       * would make the two indistinguishable in the record. It goes through
+       * the same log that shares a care note, which is also what stops it
+       * quietly becoming a review field later.
+       */}
+      <FamilyMessage incident={incident} onChanged={onChanged} />
 
       {incident.status.kind === 'closed' ? null : (
         <div className={styles.reviewActions}>

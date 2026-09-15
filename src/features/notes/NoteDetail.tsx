@@ -11,6 +11,7 @@ import { useViewer } from '@/app/session/use-viewer'
 import { NoteCard } from './NoteCard'
 import { CorrectionDialog } from './CorrectionDialog'
 import { ReviewNoteControl } from './ReviewNoteControl'
+import { ShareWithFamily } from '@/features/family/ShareWithFamily'
 import { SupervisionRecord } from './SupervisionRecord'
 import styles from './notes.module.css'
 
@@ -113,6 +114,17 @@ export function NoteDetail() {
                 </p>
               ) : (
                 <>
+                  {/*
+                   * **A disclosure decision, beside the note and never on
+                   * it.** The note is immutable; sharing it is a new record
+                   * about who may see it, with an author and a moment, and
+                   * un-sharing supersedes that record rather than erasing it.
+                   */}
+                  <ShareWithFamily
+                    residentId={resident.id}
+                    noteId={resource.data.id}
+                    onChanged={() => setReviewed((count) => count + 1)}
+                  />
                   <ReviewNoteControl
                     note={resource.data}
                     resident={resident}

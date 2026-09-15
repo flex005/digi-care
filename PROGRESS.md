@@ -13435,3 +13435,89 @@ object literal cast to `Partial<ManagerReview>`, which compiled and hid that
 `recordedAt` is `IsoDateTime` — a template type — and a bare `toISOString()` is
 a string. §6 forbids `any`; a cast that silences the same check is the same
 thing with better manners. The value is built typed and then keyed.
+
+# Phase 21 — Family Portal management, and the consent act that was missing
+
+## FAM-01 is the act that writes the consent, and the act did not exist
+
+Asking what FAM-01 writes found a hole in Phase 10. `DecisionAuthority` is
+**exactly** AM v2.0's three grounds — `the_resident`, `lpa_holder` with a
+health-and-welfare LPA, `best_interests` with a non-empty `consulted` list and
+a rationale — each carrying a `CapacityAssessment<K>` whose `covers` must name
+the consent type. So "supporting detail required before the invitation can be
+sent" is not form validation, it is the compiler.
+
+**And nothing in the build could record a consent.** `withdrawConsent` has
+existed since Phase 10 and was the only writer: the capacity gate collected an
+assessment and wrote nothing, so the module could take consent away and never
+give it. `recordConsent` is that act, beside `withdrawConsent`, through the
+same `editResidentField`. **Recorded as Phase 10 work finished late** rather
+than as Phase 21 scope, so the phase notes stay true about what each phase
+delivered.
+
+The four consequences held:
+
+- The basis is `DecisionAuthority` and there is no second vocabulary.
+- Supporting detail is the fields each basis already requires, which differ by
+  basis, and that is the point of having three.
+- The gate is on the path rather than beside it: the family section **refuses
+  to show its form at all** until the consent is on file, and names the record
+  that authorises it instead of offering a second way in.
+- The consent write goes through `editResidentField`, which the dashboard reads,
+  so the count moves. Two records would have been two counts.
+
+**There is no `invited` state anywhere.** It implies an email travelling and a
+status that turns Active; nothing is sent and nothing can activate, so the
+state would be permanent and its name a promise. It says what it is:
+`Recorded here, nothing sent`.
+
+## One disclosure log for FAM-02 and FAM-03
+
+Append-only, keyed by subject, current visibility derived from the latest
+entry. Un-sharing appends a second record rather than removing the first,
+because **a note a family could read for three weeks was disclosed** and a
+boolean flipped back to false destroys that. Mutation-tested by making the
+withdrawal splice the earlier entry out: it fires.
+
+The incident's family message goes through the same log, which is also what
+stops it becoming a field on `ManagerReview` later — where it would be
+indistinguishable from the manager's conclusions, and where AM v2.0 is explicit
+that the family see the message and never the record.
+
+**Family access is removed rather than superseded, and the difference is the
+reason.** A disclosure was seen; this list is a statement about who may see
+things now, and nothing on it was ever shown to anybody. There is no disclosure
+to preserve, only a decision that no longer stands.
+
+## The statement, and why it is not a banner
+
+This is the only place in the build where believing a stub can hurt somebody.
+Everywhere else a stub costs a reader a file. Here a manager who reads "shared
+with family" as *the family were told* **may not telephone them**, and for an
+incident that is a family not hearing that their relative fell.
+
+So: **on the control, in front of the act** — the opposite of the sign-in
+screen, where the statement sits behind a click precisely because a paragraph
+in front of a form goes unread. Here the risk is somebody not clicking.
+
+And **an instruction rather than a caveat**. "This is a prototype" describes
+the software; "if this family needs to know today, telephone them" describes
+what was about to not happen. One owner in `family-statement.ts`, phrased per
+screen because an incident is urgent and a care note is not.
+
+Recorded in §8 as its own entry, with the test: not "does the screen say it did
+not happen" — every stub here says so — but **"would somebody skip a real-world
+action because they think this one happened".**
+
+## Two small things
+
+**A label's accessible name was unreachable.** The access-level radios wrapped
+their name and their explanation in one span, and jsx-a11y stops looking at
+depth two. The text was on the screen and the accessible name was not, which is
+the defect the rule exists for. Flattened: the name is a direct child and what
+it means is a sibling, so the accessible name is "Full updates" rather than a
+paragraph.
+
+**An incident with no resident subject renders no family message at all.** Some
+are about a member of staff or a visitor: `subjectResidentId` says `'none'`
+rather than guessing, and there is nobody whose family this is.
