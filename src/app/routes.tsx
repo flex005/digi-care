@@ -65,6 +65,7 @@ import { ReportIncidentRoute } from '@/features/incidents/ReportIncidentRoute'
 import { CareNotesRoute } from '@/features/notes/CareNotesRoute'
 import { SignInRoute } from '@/features/auth/SignInRoute'
 import { SignOutRoute } from '@/features/auth/SignOutRoute'
+import { VerifyRoute } from '@/features/auth/VerifyRoute'
 import { InvitationRoute } from '@/features/auth/InvitationRoute'
 import { InvitationIndexRoute } from '@/features/auth/InvitationIndexRoute'
 import { InvitationAccessRoute } from '@/features/auth/InvitationAccessRoute'
@@ -97,6 +98,13 @@ export const router = createBrowserRouter([
   { path: '/invitation', element: <InvitationIndexRoute /> },
   { path: '/invitation/:staffId', element: <InvitationRoute /> },
   { path: '/invitation/:staffId/access', element: <InvitationAccessRoute /> },
+  /*
+   * Phase 19. Verification sits between the credentials and the session, for
+   * both paths into the product: accepting an invitation and signing in. It is
+   * outside the shell and outside the gate like the others, because it is
+   * reached before anybody has said who they are.
+   */
+  { path: '/verify/:staffId', element: <VerifyRoute /> },
   { path: '/sign-out', element: <SignOutRoute /> },
   {
     path: '/',

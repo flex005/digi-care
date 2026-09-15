@@ -8,6 +8,7 @@ import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
 import { ADMIN_ACTS, moduleForPath } from '@/features/team/permissions'
 import { NoAccess } from '@/app/NoAccess'
+import { SessionExpiry } from '@/features/auth/SessionExpiry'
 import { residents } from '@/data/fixtures/residents'
 import { incidents } from '@/data/fixtures/incidents'
 import type { NavCount } from './NavBadge'
@@ -163,6 +164,11 @@ export function AppShell() {
                    * reassurance failure with the reader's own change as the
                    * cause — the version they would least suspect.
                    */}
+                  {/*
+                   * Above everything, because it is a countdown to this
+                   * session's work being destroyed and the reader has minutes.
+                   */}
+                  <SessionExpiry />
                   <MovedClockBanner />
                   <ChangedFiguresBanner />
                   {refused === undefined ? (

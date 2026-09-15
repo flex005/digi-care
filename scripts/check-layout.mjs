@@ -109,6 +109,19 @@ try {
   await page.goto(`http://localhost:${PORT}/sign-in`, { waitUntil: 'networkidle' })
   await page.fill('[data-field="email"]', 'a.okonkwo@rosewoodcourt.example')
   await page.click('[data-sign-in-submit]')
+
+  /*
+   * **Verification, because from Phase 19 signing in is two screens.** The
+   * crawl clicked submit and waited for `main`, which used to be the next
+   * thing to appear; the OTP step now sits between the credentials and the
+   * product, and waiting for `main` on a screen that has none times out after
+   * fifteen seconds with no indication of why.
+   *
+   * It is also worth crawling: it is a screen at 1280 like any other.
+   */
+  await page.waitForSelector('[data-verify]', { timeout: 15000 })
+  await page.fill('[data-field="code"]', '123456')
+  await page.click('[data-verify-submit]')
   await page.waitForSelector('main', { timeout: 15000 })
 
   /*

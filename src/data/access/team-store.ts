@@ -338,6 +338,7 @@ export function teamHoldings(): SessionHolding[] {
      */
     ...held('resident assignments you set', assignmentChanges),
     ...held('home assignments you changed', siteChanges),
+    ...held('signing codes chosen at setup', codesChosen),
   ]
 }
 
@@ -348,6 +349,8 @@ export function resetSessionTeam(): void {
   standingChanges = 0
   assignmentChanges = 0
   siteChanges = 0
+  codesChosen = 0
+  chosenCodes.clear()
 }
 
 // ---------------------------------------------------------------------------
@@ -481,12 +484,48 @@ function shortName(fullName: string): string {
  * which is what an audit trail needs.
  */
 export function signingCodeFor(id: StaffId): string {
+  const chosen = chosenCodes.get(id)
+  if (chosen !== undefined) return chosen
+
   let hash = 0
   for (const character of String(id)) {
     hash = (hash * 31 + character.charCodeAt(0)) >>> 0
   }
   return String(hash % 10_000).padStart(4, '0')
 }
+
+/**
+ * Codes chosen at account setup, for this session only. Phase 19.
+ *
+ * **This is where the guarantee changes kind, and it is worth naming.** The
+ * derived code above is a pure function of the staff id, so no two people can
+ * have the same one: "a signature identifies one person" was held by
+ * construction. A code somebody chooses can collide with somebody else's, and
+ * nothing here prevents it — with one signed-in user that costs nothing, and
+ * what has actually changed is that the property stopped being the compiler's
+ * and became the deployment's.
+ *
+ * It is recorded in the handover rather than only here, because a comment is
+ * read by somebody already in this file and the person who needs this is
+ * whoever picks the build up.
+ *
+ * The alternative was worse. A PIN chosen at setup and then ignored is a dead
+ * control in front of a clinical signature, on the screen where somebody is
+ * most entitled to believe the thing they typed matters.
+ */
+const chosenCodes = new Map<StaffId, string>()
+
+export function setSigningCode(id: StaffId, code: string): void {
+  if (!/^\d{4}$/.test(code))
+    throw new Error('A signing code is four digits. Anything else is not one.')
+  chosenCodes.set(id, code)
+  codesChosen += 1
+}
+
+/** Whether this person chose their code this session, for a screen that says so. */
+export const codeWasChosen = (id: StaffId): boolean => chosenCodes.has(id)
+
+let codesChosen = 0
 
 /** Whether this code belongs to this person. */
 export const signingCodeMatches = (id: StaffId, code: string): boolean =>

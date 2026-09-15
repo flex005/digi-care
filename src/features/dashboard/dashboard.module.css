@@ -570,3 +570,40 @@
   text-decoration: none;
   white-space: nowrap;
 }
+
+/*
+ * Invitations nobody has accepted. Phase 19.
+ *
+ * **Quiet, not a finding.** Nothing is missing from the clinical record and
+ * nobody is at risk; somebody has not clicked a link. The alarm vocabulary
+ * spent here is vocabulary that stops working where there is a finding.
+ */
+.pendingInvites {
+  padding: var(--space-12) var(--space-16);
+  margin-bottom: var(--space-16);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.pendingTitle {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.pendingList {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-4) 0 var(--space-8);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.pendingLink {
+  color: var(--purple-600);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-semibold);
+}

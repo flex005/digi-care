@@ -13253,3 +13253,99 @@ reporting activity rather than coverage, and the third time it arrived inside
 the mechanism built to catch it. The point the entry makes is that this shape
 is not caught by knowing about it, because the moment of checking and the
 moment of being satisfied are the same moment.
+
+# Phase 19 — authentication, drawn honestly
+
+## What is real and what is a drawing
+
+**One thing here has teeth and the rest are drawings, and the screens say
+which.** Nothing signs anybody in, verifies an address or checks a password.
+The session expiry is different in kind: the clock is real, the inactivity is
+real, and reaching zero destroys everything the session wrote through the same
+path the sign-out screen uses. It has teeth because the thing it protects —
+work held in memory and nowhere else — is real too.
+
+**The verification screen puts its statement first, which is the opposite of
+every other authentication screen in this build.** The others put it one click
+away, because a form that explains what it cannot do before somebody uses it is
+a paragraph in front of a form. This one asks for a code that was never sent
+anywhere: a reader who is not told will sit waiting for an email. The statement
+is the screen's subject rather than a disclaimer on it.
+
+**Verification sits before the session, not after it.** Signing in navigates to
+`/verify/:staffId` and the session is created there. The other order would put
+the step behind the gate it exists to stand in front of, since every route
+redirects to sign-in until somebody is signed in.
+
+## The signing code, and the guarantee that changed kind
+
+`signingCodeFor` was a pure function of the staff id, so **no two people could
+have the same signing code, by construction**. A chosen code can collide, and
+nothing here prevents it.
+
+The alternative was worse: a PIN chosen at setup and then ignored is a dead
+control in front of a clinical signature, on the screen where somebody is most
+entitled to believe what they typed matters. So it replaces the derivation for
+the session, the round and the handover ask for it, and a test walks the whole
+loop — set it on the invitation, read it back from `signingCodeFor`.
+
+**Recorded in the README rather than only in a comment.** A comment is read by
+somebody already in that file; the person who needs this is whoever picks the
+build up, and the requirement is easy to miss precisely because the old
+behaviour never needed it written down.
+
+## The strength bar is a count with a denominator
+
+AM v2.0 asks for Weak / Fair / Strong in red, amber and green. Two problems:
+RAG is reserved for findings, and "strong" is a claim about security that
+nothing in this build can make. A password meeting five rules meets five rules.
+So the figure is the one the checklist already supports — "4 of 5 rules met" —
+and the list underneath is what tells somebody what to change.
+
+## Three refusals, stated rather than built
+
+- **Single active session.** One tab, no server, nothing to terminate.
+- **The device and IP list.** Fabricated records in the one screen whose
+  subject is account security. The active-sessions block has one row and the
+  sentence beside it is the point: a list of one reads as a product that found
+  one rather than one that can only ever see one.
+- **"Safe has dropped to Red since your last login".** The sharpest of the
+  three. Once there is a last login it is always this session, so the banner
+  would always mean "since you signed in" — a different claim wearing the same
+  words, and the more reassuring of the two, because a rating that fell last
+  month would not appear in it. Refused in place, in the compliance overview,
+  so the next reader meets the reason rather than the absence.
+
+## The timeout is a settable figure, and that is why the state is reachable
+
+Eight hours of inactivity with a warning in the last ten minutes is a state
+nobody reviewing this build will ever reach: the warning is 470 minutes away.
+A state the clock cannot reach is a branch nothing tests. It is read while the
+shell draws, so it qualifies under the rule the rest of that list obeys, and
+lowering it does what it says rather than moving a label.
+
+## Two things that only moved because something else did
+
+**The statement moved with the act.** "No account was created" was on the
+invitation's Accept button, which was the end of the flow until verification
+landed in front of the product. A statement placed at the moment of an act has
+to move when the act does, or it warns about a step that is no longer the end
+of anything. Its test walks to the end now rather than asserting where the end
+used to be.
+
+**Two guards had to walk the new path.** `auth.test.tsx`'s sign-in helper
+clicked submit and expected a session; `check-layout.mjs` clicked submit and
+waited for `main`. Both now type six digits first. The layout one failed
+usefully — a fifteen-second timeout with no indication why — and the test one
+failed usefully too, which is the difference between a guard that walks the
+product and one that reaches past it.
+
+## The screenshot found what the layout guard could not
+
+The verification card rendered at the full 1440: `.card` sets a surface and
+never a width, and the sign-in screen constrains itself through its two-column
+panel, so a new screen using `.card` alone stretched to the window. **Nothing
+was clipped, so `check-layout` passed it** — a card at full width is not a lost
+value, it is a form whose fields run the width of a monitor. Correct in the
+DOM, wrong on screen, found by looking at a picture. Same class as the hatched
+tile and the black donut.

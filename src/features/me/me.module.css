@@ -595,3 +595,20 @@
   line-height: var(--text-body-line);
   max-width: 72ch;
 }
+
+/* Where you are signed in: one row, and the sentence is the point. Phase 19. */
+.sessions {
+  padding: 0 var(--space-20) var(--space-16);
+  border-top: 1px solid var(--border-subtle);
+  margin-top: var(--space-16);
+  padding-top: var(--space-16);
+}
+
+.sessionRow {
+  display: flex;
+  gap: var(--space-16);
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--border-subtle);
+}

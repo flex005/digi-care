@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useSession } from '@/app/session/use-session'
-import { Button, Dialog, PasswordField } from '@/components/primitives'
+import { Button, PasswordField } from '@/components/primitives'
 import { STAFF_ROLE_NAMES } from '@/data/types'
+import { setSigningCode } from '@/data/access/team-store'
 import type { IsoDate, IsoDateTime } from '@/data/types'
 import { now as appNow } from '@/data/fixtures/clock'
 import { invitationFor, invitationHasExpired } from '@/data/fixtures/invitations'
@@ -10,7 +11,6 @@ import { memberById } from '@/data/access/team-store'
 import { PERMISSION_MODULES, levelFor } from '@/features/team/permissions'
 import { PERMISSION_LABELS } from '@/features/team/permissions'
 import { formatDate, zonedDate } from '@/lib/format'
-import { PROTOTYPE_STATEMENT, PROTOTYPE_WARNING } from './prototype-statement'
 import styles from './auth.module.css'
 
 /**
@@ -59,6 +59,27 @@ export const PASSWORD_RULES: {
       )
     },
   },
+  /*
+   * AM v2.0's AUTH-03 asks for one uppercase, one number and one special
+   * character. Three rules rather than one, because the list is what the
+   * screen renders: a single "meets the complexity requirements" row tells
+   * somebody they have failed and not what to change.
+   */
+  {
+    id: 'uppercase',
+    says: 'At least one capital letter',
+    met: ({ password }) => /[A-Z]/.test(password),
+  },
+  {
+    id: 'number',
+    says: 'At least one number',
+    met: ({ password }) => /\d/.test(password),
+  },
+  {
+    id: 'special',
+    says: 'At least one symbol',
+    met: ({ password }) => /[^A-Za-z0-9]/.test(password),
+  },
   {
     id: 'match',
     says: 'Both entries match',
@@ -80,7 +101,9 @@ export function InvitationRoute() {
 
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
-  const [accepted, setAccepted] = useState(false)
+  const [jobTitle, setJobTitle] = useState('')
+  const [pin, setPin] = useState('')
+  const [pinConfirm, setPinConfirm] = useState('')
 
   const member = staffId === undefined ? undefined : memberById(staffId)
   const invitation = staffId === undefined ? undefined : invitationFor(staffId)
@@ -115,6 +138,7 @@ export function InvitationRoute() {
   ]
   const input: Input = { password, confirm, forbidden }
   const unmet = PASSWORD_RULES.filter((rule) => !rule.met(input))
+  const pinReady = /^\d{4}$/.test(pin) && pin === pinConfirm
 
   const initials = member.ref.fullName
     .split(/\s+/)
@@ -227,6 +251,71 @@ export function InvitationRoute() {
                 data-field="confirm"
               />
             </div>
+
+            {/*
+             * **The count of rules met, where AM v2.0 asks for a strength
+             * bar.** Weak, Fair and Strong are a RAG treatment on a claim
+             * about security that nothing in this build can make: a password
+             * meeting five rules is not "strong", it meets five rules. And RAG
+             * is reserved for findings. So the figure is the one the checklist
+             * already supports, with its denominator, and the list above is
+             * what tells somebody what to change.
+             */}
+            <p className={styles.pwCount} data-password-met>
+              {PASSWORD_RULES.length - unmet.length} of {PASSWORD_RULES.length} rules
+              met
+            </p>
+
+            <h2>Set your signing code</h2>
+            <p className={styles.hint}>
+              Four digits, typed when you sign for a medication round, countersign a
+              handover, or finalise a care plan. It goes on those records as you.
+            </p>
+            <div className={styles.field}>
+              <PasswordField
+                id="invitation-pin"
+                label="Signing code"
+                value={pin}
+                onChange={(next) => setPin(next.replace(/\D/g, '').slice(0, 4))}
+                autoComplete="off"
+                data-field="pin"
+              />
+            </div>
+            <div className={styles.field}>
+              <PasswordField
+                id="invitation-pin-confirm"
+                label="Confirm signing code"
+                value={pinConfirm}
+                onChange={(next) => setPinConfirm(next.replace(/\D/g, '').slice(0, 4))}
+                autoComplete="off"
+                data-field="pin-confirm"
+              />
+            </div>
+            <p className={styles.hint} data-pin-collision>
+              Nothing stops two people choosing the same four digits. Until you set one,
+              your code is derived from your account and cannot collide with anybody
+              else&rsquo;s; choosing one is what a real deployment does, and it moves
+              that guarantee from the system to whoever runs it.
+            </p>
+
+            <h2>About you</h2>
+            <div className={styles.field}>
+              <label className={styles.k} htmlFor="invitation-job-title">
+                Job title
+              </label>
+              <input
+                id="invitation-job-title"
+                type="text"
+                value={jobTitle}
+                onChange={(event) => setJobTitle(event.target.value)}
+                data-field="job-title"
+              />
+              <p className={styles.hint}>
+                What you call the job. It is not your role:{' '}
+                {STAFF_ROLE_NAMES[member.role]} is what decides what you can open, and
+                only an admin changes it.
+              </p>
+            </div>
           </div>
         )}
 
@@ -235,9 +324,12 @@ export function InvitationRoute() {
             See what I would be able to do
           </Link>
           <Button
-            disabled={expired || unmet.length > 0}
+            disabled={expired || unmet.length > 0 || !pinReady}
             data-accept-invitation
-            onClick={() => setAccepted(true)}
+            onClick={() => {
+              setSigningCode(member.id, pin)
+              navigate(`/verify/${member.id}?next=invitation`)
+            }}
           >
             Accept and set up my account
           </Button>
@@ -246,42 +338,16 @@ export function InvitationRoute() {
 
       {/* Feedback on the form, not an explanation of it: what is still
           outstanding, and nothing when nothing is. */}
-      {expired || unmet.length === 0 ? null : (
+      {expired || (unmet.length === 0 && pinReady) ? null : (
         <p className={styles.subtitle} data-invitation-state>
-          Waiting on: {unmet.map((rule) => rule.says.toLowerCase()).join(' · ')}.
+          Waiting on:{' '}
+          {[
+            ...unmet.map((rule) => rule.says.toLowerCase()),
+            ...(pinReady ? [] : ['a four-digit signing code, entered twice']),
+          ].join(' · ')}
+          .
         </p>
       )}
-
-      {/*
-       * The statement that used to be a banner above the form, on the control
-       * it is actually about: this button creates no account. It lands at the
-       * moment of the act rather than as a preamble in front of it, which is
-       * where somebody is deciding rather than skimming.
-       */}
-      <Dialog
-        open={accepted}
-        onOpenChange={(next) => {
-          setAccepted(next)
-          if (!next) navigate('/sign-in')
-        }}
-        title="No account was created"
-        description={PROTOTYPE_STATEMENT}
-        actions={
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setAccepted(false)
-              navigate('/sign-in')
-            }}
-          >
-            Back to sign in
-          </Button>
-        }
-      >
-        <p className={styles.dialogBody} data-accept-note>
-          {PROTOTYPE_WARNING}
-        </p>
-      </Dialog>
     </div>
   )
 }

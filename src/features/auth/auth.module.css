@@ -647,3 +647,93 @@
   font-weight: var(--weight-regular);
   color: var(--ink-500);
 }
+
+/*
+ * The verification step. Phase 19.
+ *
+ * The notice is the screen's subject rather than a banner on it, so it reads
+ * as body copy in the flow rather than as an alarm: nothing here is a finding,
+ * and the caution treatment on a screen with nothing wrong is how the caution
+ * treatment stops working where something is.
+ */
+
+/*
+ * **The verification card is narrow, and the screenshot is what said so.**
+ * `.card` sets the surface and never a width: the sign-in screen constrains
+ * itself through `.authWrap`, its two-column panel, so a new screen using
+ * `.card` alone stretched to the full 1440. Nothing was clipped, so
+ * `check-layout` passed it — a card at full width is not a lost value, it is a
+ * form whose fields run the width of a monitor — and only looking at it found
+ * it. The same class as the hatched tile: correct in the DOM, wrong on screen.
+ */
+.verifyCard {
+  width: 100%;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: var(--space-32);
+}
+
+.verifyCard .field {
+  margin-bottom: var(--space-12);
+}
+
+.verifyNotice {
+  color: var(--ink-700);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  max-width: 60ch;
+  margin-bottom: var(--space-12);
+  padding: var(--space-12);
+  border-left: 2px solid var(--border-subtle);
+}
+
+/*
+ * The session-expiry bar. Phase 19.
+ *
+ * **It takes the caution treatment and it is the case that earns it.** A
+ * notice is not a finding, and this build spends the alarm vocabulary
+ * carefully — but this is a countdown to work being destroyed, which is
+ * something a reader has to act on within minutes. The moved-clock notice does
+ * not earn it; this does.
+ */
+.expiryBar {
+  display: flex;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-12) var(--space-16);
+  margin-bottom: var(--space-16);
+  border: 1px solid var(--status-caution);
+  border-radius: var(--radius-md);
+  background: var(--status-caution-tint);
+}
+
+.expiryText {
+  color: var(--status-caution-ink);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  max-width: 72ch;
+}
+
+.expiryStay {
+  flex: none;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--status-caution);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  color: var(--status-caution-ink);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+/* Why the last session ended, on the screen it returned you to. Phase 19. */
+.endedNotice {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  max-width: 60ch;
+  margin-bottom: var(--space-12);
+  padding-left: var(--space-12);
+  border-left: 2px solid var(--border-subtle);
+}

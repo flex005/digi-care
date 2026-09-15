@@ -24,10 +24,26 @@ details into it.**
 
 - **No backend.** No server, no database, no API. Every screen reads typed
   fixtures in `src/data/`.
-- **No authentication.** There is a sign-in screen and it checks nothing. Any
-  password signs you in, no permission is enforced, and every screen is
-  reachable by anybody who opens the URL. The screens say so where somebody can
-  read it before they type.
+- **No authentication.** There is a sign-in screen and a six-digit
+  verification step, and neither checks anything. Any password signs you in,
+  any six digits pass, no email is ever sent, and the screens say so where
+  somebody can read it before they type. **Permissions do decide what renders**
+  from Phase 17 — a module a role has no access to does not open, and a control
+  a role has no level for is not drawn — which prevents a wrong-role mistake
+  and nothing else: access control that lives in a browser is a suggestion, and
+  a real deployment enforces it on a server.
+- **One guarantee changed kind in Phase 19, and whoever takes this on needs to
+  know.** A signature in this build carries a four-digit code, asked for when
+  somebody signs a medication round, countersigns a handover, or finalises a
+  care plan. Until Phase 19 that code was derived from the staff id, so **no
+  two people could have the same one, by construction** — "a signature
+  identifies one person" was a property the code held. Account setup now lets
+  somebody choose their own, because a PIN field that is then ignored is a dead
+  control in front of a clinical signature. Nothing prevents two people
+  choosing the same four digits. With one signed-in user that costs nothing;
+  **in a real deployment it is now that deployment's job**, and it is the kind
+  of requirement that is easy to miss precisely because the old behaviour never
+  needed it written down.
 - **Nothing persists.** Everything written is held in the browser tab and is
   gone on reload. Signing out destroys it deliberately, and names what it is
   destroying item by item.

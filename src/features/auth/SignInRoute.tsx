@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useSession } from '@/app/session/use-session'
 import { Button, Dialog, PasswordField } from '@/components/primitives'
 import { Logo } from '@/components/brand/Logo'
@@ -37,7 +37,8 @@ import styles from './auth.module.css'
  * otherwise be the giveaway.
  */
 export function SignInRoute() {
-  const { sites, signInAs } = useSession()
+  const { sites } = useSession()
+  const [params] = useSearchParams()
   const navigate = useNavigate()
 
   const members = useMemo(() => teamMembers(), [])
@@ -80,6 +81,21 @@ export function SignInRoute() {
             {/* The page's only h1: the outer heading was a second one saying
                 the same word. */}
             <h1 className={styles.authTitle}>Sign in</h1>
+
+            {/*
+             * **Why the last session ended, where it ended by itself.** Being
+             * returned to a sign-in screen with no explanation reads as
+             * something having gone wrong, and what actually happened is a
+             * rule doing its job. It also has to name the consequence: the
+             * work is not waiting to be picked up, it is gone.
+             */}
+            {params.get('ended') === 'inactivity' ? (
+              <p className={styles.endedNotice} data-session-ended>
+                <b>Your last session ended after a spell of inactivity.</b> Anything it
+                had written is gone: this build holds every write in memory and nowhere
+                else.
+              </p>
+            ) : null}
             <p className={styles.lede}>
               Use the email address your invitation was sent to.
             </p>
@@ -250,8 +266,16 @@ export function SignInRoute() {
                   data-sign-in-submit
                   onClick={() => {
                     if (member === undefined || site === undefined) return
-                    signInAs(member, site)
-                    navigate('/')
+                    /*
+                     * **Verification first, and the session afterwards.** AM
+                     * v2.0 puts an OTP between the credentials and the
+                     * product, and signing in here and verifying after would
+                     * put the step behind the gate it exists to be in front
+                     * of: every route redirects to sign-in until somebody is
+                     * signed in, so a verify screen reached while signed in is
+                     * a screen nobody has to pass.
+                     */
+                    navigate(`/verify/${member.id}?site=${site.id}`)
                   }}
                 >
                   Sign in

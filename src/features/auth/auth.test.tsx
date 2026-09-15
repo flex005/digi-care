@@ -25,6 +25,7 @@ import { InvitationRoute, PASSWORD_RULES } from './InvitationRoute'
 import { InvitationIndexRoute } from './InvitationIndexRoute'
 import { PROTOTYPE_STATEMENT, PROTOTYPE_WARNING } from './prototype-statement'
 import { InvitationAccessRoute } from './InvitationAccessRoute'
+import { VerifyRoute } from './VerifyRoute'
 
 /**
  * Sign in, invitation, sign out. PRD §6.7.
@@ -39,6 +40,16 @@ afterEach(() => {
   endSession()
 })
 
+/**
+ * A password meeting every rule, built to be read against the list.
+ *
+ * Twelve characters, a capital, a number and a symbol, and nothing resembling
+ * anybody's name. It was `'quarter-tin-elm'`, which met the only three rules
+ * that existed when it was written and silently stopped meeting the set when
+ * AM v2.0's complexity rules landed.
+ */
+const GOOD_PASSWORD = 'Quarter-Tin-Elm-9'
+
 function makeRouter(path: string) {
   return createMemoryRouter(
     [
@@ -47,6 +58,9 @@ function makeRouter(path: string) {
       { path: '/invitation', element: <InvitationIndexRoute /> },
       { path: '/invitation/:staffId', element: <InvitationRoute /> },
       { path: '/invitation/:staffId/access', element: <InvitationAccessRoute /> },
+      // Phase 19: verification sits between the credentials and the session on
+      // both paths in, so a router without it 404s where the product navigates.
+      { path: '/verify/:staffId', element: <VerifyRoute /> },
       {
         path: '/',
         element: (
@@ -96,6 +110,15 @@ function renderAt(path: string) {
  * exists for somebody who is signed in, and a test that fabricated a session
  * would not notice the day signing in stopped producing one.
  */
+/**
+ * Signed in the way a person is, which from Phase 19 is two screens.
+ *
+ * **It clicks through verification rather than skipping it**, because the
+ * session is created there and not on the sign-in form: AM v2.0's OTP sits
+ * between the credentials and the product, and putting it after the session
+ * would put the step behind the gate it exists to be in front of. A helper
+ * that reached past it would be signing in by a route no person has.
+ */
 async function signedInAt(path: string) {
   const user = userEvent.setup()
   const view = renderAt('/sign-in')
@@ -103,6 +126,13 @@ async function signedInAt(path: string) {
     expect(view.container.querySelector('[data-sign-in]')).toBeTruthy(),
   )
   await user.click(view.container.querySelector('[data-sign-in-submit]')!)
+
+  await waitFor(() =>
+    expect(view.container.querySelector('[data-verify]')).toBeTruthy(),
+  )
+  await user.type(view.container.querySelector('[data-field="code"]')!, '123456')
+  await user.click(view.container.querySelector('[data-verify-submit]')!)
+
   await act(async () => {
     await view.router.navigate(path)
   })
@@ -162,20 +192,24 @@ describe('what this build does not do is said on the control that cannot do it',
     }
   })
 
-  it('is behind Accept, which is the control that creates no account', async () => {
+  it('is behind the last step of setting up, which creates no account', async () => {
+    /*
+     * **The statement moved with the act.** It was on the invitation's Accept
+     * button, which was the end of the flow until AM v2.0's verification
+     * landed in front of the product. A statement placed at the moment of the
+     * act has to move when the act does, or it warns about a step that is no
+     * longer the end of anything — so this walks to the end rather than
+     * asserting where the end used to be.
+     */
     const user = userEvent.setup()
     const invited = liveInvitation()
     const { container } = renderAt(`/invitation/${invited.staffId}`)
     await settled(container, '[data-invitation]')
 
-    await user.type(
-      container.querySelector('[data-field="password"]')!,
-      'quarter-tin-elm',
-    )
-    await user.type(
-      container.querySelector('[data-field="confirm"]')!,
-      'quarter-tin-elm',
-    )
+    await user.type(container.querySelector('[data-field="password"]')!, GOOD_PASSWORD)
+    await user.type(container.querySelector('[data-field="confirm"]')!, GOOD_PASSWORD)
+    await user.type(container.querySelector('[data-field="pin"]')!, '4071')
+    await user.type(container.querySelector('[data-field="pin-confirm"]')!, '4071')
     await waitFor(() =>
       expect(
         container.querySelector<HTMLButtonElement>('[data-accept-invitation]')!
@@ -183,6 +217,10 @@ describe('what this build does not do is said on the control that cannot do it',
       ).toBe(false),
     )
     await user.click(container.querySelector('[data-accept-invitation]')!)
+
+    await waitFor(() => expect(container.querySelector('[data-verify]')).toBeTruthy())
+    await user.type(container.querySelector('[data-field="code"]')!, '123456')
+    await user.click(container.querySelector('[data-verify-submit]')!)
 
     const dialog = await screen.findByRole('dialog')
     expect(dialog.textContent).toMatch(/no account was created/i)
@@ -494,15 +532,24 @@ describe('an invitation states what is being accepted, before the password', () 
     expect(rules.length).toBe(PASSWORD_RULES.length)
     for (const rule of rules) expect(rule.getAttribute('data-met')).toBe('no')
 
-    await user.type(
-      container.querySelector('[data-field="password"]')!,
-      'quarter-tin-elm',
-    )
+    await user.type(container.querySelector('[data-field="password"]')!, GOOD_PASSWORD)
     await waitFor(() =>
       expect(
         container.querySelector('[data-rule="length"]')!.getAttribute('data-met'),
       ).toBe('yes'),
     )
+    /*
+     * Every rule but the match, which needs the second field. Asserted across
+     * the whole list rather than on the one that changed, because a checklist
+     * that ticks one row and quietly leaves another unchecked is the thing
+     * this screen exists to prevent.
+     */
+    for (const rule of container.querySelectorAll('[data-rule]')) {
+      const expected = rule.getAttribute('data-rule') === 'match' ? 'no' : 'yes'
+      expect(rule.getAttribute('data-met'), rule.getAttribute('data-rule')!).toBe(
+        expected,
+      )
+    }
     // And the checklist is checked rather than described: the rule that is not
     // met yet still says so.
     expect(
@@ -512,10 +559,21 @@ describe('an invitation states what is being accepted, before the password', () 
       container.querySelector<HTMLButtonElement>('[data-accept-invitation]')!.disabled,
     ).toBe(true)
 
-    await user.type(
-      container.querySelector('[data-field="confirm"]')!,
-      'quarter-tin-elm',
-    )
+    await user.type(container.querySelector('[data-field="confirm"]')!, GOOD_PASSWORD)
+
+    /*
+     * **Still disabled, because a password is not the whole of setting an
+     * account up.** AM v2.0's AUTH-03 asks for a signing code too, and it is
+     * the half with clinical consequence: it goes on a medication round. A
+     * form that enabled here would let somebody finish without one.
+     */
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-accept-invitation]')!.disabled,
+    ).toBe(true)
+
+    await user.type(container.querySelector('[data-field="pin"]')!, '4071')
+    await user.type(container.querySelector('[data-field="pin-confirm"]')!, '4071')
+
     await waitFor(() =>
       expect(
         container.querySelector<HTMLButtonElement>('[data-accept-invitation]')!

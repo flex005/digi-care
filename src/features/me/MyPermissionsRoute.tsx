@@ -100,6 +100,39 @@ export function MyPermissionsRoute() {
           </div>
         </div>
 
+        {/*
+         * **AM v2.0's active-sessions list, which is one row here and says
+         * why.** Its AUTH-08 lists every device somebody is signed in on and
+         * offers to end each one. This build has a browser tab: there is no
+         * server holding sessions, nothing to enumerate, and inventing rows
+         * with device names and IP addresses would be fabricated records in
+         * the one screen whose subject is account security.
+         *
+         * One row is the honest version, and the sentence beside it is the
+         * part that matters — a list of one reads as a product that found one,
+         * rather than as a product that can only ever see one.
+         */}
+        <div className={styles.sessions} data-active-sessions>
+          <h3 className={styles.yoursTitle}>Where you are signed in</h3>
+          <p className={styles.yoursBody}>
+            One, and it is this tab. A real deployment lists every device and ends any
+            of them from here; this build has no server keeping sessions, so it can see
+            the one it is running in and no others. A list naming devices you are not
+            looking at would be invented.
+          </p>
+          <div className={styles.sessionRow} data-session-row="this">
+            <span className={styles.detailValue}>This browser tab</span>
+            <span className={styles.detailKey}>
+              {signIn.kind === 'signed_in'
+                ? `since ${formatTime(signIn.at, activeSite.timeZone)}`
+                : 'not signed in'}
+            </span>
+            <Link to="/sign-out" className={styles.plainButton} data-end-this-session>
+              End it
+            </Link>
+          </div>
+        </div>
+
         <div className={styles.panelActions}>
           <Button variant="secondary" disabled data-no-password>
             Change my password

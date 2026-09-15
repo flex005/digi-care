@@ -80,6 +80,20 @@ export function ComplianceOverviewRoute() {
         </div>
       </header>
 
+      {/*
+       * **There is no "Safe has dropped to Red since your last login" banner,
+       * and AM v2.0's DASH-01 asks for one.** Refused rather than missed.
+       *
+       * "Since your last login" needs a previous login to compare against, and
+       * this build has exactly one: the session you are in. Once there is a
+       * last login it is always this one, so the banner would always mean
+       * "since you signed in" — a different claim wearing the same words, and
+       * the more reassuring of the two, because a rating that fell last month
+       * would not appear in it.
+       *
+       * The screen below states every rating and every check without needing a
+       * comparison, which is what a reader actually has to act on.
+       */}
       <PlaceholderBanner what="screen" />
 
       <div className={styles.analysisGrid}>

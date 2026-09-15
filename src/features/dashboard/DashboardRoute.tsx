@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import type { IsoDateTime } from '@/data/types'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { PendingInvitations } from './PendingInvitations'
 import { Card, SelectedMark } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { NeverWrittenUp, Unrecorded } from '@/components/status'
@@ -92,6 +93,8 @@ export function DashboardRoute() {
   return (
     <div className={styles.page} data-dashboard>
       {/* One pattern definition for every chart on the page. */}
+
+      <PendingInvitations />
 
       <header>
         <h1 className={styles.pageTitle}>{activeSite.name}</h1>

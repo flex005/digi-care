@@ -44,6 +44,30 @@ export interface AdjustableFigure {
 
 const FIGURES: AdjustableFigure[] = [
   {
+    /*
+     * **Settable because it is the only way to see the state it produces.**
+     * AM v2.0's AUTH-08 expires a governance session after eight hours of
+     * inactivity and warns in the last ten minutes, which is a state nobody
+     * reviewing this build will ever reach: the warning is 470 minutes away
+     * and the sign-out 480. A figure nobody can reach is a branch nothing
+     * tests, which is the standing check about a fixture reaching every state,
+     * one level up — here the thing that cannot reach it is the clock.
+     *
+     * It is read while the shell draws, so it qualifies under the rule the
+     * rest of this list obeys, and lowering it does exactly what it says
+     * rather than moving a label.
+     */
+    id: 'session-timeout-minutes',
+    label: 'Minutes of inactivity before a session ends',
+    effect:
+      'The warning appears in the last ten minutes and the session ends at zero, destroying everything it wrote. Lower it to see either.',
+    unit: 'minutes',
+    value: 480,
+    fallback: 480,
+    fixedAtGeneration: false,
+    seenOn: 'Every screen, in the bar above the content',
+  },
+  {
     id: 'min-population-for-a-rate',
     label: 'Smallest population a rate may be drawn from',
     effect:
@@ -151,6 +175,7 @@ export const dueSoonDays = () => figure('due-soon-days').value
 export const gapThresholdWakingMinutes = () =>
   figure('gap-threshold-waking-minutes').value
 export const reviewIntervalMonths = () => figure('review-interval-months').value
+export const sessionTimeoutMinutes = () => figure('session-timeout-minutes').value
 
 // ---------------------------------------------------------------------------
 // Sites
