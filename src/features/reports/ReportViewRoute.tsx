@@ -309,6 +309,15 @@ function Cell({ cell }: { cell: ReportCell }) {
     case 'rate':
       return (
         <span data-numeric data-cell="rate">
+          {/*
+           * The denominator is the row, not this cell. Every table carrying a
+           * rate puts the population in a named column beside it: the
+           * omissions report reads "Doses due · No record · Rate", so 2.6% is
+           * read across from 420. A cell component cannot see its own row, and
+           * repeating the total inside the cell would print it twice in one
+           * line — the pharmacy cycle's "30mg · 30mg · capsules" defect.
+           */}
+          {/* percentage-ok: the population is the row's own column, labelled in the header */}
           {cell.aggregate.value.toFixed(1)}%
         </span>
       )

@@ -13193,3 +13193,63 @@ denominator is in a sibling span. So the check cannot be "percentages come from
 rendering fact rather than a syntactic one. Within one component is a
 reasonable approximation and it is an approximation, which is the thing §8 warns
 about. Frank's call.
+
+# The percentage guard, and what its mutation showed
+
+`check-percentages.mjs` holds the half of §1 that does more damage: a bare
+count invites a question, a bare percentage answers one.
+
+**Three rendered percentages, not the two I reported.** The earlier count came
+from a grep that excluded lines matching `100%|width|...` to filter out CSS,
+and that filter also removed `{cell.aggregate.value.toFixed(1)}%` in the report
+table. Eighteen `}%` exist in feature code; fifteen are lengths inside a
+`style` object, told apart by the backtick that follows them.
+
+**The report cell is the one opt-out, and it is compliant.** A rate sits in a
+row whose columns read "Doses due · No record · Rate", so 2.6% is read across
+from 420. The cell component cannot see its own row, and repeating the total
+inside the cell would print it twice in one line — the pharmacy cycle's
+"30mg · 30mg · capsules" defect. The opt-out names where a reader finds it.
+
+## The scope was wrong, and a mutation said so rather than a reading
+
+Frank's argument for "within the same component" was that it can only fail by
+flagging a percentage whose denominator lives elsewhere — a false alarm
+somebody investigates, never a bare one passing silently. The argument is
+right and **the scope did not deliver it**: a bare `{92}%` added to
+`DashboardRoute` passed, because that component is six hundred lines long and
+contains an unrelated "of {" somewhere inside it. A pass for the wrong reason,
+which is what whole-file scope was rejected for, at a smaller scale.
+
+So the check is a **line window** as well as a component: twelve lines, which
+is what "beside it" means to a reader. The widest compliant case in the build
+is five. Both halves are required, and tightening the number produces false
+alarms and never silence.
+
+**Three mutations, and one of them did not apply.** Stripping the denominator
+from the group overview fires. Moving the compliance denominator out of reach
+fires. The first attempt at the bare-percentage mutation replaced a string that
+is not in that file, so nothing was injected and the guard printed its tick —
+which I nearly read as a pass. That is the §8 entry about a mutation whose
+build fails silently, arriving as a mutation whose *edit* fails silently, and
+the tell was the same: the finding that came back was the previous run's.
+
+## Counts examined and refused
+
+Recorded at the foot of the guard so nobody re-derives it as an oversight. A
+number in JSX is syntactically recognisable and says nothing about whether it
+is an aggregate: `{grid.rows.length} medications` describes what is visibly on
+the screen and `{covered} medications` is a claim about evidence. Identical
+AST, opposite meanings. Three hundred–odd `data-numeric` sites and several
+hundred more numbers mean any syntactic rule is hundreds of mostly-legitimate
+findings, which is wallpaper on the first run — and wallpaper is worse than a
+sentence, because it reads as coverage.
+
+## Third §8 entry
+
+The audit's own defect, as its own entry: it searched for each refusal's
+wording, found a test mentioning it, and stopped. Third occurrence of a guard
+reporting activity rather than coverage, and the third time it arrived inside
+the mechanism built to catch it. The point the entry makes is that this shape
+is not caught by knowing about it, because the moment of checking and the
+moment of being satisfied are the same moment.

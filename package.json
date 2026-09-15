@@ -13,7 +13,7 @@
     "icons": "node scripts/icons/build-icons.mjs",
     "icons:check": "node scripts/icons/build-icons.mjs --check",
     "typecheck": "tsc -b",
-    "lint": "npm run lint:es && npm run lint:css && npm run lint:hatch && npm run lint:tel && npm run lint:plurals && npm run lint:selectors && npm run lint:instants && npm run lint:dashes && npm run lint:losses && npm run lint:svg && npm run lint:tokens && npm run lint:assignment",
+    "lint": "npm run lint:es && npm run lint:css && npm run lint:hatch && npm run lint:tel && npm run lint:plurals && npm run lint:selectors && npm run lint:instants && npm run lint:dashes && npm run lint:losses && npm run lint:svg && npm run lint:tokens && npm run lint:assignment && npm run lint:percentages",
     "lint:es": "eslint .",
     "lint:css": "stylelint \"src/**/*.css\"",
     "lint:hatch": "node scripts/check-hatch.mjs",
@@ -32,7 +32,8 @@
     "lint:svg": "node scripts/check-svg-portable.mjs",
     "check:layout": "npm run build && node scripts/check-layout.mjs",
     "lint:tokens": "node scripts/check-tokens.mjs",
-    "lint:assignment": "node scripts/check-assignment-reach.mjs"
+    "lint:assignment": "node scripts/check-assignment-reach.mjs",
+    "lint:percentages": "node scripts/check-percentages.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --fix",
