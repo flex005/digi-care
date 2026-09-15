@@ -107,8 +107,9 @@ export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
             />
             {existing !== undefined ? (
               <span className={styles.fieldError} data-already-on-team>
-                {existing.ref.fullName} is already on the team record. Change their role
-                or their homes on their own page rather than adding them twice.
+                {existing.ref.fullName} is already on the team record. Their homes can
+                be changed on their own page; changing a role is not something this
+                build does, and adding them twice would not do it either.
               </span>
             ) : null}
           </label>

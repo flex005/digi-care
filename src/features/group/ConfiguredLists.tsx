@@ -58,7 +58,7 @@ export function ConfiguredLists({
       id: 'domains',
       title: 'Care plan domains this home writes',
       items: CARE_PLAN_DOMAINS.map((d) => ({ id: d.id, name: d.name })),
-      note: 'Custom domains are site-scoped where they are added, and a coverage rate is never compared across homes whose domain sets differ.',
+      note: 'These ten and no others. Adding a domain of a home’s own is not built yet, and there is no control for it on any screen. The rules for it are agreed: it would belong to one home, that home’s denominator would say so, and no rate would be compared across homes whose domains differ.',
     },
     {
       id: 'consents',
