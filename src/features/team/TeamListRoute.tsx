@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSession } from '@/app/session/use-session'
-import { Avatar, Button, Card } from '@/components/primitives'
+import { Avatar, Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { STAFF_ROLE_NAMES } from '@/data/types'
 import { teamMembers } from '@/data/access/team-store'
-import { AddMemberDialog, Tally, standingCounts } from './TeamManagement'
+import { Tally, standingCounts } from './TeamManagement'
+import { InviteDrawer } from './InviteDrawer'
+import { useViewer } from '@/app/session/use-viewer'
 import { sites } from '@/data/fixtures/organisation'
 import { Standing } from './TeamParts'
 import styles from './team.module.css'
@@ -23,7 +25,7 @@ import styles from './team.module.css'
  */
 export function TeamListRoute() {
   const { organisation } = useSession()
-  const [adding, setAdding] = useState(false)
+  const viewer = useViewer()
   const [, setVersion] = useState(0)
   const members = teamMembers()
   const counts = standingCounts(members)
@@ -55,12 +57,6 @@ export function TeamListRoute() {
         </div>
       </header>
 
-      <AddMemberDialog
-        open={adding}
-        onClose={() => setAdding(false)}
-        onAdded={() => setVersion((count) => count + 1)}
-      />
-
       <Card>
         {/*
          * The actions sit opposite the ordering note rather than under the
@@ -73,9 +69,21 @@ export function TeamListRoute() {
             count is a ranking however it is labelled.
           </p>
           <div className={styles.pageActions}>
-            <Button onClick={() => setAdding(true)} data-add-member>
-              Add a team member
-            </Button>
+            {/*
+             * **The invite drawer replaces the add dialog for an Admin**, and
+             * the old one stays for nobody: AM v2.0's TM-02 asks for name,
+             * role, homes and residents in one act, which the Phase 14 dialog
+             * did not have. Withheld from a Manager, who reads this list and
+             * does not decide who is on it.
+             */}
+            {viewer.may('manage_team') ? (
+              <InviteDrawer onAdded={() => setVersion((count) => count + 1)} />
+            ) : (
+              <p className={styles.hint} data-team-read-only>
+                Your role is {viewer.roleName}, which reads the team and does not change
+                who is on it.
+              </p>
+            )}
             <Link to="permissions" className={styles.headLink} data-permissions-link>
               Permissions
               <Icon name="arrows-sharp/arrow-right-01-sharp" size={16} aria-hidden />
@@ -111,7 +119,12 @@ export function TeamListRoute() {
 
                 <Standing standing={member.standing} />
 
-                <p className={styles.site}>{siteName(member.siteId)}</p>
+                {/* Every home they work at. AM v2.0's TM-01 has a SITES
+                    ASSIGNED column, and a manager across two homes reading as
+                    one is the whole reason `siteIds` is a list. */}
+                <p className={styles.site} data-sites={member.siteIds.length}>
+                  {member.siteIds.map(siteName).join(' · ')}
+                </p>
 
                 <Link
                   to={`team/${member.id}`}

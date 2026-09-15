@@ -415,6 +415,19 @@ export const ADMIN_ACTS = [
     why: 'Configuring the service belongs to the registered person. A manager sees every setting and changes none of them.',
   },
   {
+    id: 'manage_team',
+    module: '/settings',
+    /*
+     * Controls on a screen a manager reads. AM v2.0's TM-01 gives them the
+     * staff list in read-only: they need to know who is on the team, and
+     * deciding it is the registered person's.
+     */
+    route: undefined,
+    what: 'Invite staff, change a role, assign homes, and deactivate an account',
+    phrase: 'Deciding who is on the team',
+    why: 'Who works in a service, and what they may reach in the record, is decided by the person the service is registered to. AM v2.0 gives a manager the staff list and none of the acts on it.',
+  },
+  {
     id: 'group_overview',
     module: '/settings',
     route: '/settings/homes',

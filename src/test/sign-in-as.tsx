@@ -39,7 +39,7 @@ export function SignInAs({ as: role }: { as: StaffRole }) {
       throw new Error(
         `No member of staff with access holds the role ${role}, so no test can render the product as one. Either the fixtures lost somebody or the role is not reachable by anybody.`,
       )
-    const site = sites.find((entry) => entry.id === member.siteId)
+    const site = sites.find((entry) => member.siteIds.includes(entry.id))
     if (site === undefined)
       throw new Error(`${role} belongs to a site that is not configured.`)
     signInAs(member, site)

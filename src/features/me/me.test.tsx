@@ -32,7 +32,7 @@ afterEach(() => {
 /** A pinned session, so "who is signed in" is a fact of the test. */
 function signedInAs(member: StaffMember) {
   const sites = configuredSites()
-  const site = sites.find((entry) => entry.id === member.siteId) ?? sites[0]!
+  const site = sites.find((entry) => member.siteIds.includes(entry.id)) ?? sites[0]!
   return function Provider({ children }: { children: React.ReactNode }) {
     const value: Session = {
       organisation,

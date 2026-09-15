@@ -17,6 +17,7 @@ import { Avatar, Button, Card, Dialog } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { formatDate } from '@/lib/format'
 import { NotAPerformanceRecord, Standing } from './TeamParts'
+import { AssignmentSection } from './AssignmentSection'
 import { RECENT_ACTS, staffActivity } from './staff-activity'
 import styles from './team.module.css'
 
@@ -68,7 +69,7 @@ export function StaffDetailRoute() {
     )
   }
 
-  const site = sites.find((entry) => entry.id === member.siteId)
+  const site = sites.find((entry) => member.siteIds.includes(entry.id))
   const hasAccessNow = member.standing.kind === 'has_access'
 
   const change = (standing: StaffStanding) => {
@@ -196,6 +197,14 @@ export function StaffDetailRoute() {
             </p>
           ) : null}
         </section>
+
+        {/*
+         * Beneath access and above the activity. Who somebody covers belongs
+         * with what they can reach rather than with what they have done: the
+         * moment it sits above a list of records, the two read as one claim
+         * about a person.
+         */}
+        <AssignmentSection member={member} />
 
         {/* Above the activity, never below it. */}
         <section className={styles.section}>

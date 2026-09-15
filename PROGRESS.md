@@ -12950,3 +12950,142 @@ hold it, so it reads `STAFF_ROLE_NAMES` and cannot go stale against it.
 - The invitation fixtures are a care worker and an activities coordinator —
   both non-viewers. Phase 18 needs outstanding invitations for roles that can
   sign in here.
+
+# Phase 18, first half — fixtures, sites, and the constraint that had nothing holding it
+
+Built in the order Frank set: fixtures, then `siteIds`, then the screens on top
+of both. The team screens are half done and the rest is listed at the end.
+
+## The fixtures could not demonstrate the screens
+
+Both outstanding invitations belonged to a care worker and an activities
+coordinator, who accept in a different product. Two more, and the lapsed one is
+now a governance account because that is the finding a real home has: **Bisi
+Ogundipe, deputy manager at Ashgrove, invited five weeks ago and never
+accepted** — a second site running with nobody in the deputy's account for over
+a month. The live one is **Eleanor Marsden, an auditor invited two days ago**,
+ahead of an inspection.
+
+**The original two stay**, and the reason is a distinction worth keeping:
+chasing an invitation and accepting one are different acts. An Admin chases
+everybody they invited, care workers included, which is what TM-01's pending
+banner counts. Only accepting is done in the invitee's own product.
+
+Marie Halloran now works at both homes, which is the only way TM-04 has
+anything to show.
+
+**A test typed a surname into an assertion.** `'AdeyinkaAdeyinka'` was the
+password in "refuses a password containing their own name", and it went red the
+moment a governance invitation sorted ahead of hers. The rule under test is that
+a password may not contain your own name; a surname typed into the assertion
+tests one person's name and passes or fails on which fixture came first. It
+reads the invitee's name from the record now.
+
+**And a guard hardcoded seven roles.** `new Set(staff.map(s => s.role)).size ===
+7` went red on the `organisation_admin` collapse and the one-character fix was
+to type `6`. What the fixtures owe is that no role in the model is left without
+somebody to hold it, so it reads `STAFF_ROLE_NAMES`. **PRD §5.2 still says
+fifteen staff and there are seventeen** — flagged rather than edited, because
+the precedent recorded in that test is that Frank corrects the figure.
+
+## `siteIds`
+
+`StaffMember.siteId` is a list. Six readers, all named in the plan and all
+found by the compiler. The one non-mechanical part was the sign-in address:
+it is derived from a name and a home, so somebody at two homes has two
+addresses, and `memberForAddress` accepts any of theirs — otherwise a deputy
+manager could not sign in with the address the second home's screen suggested.
+
+`ASHGROVE`, a hardcoded `Set` of one id, is now a map of who works where. One
+role across every home, per AM v2.0's TM-04, with v4's disagreement recorded on
+the field rather than resolved silently.
+
+## Resident assignment, and the guard that is the point of it
+
+**Three members, no fourth.** `never_set`, `all_residents_at_site` with a name
+and a date, and `assigned` with residents. AM v2.0 says leaving the field blank
+means the care worker sees everybody, which is a blank meaning two opposite
+things; the whole-home answer is a decision like any other. No `not_applicable`
+member, because it is derivable from the role the record already carries and a
+derivable member is a second owner of a fact.
+
+**`check-assignment-reach.mjs` is the most valuable thing here and it is not
+about rendering.** Assignment decides nothing on this platform — care workers do
+not sign in — so the constraint Frank set is currently free, and nothing would
+push back the day somebody wired it into a figure. The failure message carries
+the reason rather than the rule: an omission is a dose nobody recorded and
+carries nobody's name, and a gap that acquires one becomes a performance record.
+
+Three things the guard taught while being written:
+
+1. **It could not see the writer.** `line.includes('residentAssignment')` is
+   false for `setResidentAssignment`, so the invite drawer — the one screen that
+   writes an assignment — did not register as reaching for it at all. A guard
+   that cannot see the write is guarding one spelling of a field.
+2. **Its dead-entry check could not fail.** The condition was
+   `!findings.length && false`. The count printed in the success line was always
+   zero. Written in the same hour as the §8 entry about assertions that cannot
+   fail, by the person who had just written it.
+3. **It told me what I had not built.** With the two screens listed and absent,
+   it failed on the dead entries, which is the bidirectional half working.
+
+Mutation-tested by wiring a count into `ReportViewRoute` — the first of the five
+places it exists to stop. It fails with the file and the line.
+
+`setResidentAssignment` throws for a role that does not take one and for an
+assignment with nobody in it, because the fixture guard cannot see a write made
+at runtime. And assignment changes are on `teamHoldings`, so signing out names
+them: a confirmation listing four kinds of record is read as listing all of them.
+
+## Where the constraint could be broken, written down
+
+Nothing reads assignment to decide anything. Five places invite it, and they are
+in the guard's docblock rather than here so that whoever hits the failure reads
+them: the staff report's removed column first, because that is where the data
+now exists and the column used to be.
+
+## The audit Frank asked for: what else is held by nothing
+
+More is mechanised than I expected, and the list is worth having in three parts.
+
+**Held mechanically, and violation is noisy.** The hatch (`check-hatch`), tokens
+existing (`check-tokens`), em dashes, plurals, date-widening, session losses,
+chart geometry, selector specificity, dialable hrefs, layout at 1280,
+assignment reach, route reachability in both directions, every resident holding
+all nine templates and eight consents and ten domains, the ten deliberate gaps
+held by identity, permission cells capped by their module's ceiling, and every
+role in the model held by somebody. **And four in eslint I would have guessed
+were free**: `no-console`, `no-restricted-globals` on `localStorage` and
+`sessionStorage`, a ban on importing icons directly, and a ban on `date-fns`
+formatters so clinical timestamps cannot render in the viewer's zone.
+
+**Held by a test that asserts the sentence rather than the property.** This is
+the dangerous middle and there are three:
+
+- `/me`: "There are no counts of your work on this screen, and there will not
+  be." The test matches that text. **Adding a count beside it would not fail.**
+- Compliance: "no overall compliance figure". Same shape, same gap.
+- The staff profile's `NotAPerformanceRecord`. Same.
+
+Each of the three refuses a figure, and each is held by an assertion that the
+refusal is *printed*. Note immutability is the counter-example and shows what
+the other three should look like: it asserts both the sentence **and** that no
+edit control is in the document.
+
+**Held by nothing but a sentence and nobody having tried:**
+
+- **§1's central rule — no bare counts or percentages anywhere.** The
+  `Aggregate` type exists and is widely used; nothing stops a raw number being
+  rendered beside it. This is the largest free constraint in the build.
+- **No icon library.** Eslint blocks importing from `assets/icons`, and nothing
+  stops `npm i lucide-react` and importing that.
+- **Every clinical record shows its author and timestamp, never hover-only.**
+- **Relative time only alongside an absolute timestamp, never instead of it.**
+- **Fixtures not tidied to make a screen look better.**
+
+## Still to build in this phase
+
+TM-01's filters and the Manager's read-only list, TM-04 assigning a Manager to
+sites, TM-05 deactivation with a reason and a typed confirmation, and deleting
+`/me` with its four facts moving onto `/me/permissions` and the two renderings
+of standing collapsing into one.

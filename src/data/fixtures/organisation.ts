@@ -156,6 +156,39 @@ export const staffAkinyemi = makeStaff(
  * states one URL away; one person could only ever show whichever the fixture
  * instant happened to make true.
  */
+/**
+ * Ashgrove's deputy manager, invited five weeks ago and never accepted.
+ *
+ * **A governance account left open, which is the finding a real home has.**
+ * The lapsed invitation was Laura Bennett's, an activities coordinator, and
+ * she is a user of the Care Worker product: every screen in Team Management is
+ * about people who sign in here, so demonstrating the lapsed state with
+ * somebody who never would was the branch-with-no-fixture problem one level
+ * up. An unaccepted invitation to a deputy manager is a home running a second
+ * site with nobody in the deputy's account for over a month.
+ */
+export const staffOgundipe = makeStaff(
+  'b-ogundipe',
+  'B. Ogundipe',
+  'Bisi Ogundipe',
+  'deputy_manager',
+)
+
+/**
+ * An auditor invited two days ago, ahead of an inspection. The live state.
+ *
+ * Peter Fitzgerald is the auditor who already has access; this is the second,
+ * and the reason there are two is the same reason there were two care workers
+ * before: one person can only ever show whichever state the fixture instant
+ * happens to make true.
+ */
+export const staffMarsden = makeStaff(
+  'e-marsden',
+  'E. Marsden',
+  'Eleanor Marsden',
+  'auditor',
+)
+
 export const staffAdeyinka = makeStaff(
   'f-adeyinka',
   'F. Adeyinka',
@@ -165,6 +198,8 @@ export const staffAdeyinka = makeStaff(
 
 export const staff: StaffRef[] = [
   staffAdeyinka,
+  staffOgundipe,
+  staffMarsden,
   staffClarke,
   staffOkonkwo,
   staffHalloran,

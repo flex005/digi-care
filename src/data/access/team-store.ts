@@ -2,6 +2,8 @@ import { held, type SessionHolding } from './session-holding'
 import { now as appNow } from '@/data/fixtures/clock'
 import type {
   IsoDate,
+  ResidentAssignment,
+  ResidentId,
   SiteId,
   StaffId,
   StaffMember,
@@ -17,6 +19,10 @@ import {
   staffDeactivated,
   staffOkonkwo,
   staffClarke,
+  staffEze,
+  staffHalloran,
+  staffMarsden,
+  staffOgundipe,
   staffPatel,
 } from '../fixtures/organisation'
 import { daysAgo, toIsoDate } from '../fixtures/generate'
@@ -30,15 +36,42 @@ import { daysAgo, toIsoDate } from '../fixtures/generate'
  * access)" beside an author reads it from here, at render time.
  */
 
-const ASHGROVE = new Set<StaffId>([staffPatel.id, staffClarke.id])
+/**
+ * Where each person works, for anybody who is not at Rosewood alone.
+ *
+ * **A map rather than a set, from Phase 18**, because a member can now be at
+ * more than one home. Marie Halloran is the case AM v2.0's TM-04 is about: a
+ * deputy manager overseeing both homes, which is the only way that screen has
+ * anything to show and the only reason `siteIds` is a list.
+ */
+const SITES: Partial<Record<StaffId, SiteId[]>> = {
+  [staffPatel.id]: ['site-ashgrove-lodge'],
+  [staffClarke.id]: ['site-ashgrove-lodge'],
+  [staffOgundipe.id]: ['site-ashgrove-lodge'],
+  [staffHalloran.id]: ['site-rosewood-court', 'site-ashgrove-lodge'],
+}
 
 /**
  * Who has access, and who does not.
  *
  * Four standings, all four reached: Joseph Whitfield left, Folake Adebayo is
- * suspended pending a review, and Laura Bennett is on the team with access
+ * suspended pending a review, and four people are on the team with access
  * never set up — a gap rather than a decision, and the one that takes the
  * hatch. Everybody else has access.
+ *
+ * **Two of those four are governance accounts, and that is the point.** Every
+ * screen in Team Management is about people who sign into this platform, and
+ * the only outstanding invitations were a care worker's and an activities
+ * coordinator's — both users of the Care Worker product. Demonstrating the
+ * invitation states with somebody who would accept in a different product is
+ * the branch-with-no-fixture problem one level up: the screens worked and
+ * nothing they showed could be reviewed.
+ *
+ * The other two stay, because they are a different thing rather than the same
+ * thing done wrong. **Chasing an invitation and accepting one are two acts**:
+ * an Admin chases everybody they invited, care workers included, which is what
+ * TM-01's pending-invitations banner counts. Only accepting is done in the
+ * invitee's own product.
  *
  * Dates are relative to the fixture instant, like every other fixture date,
  * so "suspended 11 days ago" stays true rather than drifting into history.
@@ -55,6 +88,22 @@ const STANDINGS: Partial<Record<StaffId, StaffStanding>> = {
     on: toIsoDate(daysAgo(11)),
     reason: 'suspended pending a review',
     by: staffOkonkwo,
+  },
+  /*
+   * The lapsed governance invitation: five weeks, against INVITATION_DAYS of
+   * seven. A deputy manager at the second site whose account nobody followed
+   * up, which is a finding about the home rather than about the fixture.
+   */
+  [staffOgundipe.id]: {
+    kind: 'never_given_access',
+    addedOn: toIsoDate(daysAgo(35)),
+    addedBy: staffOkonkwo,
+  },
+  /* The live one: an auditor invited ahead of an inspection, two days ago. */
+  [staffMarsden.id]: {
+    kind: 'never_given_access',
+    addedOn: toIsoDate(daysAgo(2)),
+    addedBy: staffOkonkwo,
   },
   [staffBennett.id]: {
     kind: 'never_given_access',
@@ -80,6 +129,38 @@ const DEFAULT_STANDING = (since: IsoDate): StaffStanding => ({
 })
 
 /**
+ * Which care workers have been given which residents.
+ *
+ * **Three of the five care workers, so all three states are on a fresh load.**
+ * Sunita Patel covers the whole of Ashgrove, which is a decision somebody took
+ * and carries their name; Ngozi Eze has four named residents; the rest are
+ * `never_set`, which is the hatched state and the ordinary one — nobody has
+ * been through the team record deciding this.
+ *
+ * Only care workers appear here. A manager holding an assignment would be a
+ * fact about a role that does not take one, and `check-assignment-reach.mjs`
+ * holds that as well as holding who may read it.
+ */
+const ASSIGNMENTS: Partial<Record<StaffId, ResidentAssignment>> = {
+  [staffPatel.id]: {
+    kind: 'all_residents_at_site',
+    decidedBy: staffClarke,
+    on: toIsoDate(daysAgo(212)),
+  },
+  [staffEze.id]: {
+    kind: 'assigned',
+    residents: [
+      'res-okafor' as ResidentId,
+      'res-adeyemi' as ResidentId,
+      'res-hutchinson' as ResidentId,
+      'res-pemberton' as ResidentId,
+    ],
+    decidedBy: staffOkonkwo,
+    on: toIsoDate(daysAgo(64)),
+  },
+}
+
+/**
  * Built from the fixtures rather than being them.
  *
  * `setStanding` writes onto the member objects, so this array is the session's
@@ -92,7 +173,8 @@ const fromFixtures = (): StaffMember[] =>
     id: ref.id,
     ref,
     role: ref.role,
-    siteId: ASHGROVE.has(ref.id) ? 'site-ashgrove-lodge' : 'site-rosewood-court',
+    siteIds: SITES[ref.id] ?? ['site-rosewood-court'],
+    residentAssignment: ASSIGNMENTS[ref.id] ?? { kind: 'never_set' },
     standing: STANDINGS[ref.id] ?? DEFAULT_STANDING(toIsoDate(daysAgo(880))),
   }))
 
@@ -184,10 +266,54 @@ let standingChanges = 0
  * with a reason. It is the least record-shaped thing on the loss list and one
  * of the most consequential.
  */
+/**
+ * Give somebody residents, or record that they cover the whole home.
+ *
+ * **The only writer, and the only reader is the staff profile.** Which
+ * residents a care worker has been given decides nothing on this platform:
+ * care workers do not sign in here, and the scoping it describes happens in
+ * the Care Worker product. `check-assignment-reach.mjs` is what keeps it that
+ * way, because a gap that acquires a name stops being a gap and becomes a
+ * performance record about a person.
+ *
+ * Throws for a role that does not take one rather than storing it quietly. A
+ * manager holding an assignment is a fact about a question nobody asked them,
+ * and the guard that checks the fixtures cannot see a write made at runtime.
+ */
+export function setResidentAssignment(
+  id: StaffId,
+  assignment: ResidentAssignment,
+): StaffMember {
+  const member = members.find((entry) => entry.id === id)
+  if (member === undefined) throw new Error(`No member of staff with id ${id}`)
+  if (member.role !== 'care_worker')
+    throw new Error(
+      `${member.ref.fullName} is a ${member.role}, and resident assignment is a care worker's. Storing one here would answer a question nobody asked them.`,
+    )
+  if (assignment.kind === 'assigned' && assignment.residents.length === 0)
+    throw new Error(
+      'An assignment with no residents in it is `never_set` wearing a decision. Record the decision nobody took as nobody having taken it.',
+    )
+  member.residentAssignment = assignment
+  assignmentChanges += 1
+  return member
+}
+
+let assignmentChanges = 0
+
 export function teamHoldings(): SessionHolding[] {
   return [
     ...held('people you put on the team', added),
     ...held('access decisions you made', standingChanges),
+    /*
+     * **On the list because signing out destroys it.** A confirmation that
+     * names four kinds of record is read as naming all of them, and the
+     * session-losses entry in §8 is about a list built from a source that
+     * could not carry the weight. Assignment is a session write like any
+     * other; leaving it off would destroy it under a list that never
+     * mentioned it.
+     */
+    ...held('resident assignments you set', assignmentChanges),
   ]
 }
 
@@ -196,6 +322,7 @@ export function resetSessionTeam(): void {
   members = fromFixtures()
   added = 0
   standingChanges = 0
+  assignmentChanges = 0
 }
 
 // ---------------------------------------------------------------------------
@@ -216,7 +343,8 @@ let added = 0
 export function addMember(input: {
   fullName: string
   role: StaffRole
-  siteId: SiteId
+  /** Every home they are being given, never one. Phase 18. */
+  siteIds: SiteId[]
   addedBy: StaffRef
 }): StaffMember {
   added += 1
@@ -238,7 +366,13 @@ export function addMember(input: {
     id,
     ref,
     role: input.role,
-    siteId: input.siteId,
+    siteIds: input.siteIds,
+    /*
+     * Never set by adding somebody. Assigning residents is a second act by a
+     * named person, the way granting access is: a default here would put a
+     * decision nobody took onto a new care worker's record.
+     */
+    residentAssignment: { kind: 'never_set' },
     standing: {
       kind: 'never_given_access',
       addedOn: today(),

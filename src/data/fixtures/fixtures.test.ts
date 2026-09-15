@@ -61,7 +61,20 @@ describe('fixture volume: PRD §5.2', () => {
      * in the model is left without somebody holding it, so the assertion reads
      * the declaration and cannot go stale against it.
      */
-    expect(staff).toHaveLength(15)
+    /*
+     * Seventeen from Phase 18. The two added are a deputy manager whose
+     * invitation lapsed five weeks ago and an auditor invited two days ago:
+     * every screen in Team Management is about people who sign into this
+     * platform, and both outstanding invitations belonged to a care worker and
+     * an activities coordinator, who accept in a different product. The
+     * original two stay, because chasing an invitation and accepting one are
+     * different acts and an Admin chases everybody they invited.
+     *
+     * PRD §5.2 still says fifteen. Flagged for Frank rather than edited: the
+     * precedent recorded above is that he corrects the figure in the PRD
+     * rather than have the fixture obey a stale one.
+     */
+    expect(staff).toHaveLength(17)
 
     const held = new Set(staff.map((member) => member.role))
     const unheld = (Object.keys(STAFF_ROLE_NAMES) as StaffRole[]).filter(

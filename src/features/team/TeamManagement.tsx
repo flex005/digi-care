@@ -99,7 +99,7 @@ export function AddMemberDialog({
 
   const submit = () => {
     if (!ready) return
-    addMember({ fullName, role, siteId, addedBy: currentUser })
+    addMember({ fullName, role, siteIds: [siteId], addedBy: currentUser })
     setFullName('')
     onAdded()
     onClose()

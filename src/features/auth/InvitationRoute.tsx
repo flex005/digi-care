@@ -100,7 +100,7 @@ export function InvitationRoute() {
     )
   }
 
-  const home = sites.find((entry) => entry.id === member.siteId) ?? activeSite
+  const home = sites.find((entry) => member.siteIds.includes(entry.id)) ?? activeSite
   /*
    * The home's day, not the viewer's. An invitation that has a day left in
    * London and none in the viewer's zone is the timezone bug this product

@@ -673,3 +673,68 @@
   text-decoration: none;
   white-space: nowrap;
 }
+
+/*
+ * Resident assignment on the staff profile. Phase 18.
+ *
+ * The recorded states render quietly: a decision somebody took, with their
+ * name and the date. Nothing here takes a status colour, because an assignment
+ * is neither a finding nor a gap — the gap state is the hatch, and it comes
+ * from the shared unrecorded treatment rather than from this file.
+ */
+.sectionNote {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+  max-width: 68ch;
+  margin-bottom: var(--space-12);
+}
+
+.assignmentSettled {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.assignmentValue {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.assignmentList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.assignmentList li {
+  display: flex;
+  gap: var(--space-8);
+  align-items: baseline;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.assignmentName {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.assignmentRoom {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.byline {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}

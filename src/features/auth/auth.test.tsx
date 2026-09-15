@@ -9,7 +9,7 @@ import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/prim
 import type { CareNote } from '@/data/types'
 import { careNotes } from '@/data/fixtures/care-notes'
 import { appendNote } from '@/data/access/note-store'
-import { teamMembers } from '@/data/access/team-store'
+import { memberById, teamMembers } from '@/data/access/team-store'
 import { STAFF_ROLE_NAMES } from '@/data/types'
 import { addressFor } from './addresses'
 import { endSession } from '@/data/access/session-losses'
@@ -276,7 +276,7 @@ describe('signing in chooses the home, because the home decides the clock', () =
      * holds, and the button stays down.
      */
     for (const member of denied) {
-      const site = configuredSites().find((entry) => entry.id === member.siteId)!
+      const site = configuredSites().find((entry) => member.siteIds.includes(entry.id))!
       await user.clear(field)
       await user.type(field, addressFor(member, site))
       await waitFor(() =>
@@ -290,7 +290,7 @@ describe('signing in chooses the home, because the home decides the clock', () =
 
     // And somebody who does have access gets in.
     const allowed = teamMembers().find((entry) => entry.standing.kind === 'has_access')!
-    const site = configuredSites().find((entry) => entry.id === allowed.siteId)!
+    const site = configuredSites().find((entry) => allowed.siteIds.includes(entry.id))!
     await user.clear(field)
     await user.type(field, addressFor(allowed, site))
     await waitFor(() => expect(submit.disabled).toBe(false))
@@ -518,9 +518,19 @@ describe('an invitation states what is being accepted, before the password', () 
     const { container } = renderAt(`/invitation/${invited.staffId}`)
     await settled(container, '[data-invitation]')
 
+    /*
+     * **Their name, read from the record rather than typed.** This was the
+     * literal `'AdeyinkaAdeyinka'`, which is the surname of whoever the live
+     * invitation happened to belong to, and it went red the moment the
+     * fixtures gained a governance invitation that sorted ahead of hers. The
+     * rule under test is "a password may not contain your own name"; a
+     * surname typed into the assertion tests one person's name instead, and
+     * passes or fails on which fixture came first.
+     */
+    const surname = memberById(invited.staffId)!.ref.fullName.split(/\s+/).pop()!
     await user.type(
       container.querySelector('[data-field="password"]')!,
-      'AdeyinkaAdeyinka',
+      `${surname}${surname}`,
     )
     await waitFor(() =>
       expect(

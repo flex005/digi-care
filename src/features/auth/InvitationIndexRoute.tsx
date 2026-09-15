@@ -55,7 +55,8 @@ export function InvitationIndexRoute() {
             {outstanding.map((invitation) => {
               const member = memberById(invitation.staffId)
               if (member === undefined) return null
-              const home = sites.find((site) => site.id === member.siteId) ?? activeSite
+              const home =
+                sites.find((site) => member?.siteIds.includes(site.id)) ?? activeSite
               const expired = invitationHasExpired(invitation, today)
 
               return (

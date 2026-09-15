@@ -37,10 +37,17 @@ export function memberForAddress(
   const wanted = typed.trim().toLowerCase()
   if (wanted === '') return undefined
 
+  /*
+   * **Any of their homes, from Phase 18.** The address is derived from a name
+   * and a home, so somebody working at two has two of them, and a deputy
+   * manager overseeing both sites would otherwise be unable to sign in with
+   * the address the second home's screen suggested to them.
+   */
   return members.find((member) => {
     if (member.standing.kind !== 'has_access') return false
-    const site = sites.find((entry) => entry.id === member.siteId)
-    if (site === undefined) return false
-    return addressFor(member, site) === wanted
+    return member.siteIds.some((siteId) => {
+      const site = sites.find((entry) => entry.id === siteId)
+      return site !== undefined && addressFor(member, site) === wanted
+    })
   })
 }

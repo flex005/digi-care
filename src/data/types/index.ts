@@ -68,7 +68,13 @@ export type {
   ReportRow,
 } from './report'
 
-export type { PermissionLevel, SessionAct, StaffMember, StaffStanding } from './team'
+export type {
+  PermissionLevel,
+  ResidentAssignment,
+  SessionAct,
+  StaffMember,
+  StaffStanding,
+} from './team'
 
 export type { Aggregate, Coverage } from './aggregate'
 export {
