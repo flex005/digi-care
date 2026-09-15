@@ -13930,3 +13930,19 @@ files passed alone (206 of 206). The second run passed every stage: 73 files,
 screens at 1280px. The live bundle on `digi-care-zeta.vercel.app` was
 downloaded once. Its size matched its `content-length` of 1,435,115 bytes, and
 it contains strings from this phase and from Phase 23.
+
+## Step 2 decided
+
+Frank's decision: Contact and GP stays optional, and it is a departure, not an
+undecided item. His reasoning is the one this phase already reached for the
+resuscitation decision and the assessment dates. A form that requires a GP on
+admission day will get one invented. Somebody arriving from hospital at nine in
+the evening may not have practice details to hand, and the honest result is a
+gap every screen shows. The PRD requires it because a complete record is better
+than an incomplete one. That is true, and it is not the question. The question
+is whether requiring it produces a complete record or a plausible one.
+
+The status doc now states that principle once, over the four admission
+departures it covers: step 2, the DNAR decision, target dates, and gender left
+not recorded. The earlier note in this file calling step 2 Frank's call is
+superseded by this entry.
