@@ -13349,3 +13349,89 @@ was clipped, so `check-layout` passed it** — a card at full width is not a los
 value, it is a form whose fields run the width of a monitor. Correct in the
 DOM, wrong on screen, found by looking at a picture. Same class as the hatched
 tile and the black donut.
+
+# Phase 20 — the acts the screens rendered and could not perform
+
+## The two accounts, and where they could have collapsed
+
+`ImmediateResponse.immediateAction` is what the person who was there wrote at
+the time; `ManagerReview.actionsTaken` is what somebody concluded later. The
+type has held them apart since Phase 4, and Frank's warning was right about
+where that stops being true: a write path is one careless spread from
+attributing one person's account to another.
+
+**So the patch is typed to the manager's fields only.** `incident-store`'s
+`Edit` has `status` and `review` and no way to reach `response`, which is
+stronger than remembering not to. The test asserts the reporter's record is
+byte-identical after a review is written, compared whole rather than field by
+field: a patch that reached `response` would likely reach more than one of its
+fields, and naming three would check three.
+
+Mutation-tested by making `withIncidentEdits` copy the manager's actions into
+the reporter's account. It fires.
+
+**Two rules moved from the screen into the store.** An incident cannot close
+without a decision about the CQC — already the rule, and already said on the
+screen — and now also cannot close without a root cause, because closing with
+none is the home saying it is finished with something it never explained. Both
+are checked where the write happens, since a rule that lives in a form is a
+rule the next form forgets.
+
+**Acknowledging cannot be taken back**, and the store refuses a second one
+rather than overwriting. Who picked an incident up is the fact the log exists
+for.
+
+## Cancelling a session keeps everything already recorded
+
+AM v2.0's ACT-01 asks whether to remove attendance recorded before a
+cancellation. **This build refuses the question.** Somebody wrote that a
+resident came, with their name and the time on it, and a later decision about
+the session does not make that untrue. It is the shape consent withdrawal
+settled on: a withdrawal supersedes a consent and never erases it, because the
+earlier record is evidence of what somebody did.
+
+So `cancelSession` writes a standing beside the record and touches neither
+`invited` nor `joined` — there is no path from it to either — and the
+confirmation **says what stays, counted**, before anybody decides. A reader can
+hold a number against what they can see behind the dialog; "some records"
+cannot be held against anything.
+
+**A cancelled session renders settled, never hatched.** Somebody decided, their
+name is on it, and the reason is in their words: the record is complete. The
+hatch says nobody has looked.
+
+The reason is required and refused rather than defaulted, and a second
+cancellation is refused rather than overwriting the first reason.
+
+Mutation-tested by making the cancellation blank every attendance. It fires.
+
+## The family notification toggle: left out entirely, no field and no slot
+
+Frank asked whether building the field now and the screen in Phase 21 is
+cheaper. It is not, and it is worse.
+
+`ManagerReview`'s fields are `Recorded<string>`, so a `familyMessage` added now
+would be `not_recorded` on every incident with no control writing it. Two
+consequences: **the unrecorded branch renders hatched**, which would put a gap
+on the screen that somebody is invited to close with a control that does not
+exist — a gap is a record somebody can complete, and this would be the product
+saying it is missing something it cannot hold. And no fixture reaches the
+recorded branch, which is a state nothing renders.
+
+The total work is identical either way: the type, the fixture builder and the
+form all have to be touched whenever it lands. Adding the field early only
+moves part of it earlier and leaves a dead branch in between.
+
+## Also
+
+`ActivityStanding` is a fixture type change and is reported as one. Every
+generated session is `planned`: a cancellation is something somebody does
+during a session of the product, and seeding one would put a decision nobody
+took into the record with an invented reason against a made-up name. The
+fixtures are messy on purpose about gaps, not about decisions.
+
+**A cast was hiding a type error.** The review form built its patch as an
+object literal cast to `Partial<ManagerReview>`, which compiled and hid that
+`recordedAt` is `IsoDateTime` — a template type — and a bare `toISOString()` is
+a string. §6 forbids `any`; a cast that silences the same check is the same
+thing with better manners. The value is built typed and then keyed.

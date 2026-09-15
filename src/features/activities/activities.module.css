@@ -610,3 +610,74 @@
 .backLink:hover {
   text-decoration: underline;
 }
+
+/*
+ * Cancelling a session, and a session that was. Phase 20.
+ *
+ * **A cancelled session is settled, not a gap and not a finding.** Somebody
+ * decided, their name is on it, and the record is complete — so it renders
+ * quietly with its reason, the way a recorded negative does. It is never
+ * hatched: hatching would say nobody has looked, and somebody has.
+ */
+.cancelBody {
+  color: var(--ink-700);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  max-width: 60ch;
+  margin-bottom: var(--space-12);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.fieldLabel {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  font-weight: var(--weight-semibold);
+}
+
+.field textarea {
+  width: 100%;
+  padding: var(--space-8);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  resize: vertical;
+}
+
+.hint {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
+.cancelled {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-12);
+  margin-bottom: var(--space-16);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-sunken);
+}
+
+.cancelledLabel {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.cancelledWhy {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}

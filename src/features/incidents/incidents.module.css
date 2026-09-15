@@ -1114,3 +1114,48 @@
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
 }
+
+/*
+ * Writing the manager's review. Phase 20.
+ *
+ * Plain surfaces and no status colour: a review being written is neither a
+ * finding nor a gap. The gap treatment belongs to the fields that are still
+ * unrecorded, and it comes from the shared unrecorded component rather than
+ * from here.
+ */
+.reviewForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  margin-top: var(--space-16);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.reviewWrite {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.reviewWrite textarea {
+  width: 100%;
+  padding: var(--space-8);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  resize: vertical;
+}
+
+.reviewActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  align-items: flex-start;
+  padding-top: var(--space-8);
+}

@@ -193,6 +193,7 @@ export type {
 } from './goal'
 export type {
   Activity,
+  ActivityStanding,
   AttendanceState,
   DidNotAttendReasonId,
   Invitation,

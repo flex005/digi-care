@@ -87,8 +87,37 @@ export interface Joiner {
   recordedAt: IsoDateTime
 }
 
+/**
+ * Whether a session is still going ahead. Phase 20.
+ *
+ * **Cancelling keeps every attendance already recorded, and the type is what
+ * says so.** A cancellation that discarded them would be a record editing
+ * itself: somebody wrote that Emmanuel came to the gardening club, with their
+ * name and the time on it, and a later decision about the session does not
+ * make that untrue. It is the shape consent withdrawal settled on — a
+ * withdrawal supersedes a consent and never erases it — and the reason is the
+ * same, that the earlier record is evidence of what somebody did.
+ *
+ * So there is no `cancelled` variant that drops `joined`. There is a standing
+ * beside it, and the screens render the pair.
+ *
+ * **The reason is required and never a code.** AM v2.0's ACT-01 asks for one,
+ * and a cancelled session with no reason is the same shape as a removed
+ * access with none: a record whose reason says where somebody clicked.
+ */
+export type ActivityStanding =
+  | { kind: 'planned' }
+  | {
+      kind: 'cancelled'
+      /** In words: "the minibus did not arrive". */
+      reason: string
+      by: StaffRef
+      at: IsoDateTime
+    }
+
 export interface Activity {
   id: ActivityId
+  standing: ActivityStanding
   siteId: SiteId
   name: string
   description: string

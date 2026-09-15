@@ -194,6 +194,14 @@ for (const site of sites) {
 
       list.push({
         id: `act-${sequence.toString().padStart(4, '0')}` as ActivityId,
+        /*
+         * Every generated session is planned. A cancelled one is something
+         * somebody does during a session of the product, and seeding one here
+         * would put a cancellation in the record with an invented reason
+         * against a made-up name — the fixtures are messy on purpose about
+         * gaps, not about decisions nobody took.
+         */
+        standing: { kind: 'planned' },
         siteId: site.id,
         name: entry.name,
         description: entry.description,

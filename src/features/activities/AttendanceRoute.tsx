@@ -20,6 +20,8 @@ import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { useSession } from '@/app/session/use-session'
 import { formatCount, pluralise } from '@/lib/format'
 import { tally } from './session-state'
+import { CancelSession } from './CancelSession'
+import { useViewer } from '@/app/session/use-viewer'
 import styles from './activities.module.css'
 import { staffLabel } from '@/data/access/team-store'
 
@@ -64,7 +66,9 @@ export function AttendanceRoute() {
     () => getActivity((activityId ?? '') as ActivityId),
     [activityId],
   )
-  const resource = useResource<Loaded>(load, [activityId])
+  /* Bumped when a session is cancelled, to re-read it. */
+  const [version, setVersion] = useState(0)
+  const resource = useResource<Loaded>(load, [activityId, version])
 
   return (
     <SiteTimeZone timeZone={activeSite.timeZone}>
@@ -90,15 +94,16 @@ export function AttendanceRoute() {
             </Button>
           </Card>
         ) : (
-          <Grid data={resource.data} />
+          <Grid data={resource.data} onChanged={() => setVersion((c) => c + 1)} />
         )}
       </div>
     </SiteTimeZone>
   )
 }
 
-function Grid({ data }: { data: Loaded }) {
+function Grid({ data, onChanged }: { data: Loaded; onChanged: () => void }) {
   const format = useSiteFormat()
+  const viewer = useViewer()
   const [draft, setDraft] = useState<Draft>({})
 
   const { activity, residents } = data
@@ -122,7 +127,31 @@ function Grid({ data }: { data: Loaded }) {
           <span data-numeric>{format.dateTime(activity.startsAt)}</span> ·{' '}
           {activity.place} · planned by {activity.plannedBy.displayName}
         </p>
+        {activity.standing.kind === 'planned' && viewer.canRecordIn('/activities') ? (
+          <CancelSession activity={activity} onCancelled={onChanged} />
+        ) : null}
       </div>
+
+      {/*
+       * **A cancelled session renders settled, never hatched.** Somebody
+       * decided, their name is on it and the reason is in their words: the
+       * record is complete. The hatch says nobody has looked, and here
+       * somebody has. The tallies below stay exactly as they were, because
+       * what was recorded before the cancellation is still what happened.
+       */}
+      {activity.standing.kind === 'cancelled' ? (
+        <div className={styles.cancelled} data-cancelled>
+          <p className={styles.cancelledLabel}>This session was cancelled</p>
+          <p className={styles.cancelledWhy}>
+            {activity.standing.reason} · {activity.standing.by.displayName} ·{' '}
+            <span data-numeric>{format.dateTime(activity.standing.at)}</span>
+          </p>
+          <p className={styles.cancelledWhy}>
+            Everything recorded before it stays below, with the names and times it was
+            written under.
+          </p>
+        </div>
+      ) : null}
 
       {/* Four cells, and every one counts over the invitation list. */}
       <div className={styles.tally} data-tally>

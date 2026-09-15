@@ -1,5 +1,6 @@
 import { held, type SessionHolding } from './session-holding'
 import { decisionFor } from './notification-store'
+import { withIncidentEdits } from './incident-store'
 import type {
   CarePlanDomainId,
   Incident,
@@ -135,8 +136,15 @@ export function patchedIncidents(): Incident[] {
    * after somebody did.
    */
   const withDecisions = fixtureIncidents.map((incident) => {
+    /*
+     * This session's acknowledgement, review findings and closure first, then
+     * its notification decisions. Both are overlays on the same record and a
+     * read that saw one and not the other would show a screen half its own
+     * session: acknowledged, and still saying nobody had picked it up.
+     */
+    const written = withIncidentEdits(incident)
     const decision = decisionFor(incident.id)
-    return decision === undefined ? incident : { ...incident, notification: decision }
+    return decision === undefined ? written : { ...written, notification: decision }
   })
 
   if (cleared.size === 0) return withDecisions

@@ -53,7 +53,8 @@ import type {
 import { subjectResidentId } from '../types'
 import { organisation, sites, staff } from '../fixtures/organisation'
 import { goalProgressNotes, goals, goalsFor } from '../fixtures/goals'
-import { activitiesForSite, activityById } from '../fixtures/activities'
+import { activityById } from '../fixtures/activities'
+import { activitiesAt, withActivityEdits } from './activity-store'
 import { residentById as fixtureResidentById } from '../fixtures/residents'
 import {
   discardDraft,
@@ -843,7 +844,13 @@ export function getActivities(
   siteId: SiteId,
 ): Promise<{ activities: Activity[]; residents: Resident[] }> {
   return resolve({
-    activities: activitiesForSite(siteId),
+    /*
+     * Through this session's writes, so a session planned or cancelled a
+     * moment ago is on the calendar that the planning screen navigated back
+     * to. A read that saw the fixtures only would show a screen half its own
+     * session, which is the two-clocks failure with a router in it.
+     */
+    activities: activitiesAt(siteId),
     residents: residentsBySite(siteId),
   })
 }
@@ -852,7 +859,13 @@ export function getActivities(
 export function getActivity(
   id: ActivityId,
 ): Promise<{ activity: Activity; residents: Resident[] }> {
-  const activity = activityById(id)
+  const fromFixtures = activityById(id)
+  const activity =
+    fromFixtures === undefined
+      ? activitiesAt('site-rosewood-court')
+          .concat(activitiesAt('site-ashgrove-lodge'))
+          .find((entry) => entry.id === id)
+      : withActivityEdits(fromFixtures)
   if (!activity) return reject(`No activity with id ${id}`)
   return resolve({ activity, residents: residentsBySite(activity.siteId) })
 }

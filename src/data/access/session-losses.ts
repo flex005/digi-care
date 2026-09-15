@@ -3,6 +3,8 @@ import { cycleHoldings, resetSessionCycle } from './cycle-store'
 import { documentHoldings, resetSessionDocuments } from './document-store'
 import { handoverHoldings, resetHandoverSession } from './handover-store'
 import { marHoldings, resetSessionAdministrations } from './mar-store'
+import { activityHoldings, resetSessionActivities } from './activity-store'
+import { incidentHoldings, resetSessionIncidents } from './incident-store'
 import { noteHoldings, resetSessionNotes } from './note-store'
 import { notificationHoldings, resetSessionNotifications } from './notification-store'
 import { residentHoldings, resetSessionResidents } from './resident-store'
@@ -43,6 +45,8 @@ import type { SessionHolding } from './session-holding'
 
 /** Each store, asked in turn. Order is the order a shift produces them in. */
 const SOURCES: (() => SessionHolding[])[] = [
+  activityHoldings,
+  incidentHoldings,
   noteHoldings,
   marHoldings,
   handoverHoldings,
@@ -90,6 +94,8 @@ export const sessionHasWrites = (): boolean => sessionLosses().length > 0
  */
 export function endSession(): void {
   resetSessionNotes()
+  resetSessionIncidents()
+  resetSessionActivities()
   resetSessionAdministrations()
   resetHandoverSession()
   resetSessionCarePlan()

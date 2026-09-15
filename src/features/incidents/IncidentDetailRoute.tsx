@@ -33,6 +33,7 @@ import {
   outstandingDecisions,
   outstandingHeading,
 } from './decisions'
+import { ManagerReviewForm } from './ManagerReviewForm'
 import styles from './incidents.module.css'
 
 /**
@@ -366,6 +367,15 @@ function Found({
             label="Preventive measures"
             value={incident.review.preventiveMeasures}
           />
+          {/*
+           * **The form writes the manager's fields and cannot reach the
+           * reporter's.** Both accounts stay on this screen, in their own
+           * sections, with their own names: the reporter's above under what
+           * they did at the time, the manager's here. Phase 4 put that in the
+           * type and Phase 20 is where a write path could have collapsed it.
+           */}
+          <ManagerReviewForm incident={incident} onChanged={onDecided} />
+
           {incident.status.kind === 'reported_not_acknowledged' ? (
             <p className={styles.byline}>Nobody has started a review.</p>
           ) : (
