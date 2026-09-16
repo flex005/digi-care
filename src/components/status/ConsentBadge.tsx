@@ -1,4 +1,4 @@
-import type { AnyConsent } from '@/data/types'
+import type { AnyConsent, ConsentMethod } from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
 import { formatDate } from '@/lib/format'
 import { StatusPill } from './StatusPill'
@@ -75,8 +75,21 @@ export function ConsentBadge({ status }: { status: AnyConsent }) {
   }
 }
 
-const METHOD: Record<string, string> = {
+/**
+ * How a consent was given, in words.
+ *
+ * **Keyed by the union, not by `string`.** It was `Record<string, string>`
+ * with a `digital` key, and the value a record actually holds is
+ * `digital_signature` — so every consent given by signature rendered
+ * "undefined" beside its date, on a badge whose whole job is to say what was
+ * decided and how. Nothing failed: a `Record<string, …>` accepts any key and
+ * returns `undefined` for the ones it has not got, silently.
+ *
+ * Typed this way, a member the map does not cover is a compile error, and a
+ * member renamed in `ConsentMethod` cannot leave a screen printing nothing.
+ */
+const METHOD: Record<ConsentMethod, string> = {
   verbal: 'verbal',
   written: 'written',
-  digital: 'digital',
+  digital_signature: 'digital signature',
 }

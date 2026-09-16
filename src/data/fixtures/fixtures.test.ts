@@ -3,7 +3,7 @@ import { STAFF_ROLE_NAMES, type StaffRole } from '@/data/types'
 import { CONSENT_TYPES, CARE_PLAN_DOMAINS, RISK_ASSESSMENT_TEMPLATES } from '../types'
 import type { CarePlanVersion } from '../types'
 import { recordCompleteness, staleRecords } from '../completeness'
-import { residents } from './residents'
+import { REFUSAL_REASONS, residents } from './residents'
 import { hasNoRiskFlags } from '@/features/residents/RiskFlagsCell'
 import { careNotes } from './care-notes'
 import {
@@ -868,6 +868,74 @@ describe('list fields cannot smuggle back the ambiguity', () => {
         expect(resident.allergies.items.length).toBeGreaterThan(0)
       }
     }
+  })
+
+  it('never attaches a refusal reason to a consent it is not about', () => {
+    /*
+     * **The pronouns defect in another field.** Every refusal drew its reason
+     * from one pool of three sentences with no reference to what was being
+     * refused, so "she does not want her picture anywhere" landed on
+     * medication administration, on data sharing, on medical treatment and on
+     * care and support — while photography, the one type it fits, never
+     * received it. All 57 refusals were drawn that way; the other two
+     * sentences said nothing in particular, which is why only one announced
+     * itself.
+     *
+     * A refusal reason on the wrong decision is a record saying somebody
+     * refused something for a reason they never gave, and nothing on the
+     * screen distinguishes it from one they did.
+     */
+    let checked = 0
+    for (const resident of residents) {
+      for (const type of CONSENT_TYPES) {
+        const consent = resident.consents[type.id]
+        if (consent.kind !== 'refused') continue
+        checked += 1
+        const reasons = REFUSAL_REASONS[type.id]
+        expect(
+          [...reasons.refused, reasons.decidedAgainst],
+          `${resident.id}/${type.id}: ${consent.note}`,
+        ).toContain(consent.note)
+      }
+    }
+    // A sweep that matched nothing would pass this silently.
+    expect(checked, 'no refusal in the fixtures to check').toBeGreaterThan(20)
+  })
+
+  it('gives no reason to two consent types, and keeps the photography one to photography', () => {
+    /*
+     * **The test above cannot catch a reason filed under the wrong type**, and
+     * that is the defect this pair exists for. It checks each note against the
+     * table that generated it, so a photography sentence sitting in
+     * medication's list satisfies it: the generator drew from the table and
+     * the assertion agrees by construction. A property over a derived bound
+     * inherits every error in the bound (§8), and the mutation proved it —
+     * the reason moved, and the suite stayed green.
+     *
+     * A sentence that belongs to two decisions is either filler, which is how
+     * the original pool passed for phases, or it is misplaced. Neither is a
+     * refusal anybody gave. And the case that started this is held by name,
+     * because a named case is the one thing a corrupt table cannot absorb.
+     */
+    const byReason = new Map<string, string[]>()
+    for (const type of CONSENT_TYPES) {
+      const reasons = REFUSAL_REASONS[type.id]
+      for (const reason of [...reasons.refused, reasons.decidedAgainst]) {
+        byReason.set(reason, [...(byReason.get(reason) ?? []), type.id])
+      }
+    }
+
+    const shared = [...byReason.entries()]
+      .filter(([, types]) => types.length > 1)
+      .map(([reason, types]) => `${types.join(' + ')} :: ${reason}`)
+    expect(shared).toEqual([])
+
+    const picture = [...byReason.entries()].find(([reason]) =>
+      reason.includes('picture anywhere'),
+    )
+    expect(picture?.[1], 'the photography reason is filed under another type').toEqual([
+      'photography',
+    ])
   })
 
   it('never records a best-interests decision with nobody consulted', () => {

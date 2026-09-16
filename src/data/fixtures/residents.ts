@@ -966,7 +966,7 @@ function makeConsents(
       consents[type.id] = {
         kind: 'refused',
         on,
-        note: rng.pick(REFUSAL_NOTES),
+        note: rng.pick(REFUSAL_REASONS[type.id].refused),
         recordedBy: assessedBy,
         by: authority(),
       }
@@ -981,7 +981,7 @@ function makeConsents(
       consents[type.id] = {
         kind: 'refused',
         on,
-        note: 'Decided against on their behalf after consulting the family and the GP.',
+        note: REFUSAL_REASONS[type.id].decidedAgainst,
         recordedBy: assessedBy,
         by: {
           kind: 'best_interests',
@@ -1009,11 +1009,96 @@ const FUNCTIONAL_FINDINGS = [
   'Could not retain the explanation long enough to reach a decision.',
 ]
 
-const REFUSAL_NOTES = [
-  'Said no, and said why: she does not want her picture anywhere.',
-  'Declined after talking it over with her son.',
-  'Said he would rather not, and did not want to discuss it further.',
-]
+/**
+ * Why somebody refused, **per consent type**.
+ *
+ * It was one pool of three sentences, drawn with no reference to what was
+ * being refused — so "she does not want her picture anywhere" landed on
+ * medication administration, on data sharing twice, on medical treatment twice
+ * and on care and support, while photography, the one type it fits, never
+ * received it at all. All 57 refusals in the fixtures were drawn that way; the
+ * other two sentences said nothing in particular, which is why only the
+ * photography one announced itself.
+ *
+ * **It is the pronouns defect in another field**: a generated value landing on
+ * a subject it was never about. A refusal reason attached to the wrong
+ * decision is a record saying somebody refused something for a reason they
+ * never gave, and a reader has no way to tell it from one they did.
+ *
+ * `decidedAgainst` is the best-interests branch, which concluded no on
+ * somebody's behalf. It says which decision it weighed, for the same reason.
+ */
+const REFUSAL_REASONS: Record<
+  ConsentTypeId,
+  { refused: [string, ...string[]]; decidedAgainst: string }
+> = {
+  care_and_support: {
+    refused: [
+      'Said she would rather wash and dress herself for as long as she is able.',
+      'Does not want help at bath time, and asked for the door to be left closed.',
+    ],
+    decidedAgainst:
+      'Decided against this level of personal care after talking it through with the family and the GP.',
+  },
+  medication: {
+    refused: [
+      'Said he does not want the new tablet and would rather stay on what he has.',
+      'Refused the flu vaccination, and said he has never had one.',
+    ],
+    decidedAgainst:
+      'Decided against starting the medication after weighing it up with the GP and the family.',
+  },
+  photography: {
+    refused: [
+      'Said no, and said why: she does not want her picture anywhere.',
+      'Happy to be in the room, not in the photograph.',
+    ],
+    decidedAgainst:
+      'Decided against photographs being taken, having talked it over with the family.',
+  },
+  data_sharing: {
+    refused: [
+      'Does not want her records shared with the day centre.',
+      'Said the fewer people who see her notes, the better.',
+    ],
+    decidedAgainst:
+      'Decided against sharing the record beyond the home after consulting the family and the GP.',
+  },
+  family_portal: {
+    refused: [
+      'Said she would rather her family rang her than read about her online.',
+      'Does not want her son reading her daily notes.',
+    ],
+    decidedAgainst:
+      'Decided against family access after talking it through with the family and the GP.',
+  },
+  research_audit: {
+    refused: [
+      'Said she has had enough of forms, and does not want to be part of a study.',
+      'Not interested in taking part in research, and said so plainly.',
+    ],
+    decidedAgainst:
+      'Decided against taking part in research after consulting the family and the GP.',
+  },
+  medical_treatment: {
+    refused: [
+      'Refused the referral to the falls clinic, and said she has been before.',
+      'Said he does not want to go into hospital again.',
+    ],
+    decidedAgainst:
+      'Decided against the treatment after weighing it up with the GP and the family.',
+  },
+  electronic_records: {
+    refused: [
+      'Asked for her record to stay on paper.',
+      'Said she does not trust a computer with her information.',
+    ],
+    decidedAgainst:
+      'Decided against holding the record electronically after consulting the family.',
+  },
+}
+
+export { REFUSAL_REASONS }
 
 function makeImportantPeople(rng: Rng, richness: number): ImportantPeople {
   const person = (isPrimary: boolean) => ({

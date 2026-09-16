@@ -14129,3 +14129,65 @@ answers the question is the position of the text and of the last control,
 which came back at 17px each against a computed `12px 16px`. It is the
 wrong-subject class in miniature: the measurement was accurate and it was
 about the wrong box.
+
+# Phase 28 — two defects on the Consent tab
+
+Both found by Frank reading the deployed build.
+
+## "undefined" where the method belongs
+
+Three rows rendered `undefined` where a given consent should say how it was
+given. `ConsentMethod` is `verbal | written | digital_signature`; the badge's
+label map was `Record<string, string>` keyed `verbal`, `written`, `digital`.
+Every consent given by signature therefore rendered nothing at all, and the
+`Record<string, …>` type is what allowed it: any key is acceptable to it, and
+a miss returns `undefined` silently.
+
+**There is no unrecorded state to render here, and that is worth saying.** A
+given consent always holds a method, and these records hold one. The screen
+was not reporting a gap in the record; it was failing to name a value that was
+there. Rendering "not recorded" would have asserted something false about a
+consent that *was* recorded. So the map is now keyed by `ConsentMethod`, where
+a missing member cannot compile, and a test renders each member and asserts
+the label reaches the screen — the compile-time guarantee says nothing about
+what a reader sees.
+
+## A refusal reason attached to the wrong decision
+
+Frank saw a photography reason on a medication row. The cause is the one he
+guessed: `note: rng.pick(REFUSAL_NOTES)`, one pool of three sentences, drawn
+with no reference to `type.id`.
+
+**Measured before fixing, because the visible count understates it.** 57
+refusals across the fixtures, every one drawn from that pool. Six carried
+"she does not want her picture anywhere" onto care and support, data sharing
+(twice), medical treatment (twice) and medication. The other two sentences —
+"declined after talking it over with her son" and "said he would rather not" —
+say nothing in particular, so they read as records wherever they land. And the
+detail that names the defect: **photography itself never received the
+photography reason once.**
+
+That is the pronouns defect in another field, and worse in kind, because a
+refusal reason is evidence: the record says somebody refused something for a
+reason they never gave.
+
+Each of the eight consent types now has its own reasons, and the
+best-interests branch that concludes *no* says which decision it weighed. The
+generator draws once per refusal either way, so the seeded stream does not
+move: the totals are unchanged at 57, and the fixture suite's pronoun and room
+assertions still hold. A fixture test now asserts every refusal note belongs
+to its own type's list, and fails if the sweep finds fewer than twenty
+refusals to check.
+
+## Two probes of mine were wrong, both in the same way
+
+Worth recording because they are this file's own subject. The padding fix was
+first measured by comparing the row's bounding box with the card's, which
+returned 1px — the card's border — and would have returned that before and
+after, since padding is interior to the box being measured. And the deployed
+stylesheet was first checked by grepping for `padding:12px 16px`, which is not
+what the file contains: custom properties are not resolved at build time, so
+it holds `var(--space-12) var(--space-16)`. Both probes were accurate about
+the wrong subject. What settled each was a different instrument: the position
+of the text and the last control, at 17px each, and a byte comparison showing
+the deployed stylesheet is the file the verified build produced.
