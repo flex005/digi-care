@@ -72,7 +72,7 @@ export function PrescriptionsTab() {
          * this build's own, so the answer is recorded rather than acted on.
          */}
         {viewer.canRecordIn('/medications') ? (
-          <Tooltip content="Prescribing is a prescriber's act. diGi-Care has no prescriber, no directions model and no interaction checking, so it records prescriptions rather than making them.">
+          <Tooltip content="diGi-Care records prescriptions and does not check interactions.">
             <span>
               <Button
                 variant="primary"
@@ -91,9 +91,7 @@ export function PrescriptionsTab() {
       {prescriptions.length === 0 ? (
         <Card padded>
           <p className={styles.settledNote}>
-            Nothing is prescribed for {resident.preferredName}. This is a complete
-            answer, not an empty screen, no medication has been prescribed and none is
-            missing.
+            Nothing is prescribed for {resident.preferredName}.
           </p>
         </Card>
       ) : (

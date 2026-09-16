@@ -77,10 +77,7 @@ export function RiskQueueRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Risk assessments could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. A partial list is not shown,
-              because it would read as fewer unassessed risks than there are.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>
@@ -255,7 +252,7 @@ function Found({
           <p className={styles.settledNote}>
             {filter === 'never_assessed' && template === 'all'
               ? `Every risk assessment at ${siteName} has been completed at least once.`
-              : 'Nothing matches these filters. That is a statement about the filters, not about the record.'}
+              : 'Nothing matches these filters.'}
           </p>
         ) : (
           <>

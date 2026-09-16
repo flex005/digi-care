@@ -73,8 +73,7 @@ export function OwedReviews({
           Post-incident reviews could not be read for this resident
         </p>
         <p className={styles.owedItem}>
-          Whether this care plan owes a review is unknown, not settled. Nothing on this
-          screen should be read as saying it owes none.
+          Whether this care plan owes a review is unknown, not settled.
         </p>
       </div>
     )

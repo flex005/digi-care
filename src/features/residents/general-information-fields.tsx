@@ -158,7 +158,7 @@ export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
             <p className={styles.photoNote}>
               {resident.photo.kind === 'on_file'
                 ? 'Photograph on file.'
-                : 'No photograph on file; initials shown. A photograph helps staff confirm they are with the right person before writing a record.'}
+                : 'No photograph on file; initials shown.'}
             </p>
           </div>
         ),

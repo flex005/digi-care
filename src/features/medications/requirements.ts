@@ -85,7 +85,7 @@ export function requirementsFor(medication: Medication): Requirement[] {
       case 'not_recorded':
         // The one that turns the whole block critical.
         out.push({
-          text: 'No 24-hour maximum is recorded, so the system cannot tell anybody when a further dose would exceed it. Somebody has to know this from the prescription itself.',
+          text: 'No 24-hour maximum is recorded, so check the prescription before a further dose.',
           unenforceable: true,
         })
         break

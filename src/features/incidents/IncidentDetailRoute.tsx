@@ -82,11 +82,7 @@ export function IncidentDetailRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>This incident could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. No part of it is shown rather than
-              some of it, because an incident missing its decisions reads as an incident
-              with none outstanding.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>
@@ -700,7 +696,7 @@ function NotificationBlock({
           <Unrecorded
             variant="panel"
             label="Not yet decided"
-            detail="Nobody has recorded whether this must be notified. A decision is required either way, “not required” is a recorded judgement with a name against it, and this incident cannot be closed until one exists."
+            detail="Nobody has recorded whether this must be notified, and this incident cannot be closed until somebody does."
           />
           <div className={styles.notificationActions}>
             <Button

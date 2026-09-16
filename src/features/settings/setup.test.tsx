@@ -180,17 +180,17 @@ describe('two states at setup, and what retiring one later means', () => {
       ),
     ).toBeNull()
     expect(container.querySelector('[data-retire-later]')!.textContent).toMatch(
-      /Turning one off later is different/i,
+      /nobody here will be asked it/i,
     )
   }, 20000)
 })
 
 describe('"first login only" is not claimed, and progress is honest', () => {
-  it('says nothing remembers whether it has run', async () => {
+  it('picks up at the first step nobody has confirmed', async () => {
     const { container } = renderWizard()
     await settled(container)
     expect(container.querySelector('[data-nothing-remembers]')!.textContent).toMatch(
-      /Nothing remembers whether this has been done/i,
+      /picks up at the first step nobody has confirmed or skipped/i,
     )
   })
 

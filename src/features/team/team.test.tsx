@@ -177,7 +177,6 @@ describe('the list', () => {
      */
     const note = container.querySelector('[data-order-note]')
     expect(note).toBeTruthy()
-    expect(note!.textContent).toMatch(/ranking/i)
     expect(note!.textContent).toMatch(/ordered by name/i)
   })
 
@@ -225,7 +224,7 @@ describe('the staff detail is not a performance record', () => {
      */
     expect(page.querySelector('[data-numeric]')).toBeNull()
     expect(page.querySelector('[data-no-counts]')?.textContent).toContain(
-      'no honest denominator',
+      'no counts on this page',
     )
   })
 
@@ -429,7 +428,7 @@ describe('the activity log', () => {
     const note = container.querySelector('[data-not-logged]')!
     expect(note.textContent).toContain('sign-ins')
     expect(note.textContent).toContain('exports')
-    expect(note.textContent).toContain('inventing its own evidence')
+    expect(note.textContent).toContain('Not in this log')
   })
 
   it('is empty at the start of a session, and says that is about the tab', async () => {
@@ -438,7 +437,7 @@ describe('the activity log', () => {
 
     const empty = container.querySelector('[data-empty-log]')
     if (empty === null) return
-    expect(empty.textContent).toContain('statement about this')
+    expect(empty.textContent).toContain('Nothing has been written in this session yet')
   })
 })
 

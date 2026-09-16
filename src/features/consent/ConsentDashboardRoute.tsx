@@ -63,10 +63,7 @@ export function ConsentDashboardRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Consents could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. A partial list is not shown,
-              because it would read as fewer unsought consents than there are.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>
@@ -166,8 +163,7 @@ function Found({
       <p className={styles.sortLine} data-decided-for>
         <span data-numeric>{formatCount(decidedFor)}</span> of the decisions that have
         been made were made <em>for</em> somebody rather than <em>by</em> them: a
-        best-interests process or an attorney. That is lawful and it is not the same
-        thing, which is why the two are separate columns.
+        best-interests process or an attorney.
       </p>
 
       <Card>

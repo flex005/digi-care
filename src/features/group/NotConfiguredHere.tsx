@@ -30,30 +30,30 @@ const ABSENT: {
     id: 'notifications',
     title: 'Notification settings',
     because: 'no_server',
-    why: 'Which events alert whom, and through which channel. Nothing in this build sends anything: there is no server, no email and no push, so there is no delivery to configure. A read-only version would imply the thing exists in a disabled state.',
+    why: 'Which events alert whom, and through which channel.',
   },
   {
     id: 'data-export',
     title: 'Data export',
     because: 'no_server',
-    why: 'A full export of the site, zipped and emailed within 24 hours. That needs a server, a mailbox and somewhere to put the file. A button here would be worse than its absence: a subject access request has a statutory clock, and somebody who believed they had started one would not start the real one.',
+    why: 'A subject access request has a statutory clock, so start one outside diGi-Care.',
   },
   {
     id: 'family-portal-switch',
     title: 'Turning the Family Portal on or off for this home',
     because: 'would_break_records',
-    why: 'Off would make every recorded Family Portal consent unusable, and every disclosure already made unreadable, from a screen that looks like preferences. A setting that silently invalidates records is worse than one that does nothing. The default access level, which applies only to the next decision, is on the Consent tab where it is used.',
+    why: 'Off would make every recorded Family Portal consent unusable.',
   },
   {
     id: 'pharmacy-cycle',
     title: 'Turning the 28-day pharmacy cycle off',
     because: 'would_break_records',
-    why: 'The cycle screen holds checked rows, four tallies and the finding that only it can produce: a drug still being given that the pharmacy has stopped supplying. Hiding the module would hide those records rather than end them.',
+    why: 'Hiding the module would hide its records rather than end them.',
   },
 ]
 
 const BECAUSE: Record<(typeof ABSENT)[number]['because'], string> = {
-  no_server: 'Needs a server this build does not have',
+  no_server: 'Needs a server',
   would_break_records: 'Would change what records already on file say',
 }
 
@@ -62,10 +62,7 @@ export function NotConfiguredHere() {
     <section className={styles.settingsSection} data-not-configured>
       <h2 className={styles.settingsTitle}>Not configured here, and why</h2>
       <p className={styles.settingsNote}>
-        Four sections of the source specification&rsquo;s settings screen are absent
-        from this one. They are named because somebody who has read it will look for
-        them, and a page that quietly omits what somebody came for is its own failure.
-        None of these is a gap anybody can close.
+        Four sections of the source specification&rsquo;s settings screen are not here.
       </p>
 
       <ul className={styles.absentList}>

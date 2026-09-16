@@ -105,8 +105,8 @@ export function ComplianceOverviewRoute() {
           </p>
           <p className={styles.heroBody}>
             of {formatCount(headline.derived)} checks across{' '}
-            {pluralise(headline.panels, 'Key Question')}. Nothing on this screen can
-            tell you about these, not that they are bad, that they are unmeasurable.
+            {pluralise(headline.panels, 'Key Question')}. These cannot be measured,
+            which is not the same as bad.
           </p>
           <div className={styles.heroSplit}>
             <div data-worst-affected>
@@ -185,9 +185,8 @@ export function ComplianceOverviewRoute() {
                * angles, and adding them would produce a total nobody could
                * check.
                */}
-              Each bar is one named population of records for that Key Question. The
-              hatched part is what is expected and missing, not a shortfall against a
-              target, a count of records nobody has written.
+              Each bar is one population of records; the hatched part is records nobody
+              has written.
             </p>
             <div className={styles.legend}>
               <span className={styles.legendItem}>
@@ -236,8 +235,7 @@ export function ComplianceOverviewRoute() {
           <div>
             <h2 className={styles.tableTitle}>The five Key Questions</h2>
             <p className={styles.tableNote}>
-              Ordered as CQC orders them, never by rating. Coverage is checks that can
-              support a figure, not evidence recorded.
+              Coverage is checks that can support a figure, not evidence recorded.
             </p>
           </div>
         </div>
@@ -361,23 +359,7 @@ export function ComplianceOverviewRoute() {
           <b>
             There is no overall compliance figure on this screen, and there will not be
             one.
-          </b>{' '}
-          {/*
-           * The reason is the standing one, not a count.
-           *
-           * It first read "N of 5 Key Questions cannot be rated at all, so
-           * there is nothing to average" — and N was zero, so the screen's
-           * stated reason for refusing a figure was false on the day it
-           * shipped. A refusal that rests on a figure stops being a refusal
-           * the moment the figure moves.
-           */}
-          Each of the five is worst-of over checks counting different things, residents,
-          doses, documents, consents, with no denominator in common, so an average of
-          the five ratings could not be checked against anything. And where a check
-          cannot support a figure at all there is nothing to average in its place:{' '}
-          {formatCount(headline.unusable)} of {formatCount(headline.derived)} are in
-          that state now. A single number would be most reassuring exactly where the
-          record is thinnest.
+          </b>
         </p>
       </div>
     </div>

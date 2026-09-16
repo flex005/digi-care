@@ -89,10 +89,7 @@ export function AttendanceRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>This session could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. A partial invitation list is not
-              shown, because the list is the denominator for everything on this screen.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>

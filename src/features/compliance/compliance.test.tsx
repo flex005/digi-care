@@ -321,8 +321,8 @@ describe('the compliance overview', () => {
     await settled(container)
 
     const banner = container.querySelector('[data-placeholder-banner]')!
-    expect(banner.textContent).toContain('not derived from CQC')
-    expect(banner.textContent).toContain('worst of them')
+    expect(banner.textContent).toContain('are placeholders')
+    expect(banner.textContent).toContain('No regulatory conclusion')
     expect(banner.getAttribute('data-state')).toBe('unrecorded')
   }, 30000)
 
@@ -529,9 +529,9 @@ describe('the inspection pack', () => {
       expect(within(page).queryByRole('button', { name: word })).toBeNull()
       expect(within(page).queryByRole('link', { name: word })).toBeNull()
     }
-    // And it says why, rather than leaving the absence to be noticed.
+    // And it says nothing was generated, rather than leaving that to be noticed.
     expect(page.querySelector('[data-no-file]')?.textContent).toContain(
-      'no download control',
+      'Nothing has been generated',
     )
   }, 30000)
 

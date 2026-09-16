@@ -19,16 +19,16 @@ export function NotYourHome({
     <div className={styles.panel} data-not-your-home={refusal.home}>
       <p className={styles.title}>This record belongs to {refusal.home}</p>
       <p className={styles.body}>
-        {refusal.what} is on file and nothing here has failed. You are appointed to{' '}
+        {refusal.what} is held there. You are appointed to{' '}
         {refusal.yours.length > 0
           ? refusal.yours.join(' and ')
           : 'no home on this record'}
-        , and a record is read at the home that holds it.
+        .
       </p>
       <p className={styles.body}>
         {refusal.yours.length > 0
           ? 'Which homes you are appointed to is on your staff record, and an admin changes it on the team screen.'
-          : 'Nobody has recorded which home you work in, which is why nothing here is readable.'}
+          : 'Nobody has recorded which home you work in.'}
       </p>
     </div>
   )

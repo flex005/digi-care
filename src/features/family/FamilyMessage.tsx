@@ -69,9 +69,8 @@ export function FamilyMessage({
 
       {named.length === 0 ? (
         <p className={styles.noFamily} data-no-family-named>
-          Nobody is named to see this resident&rsquo;s updates, so there is nobody here
-          to write to. That is not the same as the family not needing to know: family
-          access is a record on the Consent tab, and a telephone call is not.
+          Nobody is named to see this resident&rsquo;s updates; if the family need to
+          know, telephone them.
         </p>
       ) : current !== undefined ? (
         <>
@@ -116,8 +115,8 @@ export function FamilyMessage({
               data-field="family-message"
             />
             <span className={styles.levelMeans}>
-              They see this and never the incident record. Not &ldquo;unwitnessed fall,
-              moderate harm&rdquo;, but what happened and how their relative is.
+              They see this and never the incident record, so say what happened and how
+              their relative is.
             </span>
           </label>
 

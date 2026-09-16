@@ -43,9 +43,8 @@ export function ConsentTab() {
             been sought
           </span>
           <span className={styles.leadDetail}>
-            Nobody has asked {resident.preferredName}, and nobody has decided on their
-            behalf. Never sought is not refusal and it is not permission, care given
-            without either is care given without consent.
+            Nobody has asked {resident.preferredName} or decided on their behalf, so
+            care given now is given without consent.
           </span>
         </span>
       </div>
@@ -119,8 +118,8 @@ function Remains({ status }: { status: Extract<AnyConsent, { kind: 'withdrawn' }
     <div className={styles.remains} data-remains={status.remains.length}>
       <p className={styles.remainsTitle}>What withdrawing did not undo</p>
       <p className={styles.remainsIntro}>
-        Withdrawing stopped anything new. It did not remove what already exists, and
-        nothing here happened automatically: each of these is somebody&rsquo;s job.
+        Withdrawing stopped anything new and removed nothing: each of these is
+        somebody&rsquo;s job.
       </p>
       <ul className={styles.remainsList}>
         {status.remains.map((effect) => (

@@ -208,9 +208,6 @@ describe('who this home rings first', () => {
     )
     expect(container.querySelector('[data-primary-contact="none"]')).toBeTruthy()
     expect(container.querySelector('[data-state="unrecorded"]')).toBeTruthy()
-    expect(
-      screen.getByText(/not the same as there being nobody to ring/i),
-    ).toBeVisible()
   })
 
   it('has a resident in the fixtures with nobody holding it', async () => {

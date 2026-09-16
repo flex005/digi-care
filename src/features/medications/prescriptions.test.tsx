@@ -113,8 +113,8 @@ describe('what this requires of you', () => {
     // It says which requirement, and why it cannot run — not merely that
     // something is missing.
     expect(blocked.textContent).toMatch(/and what is missing/)
-    expect(blocked.textContent).toMatch(/cannot tell anybody when a further dose/)
-    expect(blocked.textContent).toMatch(/from the prescription itself/)
+    expect(blocked.textContent).toMatch(/No 24-hour maximum is recorded/)
+    expect(blocked.textContent).toMatch(/check the prescription before a further dose/)
   })
 
   it('leaves the other prescriptions uncritical', async () => {
@@ -273,7 +273,7 @@ describe('the count line and the disabled action', () => {
      * against one nothing on any screen can.
      */
     await waitFor(() =>
-      expect(screen.getAllByText(/no prescriber/).length).toBeGreaterThan(0),
+      expect(screen.getAllByText(/records prescriptions/).length).toBeGreaterThan(0),
     )
   })
 })

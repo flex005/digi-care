@@ -55,7 +55,7 @@ export function ResuscitationPanel({
           ? 'Record a resuscitation decision'
           : 'Change the resuscitation decision'
       }
-      description={DESCRIPTIONS[status.kind](siteName)}
+      description={DESCRIPTIONS[status.kind]}
       confirmLabel={
         status.kind === 'no_decision_recorded' ? 'Record decision' : 'Change decision'
       }
@@ -71,7 +71,7 @@ export function ResuscitationPanel({
             variant="panel"
             caption="Resuscitation"
             label="No decision recorded"
-            detail={`Nobody has recorded whether CPR should be attempted for ${residentName}. In the absence of a decision CPR is attempted, so this is not a neutral gap; it is an outcome nobody has chosen.`}
+            detail={`Nobody has recorded whether CPR should be attempted for ${residentName}; in the absence of a decision CPR is attempted.`}
           />
           <div className={styles.bannerActions}>{control}</div>
         </div>
@@ -102,10 +102,7 @@ export function ResuscitationPanel({
           <div className={`${styles.banner} ${styles.bannerSettled}`}>
             <p className={styles.bannerCaption}>Resuscitation</p>
             <p className={styles.bannerHeadline}>For resuscitation</p>
-            <p className={styles.bannerDetail}>
-              CPR is to be attempted. Somebody asked and recorded this; it is a
-              decision, not the absence of one.
-            </p>
+            <p className={styles.bannerDetail}>CPR is to be attempted.</p>
             <p className={styles.attribution}>
               Recorded by {staffLabel(status.recordedBy)},{' '}
               <span data-numeric>{format.instantDate(status.recordedAt)}</span>
@@ -120,12 +117,9 @@ export function ResuscitationPanel({
   }
 }
 
-const DESCRIPTIONS: Record<ResuscitationStatus['kind'], (siteName: string) => string> =
-  {
-    dnar_in_place: (siteName) =>
-      `Changing it overrides a signed clinical decision about whether CPR is attempted, and every member of staff on shift at ${siteName} is notified.`,
-    for_resuscitation: (siteName) =>
-      `Changing it alters whether CPR is attempted, and every member of staff on shift at ${siteName} is notified.`,
-    no_decision_recorded: (siteName) =>
-      `Recording one changes what staff do in an emergency, and every member of staff on shift at ${siteName} is notified.`,
-  }
+const DESCRIPTIONS: Record<ResuscitationStatus['kind'], string> = {
+  dnar_in_place:
+    'Changing it overrides a signed clinical decision about whether CPR is attempted.',
+  for_resuscitation: 'Changing it alters whether CPR is attempted.',
+  no_decision_recorded: 'Recording one changes what staff do in an emergency.',
+}

@@ -116,8 +116,7 @@ export function expectationFor(
   if (category === 'identity_admission') {
     return {
       missing: `${resident.preferredName} was admitted on ${formatDate(resident.admittedOn)} and nothing is filed here.`,
-      because:
-        'An admission agreement is signed on the day somebody moves in. Nothing in this section can produce one.',
+      because: 'An admission agreement is signed on the day somebody moves in.',
     }
   }
 
@@ -127,7 +126,7 @@ export function expectationFor(
         return {
           missing: `A consent was taken in writing on ${formatDate(consent.on)} and nothing is filed here.`,
           because:
-            'Written consent means somebody signed a form. The record says it was signed; this section cannot produce it.',
+            'The record says a consent form was signed, and it is not filed here.',
         }
       }
     }
@@ -141,8 +140,7 @@ export function expectationFor(
       if (current === undefined) continue
       return {
         missing: `A care plan was finalised on ${formatDate(current.finalisedOn)} and nothing is filed here.`,
-        because:
-          'A finalised plan is signed and filed. The care record says this version exists; this section cannot produce it.',
+        because: 'The care record says this version exists, and it is not filed here.',
       }
     }
     return undefined
@@ -156,7 +154,7 @@ export function expectationFor(
       return {
         missing: `${effect.name}: ${effect.count.value} counted when photography consent was withdrawn, and nothing is filed here.`,
         because:
-          'That count is what the withdrawal said it could not undo. If the photographs cannot be found here, nobody can act on it.',
+          'If the photographs cannot be found here, nobody can act on the withdrawal.',
       }
     }
     return undefined

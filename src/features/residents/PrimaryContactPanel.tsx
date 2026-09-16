@@ -75,7 +75,7 @@ export function PrimaryContactPanel({
           variant="panel"
           caption="Primary contact"
           label="Not recorded"
-          detail={`Nobody has been named as the person this home rings first about ${residentName}. That is not the same as there being nobody to ring, and it is the question staff ask at the worst possible moment.`}
+          detail={`Nobody has been named as the person this home rings first about ${residentName}.`}
         />
       </div>
     )
@@ -92,8 +92,7 @@ export function PrimaryContactPanel({
               .map((entry) => `${entry.person.name} (${entry.category})`)
               .join(' and ')}{' '}
             are both marked as the primary contact for {residentName}. Only one person
-            can be, and this screen will not choose between them; ringing the wrong one
-            is how the wrong family member finds out.
+            can be.
           </p>
         </div>
       </div>

@@ -148,9 +148,8 @@ export function NoteDetail() {
             {/* One line, above the control it explains, rather than a card
                 longer than the note it describes. */}
             <p className={styles.immutabilityLine}>
-              A submitted care note is never edited or deleted, by anybody. A correction
-              is a second note, linked to this one, which stays visible and is marked
-              superseded.
+              A submitted care note is never edited or deleted; a correction is a second
+              note, linked to this one.
             </p>
           </Card>
 

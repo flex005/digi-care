@@ -133,7 +133,7 @@ export function AllergyPanel({
             variant="panel"
             caption={CAPTION}
             label="Not recorded"
-            detail="Nobody has recorded whether this person has allergies. That is not the same as having none, and medication must not be given on the assumption that it is."
+            detail="Nobody has recorded whether this person has allergies, and medication must not be given on the assumption there are none."
           />
           <div className={styles.bannerActions}>{control}</div>
         </div>

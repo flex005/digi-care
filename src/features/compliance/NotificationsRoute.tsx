@@ -136,7 +136,6 @@ export function NotificationsRoute() {
         {rows.length === 0 ? (
           <p className={styles.emptyFiltered} data-empty="filtered">
             Nothing at {activeSite.name} matches {selected?.label ?? 'this filter'}.
-            That is a statement about this filter, not about the incident log.
           </p>
         ) : (
           <ul className={styles.rows}>

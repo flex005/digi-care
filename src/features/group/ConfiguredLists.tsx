@@ -52,19 +52,19 @@ export function ConfiguredLists({
        * it into a union whose job is to produce a risk level would make it say
        * something it does not say.
        */
-      note: 'Nine, not the ten the source PRD names: the Mental Capacity Act two-stage test is a capacity determination rather than a risk, and it lives in the consent module.',
+      note: 'Nine: the Mental Capacity Act test is recorded with consent.',
     },
     {
       id: 'domains',
       title: 'Care plan domains this home writes',
       items: CARE_PLAN_DOMAINS.map((d) => ({ id: d.id, name: d.name })),
-      note: 'These ten and no others. Adding a domain of a home’s own is not built yet, and there is no control for it on any screen. The rules for it are agreed: it would belong to one home, that home’s denominator would say so, and no rate would be compared across homes whose domains differ.',
+      note: 'These ten and no others; adding a home’s own domain is not built.',
     },
     {
       id: 'consents',
       title: 'Consents this home seeks',
       items: CONSENT_TYPES.map((c) => ({ id: c.id, name: c.name })),
-      note: 'These eight and no others. A resident’s consents are a mapped type over exactly these keys, which is what makes a blanket capacity decision unexpressible and stops a consent referencing an assessment that does not name its type; a custom type would give that up for all eight.',
+      note: 'These eight and no others.',
     },
   ]
 
@@ -79,12 +79,9 @@ export function ConfiguredLists({
           <h2 className={styles.settingsTitle}>{set.title}</h2>
           <p className={styles.settingsNote}>{set.note}</p>
           <p className={styles.settingsNote}>
-            <b>Turning one off clears nothing.</b> Every assessment, domain and consent
-            already recorded stays exactly where it is, with the name and date it was
-            written under. What changes is what an <em>unanswered</em> one means: it
-            stops being a gap somebody can close and becomes a question this home does
-            not ask. That moves what {siteName} is expected to hold, across{' '}
-            {pluralise(residents, 'resident')}.
+            <b>Turning one off clears nothing already recorded</b>, and an unanswered
+            one stops counting as a gap. That moves what {siteName} is expected to hold,
+            across {pluralise(residents, 'resident')}.
           </p>
 
           <ul className={styles.toggles}>

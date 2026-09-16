@@ -34,8 +34,7 @@ export function FuturePlansTab() {
     <div className={styles.tabPanel}>
       <Card padded>
         <p className={styles.tabIntro}>
-          Recorded in advance, while this person could say what they wanted. Every entry
-          is listed, recorded or not.
+          Recorded in advance, while this person could say what they wanted.
         </p>
       </Card>
 

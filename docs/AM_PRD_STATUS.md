@@ -24,7 +24,7 @@ browser.
 
 | PRD section | What exists |
 | --- | --- |
-| **Authentication** | Sign-in offering the three roles above. An invitation-acceptance screen with password rules and a four-digit signing code. A six-digit verification step. A session that ends after a settable period of inactivity, with a warning first. An account page listing this one session. The organisation setup wizard. **None of it authenticates anybody**, and each screen says so. |
+| **Authentication** | Sign-in offering the three roles above. An invitation-acceptance screen with password rules and a four-digit signing code. A six-digit verification step. A session that ends after a settable period of inactivity, with a warning first. An account page listing this one session. The organisation setup wizard. **None of it authenticates anybody.** |
 | **Dashboard** | The site dashboard, with an Admin-only banner naming invitations nobody has accepted. A site switcher, and an Admin-only view of every home side by side. |
 | **Team** | Staff list with search and filters, read-only for a Manager. Invite drawer (care worker, senior carer, deputy manager), including which residents a care worker covers. Staff profile with homes, resident assignment and recorded activity. Assigning a Manager to several homes. Deactivation with a reason and a typed confirmation. |
 | **Residents** | Admission in five steps shown one at a time, of which only the first is required, with a DNAR form that can be filed as part of it (see the departures). Writing and finalising care plan domains, with version history. |
@@ -76,6 +76,7 @@ Each was decided and recorded, not missed.
 - **Cancelling a session keeps attendance already recorded.** The PRD offers to remove it.
 - **A session can be changed only before it starts**, because once it has begun its time is what attendance is recorded against.
 - **The incident family message is a disclosure record, not a field on the manager's review**, and family access reads its basis from the consent rather than asking again.
+- **A resuscitation or ADRT confirmation does not warn that staff on shift are notified** (FRONTEND_PRD §6.2 asks for that warning). Nothing in this build notifies anybody, so the warning would be a screen promising an act it does not perform, and the toast that follows, saying nobody on shift was notified, would contradict it. That makes the dialog wrong, not merely unfulfilled. The confirmation names the resident and what the change does; the toast names the home whose staff were not told.
 - **Resident assignment changes nothing on any screen that counts gaps**, enforced by a guard, because a missing record must not become a mark against whoever was assigned.
 - **No personal dashboard.** The PRD has none, and the one that existed was built for care workers.
 
@@ -87,7 +88,7 @@ Each was decided and recorded, not missed.
 - A root cause dropdown on incidents; the field is free text.
 - The inspection pack's generation and download, report export, and the cross-site consolidated report.
 - Changing who is invited to a session once it is planned.
-- Changing a role on the staff profile (listed above); the invite drawer now says so.
+- Changing a role on the staff profile (listed above).
 - Adding custom care plan domains (approved, not built); Settings now says so.
 - Settings that change what existing records mean are shown on the risk assessment list only. The care plan and consent screens do not yet show when a domain or consent type has been turned off.
 - Billing.

@@ -52,18 +52,14 @@ export function ActivityLogRoute() {
       <header>
         <h1 className={styles.pageTitle}>Activity log</h1>
         <p className={styles.pageSubtitle}>
-          Everything written in this browser tab since it was opened, newest first. It
-          is gone on reload, like every other write in this build.
+          Everything written in this browser tab since it was opened, newest first.
         </p>
       </header>
 
       <Card>
         {acts.length === 0 ? (
           <p className={styles.emptyLog} data-empty-log>
-            Nothing has been written in this session yet. That is a statement about this
-            tab, not about the record: the care notes, doses and signatures already in
-            the record were written before it was opened, and each carries its own
-            author and timestamp where it lives.
+            Nothing has been written in this session yet.
           </p>
         ) : (
           <ul className={styles.acts}>
@@ -104,8 +100,8 @@ export function ActivityLogRoute() {
           <Unrecorded
             variant="panel"
             caption={`${formatCount(acts.length)} ${acts.length === 1 ? 'act' : 'acts'} in this session`}
-            label="A deployed log would carry more than this one can."
-            detail={`None of the following exists in this build: ${NOT_LOGGED.join('; ')}. A log that listed them would be inventing its own evidence.`}
+            label="Not in this log"
+            detail={`${NOT_LOGGED.join('; ')}.`}
           />
         </div>
       </Card>

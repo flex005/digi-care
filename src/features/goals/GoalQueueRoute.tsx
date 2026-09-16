@@ -63,10 +63,7 @@ export function GoalQueueRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Goals could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. A partial list is not shown,
-              because it would read as fewer unanswered goals than there are.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>
@@ -156,7 +153,7 @@ function Found({
             Of <span data-numeric>{pluralise(dated, 'goal')}</span> with a target date,
             across <span data-numeric>{formatCount(data.goals.length)}</span> at{' '}
             {siteName}. <span data-numeric>{formatCount(undated)}</span> have no date at
-            all: a goal with no date is not late and is not counted here.
+            all and are not counted here.
           </span>
         </span>
       </div>

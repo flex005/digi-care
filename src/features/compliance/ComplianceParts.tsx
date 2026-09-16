@@ -22,8 +22,8 @@ export function PlaceholderBanner({ what }: { what: 'screen' | 'pack' }) {
   return (
     <div className={styles.banner} data-placeholder-banner data-state="unrecorded">
       {what === 'pack'
-        ? 'This is a contents list, not a document. The mapping of evidence to Key Questions is not derived from CQC’s published framework and is a placeholder.'
-        : 'This mapping of evidence to Key Questions is not derived from CQC’s published framework, and the rating combines checks by taking the worst of them. Both are placeholders.'}{' '}
+        ? 'This is a contents list, not a document, and its mapping of evidence to Key Questions is a placeholder.'
+        : 'This mapping of evidence to Key Questions, and the rating built on it, are placeholders.'}{' '}
       No regulatory conclusion should be drawn from anything on this screen.
     </div>
   )

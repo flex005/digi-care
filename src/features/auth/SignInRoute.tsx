@@ -67,10 +67,6 @@ export function SignInRoute() {
             <p className={styles.claim}>
               A care record that says what nobody has written down.
             </p>
-            <p className={styles.claimSmall}>
-              Every gap renders as a gap. A blank never means the same as a no, and
-              nothing is green because it happens to be empty.
-            </p>
             <p className={styles.sideFoot}>
               {sites.map((entry) => entry.name).join(' and ')}
             </p>
@@ -160,9 +156,7 @@ export function SignInRoute() {
                   })}
                 </div>
                 <p className={styles.hint}>
-                  Chosen here rather than afterwards, because it decides the timezone
-                  every record you write today will carry, and the home whose record you
-                  are about to read.
+                  It decides the timezone every record you write today will carry.
                 </p>
               </div>
 

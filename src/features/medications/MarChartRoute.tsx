@@ -103,10 +103,7 @@ export function MarChartRoute() {
           <p className={styles.errorTitle}>
             This medication record could not be loaded
           </p>
-          <p className={styles.errorBody}>
-            Nothing has been lost; this is a read. A partial MAR chart is not shown,
-            because a missing cell and an unrecorded dose look identical.
-          </p>
+          <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
           {resource.kind === 'refused' ? (
             <NotYourHome refusal={resource} />
           ) : resource.kind === 'error' ? (

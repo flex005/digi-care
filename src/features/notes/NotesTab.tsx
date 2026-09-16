@@ -121,10 +121,7 @@ export function NotesTab() {
       <div className={styles.tabPanel}>
         <Card padded>
           <p className={styles.errorTitle}>These care notes could not be loaded</p>
-          <p className={styles.errorBody}>
-            Nothing has been lost; this is a read. A partial history is not shown,
-            because it would read as a quieter record than it is.
-          </p>
+          <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
           <Button variant="secondary" onClick={resource.retry}>
             Try again
           </Button>
@@ -185,8 +182,7 @@ export function NotesTab() {
               Showing {visible.length} of {notes.length} notes in {rangeLabel(range)},
               and gap markers are hidden.
             </strong>{' '}
-            A stretch with nothing in it here is a stretch with nothing matching these
-            filters. Clear them to see where the real gaps are.
+            Clear the filters to see where the real gaps are.
           </p>
         </Card>
       ) : null}

@@ -77,9 +77,7 @@ export function SitesSection({
                  * work later.
                  */
                 <span className={styles.siteLast} data-last-home>
-                  Their only home. Somebody on the team works somewhere, so this cannot
-                  be removed; removing their access is the decision that ends their work
-                  here, and it carries a name.
+                  Their only home, so it cannot be removed; remove their access instead.
                 </span>
               ) : (
                 <Button

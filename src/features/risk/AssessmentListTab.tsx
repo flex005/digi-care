@@ -76,9 +76,7 @@ export function AssessmentListTab() {
             been assessed for {resident.preferredName}
           </span>
           <span className={styles.leadDetail}>
-            Never assessed is not low risk. Every template is listed whether or not
-            anybody has completed it, because a list of only the completed ones would
-            read as a complete picture.
+            Never assessed is not low risk.
             {retired > 0 ? (
               <>
                 {' '}

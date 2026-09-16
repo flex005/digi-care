@@ -127,10 +127,8 @@ export function WholePlanReviewRoute() {
             {outstanding.length === 1 ? 'was a gap' : 'were gaps'} at the time
           </p>
           <p className={styles.willStoreBody}>
-            You can complete this review with parts of the plan unwritten, the meeting
-            happened and it should be on the record. But the record will carry what was
-            outstanding when you signed it, so it can never later read as a review of a
-            complete plan.
+            You can complete this review with parts of the plan unwritten; the record
+            carries what was outstanding when you signed it.
           </p>
           <ul className={styles.willStoreList}>
             {outstanding.map(({ domain, record }) => (

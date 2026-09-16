@@ -47,31 +47,28 @@ export const CARE_NOTES_VIEWS: {
     id: 'flagged',
     label: 'Flagged, not reviewed',
     question:
-      'Notes a care worker asked a senior to look at, that no senior has looked at yet. Oldest first, because the wait is the problem.',
+      'Notes a care worker asked a senior to look at, that no senior has looked at yet. Oldest first.',
   },
   {
     id: 'quiet_today',
     label: 'No note today',
-    question:
-      'Residents nobody has written about today. Named, never counted alone, because a count cannot be acted on and a name can.',
+    question: 'Residents nobody has written about today.',
   },
   {
     id: 'by_author',
     label: 'By author',
-    question:
-      'One worker’s records, for supervision or an investigation. Says what they wrote, not how well they wrote it.',
+    question: 'One worker’s records, for supervision or an investigation.',
   },
   {
     id: 'by_shift',
     label: 'By shift',
-    question:
-      'Whether a shift wrote anything at all. The night team is the one this question is usually about.',
+    question: 'Whether a shift wrote anything at all.',
   },
   {
     id: 'everything',
     label: 'All notes',
     question:
-      'Every care note at this site, by everybody, newest first, a page at a time. Last, and never the default: a feed answers no question anybody arrives with, and §6.3 calls it a screen nobody opens twice.',
+      'Every care note at this site, by everybody, newest first, a page at a time.',
   },
 ]
 

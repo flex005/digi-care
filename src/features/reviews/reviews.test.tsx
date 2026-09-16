@@ -219,9 +219,6 @@ describe('the review queue', () => {
     await settled(container)
 
     const line = container.querySelector('[data-exclusions]')
-    expect(line?.textContent).toMatch(
-      /no review to schedule for a record that does not exist/,
-    )
     expect(line?.textContent).toMatch(/nobody has done/)
     expect(line?.textContent).toMatch(/nothing signed/)
     // And points at the queue where each one's own claim lives.
@@ -428,7 +425,7 @@ describe('the whole care plan review session', () => {
     }
     // A figure says how much was missing; the names say what.
     expect(block?.textContent).toMatch(
-      /can never later read as a review of a complete plan/,
+      /the record carries what was outstanding when you signed it/,
     )
   })
 

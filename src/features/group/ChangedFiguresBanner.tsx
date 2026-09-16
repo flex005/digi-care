@@ -32,7 +32,7 @@ export function ChangedFiguresBanner() {
           )
           .join('; ')}
         . Anything on this screen derived from {changed.length === 1 ? 'it' : 'them'}{' '}
-        was drawn against the changed value, and reverts on reload.
+        was drawn against the changed value.
       </p>
       <Link to="/settings" className={styles.changedLink} data-changed-link>
         Settings

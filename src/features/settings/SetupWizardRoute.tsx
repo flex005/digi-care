@@ -77,11 +77,7 @@ export function SetupWizardRoute() {
          * finishing here means it will not appear again.
          */}
         <p className={styles.nothingRemembers} data-nothing-remembers>
-          <b>Nothing remembers whether this has been done.</b> A real deployment runs it
-          once, for the first Admin, on their first sign-in. This build keeps no
-          accounts and forgets everything on reload, so this is a screen you can open
-          whenever you like. Within this session it picks up at the first step nobody
-          has confirmed or skipped.
+          It picks up at the first step nobody has confirmed or skipped.
         </p>
       </header>
 
@@ -136,9 +132,7 @@ export function SetupWizardRoute() {
              * a step that forgot them.
              */}
             <p className={styles.note} data-not-held-here>
-              The name is all this build holds about an organisation. An address,
-              country, care setting, CQC registration number and primary contact have no
-              field here, so there is nowhere for them to go.
+              The name is all diGi-Care holds about an organisation.
             </p>
             <div className={styles.actions}>
               <Button
@@ -161,9 +155,8 @@ export function SetupWizardRoute() {
           <section className={styles.section} data-setup-section="site">
             <h2 className={styles.sectionTitle}>Its first home</h2>
             <p className={styles.note}>
-              The home you are signed in to. Its name and timezone are the same settings
-              the Settings screen changes, not a copy of them; the timezone decides what
-              every clinical timestamp in this home says.
+              The home you are signed in to. Its timezone decides what every clinical
+              timestamp in it says.
             </p>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Home name</span>
@@ -223,11 +216,8 @@ export function SetupWizardRoute() {
              * not the same experience even though it is the same setting.
              */}
             <p className={styles.note} data-retire-later>
-              Nine, all on by default. Turning one off now simply means nobody here will
-              be asked it. <b>Turning one off later is different:</b> by then residents
-              will have assessments against it, and those stay on file with their author
-              and date while unanswered ones stop counting as gaps. It is the same
-              setting, changed from Settings, at a moment when it reaches back.
+              Nine, all on by default; turning one off means nobody here will be asked
+              it.
             </p>
             <ul className={styles.templates}>
               {RISK_ASSESSMENT_TEMPLATES.map((template) => {
@@ -299,10 +289,8 @@ export function SetupWizardRoute() {
              * would not.
              */}
             <p className={styles.note}>
-              The same invitation Team Management sends, and they appear on the team
-              list as somebody whose access has not been set up. Nothing is emailed:
-              there is no mail here, and an invitation nobody receives is recorded as
-              exactly that.
+              They appear on the team list with access not set up, and nothing is
+              emailed to them.
             </p>
             <InviteDrawer onAdded={bump} />
             {teamMembers().length > invitedBefore ? (

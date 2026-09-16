@@ -77,7 +77,7 @@ describe('a cancellation keeps every attendance already recorded', () => {
 
   it('refuses a cancellation with no reason', () => {
     expect(() => cancelSession(withAttendance(), '   ', staffOkonkwo)).toThrow(
-      /carries a reason/i,
+      /needs a reason/i,
     )
   })
 
@@ -149,7 +149,7 @@ describe('planning a session asks for its denominator', () => {
         residentIds: [],
         by: staffOkonkwo,
       }),
-    ).toThrow(/no denominator/i)
+    ).toThrow(/at least one resident invited/i)
   })
 
   it('puts a planned session on the calendar this session reads', () => {

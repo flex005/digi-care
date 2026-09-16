@@ -17,7 +17,7 @@ import type { RiskLevel, RiskTemplateId } from '@/data/types'
  */
 
 export const PLACEHOLDER_NOTICE =
-  'This instrument is a placeholder. It is not a validated clinical scale, its items and weightings are invented, and no clinical decision should be made from a score it produces. A real instrument has to be sourced before this module is used with real residents.'
+  'This instrument is a placeholder, not a validated clinical scale: make no clinical decision from its score.'
 
 export interface InstrumentChoice {
   label: string
@@ -41,8 +41,7 @@ export const INSTRUMENT_ITEMS: InstrumentItem[] = [
   {
     id: 'history',
     question: 'Assessment factor 1: recent history',
-    guidance:
-      'Placeholder item. A real instrument states exactly what is being asked and how to judge it.',
+    guidance: 'Placeholder item.',
     choices: [
       { label: 'Not present', points: 0 },
       { label: 'Present in the last 3 months', points: 15 },

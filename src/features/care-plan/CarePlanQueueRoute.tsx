@@ -78,10 +78,7 @@ export function CarePlanQueueRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Care plans could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. A partial list is not shown,
-              because it would read as fewer unwritten domains than there are.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>
@@ -266,8 +263,7 @@ function Found({
         </div>
 
         <p className={styles.sortLine}>
-          Never written first, then longest overdue, a domain nobody has written has no
-          wait to measure, so it sorts above the ones that do
+          Never written first, then longest overdue
           {filter === 'all' && domain === 'all' ? null : (
             <>
               {' · '}
@@ -281,7 +277,7 @@ function Found({
           <p className={styles.settledNote}>
             {filter === 'never_written' && domain === 'all'
               ? `Every care plan domain at ${siteName} has been written at least once.`
-              : 'Nothing matches these filters. That is a statement about the filters, not about the record.'}
+              : 'Nothing matches these filters.'}
           </p>
         ) : (
           <>

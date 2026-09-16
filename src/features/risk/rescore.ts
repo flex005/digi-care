@@ -32,12 +32,8 @@ export function badgeStripChange(
 }
 
 /**
- * The notification this build will not send.
- *
- * The export stub's treatment, for the export stub's reason. Recording a level
- * rise would notify everybody on shift in a real system; claiming it happened
- * here would be a record of something that did not.
+ * Nobody is notified of a level rise, so the screen says who has to be told.
  */
 export function notificationNote(residentName: string, level: string): string {
-  return `Recording this would notify every member of staff on shift that ${residentName}'s risk has risen to ${level}. This build has no notification system and will not send it.`
+  return `Tell staff on shift that ${residentName}'s risk has risen to ${level}.`
 }

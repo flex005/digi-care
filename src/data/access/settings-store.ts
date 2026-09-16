@@ -61,7 +61,7 @@ const FIGURES: AdjustableFigure[] = [
     id: 'session-timeout-minutes',
     label: 'Minutes of inactivity before a session ends',
     effect:
-      'The warning appears in the last ten minutes and the session ends at zero, destroying everything it wrote. Lower it to see either.',
+      'The warning appears in the last ten minutes, and at zero the session ends and everything it wrote is gone.',
     unit: 'minutes',
     value: 480,
     fallback: 480,
@@ -115,7 +115,7 @@ const FIGURES: AdjustableFigure[] = [
     id: 'review-interval-months',
     label: 'How long a completed review buys before the next one',
     effect:
-      'Applies to reviews completed from now on. Review dates already in the record were set against the old value and do not move.',
+      'Applies to reviews completed from now on; dates already in the record do not move.',
     unit: 'months',
     value: REVIEW_INTERVAL_MONTHS,
     fallback: REVIEW_INTERVAL_MONTHS,
@@ -138,8 +138,7 @@ const FIGURES: AdjustableFigure[] = [
      */
     id: 'round-times',
     label: 'The times this home gives medication',
-    effect:
-      'Fixed at fixture generation: every dose and every MAR record was produced against these four times, and the clock reads them to decide whether a round is running. Changing them would move the windows under records already on the chart. A change that takes effect later needs something to make it take effect, and this build has no scheduler.',
+    effect: 'Fixed: every MAR record was produced against these four times.',
     unit: ROUND_TIMES.join(' · '),
     value: ROUND_TIMES.length,
     fallback: ROUND_TIMES.length,
@@ -149,8 +148,7 @@ const FIGURES: AdjustableFigure[] = [
   {
     id: 'round-window-minutes',
     label: 'How long a round stays open',
-    effect:
-      'Fixed at fixture generation, for the same reason as the round times: the MAR was produced against this window, so changing it would relabel doses rather than move them.',
+    effect: 'Fixed: every MAR record was produced against this window.',
     unit: 'minutes',
     value: ROUND_WINDOW_MINUTES,
     fallback: ROUND_WINDOW_MINUTES,
@@ -160,8 +158,7 @@ const FIGURES: AdjustableFigure[] = [
   {
     id: 'medication-lookahead-hours',
     label: 'How far ahead a screen looks for medication about to fall due',
-    effect:
-      'Fixed at fixture generation: the MAR records were produced against this value, so changing it would move the label and not a single dose. It needs the record regenerating, not re-rendering.',
+    effect: 'Fixed: every MAR record was produced against this value.',
     unit: 'hours',
     value: MEDICATION_LOOKAHEAD_HOURS,
     fallback: MEDICATION_LOOKAHEAD_HOURS,

@@ -152,10 +152,8 @@ describe('a setting that is a claim about the future moves nothing already writt
   it('offers no control for a figure the records were generated against', () => {
     const rounds = figures().find((entry) => entry.id === 'round-times')!
     expect(rounds.fixedAtGeneration).toBe(true)
-    // And the reason is on the card rather than in a comment, because the
-    // reader is somebody wondering why they cannot change it.
-    expect(rounds.effect).toMatch(/would move the windows under records already/i)
-    expect(rounds.effect).toMatch(/no scheduler/i)
+    // And the reason is on the card rather than in a comment.
+    expect(rounds.effect).toMatch(/produced against these four times/i)
   })
 })
 

@@ -623,15 +623,6 @@ describe('an invitation states what is being accepted, before the password', () 
     }
   })
 
-  it('says nothing is enforced before the first row', async () => {
-    const { container } = renderAt(`/invitation/${invitation.staffId}/access`)
-    await settled(container, '[data-invitation-access]')
-
-    const order = [...container.querySelectorAll('[data-not-enforced], [data-module]')]
-    expect(order[0]?.hasAttribute('data-not-enforced')).toBe(true)
-    expect(order.length).toBeGreaterThan(1)
-  })
-
   it('refuses an expired invitation on the screen, not on submit', async () => {
     const { container } = renderAt(`/invitation/${invitation.staffId}`)
     await settled(container, '[data-invitation]')

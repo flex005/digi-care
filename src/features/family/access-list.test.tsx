@@ -189,7 +189,7 @@ describe('a correction keeps who recorded the access, and adds who changed it', 
         level: 'full',
         by: staffOkonkwo,
       }),
-    ).toThrow(/did not happen/i)
+    ).toThrow(/Nothing about this family member changed/i)
   })
 })
 
@@ -425,7 +425,7 @@ describe('the module screen leads on permission granted and never used', () => {
     const finding = container.querySelector('[data-finding="access-without-consent"]')!
     expect(finding.textContent).toContain(String(people.length))
     // Said, not only counted.
-    expect(finding.textContent).toMatch(/outliving what authorised it/i)
+    expect(finding.textContent).toMatch(/nothing removed them when it stopped/i)
   }, 30000)
 
   it('opens the resident where the people are, from a row', async () => {

@@ -59,11 +59,7 @@ export function RegisterRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>The register could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. No part of it is shown rather than
-              some of it, because a register missing an unknown number of drugs is one
-              somebody would read as complete.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>
@@ -134,7 +130,7 @@ function Found({ data, siteName }: { data: RegisterData; siteName: string }) {
             <span className={styles.findingTitle}>never counted</span>
             <span className={styles.findingDetail}>
               Prescribed, but no opening balance has been taken, so there is nothing for
-              a count to reconcile against. Not the same as a discrepancy. Of{' '}
+              a count to reconcile against. Of{' '}
               <span data-numeric>{formatCount(total)}</span> controlled{' '}
               {total === 1 ? 'drug' : 'drugs'} at {siteName}.
             </span>
@@ -156,8 +152,7 @@ function Found({ data, siteName }: { data: RegisterData; siteName: string }) {
 
         {rows.length === 0 ? (
           <p className={styles.settledNote}>
-            No controlled drugs are prescribed at {siteName}. Nothing is missing: there
-            is no register to keep.
+            No controlled drugs are prescribed at {siteName}.
           </p>
         ) : (
           <ul className={styles.registerList}>

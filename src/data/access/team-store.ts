@@ -307,12 +307,10 @@ export function setResidentAssignment(
   if (member === undefined) throw new Error(`No member of staff with id ${id}`)
   if (member.role !== 'care_worker')
     throw new Error(
-      `${member.ref.fullName} is a ${member.role}, and resident assignment is a care worker's. Storing one here would answer a question nobody asked them.`,
+      `${member.ref.fullName} is a ${member.role}, and resident assignment is for care workers.`,
     )
   if (assignment.kind === 'assigned' && assignment.residents.length === 0)
-    throw new Error(
-      'An assignment with no residents in it is `never_set` wearing a decision. Record the decision nobody took as nobody having taken it.',
-    )
+    throw new Error('Choose at least one resident, or leave it not decided.')
   member.residentAssignment = assignment
   assignmentChanges += 1
   return member
@@ -334,7 +332,7 @@ export function setSites(id: StaffId, siteIds: SiteId[]): StaffMember {
   if (member === undefined) throw new Error(`No member of staff with id ${id}`)
   if (siteIds.length === 0)
     throw new Error(
-      `${member.ref.fullName} has to work somewhere. Removing their last home would leave a record nothing on any screen knows how to read; remove their access instead, which is a decision with a name on it.`,
+      `${member.ref.fullName} has to work somewhere; remove their access instead.`,
     )
   member.siteIds = [...siteIds]
   siteChanges += 1
@@ -458,7 +456,7 @@ export function removeMember(id: StaffId): void {
   if (index === -1) throw new Error(`No staff member with id ${id}`)
   if (!isAddedThisSession(id)) {
     throw new Error(
-      'Somebody who appears on the record cannot be deleted, because the records that name them would outlive the deletion. Remove their access instead.',
+      'Somebody who appears on the record cannot be deleted; remove their access instead.',
     )
   }
   members.splice(index, 1)

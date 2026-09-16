@@ -57,7 +57,7 @@ export function ShareWithFamily({
     return (
       <p className={styles.noFamily} data-no-family-named>
         Nobody is named to see this resident&rsquo;s updates, so there is nobody to
-        share a note with. Family access is recorded on the Consent tab.
+        share a note with.
       </p>
     )
   }

@@ -139,15 +139,6 @@ describe('what I can do is one row of the manager’s matrix', () => {
     }
   })
 
-  it('says nothing is enforced before the first row', async () => {
-    const { container } = renderMe(reader, '/me/permissions')
-    await settled(container, '[data-my-permissions]')
-
-    const order = [...container.querySelectorAll('[data-not-enforced], [data-module]')]
-    expect(order[0]?.hasAttribute('data-not-enforced')).toBe(true)
-    expect(order.length).toBeGreaterThan(PERMISSION_MODULES.length)
-  })
-
   it('says plainly that staff records are not held here', async () => {
     /*
      * It was in two places while `/me` existed, because somebody looking for
@@ -186,7 +177,7 @@ describe('what I can do is one row of the manager’s matrix', () => {
     ).toBe(true)
   })
 
-  it("renders no count of the reader's own work, and says why", async () => {
+  it("renders no count of the reader's own work, and says so", async () => {
     /*
      * **The refusal and the absence, not the refusal alone.** The `/me` version
      * of this asserted that the sentence was printed; adding a total beside it
@@ -199,7 +190,6 @@ describe('what I can do is one row of the manager’s matrix', () => {
     const page = container.querySelector('[data-my-permissions]')!
     expect(page.querySelector('[data-numeric]')).toBeNull()
     expect(page.textContent).toMatch(/no counts of your work/i)
-    expect(page.textContent).toMatch(/no rota/i)
   })
 })
 

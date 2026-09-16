@@ -123,7 +123,7 @@ describe('no role but a care worker holds one', () => {
         decidedBy: worker.ref,
         on: '2026-09-15' as never,
       }),
-    ).toThrow(/never_set wearing a decision|wearing a decision/i)
+    ).toThrow(/Choose at least one resident/i)
   })
 })
 

@@ -77,10 +77,7 @@ export function ReviewQueueRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Reviews could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. A partial list is not shown,
-              because it would read as fewer unscheduled reviews than there are.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>
@@ -223,14 +220,13 @@ function Found({
       {/* Both exclusions named, because silence on either would let a home
           that has done nothing read as a home with nothing outstanding. */}
       <p className={styles.sortLine} data-exclusions>
-        Not counted here, because there is no review to schedule for a record that does
-        not exist: <span data-numeric>{formatCount(projection.neverAssessed)}</span>{' '}
-        risk assessments nobody has done, on the{' '}
+        Not counted here:{' '}
+        <span data-numeric>{formatCount(projection.neverAssessed)}</span> risk
+        assessments nobody has done, on the{' '}
         <Link to="/risk-assessments">risk assessment queue</Link>, and{' '}
         <span data-numeric>{formatCount(projection.neverWritten)}</span> care plan
         domains with nothing signed, on the{' '}
-        <Link to="/care-plans">care plan queue</Link>. Both are real gaps, and each is
-        the finding its own queue leads on.
+        <Link to="/care-plans">care plan queue</Link>.
       </p>
 
       <Card>
@@ -273,7 +269,7 @@ function Found({
         <p className={styles.sortLine}>
           {filter === 'completed'
             ? 'Most recent first: this is the record that a review happened, not a queue of work'
-            : 'Never scheduled first: a record nobody set a date for has no wait to measure, so it sorts above the ones that do rather than among them'}
+            : 'Never scheduled first'}
           {filter === 'all' && kind === 'all' ? null : (
             <>
               {' · '}
@@ -287,7 +283,7 @@ function Found({
           <p className={styles.settledNote}>
             {filter === 'never_scheduled' && kind === 'all'
               ? `Every record at ${siteName} that can be reviewed has a review date on it.`
-              : 'Nothing matches these filters. That is a statement about the filters, not about the record.'}
+              : 'Nothing matches these filters.'}
           </p>
         ) : (
           <>
@@ -481,10 +477,7 @@ function CoverageLead({
         </p>
         <p className={styles.coverageDetail}>
           A review is counted against the date it was <em>due</em>, not the date it was
-          done: otherwise a home that clears a year&rsquo;s backlog in one afternoon
-          makes the year it neglected disappear. A review nobody ever scheduled has no
-          date to be counted against and is not in this figure; it is the lead finding
-          on the other four filters.
+          done, and one nobody scheduled is not in this figure.
         </p>
       </div>
 

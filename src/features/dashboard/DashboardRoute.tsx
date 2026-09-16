@@ -169,7 +169,7 @@ export function DashboardRoute() {
             </h2>
             <p className={styles.panelNote}>
               Each bar is that day's doses due. Solid is recorded, hatched is the gap.
-              Today is outlined because it is still running.
+              Today is outlined.
             </p>
             <div className={styles.legend}>
               <span className={styles.legendItem}>
@@ -255,8 +255,7 @@ export function DashboardRoute() {
           <div className={styles.panelHead}>
             <h2 className={styles.panelTitle}>What the record holds, by module</h2>
             <p className={styles.panelNote}>
-              Solid is recorded, hatched is expected and missing. An unacknowledged
-              incident was written down, so its remainder is a finding.
+              Solid is recorded, hatched is expected and missing.
             </p>
           </div>
           <ul className={styles.bars}>
@@ -297,8 +296,7 @@ export function DashboardRoute() {
 
         {today.late.length === 0 ? (
           <p className={styles.calmEmpty} data-empty="late">
-            Nothing at {activeSite.name} is past its time. True of this moment, not of
-            the record.
+            Nothing at {activeSite.name} is past its time.
           </p>
         ) : (
           <LateList items={today.late} />
@@ -312,8 +310,7 @@ export function DashboardRoute() {
           </h2>
           <p className={styles.sectionNote}>
             <span data-numeric>{formatCount(today.unwritten.length)}</span> of{' '}
-            <span data-numeric>{formatCount(residents)}</span>. Not a record that
-            nothing happened. A record that nobody said.
+            <span data-numeric>{formatCount(residents)}</span>.
           </p>
         </div>
 

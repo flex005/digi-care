@@ -74,7 +74,6 @@ describe('two findings, never one and never a sum', () => {
     // An absence is not a milder finding, so it does not take the finding's
     // treatment. The hatch and critical are different classes, not shades.
     expect(discrepancy.className).not.toBe(never.className)
-    expect(never.textContent).toMatch(/Not the same as a discrepancy/)
   })
 
   it('gives both figures a denominator', async () => {
@@ -191,10 +190,8 @@ describe('one drug’s ledger', () => {
 
     const note = container.querySelector('[data-discrepancy]')!
     expect(note).toBeTruthy()
-    // The explanation sits beneath the table, not inside it, and it does not
-    // claim to explain anything — the register does not hold a reason.
+    // Beneath the table, not inside it.
     expect(note.textContent).toMatch(/unaccounted for/)
-    expect(note.textContent).toMatch(/nothing here explains it/)
     expect(screen.getByRole('table').contains(note)).toBe(false)
   })
 
@@ -274,7 +271,7 @@ describe('a drug that was never counted', () => {
       return found!
     })
 
-    expect(note.textContent).toMatch(/no opening balance has been taken/)
+    expect(note.textContent).toMatch(/Nothing has ever been counted for this drug/)
     expect(note.textContent).toMatch(/counts the cabinet/)
     expect(note.textContent).toMatch(/two signatures/)
   })

@@ -425,12 +425,6 @@
   line-height: var(--text-body-line);
 }
 
-.prototypeNote {
-  color: var(--ink-500);
-  font-size: var(--text-caption-size);
-  line-height: var(--text-caption-line);
-}
-
 /* ==========================================================================
    One incident — /incidents/:incidentId
    Built to docs/incident-detail.html.

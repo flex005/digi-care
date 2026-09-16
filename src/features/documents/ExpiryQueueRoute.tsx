@@ -169,7 +169,6 @@ export function ExpiryQueueRoute() {
         {rows.length === 0 ? (
           <p className={styles.categoryEmpty} data-empty="filtered">
             Nothing at {activeSite.name} matches {selected?.label ?? 'this filter'}.
-            That is a statement about this filter, not about the whole library.
           </p>
         ) : (
           <ul className={styles.rows}>

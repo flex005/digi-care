@@ -34,16 +34,15 @@ export function AssignmentSection({ member }: { member: StaffMember }) {
     <section className={styles.section} data-assignment={assignment.kind}>
       <h2 className={styles.sectionTitle}>Residents</h2>
       <p className={styles.sectionNote}>
-        Who this care worker has been given. It decides what they see in the care worker
-        app and nothing on this platform: no figure here is filtered by it, and no gap
-        is attributed to whoever was assigned.
+        Who this care worker has been given. It decides what they see in the Care Worker
+        app.
       </p>
 
       {assignment.kind === 'never_set' ? (
         <Unrecorded
           variant="panel"
           label="Nobody has decided"
-          detail={`Nobody has recorded which residents ${member.ref.fullName} covers. That is not the same as covering everybody: somebody deciding they cover the whole home is a decision with a name on it, and this is the absence of one.`}
+          detail={`Nobody has recorded which residents ${member.ref.fullName} covers. That is not the same as covering everybody.`}
         />
       ) : assignment.kind === 'all_residents_at_site' ? (
         <div className={styles.assignmentSettled}>

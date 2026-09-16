@@ -16,7 +16,7 @@ export function FileFactsText({ file }: { file: FileFacts }) {
   if (file.kind === 'not_retrievable') {
     return (
       <span className={styles.fileFacts} data-file="not_retrievable">
-        {file.format} · not retrievable in this build
+        {file.format} · not retrievable
       </span>
     )
   }

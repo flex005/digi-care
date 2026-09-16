@@ -154,10 +154,8 @@ export function ReportViewRoute() {
       <section className={styles.tableCard}>
         {definition.subject === 'staff' ? (
           <p className={styles.staffNote} data-staff-note>
-            <b>This is workload and coverage, not a ranking.</b> A gap in a record is
-            not necessarily a failure by whoever was on shift, a missed dose can be a
-            broken trolley, a short round, or a resident in hospital nobody updated. The
-            table is ordered by name, and it will not be ordered by anything else.
+            <b>This is workload and coverage, not a ranking.</b> The table is ordered by
+            name.
           </p>
         ) : null}
 
@@ -188,8 +186,7 @@ export function ReportViewRoute() {
             </div>
           ) : (
             <p className={styles.stateNote} data-state-note>
-              This is the state of the record today, not a flow through a period, so
-              there is nothing to compare it with.
+              This is the state of the record today, so there is no period to compare.
             </p>
           )}
 
@@ -259,11 +256,6 @@ export function ReportViewRoute() {
 
         <div className={styles.noFile} data-no-file data-state="unrecorded">
           <p className={styles.noFileTitle}>No file can be produced here.</p>
-          <p className={styles.noFileBody}>
-            A real export would contain {result.exportWouldContain} This build has no
-            backend and no file storage, so there is no download control rather than one
-            that produces nothing.
-          </p>
         </div>
       </section>
     </div>

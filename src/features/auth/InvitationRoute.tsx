@@ -112,8 +112,7 @@ export function InvitationRoute() {
       <div className={styles.screen} data-invitation-missing>
         <h1 className={styles.title}>No invitation with that link</h1>
         <p className={styles.subtitle}>
-          Nothing is shown rather than a form for an invitation nobody sent. If you were
-          expecting one, ask the manager who invited you to send it again.
+          If you were expecting one, ask the manager who invited you to send it again.
         </p>
         <Link to="/sign-in" className={styles.linkButton}>
           Go to sign in
@@ -291,10 +290,7 @@ export function InvitationRoute() {
               />
             </div>
             <p className={styles.hint} data-pin-collision>
-              Nothing stops two people choosing the same four digits. Until you set one,
-              your code is derived from your account and cannot collide with anybody
-              else&rsquo;s; choosing one is what a real deployment does, and it moves
-              that guarantee from the system to whoever runs it.
+              Nothing stops two people choosing the same four digits.
             </p>
 
             {/*

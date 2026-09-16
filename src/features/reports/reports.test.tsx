@@ -305,7 +305,7 @@ describe('a report view', () => {
     }
   }, 40000)
 
-  it('offers no download control, and says what an export would contain', async () => {
+  it('offers no download control, and says no file can be produced', async () => {
     const { container } = renderAt('/reports/medication-omissions')
     await settled(container)
 
@@ -315,8 +315,7 @@ describe('a report view', () => {
       expect(within(page).queryByRole('link', { name: word })).toBeNull()
     }
     const note = page.querySelector('[data-no-file]')!
-    expect(note.textContent).toContain('Omissions over a period')
-    expect(note.textContent).toMatch(/\d+ rows/)
+    expect(note.textContent).toContain('No file can be produced here')
   }, 40000)
 
   it('offers no period comparison on a report that is a state', async () => {
@@ -326,7 +325,7 @@ describe('a report view', () => {
     expect(container.querySelector('[data-comparison]')).toBeNull()
     // Absent with a reason, rather than absent silently.
     expect(container.querySelector('[data-state-note]')?.textContent).toContain(
-      'nothing to compare it with',
+      'no period to compare',
     )
   }, 40000)
 
@@ -386,7 +385,6 @@ describe('the staff report is workload, never a ranking', () => {
       expect(column.label.toLowerCase()).not.toContain('no record')
       expect(column.label.toLowerCase()).not.toContain('missed')
     }
-    expect(result.restated).toContain('nobody')
   }, 40000)
 
   it('carries the note above the table', async () => {

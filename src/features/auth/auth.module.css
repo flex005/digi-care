@@ -103,14 +103,6 @@
   font-weight: var(--weight-extrabold);
 }
 
-.claimSmall {
-  max-width: 40ch;
-  margin-top: var(--space-16);
-  color: var(--purple-200);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-line);
-}
-
 .sideFoot {
   margin-top: auto;
   padding-top: var(--space-32);

@@ -184,8 +184,7 @@ export function DoseRow({
                 Stock does not reconcile. Expected <span data-numeric>{expected}</span>{' '}
                 {medication.stockUnit} after giving one dose;{' '}
                 <span data-numeric>{counted}</span> was counted. This cannot be recorded
-                until the count is resolved, and it raises a discrepancy incident, the
-                incident record itself arrives in Phase 4.
+                until the count is resolved.
               </p>
             )}
           </div>

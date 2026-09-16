@@ -36,16 +36,16 @@ export function UnsignedHandover({ session }: { session: HandoverSession }) {
     session.outgoing.kind === 'signed' && session.incoming.kind === 'not_signed'
       ? {
           missing: 'never countersigned',
-          detail: `Handed over by ${session.outgoing.by.displayName} at ${format.time(session.outgoing.at)}, and never accepted by the ${incomingShift} shift. Somebody handed over; nobody recorded receiving it.`,
+          detail: `Handed over by ${session.outgoing.by.displayName} at ${format.time(session.outgoing.at)}, and never accepted by the ${incomingShift} shift.`,
         }
       : session.outgoing.kind === 'not_signed' && session.incoming.kind === 'signed'
         ? {
             missing: 'never handed over',
-            detail: `Accepted by ${session.incoming.by.displayName} at ${format.time(session.incoming.at)}, but the ${outgoingShift} shift never signed to say what they were handing over. The incoming shift has a record of taking something nobody described.`,
+            detail: `Accepted by ${session.incoming.by.displayName} at ${format.time(session.incoming.at)}, but the ${outgoingShift} shift never signed to say what they were handing over.`,
           }
         : {
             missing: 'neither shift signed',
-            detail: `Neither the ${outgoingShift} shift nor the ${incomingShift} shift signed. There is no record that this shift change was handed over or taken.`,
+            detail: `Neither the ${outgoingShift} shift nor the ${incomingShift} shift signed.`,
           }
 
   return (

@@ -90,8 +90,7 @@ export function TeamListRoute() {
          */}
         <div className={styles.listBar}>
           <p className={styles.orderNote} data-order-note>
-            Ordered by name. <b>Never by anything anybody did</b>: people sorted by a
-            count is a ranking however it is labelled.
+            Ordered by name.
           </p>
           <div className={styles.pageActions}>
             {/*
@@ -197,8 +196,8 @@ export function TeamListRoute() {
 
         {members.length === 0 ? (
           <p className={styles.noMatches} data-no-matches>
-            Nobody on the team matches these filters. That is a fact about the filters
-            rather than about the team: {all.length} people are on the record.
+            Nobody on the team matches these filters. {all.length} people are on the
+            record.
           </p>
         ) : null}
 

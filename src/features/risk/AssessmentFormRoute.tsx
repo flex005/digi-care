@@ -207,8 +207,8 @@ export function AssessmentFormRoute() {
       ) : (
         <Card padded>
           <p className={styles.settledNote}>
-            {template.name} is not a scored instrument in this build. Findings are
-            recorded and a level is judged; there is no arithmetic to show.
+            {template.name} is not a scored instrument: findings are recorded and a
+            level is judged.
           </p>
         </Card>
       )}
@@ -307,8 +307,7 @@ export function AssessmentFormRoute() {
           {/* Said on the screen, not only enforced. A plan nobody owns is not
               a plan — it is a sentence somebody wrote. */}
           <p className={styles.interventionNote}>
-            An intervention with no responsible person cannot be saved. A plan nobody
-            owns is not a plan.
+            An intervention with no responsible person cannot be saved.
           </p>
         </section>
       </Card>
@@ -544,7 +543,7 @@ function CompareBlock({
           <div className={styles.notificationNote} data-notification-note>
             <Unrecorded
               variant="panel"
-              label="Staff on shift would be notified"
+              label="Nobody on shift is notified"
               detail={notificationNote(resident.preferredName, LEVEL_LABEL[nextLevel])}
             />
           </div>
@@ -557,8 +556,7 @@ function CompareBlock({
             Confirming records a {riskTemplateName(templateId).toLowerCase()} of{' '}
             {LEVEL_LABEL[nextLevel]} for {resident.fullLegalName}.
           </strong>{' '}
-          The previous score stays on the record; a re-score adds to the history rather
-          than replacing it.
+          The previous score stays on the record; a re-score adds to the history.
         </p>
         {recorded === 'none' ? (
           <Button size="large" onClick={() => levelChanged && setConfirming(true)}>

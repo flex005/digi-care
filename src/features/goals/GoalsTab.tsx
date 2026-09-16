@@ -60,11 +60,7 @@ export function GoalsTab() {
       <div className={styles.tabPanel}>
         <Card padded>
           <p className={styles.errorTitle}>Goals could not be loaded</p>
-          <p className={styles.errorBody}>
-            Nothing has been lost; this is a read. Nothing is shown rather than a
-            partial list, because an incomplete list of somebody&rsquo;s goals reads as
-            the whole of what they want.
-          </p>
+          <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
           <Button variant="secondary" onClick={resource.retry}>
             Try again
           </Button>
@@ -113,8 +109,7 @@ export function GoalsTab() {
           <span className={styles.leadDetail}>
             Of <span data-numeric>{pluralise(dated, 'goal')}</span> with a target date,
             among <span data-numeric>{formatCount(goals.length)}</span> set with{' '}
-            {resident.preferredName}. Nobody has said whether these happened, which is
-            not a record that they did not.
+            {resident.preferredName}. Nobody has said whether these happened.
           </span>
         </span>
       </div>

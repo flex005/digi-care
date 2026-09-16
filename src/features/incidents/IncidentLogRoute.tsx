@@ -101,10 +101,7 @@ export function IncidentLogRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>The incident log could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. A partial list is not shown,
-              because it would read as fewer incidents waiting than there are.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>
@@ -205,8 +202,7 @@ function Found({
               with no CQC notification decision
             </span>
             <span className={styles.findingDetail}>
-              Nobody has recorded whether these must be notified. Graver than an
-              unacknowledged incident and usually older. Of{' '}
+              Nobody has recorded whether these must be notified. Of{' '}
               <span data-numeric>{formatCount(all.length)}</span> at {siteName}.
             </span>
           </span>
@@ -281,7 +277,7 @@ function Found({
           <p className={styles.settledNote}>
             {status === 'not_acknowledged' && type === 'all' && severity === 'all'
               ? `Every incident recorded at ${siteName} has been picked up by somebody.`
-              : 'Nothing matches these filters. That is a statement about the filters, not about the record.'}
+              : 'Nothing matches these filters.'}
           </p>
         ) : (
           <ul className={styles.logList}>

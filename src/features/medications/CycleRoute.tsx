@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useSession } from '@/app/session/use-session'
 import { Button, Card, Dialog } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
-import { formatCount, formatDate, pluralise } from '@/lib/format'
+import { formatCount, formatDate } from '@/lib/format'
 import { residentsBySite } from '@/data/fixtures/residents'
 import { cycle, gapsAgainst, type CycleRow } from '@/data/fixtures/medication-cycle'
 import {
@@ -78,8 +78,7 @@ export function CycleRoute() {
         </h2>
         <p className={styles.subtitle}>
           Covers {formatDate(cycle.coversFrom)} to {formatDate(cycle.coversTo)} at{' '}
-          {activeSite.name}. Nothing here creates a prescription: every row is a change
-          a prescriber already made, and the home is recording that it received it.
+          {activeSite.name}. Every row is a change a prescriber already made.
         </p>
       </header>
 
@@ -241,12 +240,7 @@ export function CycleRoute() {
 
         <div className={styles.foot}>
           <p className={styles.footState} data-cycle-state>
-            <b>Each row is accepted on its own. There is no &ldquo;accept all&rdquo;</b>
-            , because one click asserting{' '}
-            {/* The changes, not the rows: the gaps below them are findings the
-                pharmacy did not send, and they are not changes to accept. */}
-            {pluralise(rows.length, 'medication change')} nobody read is the same
-            failure as signing a handover for residents nobody looked at.{' '}
+            <b>Each row is accepted on its own.</b>{' '}
             <span data-numeric>{formatCount(handled)}</span> of{' '}
             <span data-numeric>{formatCount(everyId.length)}</span> handled so far.
           </p>

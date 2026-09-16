@@ -205,7 +205,7 @@ describe('a disclosure is appended, and withdrawing does not unsay it', () => {
         { kind: 'incident', incidentId: 'inc-0001' as never, message: '   ' },
         staffOkonkwo,
       ),
-    ).toThrow(/disclosure of nothing/i)
+    ).toThrow(/Write what the family are being told/i)
   })
 
   it('refuses to share twice, which would record that nothing changed', () => {

@@ -74,15 +74,13 @@ const NOT_HELD = [
   'Disciplinary record',
 ]
 
-export function NotAPerformanceRecord({ name }: { name: string }) {
+export function NotAPerformanceRecord() {
   return (
     <div className={styles.notHeld} data-not-held>
       <p className={styles.notHeldTitle}>This is not a performance record</p>
       <p className={styles.notHeldBody}>
-        diGi-Care does not hold supervision, appraisal, training or induction. Nothing
-        on this page says whether {name} is doing their job well, and the absence of
-        those things here is a gap in this product rather than anything about them. They
-        live in whatever the home uses for staff records.
+        diGi-Care does not hold supervision, appraisal, training or induction. They live
+        in whatever the home uses for staff records.
       </p>
       <ul className={styles.notHeldList}>
         {NOT_HELD.map((item) => (

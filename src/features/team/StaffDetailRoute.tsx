@@ -77,11 +77,6 @@ export function StaffDetailRoute() {
     return (
       <div className={styles.page}>
         <p className={styles.errorTitle}>Nobody here by that name</p>
-        <p className={styles.errorBody}>
-          Nothing is shown rather than a partial page, because a page of somebody
-          else&rsquo;s records under a name nobody recognised is the wrong-subject
-          failure with a staff list around it.
-        </p>
         <Link to=".." relative="path" className={styles.backLink}>
           Back to the team
         </Link>
@@ -227,9 +222,7 @@ export function StaffDetailRoute() {
             <p className={styles.unchanged} data-removal-unchanged>
               <b>Removing access changed nothing on the record.</b> Every care note,
               medication entry and signature {member.ref.fullName.split(' ')[0]} made is
-              still there with their name on it. Records outlive access: a record of who
-              did something is not a permission, and removing one would leave the home
-              unable to say who gave a dose.
+              still there with their name on it.
             </p>
           ) : null}
         </section>
@@ -246,9 +239,7 @@ export function StaffDetailRoute() {
 
         {/* Above the activity, never below it. */}
         <section className={styles.section}>
-          <NotAPerformanceRecord
-            name={member.ref.fullName.split(' ')[0] ?? 'this person'}
-          />
+          <NotAPerformanceRecord />
         </section>
 
         <section className={styles.section}>
@@ -258,9 +249,7 @@ export function StaffDetailRoute() {
 
           {acts.length === 0 ? (
             <p className={styles.noActs} data-no-acts>
-              Nothing in this record was written by {member.ref.fullName}. That is a
-              statement about this record, not about their work, and for somebody who
-              has never been given access it is what you would expect.
+              Nothing in this record was written by {member.ref.fullName}.
             </p>
           ) : (
             <ul className={styles.acts}>
@@ -297,12 +286,8 @@ export function StaffDetailRoute() {
 
           <div className={styles.noCounts} data-no-counts>
             <p>
-              <b>There are no counts on this page, and that is deliberate.</b> There is
-              no rota and no shift record in diGi-Care, so a count of what somebody
-              recorded has no honest denominator, and a bare count beside another
-              person&rsquo;s bare count is a ranking whether or not anybody sorted it.
-              The figures live on the care note coverage report, where the period and
-              the denominators are stated alongside them.
+              <b>There are no counts on this page.</b> The figures are on the care note
+              coverage report, with their period and denominators.
             </p>
             <Link
               to="/reports/care-note-coverage"

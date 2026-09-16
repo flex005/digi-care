@@ -49,8 +49,7 @@ export function MyPermissionsRoute() {
           <h2 className={styles.yoursTitle}>Yours</h2>
           <p className={styles.yoursBody}>
             Your details and your access. There are no counts of your work here, and
-            there will not be: this build has no rota, so a figure about a person has no
-            honest denominator and is an accusation rather than a measurement.
+            there will not be.
           </p>
         </div>
 
@@ -114,12 +113,7 @@ export function MyPermissionsRoute() {
          */}
         <div className={styles.sessions} data-active-sessions>
           <h3 className={styles.yoursTitle}>Where you are signed in</h3>
-          <p className={styles.yoursBody}>
-            One, and it is this tab. A real deployment lists every device and ends any
-            of them from here; this build has no server keeping sessions, so it can see
-            the one it is running in and no others. A list naming devices you are not
-            looking at would be invented.
-          </p>
+          <p className={styles.yoursBody}>One, and it is this tab.</p>
           <div className={styles.sessionRow} data-session-row="this">
             <span className={styles.detailValue}>This browser tab</span>
             <span className={styles.detailKey}>
@@ -141,9 +135,7 @@ export function MyPermissionsRoute() {
             Sign out
           </Link>
         </div>
-        <p className={styles.yoursBody}>
-          There is no password to change: nothing is stored and nothing is checked.
-        </p>
+        <p className={styles.yoursBody}>There is no password to change.</p>
       </Card>
 
       <RolePermissions staffRole={currentUser.role} who={currentUser.fullName} />

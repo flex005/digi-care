@@ -74,10 +74,7 @@ export function FamilyQueueRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Family access could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. A partial list is not shown,
-              because it would read as fewer residents waiting than there are.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>
@@ -159,8 +156,7 @@ function Found({
               been given access under it. The other{' '}
               <span data-numeric>{formatCount(all.length - given.length)}</span> of{' '}
               <span data-numeric>{formatCount(all.length)}</span> residents have no
-              consent on file and are not counted here: nobody named is the correct
-              state for somebody who refused or was never asked.
+              consent on file and are not counted here.
             </span>
           </span>
         </div>
@@ -177,10 +173,8 @@ function Found({
                 : 'people can still be shown a record nobody has consented to share'}
             </span>
             <span className={styles.findingDetail}>
-              Named while the consent stood, and it no longer does: withdrawn, refused
-              or never recorded. Nothing removes them when a consent changes, so this is
-              a permission outliving what authorised it, across{' '}
-              <span data-numeric>{formatCount(withoutConsent.length)}</span> of{' '}
+              Named while the consent stood, and nothing removed them when it stopped,
+              across <span data-numeric>{formatCount(withoutConsent.length)}</span> of{' '}
               <span data-numeric>{formatCount(all.length)}</span> residents and{' '}
               <span data-numeric>{formatCount(namedPeople)}</span> named people at{' '}
               {siteName}. Open the resident to remove anybody who should not have it.
@@ -212,8 +206,7 @@ function Found({
 
         {visible.length === 0 ? (
           <p className={styles.errorBody} data-empty={filter}>
-            Nothing matches this filter at {siteName}. That is a statement about this
-            home today, not about the record.
+            Nothing matches this filter at {siteName}.
           </p>
         ) : (
           <ul className={styles.rows}>

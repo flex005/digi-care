@@ -54,11 +54,8 @@ export function GoalFormRoute() {
       {/* Said, not implied — the same note the care plan editor carries, for
           the same reason. */}
       <div className={styles.voiceNote} data-voice-note>
-        <b>Written in {resident.preferredName}&rsquo;s own words.</b> A goal is
-        something they want to be able to do, said the way they say it, not a care plan
-        action, and not something decided for them. What staff will do about it belongs
-        in the care plan domain this is filed under; what goes here is the outcome and
-        how anybody will know it happened.
+        <b>Written in {resident.preferredName}&rsquo;s own words.</b> Something they
+        want to be able to do, and how anybody will know it happened.
       </div>
 
       <Card>

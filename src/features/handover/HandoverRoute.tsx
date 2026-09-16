@@ -109,10 +109,7 @@ export function HandoverRoute() {
     return (
       <Card padded>
         <p className={styles.errorTitle}>This handover could not be loaded</p>
-        <p className={styles.errorBody}>
-          Nothing has been lost; this is a read. A partial handover is not shown,
-          because it is one somebody would sign.
-        </p>
+        <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
         <Button variant="secondary" onClick={resource.retry}>
           Try again
         </Button>

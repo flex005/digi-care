@@ -196,10 +196,7 @@ export function ResidentsRoute() {
         {isError ? (
           <div className={styles.errorPanel}>
             <p className={styles.errorTitle}>The resident list could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. A partial list is not shown,
-              because you cannot tell who is missing from it.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button
               variant="secondary"
               onClick={() => {
@@ -231,7 +228,7 @@ export function ResidentsRoute() {
         ) : visible.length === 0 ? (
           <EmptyState
             title="No residents match these filters"
-            body={`There are ${atSite.length} residents at ${siteLabel}, but none of them match the filters you have set. They are still here; this view is narrowed.`}
+            body={`There are ${atSite.length} residents at ${siteLabel}, but none of them match the filters you have set.`}
             actions={
               hasNarrowingFilters ? (
                 <Button variant="secondary" onClick={clearFilters}>

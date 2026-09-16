@@ -67,7 +67,7 @@ export const NEEDS_SECTIONS: NeedsSection[] =
           id: 'other',
           name: 'Other care plan domains',
           description:
-            'Part of the care plan, but outside the five need groups. End of life wishes are recorded on the Future Plans tab; the domain is listed here so no part of the care plan is invisible from this screen.',
+            'Part of the care plan; end of life wishes are recorded on the Future Plans tab.',
           domainIds: UNCLAIMED,
         },
       ]

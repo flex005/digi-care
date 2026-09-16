@@ -59,8 +59,7 @@ export function SigningIdentity({
         {!entered ? (
           <>
             Four digits, and they are {who.fullName.split(' ')[0]}&rsquo;s rather than
-            anybody&rsquo;s: the record has to say which member of staff signed, not
-            that somebody did.
+            anybody&rsquo;s.
           </>
         ) : matches ? (
           <>
@@ -77,8 +76,7 @@ export function SigningIdentity({
        * are no accounts in this build and nothing here is kept secret.
        */}
       <p className={styles.caveat}>
-        An identifier, not a password. It establishes which member of staff signed; it
-        does not protect the record from somebody who knows it.
+        An identifier, not a password: it establishes which member of staff signed.
       </p>
     </div>
   )

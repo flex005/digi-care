@@ -74,7 +74,7 @@ export function VersionHistoryRoute() {
               variant="panel"
               caption={domain.name}
               label="No version has ever been signed"
-              detail={`Nothing has been withdrawn or lost. Nobody has finalised this domain for ${resident.fullLegalName}, so there is no instruction for staff to follow and nothing to compare.`}
+              detail={`Nobody has finalised this domain for ${resident.fullLegalName}, so there is nothing to compare.`}
             />
           </div>
         </Card>
@@ -216,7 +216,7 @@ function Diff({ history, index }: { history: CarePlanVersion[]; index: number })
         <Unrecorded
           variant="panel"
           label="No previous version"
-          detail="Version 1 is the first plan written for this domain, not a change to one. A first finalise is not a comparison against nothing, so there is nothing here to put beside it."
+          detail="Version 1 is the first plan written for this domain, so there is nothing to compare it with."
         />
       </div>
     )

@@ -413,7 +413,7 @@ export const ADMIN_ACTS = [
     route: undefined,
     what: 'Record that the CQC has been told',
     phrase: 'Recording that the CQC has been told',
-    why: 'A statutory notification is made by the registered person. Deciding whether one is required is part of reviewing the incident, and that decision is not gated here.',
+    why: 'A statutory notification is made by the registered person.',
   },
   {
     id: 'configure_service',
@@ -422,7 +422,7 @@ export const ADMIN_ACTS = [
     route: undefined,
     what: "Change a home's name, its timezone, or the figures this build runs on",
     phrase: 'Changing what this home runs on',
-    why: 'Configuring the service belongs to the registered person. A manager sees every setting and changes none of them.',
+    why: 'Configuring the service belongs to the registered person.',
   },
   {
     id: 'manage_team',
@@ -435,7 +435,7 @@ export const ADMIN_ACTS = [
     route: undefined,
     what: 'Invite staff, change a role, assign homes, and deactivate an account',
     phrase: 'Deciding who is on the team',
-    why: 'Who works in a service, and what they may reach in the record, is decided by the person the service is registered to. AM v2.0 gives a manager the staff list and none of the acts on it.',
+    why: 'Who works in a service, and what they may reach in the record, is decided by the person the service is registered to.',
   },
   {
     id: 'group_overview',
@@ -443,7 +443,7 @@ export const ADMIN_ACTS = [
     route: '/settings/homes',
     what: 'See every home in the organisation at once',
     phrase: 'Seeing every home in the organisation at once',
-    why: 'A manager works in the homes they are assigned to. Reading them side by side is a view of the organisation rather than of a home.',
+    why: 'A manager works in the homes they are assigned to.',
   },
   {
     /*
@@ -457,7 +457,7 @@ export const ADMIN_ACTS = [
     route: '/settings/setup',
     what: 'Set up the organisation',
     phrase: 'Setting up the organisation',
-    why: 'Naming the organisation, its first home, what that home carries out and who joins it first are the decisions for the person the service is registered to. A manager is invited into a service somebody has already set up.',
+    why: 'Naming the organisation, its first home, what that home carries out and who joins it first are the decisions for the person the service is registered to.',
   },
 ] as const satisfies readonly AdminAct[]
 

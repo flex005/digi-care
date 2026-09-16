@@ -80,15 +80,10 @@ export function SettingsRoute() {
         {mayConfigure ? null : (
           <p className={styles.readOnlyNote} data-settings-read-only>
             <b>These are read-only for you.</b> Your role is {viewer.roleName};
-            configuring the service belongs to the person it is registered to. Every
-            value below is what this home is actually running on, which is what you need
-            to read a screen correctly.
+            configuring the service belongs to the person it is registered to.
           </p>
         )}
-        <p className={styles.pageSubtitle}>
-          {activeSite.name}. Nothing here survives a reload, like every other write in
-          this build, which is why every screen says when one of these has been changed.
-        </p>
+        <p className={styles.pageSubtitle}>{activeSite.name}.</p>
         {/*
          * The way into the setup wizard. AM v2.0 runs it on the first Admin's
          * first sign-in; with no accounts that moment does not exist here, so
@@ -108,8 +103,7 @@ export function SettingsRoute() {
         <section className={styles.settingsSection} data-settings-section="site">
           <h2 className={styles.settingsTitle}>This home</h2>
           <p className={styles.settingsNote}>
-            Both of these are read while a screen draws. The zone decides what every
-            clinical timestamp in this home says, which is the whole reason §3.6 exists.
+            The zone decides what every clinical timestamp in this home says.
           </p>
 
           <label className={styles.field}>
@@ -162,9 +156,7 @@ export function SettingsRoute() {
         <section className={styles.settingsSection} data-settings-section="adjustable">
           <h2 className={styles.settingsTitle}>Figures this build runs on</h2>
           <p className={styles.settingsNote}>
-            Every one of these is invented and named in §9 of the frontend PRD, and
-            every one is read while a screen draws, so changing one changes what that
-            screen says, immediately and everywhere.
+            Changing one changes what every screen says, immediately.
           </p>
 
           <ul className={styles.figures}>
@@ -232,12 +224,7 @@ export function SettingsRoute() {
         <section className={styles.settingsSection} data-settings-section="clock">
           <h2 className={styles.settingsTitle}>The instant the record is drawn at</h2>
           <p className={styles.settingsNote}>
-            Every record in this build is generated when the page loads, against the
-            clock. Some states only exist at certain hours: a dose is inside its window
-            for one hour after its round and not otherwise, so on a real clock they are
-            zero for most of the day, and a true zero cannot be told from a screen that
-            has stopped working. Moving the clock reloads and draws the whole record
-            again at that time.
+            Moving the clock reloads and draws the whole record again at that time.
           </p>
 
           <div className={styles.clockChoices} data-clock-choices>
@@ -272,9 +259,7 @@ export function SettingsRoute() {
         <section className={styles.settingsSection} data-settings-section="fixed">
           <h2 className={styles.settingsTitle}>Fixed at fixture generation</h2>
           <p className={styles.settingsNote}>
-            These are read-only, and the reason is the point rather than an apology: the
-            record was produced against them, so a control here would move a label and
-            not the data.
+            These are read-only: the record was produced against them.
           </p>
 
           {fixed.map((figure) => (
@@ -295,7 +280,7 @@ export function SettingsRoute() {
             variant="panel"
             caption="Changed this session"
             label={`${formatCount(changed.length)} of these figures ${changed.length === 1 ? 'is' : 'are'} no longer at the documented default.`}
-            detail={`${changed.map((figure) => figure.label).join('; ')}. Every screen carries a marker while that is true, because a screen behaving differently from its documented default without saying so is the reassurance failure with the reader's own change as the cause.`}
+            detail={`${changed.map((figure) => figure.label).join('; ')}. Every screen carries a marker while that is true.`}
           />
         </div>
       ) : null}

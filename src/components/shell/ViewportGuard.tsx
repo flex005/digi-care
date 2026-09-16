@@ -30,9 +30,7 @@ export function ViewportGuard({ children }: { children: ReactNode }) {
         <p className={styles.viewportGuardTitle}>This window is too narrow</p>
         <p className={styles.viewportGuardBody}>
           diGi-Care needs a screen at least {MIN_WIDTH} pixels wide. Widen this window
-          or move to a larger display. The care record is not shown at smaller sizes,
-          because a medication chart that does not fit is a medication chart that can be
-          misread.
+          or move to a larger display.
         </p>
       </div>
     )

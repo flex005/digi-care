@@ -54,11 +54,7 @@ export function RegisterLedgerRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>This register could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. A partial register is not shown,
-              because a balance built from some of the entries is a wrong figure rather
-              than an incomplete one.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>
@@ -131,12 +127,8 @@ function Ledger({ data, medicationId }: { data: RegisterData; medicationId: stri
         /* No table at all. Headers over an empty body would say the register
            exists and happens to be empty; it was never opened. */
         <div className={styles.openNote} data-empty-register>
-          Nothing has ever been counted for this drug, so there is no register to show,
-          not an empty one. It was prescribed for {resident.preferredName} and no
-          opening balance has been taken, which means there is no running total and
-          nothing a count could reconcile against. The next person to administer it
-          counts the cabinet and records that count as the opening balance, with two
-          signatures.
+          Nothing has ever been counted for this drug: the next person to give it counts
+          the cabinet and records the opening balance, with two signatures.
         </div>
       ) : (
         <>
@@ -226,8 +218,7 @@ function Ledger({ data, medicationId }: { data: RegisterData; medicationId: stri
                   medication.stockUnit,
                 )}
               </span>{' '}
-              is unaccounted for. The entries above are what the register holds: this is
-              an open finding, and nothing here explains it.
+              is unaccounted for.
             </p>
           ) : null}
         </>

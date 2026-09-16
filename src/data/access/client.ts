@@ -1182,7 +1182,7 @@ export function recordConsent<K extends ConsentTypeId>(input: {
   const current = resident.consents[input.consentType] as AnyConsent
   if (current.kind === 'given' || current.kind === 'refused')
     return reject(
-      `${resident.fullLegalName} already has a ${input.consentType.replace(/_/g, ' ')} decision on record. A second one would overwrite somebody's answer; withdrawing is how a consent stops standing.`,
+      `${resident.fullLegalName} already has a ${input.consentType.replace(/_/g, ' ')} decision on record; withdraw it to change it.`,
     )
 
   const status: ConsentStatus<K> =
@@ -1373,7 +1373,7 @@ export function recordRound(input: {
   const missing = expected.filter((id) => !answered.has(id))
   if (missing.length > 0) {
     return reject(
-      `This round is short ${missing.length} of ${expected.length} doses. A round recorded without them would show them as omissions with nobody's name on them.`,
+      `This round is short ${missing.length} of ${expected.length} doses: answer every dose before recording it.`,
     )
   }
 

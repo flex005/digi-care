@@ -193,7 +193,7 @@ describe('settings change what a screen says, or they are not offered', () => {
     await settled(container)
 
     const fixed = container.querySelector('[data-fixed="medication-lookahead-hours"]')!
-    expect(fixed.textContent).toContain('regenerating')
+    expect(fixed.textContent).toContain('produced against this value')
     expect(within(fixed as HTMLElement).queryByRole('spinbutton')).toBeNull()
     expect(within(fixed as HTMLElement).queryByRole('textbox')).toBeNull()
   }, 30000)

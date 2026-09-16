@@ -170,7 +170,7 @@ describe('the timeline is read against a rail of clock times', () => {
     expect(note?.textContent).toMatch(/\d{2}\/\d{2}\/\d{4}/)
   })
 
-  it('says why an overnight stretch is quiet and an omission is not', async () => {
+  it('marks an overnight stretch as a time no notes are expected', async () => {
     const { container } = renderNotes('/residents/res-okafor/notes')
     await timeline(container)
 
@@ -179,10 +179,7 @@ describe('the timeline is read against a rail of clock times', () => {
     // has no way to know the longer one is the untroubling one.
     const overnight = container.querySelector('[data-gap="overnight"]')
     expect(overnight).toBeTruthy()
-    expect(overnight?.textContent).toMatch(
-      /does not count toward the omission threshold, which is 4 hours of waking time/i,
-    )
-    expect(overnight?.textContent).toMatch(/not an omission/i)
+    expect(overnight?.textContent).toMatch(/No notes expected between/)
   })
 })
 
@@ -207,10 +204,8 @@ describe('a filtered timeline never claims a gap', () => {
     )
     expect(screen.getByText(/gap markers are hidden/i)).toBeVisible()
     expect(
-      // The claim it must still make: absence here is absence from the
-      // filter. Asserted as the claim rather than the sentence — it was
-      // three clauses of reasoning and is now one.
-      screen.getByText(/nothing matching these filters/i),
+      // The claim it must still make: the real gaps are behind the filter.
+      screen.getByText(/clear the filters to see where the real gaps are/i),
     ).toBeVisible()
   }, 20000)
 })

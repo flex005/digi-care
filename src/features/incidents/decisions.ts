@@ -83,7 +83,7 @@ export function outstandingDecisions(
       id: 'notification',
       name: 'Whether the CQC must be told',
       detail:
-        'Nobody has recorded a decision either way, and the incident cannot be closed without one. “Not required” is a recorded judgement with a name against it.',
+        'Nobody has recorded a decision either way, and the incident cannot be closed without one.',
       action: 'Decide',
       availableInPhase: 'now',
     })
@@ -94,7 +94,7 @@ export function outstandingDecisions(
       id: 'notification-outstanding',
       name: 'The CQC has not been notified',
       detail:
-        'Somebody decided this must be notified and there is nothing in the record to show that it was. An obligation with no evidence behind it.',
+        'Somebody decided this must be notified and there is nothing in the record to show that it was.',
       action: 'Record the notification',
       availableInPhase: 'now',
     })

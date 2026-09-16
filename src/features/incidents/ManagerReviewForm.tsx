@@ -55,8 +55,8 @@ export function ManagerReviewForm({
     return (
       <div className={styles.reviewActions}>
         <p className={styles.byline} data-not-acknowledged>
-          Nobody has picked this up. Acknowledging it puts your name against it, and it
-          cannot be taken back: who took it on is the fact the log exists for.
+          Nobody has picked this up; acknowledging it puts your name against it and
+          cannot be taken back.
         </p>
         <Button
           data-acknowledge
@@ -80,7 +80,7 @@ export function ManagerReviewForm({
     {
       id: 'actionsTaken',
       label: 'Actions taken',
-      asks: 'What you have done since. Not what the person who was there did: that is their account, above, with their name on it.',
+      asks: 'What you have done since, not what the person who was there did.',
     },
     {
       id: 'preventiveMeasures',

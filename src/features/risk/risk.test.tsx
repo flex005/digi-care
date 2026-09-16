@@ -180,7 +180,7 @@ describe('the placeholder says so where it appears', () => {
     // A figure that does not do what it appears to must say so where it
     // appears, not in a release note.
     expect(form.container.textContent).toMatch(/not a validated clinical scale/)
-    expect(form.container.textContent).toMatch(/no clinical decision should be made/)
+    expect(form.container.textContent).toMatch(/make no clinical decision/)
   })
 })
 

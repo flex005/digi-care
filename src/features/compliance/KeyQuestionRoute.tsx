@@ -43,10 +43,7 @@ export function KeyQuestionRoute() {
     return (
       <div className={styles.page}>
         <p className={styles.errorTitle}>That is not a Key Question</p>
-        <p className={styles.errorBody}>
-          There are five, and CQC names them. Nothing is shown rather than an empty
-          panel, because a panel with no question above it is a rating of nothing.
-        </p>
+        <p className={styles.errorBody}>There are five, and CQC names them.</p>
         <Link to=".." relative="path" className={styles.headLink}>
           Back to compliance
         </Link>
@@ -89,10 +86,7 @@ export function KeyQuestionRoute() {
       <Card>
         <div className={styles.sectionHead}>
           <h2 className={styles.sectionTitle}>Every check, findings first</h2>
-          <p className={styles.sectionNote}>
-            Each names the module it comes from. A figure whose origin is not stated is
-            a figure nobody can check.
-          </p>
+          <p className={styles.sectionNote}>Each names the module it comes from.</p>
         </div>
 
         <ul className={styles.checks}>

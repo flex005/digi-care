@@ -154,7 +154,7 @@ function thinnessFinding(rows: ReportRow[], what: string): ReportFinding | undef
       kind: 'too_thin',
       figure: '0',
       title: `nothing in this period to report on`,
-      detail: `Nothing was recorded here in the period, so there is no figure to state. The table below is empty rather than reassuring.`,
+      detail: `Nothing was recorded here in the period, so there is no figure to state.`,
     }
   }
   const usable = rows.length - thinRows(rows)
@@ -164,7 +164,7 @@ function thinnessFinding(rows: ReportRow[], what: string): ReportFinding | undef
     figure: `${formatCount(usable)}`,
     title: `of ${formatCount(rows.length)} ${what} have enough in the period to say anything about`,
     detail:
-      'Fewer than three in five rows can support a figure, so neither can the table as a whole. The rows stay below, because removing them would make it look complete.',
+      'Fewer than three in five rows can support a figure, so neither can the table as a whole.',
   }
 }
 
@@ -386,8 +386,7 @@ function controlledDrugs(input: RunInput): ReportResult {
         kind: 'finding',
         figure: formatCount(discrepancies),
         title: `counts did not match the register, across ${pluralise(rows.length, 'controlled drug')}`,
-        detail:
-          'A count that does not reconcile is an incident in its own right. A drug with no routine count in the period has nothing to reconcile and says so rather than reading as agreed.',
+        detail: 'A count that does not reconcile is an incident in its own right.',
       } satisfies ReportFinding),
     restated: restate(input, 'counts and whether they reconciled'),
     columns: [
@@ -517,7 +516,7 @@ function incidentsByType(input: RunInput): ReportResult {
         detail:
           previous === undefined
             ? 'Nothing to compare this with; the period comparison is off.'
-            : `Against ${formatCount(beforeTotal)} in the preceding ${pluralise(previous.days, 'day')}. A share of a small total moves a long way on one incident, which is why a thin period says so rather than showing percentages.`,
+            : `Against ${formatCount(beforeTotal)} in the preceding ${pluralise(previous.days, 'day')}.`,
       } satisfies ReportFinding),
     restated: restate(input, 'incidents, as a share of incidents in the period'),
     columns: [
@@ -591,7 +590,7 @@ function assessmentCoverage(input: RunInput): ReportResult {
         kind: 'finding',
         figure: formatCount(never),
         title: `of ${formatCount(expected)} expected assessments have never been done`,
-        detail: `Assessed in the period counts work done between ${describePeriod(period)}; never assessed is the whole record, because an assessment nobody has ever done is not a fact about this month.`,
+        detail: `Assessed in the period counts work done between ${describePeriod(period)}; never assessed is the whole record.`,
       } satisfies ReportFinding),
     restated: restate(input, 'assessments, of residents at this site'),
     columns: [
@@ -647,7 +646,7 @@ function careNoteCoverage(input: RunInput): ReportResult {
           figure: formatCount(notes.length),
           title: `notes written in the period, across ${pluralise(data.residents.length, 'resident')}`,
           detail:
-            'Residents seen is the count of people written up at least once on that shift, not the count of notes, one shift writing forty notes about four people has covered four people.',
+            'Residents seen is the count of people written up at least once on that shift, not the count of notes.',
         } satisfies ReportFinding),
       restated: restate(input, 'notes and the residents they were about'),
       columns: [
@@ -737,16 +736,16 @@ function careNoteCoverage(input: RunInput): ReportResult {
             figure: formatCount(usable),
             title: `of ${formatCount(rows.length)} staff have enough in the period to say anything about`,
             detail:
-              'The rest recorded too little in the period for a figure about them to mean anything. They stay in the table, because removing them would make it look complete, and because this is workload and coverage rather than a ranking.',
+              'The rest recorded too little in the period for a figure about them to mean anything.',
           }
         : {
             kind: 'finding',
             figure: formatCount(unwritten),
             title: `of ${pluralise(data.residents.length, 'resident')} were not written up by anybody in the period`,
             detail:
-              'That is a gap in the record rather than a judgement of anybody on this table. Who was on shift when a note was not written is not something this build records.',
+              'That is a gap in the record rather than a judgement of anybody on this table.',
           },
-    restated: `Every figure below is work this person recorded at ${data.site.name}, between ${describePeriod(period)}. Doses recorded is what they signed for; residents seen is how many different people they wrote up. The last column is out of every resident here, not out of the residents they were rostered to: nothing in this build records a rota, and a denominator nobody can check is worse than one that is stated. There is no column for doses with no record against them: an omission is a dose nobody recorded, so it has nobody's name on it.`,
+    restated: `Every figure below is work this person recorded at ${data.site.name}, between ${describePeriod(period)}. Doses recorded is what they signed for; residents seen is how many different people they wrote up. The last column is out of every resident here.`,
     columns: [
       { label: 'Staff member', numeric: false },
       { label: 'Doses recorded', numeric: true },
@@ -815,10 +814,9 @@ function documentExpiry(input: RunInput): ReportResult {
         kind: 'finding',
         figure: formatCount(lapsing),
         title: `documents have lapsed or lapse within ${pluralise(dueSoonDays(), 'day')}`,
-        detail:
-          'The forecast counts forward from today rather than over a period, because an expiry is a deadline: what matters is what is about to stop being valid, not what expired last month.',
+        detail: 'The forecast counts forward from today.',
       } satisfies ReportFinding),
-    restated: `Every figure below is documents on file at ${data.site.name}, counted forward from ${formatDate(today)}. This report is a state of the record rather than a flow, so it has no period comparison.`,
+    restated: `Every figure below is documents on file at ${data.site.name}, counted forward from ${formatDate(today)}.`,
     columns: [
       { label: 'Category', numeric: false },
       { label: 'On file', numeric: true },
@@ -932,7 +930,7 @@ function activityParticipation(input: RunInput): ReportResult {
         figure: formatCount(unrecorded),
         title: `of ${formatCount(invitations)} invitations have no answer either way`,
         detail:
-          'Nobody recorded whether these people came. That is not the same as their not coming, and a participation figure that treated it as absence would understate attendance and overstate certainty at once.',
+          'Nobody recorded whether these people came. That is not the same as their not coming.',
       } satisfies ReportFinding),
     restated: restate(input, 'invitations to sessions that have happened'),
     columns: [
@@ -1011,9 +1009,9 @@ function consentCoverage(input: RunInput): ReportResult {
         figure: formatCount(neverSought),
         title: `of ${formatCount(possible)} consents have never been sought`,
         detail:
-          'Never sought is neither refusal nor permission. "Decided by somebody else" counts best-interests decisions and LPA holders together, because both are somebody deciding for a person rather than with them.',
+          'Never sought is neither refusal nor permission. "Decided by somebody else" counts best-interests decisions and LPA holders together.',
       } satisfies ReportFinding),
-    restated: `Every figure below is consents at ${data.site.name}, out of ${pluralise(data.residents.length, 'resident')}. This report is a state of the record rather than a flow, so it has no period comparison.`,
+    restated: `Every figure below is consents at ${data.site.name}, out of ${pluralise(data.residents.length, 'resident')}.`,
     columns: [
       { label: 'Consent type', numeric: false },
       { label: 'Sought', numeric: true },
@@ -1046,7 +1044,7 @@ function restate(input: RunInput, what: string): string {
   const { data, period, previous } = input
   const comparison =
     previous === undefined ? '' : ` It is compared with ${describePeriod(previous)}.`
-  return `Every figure below is ${what}, at ${data.site.name}, between ${describePeriod(period)}.${comparison} A row with fewer than ${formatCount(minPopulationForARate())} behind it cannot support a rate and says so rather than showing one.`
+  return `Every figure below is ${what}, at ${data.site.name}, between ${describePeriod(period)}.${comparison} A row with fewer than ${formatCount(minPopulationForARate())} behind it cannot support a rate.`
 }
 
 /** What a real export would contain. There is no control to produce it. */

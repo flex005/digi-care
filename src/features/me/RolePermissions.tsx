@@ -43,18 +43,6 @@ export function RolePermissions({
 }) {
   return (
     <div className={styles.perms} data-role-permissions={role}>
-      {/*
-       * Still before the first row. A list of permissions is the most
-       * convincing thing on any screen, and what this one is owed is the
-       * distinction rather than a flat denial: from Phase 17 these levels
-       * decide what the reader sees, and they are still not security.
-       */}
-      <p className={styles.notEnforced} data-not-enforced data-state="unrecorded">
-        <b>These levels decide what you see, and they are not security.</b> Sign-in
-        checks nothing, so anybody can sign in as anybody. A real deployment enforces
-        this on a server rather than in a browser.
-      </p>
-
       <Card>
         <div className={styles.permHead}>
           <h2 className={styles.permTitle}>
@@ -144,8 +132,7 @@ export function RolePermissions({
             Your training, supervision, appraisal and induction records are not held in
             diGi-Care.
           </b>{' '}
-          That is a gap in this product rather than anything about you, and nothing on
-          any screen here can fill it. Ask your manager where your home keeps them.
+          Ask your manager where your home keeps them.
         </p>
       </Card>
     </div>

@@ -50,7 +50,7 @@ describe('the sample says it is a sample, above the page and not across it', () 
 
     const banner = container.querySelector('[data-sample-banner]')!
     expect(banner.textContent).toMatch(/sample document/i)
-    expect(banner.textContent).toMatch(/no file storage/i)
+    expect(banner.textContent).toMatch(/no file is stored/i)
 
     /*
      * Above, not across. A watermark would make the sample unreadable, and an

@@ -101,9 +101,8 @@ export function WithdrawalRoute() {
           <div className={styles.remains} data-remains={effects.length}>
             <p className={styles.remainsTitle}>What withdrawing does not undo</p>
             <p className={styles.remainsIntro}>
-              Withdrawing stops anything new. It does not remove what already exists,
-              and nothing here happens automatically: each of these is somebody&rsquo;s
-              job afterwards.
+              Withdrawing stops anything new and removes nothing: each of these is
+              somebody&rsquo;s job afterwards.
             </p>
             <ul className={styles.remainsList}>
               {effects.map((effect) => (

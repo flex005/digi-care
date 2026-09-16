@@ -43,10 +43,6 @@ export function DocumentViewerRoute() {
     return (
       <div className={styles.page}>
         <p className={styles.errorTitle}>No document with that id</p>
-        <p className={styles.errorBody}>
-          Nothing is shown rather than a page of somebody else&rsquo;s document under an
-          id nobody recognised.
-        </p>
         <Link to="/documents" className={styles.backLink}>
           Back to the library
         </Link>
@@ -91,10 +87,8 @@ export function DocumentViewerRoute() {
            * is a lesson this build has already paid for once.
            */}
           <p className={styles.sampleBanner} data-sample-banner>
-            <b>This is a sample document.</b> diGi-Care has no file storage, so nothing
-            real is held behind this record. What you are looking at is a representative{' '}
-            {document.title}, showing how a document of this type renders in the viewer.
-            The name, dates and filing details on it are this record&rsquo;s own.
+            <b>This is a sample document.</b> It shows how a representative{' '}
+            {document.title} renders; no file is stored behind this record.
           </p>
 
           <DocumentSample document={document} resident={owner} />
@@ -121,9 +115,7 @@ export function DocumentViewerRoute() {
                * would take evidence away from no record.
                */
               <p className={styles.railHint} data-no-referrers>
-                No record in the product points at this document. Removing it would
-                leave nothing behind a claim somewhere else, which is what the
-                library&rsquo;s broken references are.
+                No record in the product points at this document.
               </p>
             ) : (
               <>
@@ -154,7 +146,7 @@ export function DocumentViewerRoute() {
                     : `${referrers.length} records rely`}{' '}
                   on this document. If it were removed,{' '}
                   {referrers.length === 1 ? 'it' : 'each'} would render as a broken
-                  reference rather than quietly losing the evidence behind it.
+                  reference.
                 </p>
               </>
             )}

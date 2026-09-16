@@ -131,9 +131,6 @@ export function ReportIncidentRoute() {
       <div className={styles.page}>
         <div>
           <h1 className={styles.pageTitle}>Report an incident</h1>
-          <p className={styles.lede}>
-            Everything on one screen. Nothing here is saved to a server in this build.
-          </p>
         </div>
 
         <Card>
@@ -460,10 +457,6 @@ export function ReportIncidentRoute() {
             </Button>
           </div>
         </Card>
-
-        <p className={styles.prototypeNote}>
-          In this build nothing is sent anywhere and nothing is stored.
-        </p>
       </div>
     </SiteTimeZone>
   )

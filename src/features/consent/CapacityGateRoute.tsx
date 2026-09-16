@@ -132,10 +132,8 @@ export function CapacityGateRoute() {
       <Card>
         <div className={styles.section}>
           <p className={styles.gateNote} data-gate-note>
-            <b>Nothing about this consent can be recorded yet.</b> The Mental Capacity
-            Act asks whether this person has capacity for <i>this</i> decision at{' '}
-            <i>this</i> time, so it is answered first, and answered again for a
-            different decision on a different day.
+            <b>Nothing about this consent can be recorded yet.</b> Capacity for{' '}
+            <i>this</i> decision is assessed first.
           </p>
         </div>
 
@@ -165,7 +163,7 @@ export function CapacityGateRoute() {
               onSelect={() => setAnswer('lacks_capacity')}
               id="lacks_capacity"
               title={`No: ${resident.preferredName} lacks capacity for this decision`}
-              hint="Both stages of the MCA test must be recorded. A conclusion with no impairment and no functional finding is not an assessment."
+              hint="Both stages of the MCA test must be recorded."
             />
           </div>
 
@@ -187,10 +185,7 @@ export function CapacityGateRoute() {
                   Is there an impairment of, or disturbance in, the functioning of their
                   mind or brain?
                 </label>
-                <p className={styles.stageHint}>
-                  Name it. &ldquo;Lacks capacity&rdquo; with no impairment recorded is a
-                  conclusion without a test.
-                </p>
+                <p className={styles.stageHint}>Name it.</p>
                 <textarea
                   id="diagnostic"
                   className={styles.textarea}
@@ -225,10 +220,8 @@ export function CapacityGateRoute() {
           <div className={styles.section} data-scope-section>
             <p className={styles.stageNumber}>Which decisions this assessment covers</p>
             <p className={styles.questionHint}>
-              One assessment may cover several decisions made in the same conversation.
-              It can never be general: a consent may only be recorded against an
-              assessment that names its own type, so &ldquo;has capacity&rdquo; applied
-              to a decision nobody assessed against cannot be written down.
+              One assessment may cover several decisions made in the same conversation,
+              and never a general one.
             </p>
             <div className={styles.scope}>
               {CONSENT_TYPES.map((entry) => {
@@ -495,8 +488,7 @@ function DecisionStep(props: {
             {props.typeName.toLowerCase()}.
           </p>
           <p className={styles.questionHint}>
-            A second one would overwrite somebody&rsquo;s answer. Withdrawing a consent
-            is how it stops standing, and it is done from the consent itself.
+            Withdrawing it, from the consent itself, is how it stops standing.
           </p>
         </div>
       </Card>
@@ -648,8 +640,7 @@ function DecisionStep(props: {
                     Who was consulted
                   </label>
                   <p className={styles.stageHint}>
-                    One per line. A best-interests decision reached without consulting
-                    anybody is not a best-interests decision.
+                    One per line; a best-interests decision needs somebody consulted.
                   </p>
                   <textarea
                     id="consulted"
@@ -676,8 +667,7 @@ function DecisionStep(props: {
           </>
         ) : (
           <p className={styles.questionHint} data-authority="the_resident">
-            {props.preferredName} has capacity for this decision, so it is theirs. No
-            other authority is offered, because none applies.
+            {props.preferredName} has capacity for this decision, so it is theirs.
           </p>
         )}
       </div>

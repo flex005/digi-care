@@ -156,8 +156,7 @@ function Findings({
         <span>
           <span className={styles.findingTitle}>no expiry recorded</span>
           <span className={styles.findingDetail}>
-            {of} Nobody has said whether they expire, not a milder version of the two
-            beside it, but the absence of the fact those are made of.
+            {of} Nobody has said whether they expire.
           </span>
         </span>
       </div>

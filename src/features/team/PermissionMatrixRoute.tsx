@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { STAFF_ROLE_NAMES } from '@/data/types'
 import { Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
-import { Unrecorded } from '@/components/status'
 import {
   PERMISSION_LABELS,
   PERMISSION_MEANS,
@@ -33,27 +32,7 @@ export function PermissionMatrixRoute() {
       <header>
         <h1 className={styles.pageTitle}>Permissions</h1>
       </header>
-
-      {/*
-       * **This paragraph said the opposite until Phase 17, and it was true
-       * when it was written.** It is the staleness case exactly: a statement
-       * on a screen nobody re-reads, correct for fifteen phases, and made
-       * false by a change somewhere else. What replaces it draws the line that
-       * actually matters now, because "these levels do something" and "these
-       * levels are security" are a long way apart and the gap is where
-       * somebody gets hurt.
-       */}
       <div className={styles.notEnforced} data-not-enforced data-state="unrecorded">
-        <p className={styles.notEnforcedTitle}>
-          These levels decide what renders. They are not security.
-        </p>
-        <p className={styles.notEnforcedBody}>
-          A module a role has no access to does not open, and a control a role has no
-          level for is not drawn. What that prevents is somebody doing the wrong thing
-          by accident. It prevents nothing else: the sign-in screen still checks nothing
-          and anybody can sign in as anybody, and access control that lives in a browser
-          is a suggestion. A real deployment enforces this on a server.
-        </p>
         {/*
          * **What the rows are, which the table never said.** Six roles are
          * listed and three of them sign into this platform: the other three
@@ -70,8 +49,7 @@ export function PermissionMatrixRoute() {
             platform.
           </b>{' '}
           Three of these roles sign in here: the Admin, the Manager and the auditor. The
-          rest work in the Care Worker app and appear on this screen because managing
-          them is done from this one.
+          rest work in the Care Worker app and are managed from here.
         </p>
       </div>
 
@@ -130,15 +108,6 @@ export function PermissionMatrixRoute() {
               ))}
             </tbody>
           </table>
-        </div>
-
-        <div className={styles.matrixNote}>
-          <Unrecorded
-            variant="panel"
-            caption="What this matrix is not"
-            label="Fifty-four permissions across nine modules is a number from a product that has a permission model."
-            detail="This one has sixteen modules and none. A matrix that did not match the product would be worse than no matrix, so the modules come from the sidebar and the levels are the four distinctions this build already makes."
-          />
         </div>
       </Card>
     </div>

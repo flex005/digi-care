@@ -102,9 +102,7 @@ export function InspectionPackRoute() {
             What it cannot contain, because diGi-Care does not hold it
           </h2>
           <p className={styles.packNote}>
-            Nothing on any screen in this product can close these. They are gaps in the
-            system rather than in the home, and an inspector will ask for them from
-            somewhere else.
+            An inspector will ask for these from somewhere else.
           </p>
           <ul className={styles.packList}>
             {contents.notHeld.map((entry) => (
@@ -121,11 +119,7 @@ export function InspectionPackRoute() {
         <div className={styles.noFile} data-no-file data-state="unrecorded">
           <p className={styles.noFileTitle}>No file can be produced here.</p>
           <p className={styles.noFileBody}>
-            This build has no backend and no file storage, so there is nothing to
-            download and nothing has been generated. What is above is the manifest: the
-            list of what a real pack would hold, what it would be missing, and why.
-            There is no download control on this screen because there is no file; a
-            disabled one would imply that there could be.
+            Nothing has been generated; above is what a pack would hold.
           </p>
           <p className={styles.noFileBody}>
             <span data-numeric>{formatCount(contents.holds.length)}</span> kinds of

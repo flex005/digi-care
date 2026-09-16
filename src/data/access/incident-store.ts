@@ -71,7 +71,7 @@ function patch(id: IncidentId, next: Edit): void {
 export function acknowledge(incident: Incident, by: StaffRef): IncidentStatus {
   if (incident.status.kind !== 'reported_not_acknowledged')
     throw new Error(
-      `${incident.id} was acknowledged by ${incident.status.acknowledged.by.fullName}. A second acknowledgement would overwrite the first, and who picked it up is the fact the log exists for.`,
+      `${incident.id} was acknowledged by ${incident.status.acknowledged.by.fullName}.`,
     )
   const status: IncidentStatus = { kind: 'open', acknowledged: act(by) }
   patch(incident.id, { status })
@@ -86,9 +86,7 @@ export function recordReview(
   by: StaffRef,
 ): void {
   if (incident.status.kind === 'reported_not_acknowledged')
-    throw new Error(
-      `${incident.id} has not been acknowledged. A review with nobody's name against the incident is a conclusion from nobody.`,
-    )
+    throw new Error(`${incident.id} has not been acknowledged.`)
   patch(incident.id, {
     review: fields,
     status:
@@ -126,12 +124,10 @@ export function close(
     )
   if (!notificationDecided)
     throw new Error(
-      `Nobody has recorded whether ${incident.id} must be notified to the CQC. A decision either way is required before it closes, and "not required" is a judgement with a name on it.`,
+      `Nobody has recorded whether ${incident.id} must be notified to the CQC, and it cannot close without a decision.`,
     )
   if (incident.review.rootCause.kind !== 'recorded')
-    throw new Error(
-      `${incident.id} has no root cause recorded. Closing it would be the home saying it is finished with something it never explained.`,
-    )
+    throw new Error(`${incident.id} has no root cause recorded.`)
 
   const status: IncidentStatus = {
     kind: 'closed',

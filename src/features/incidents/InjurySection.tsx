@@ -111,8 +111,7 @@ export function InjurySection({
             {/* Said on the screen, not only in the code: the list is what the
                 record holds, and the map is the way of entering it. */}
             <p className={styles.mapHint}>
-              The list is the record. The map is only the way of entering it: a diagram
-              alone is unreadable to a screen reader and in greyscale.
+              The list is the record; the map is a way of entering it.
             </p>
             <p className={styles.mapHint}>
               Left and right are {"the resident's"}, not yours. Their left arm is on the

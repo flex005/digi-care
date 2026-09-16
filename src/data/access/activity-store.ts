@@ -88,9 +88,7 @@ export function planSession(input: {
   by: StaffRef
 }): Activity {
   if (input.residentIds.length === 0)
-    throw new Error(
-      'A session with nobody invited has no denominator: every figure about it would divide by nobody, and "nobody came" would be indistinguishable from "nobody was asked".',
-    )
+    throw new Error('A session needs at least one resident invited.')
 
   const activity: Activity = {
     id: `act-session-${String(added.length + 1).padStart(3, '0')}` as ActivityId,
@@ -132,13 +130,10 @@ export function cancelSession(
   reason: string,
   by: StaffRef,
 ): ActivityStanding {
-  if (reason.trim() === '')
-    throw new Error(
-      'A cancellation carries a reason. Without one the record says a session did not happen and nothing about why, which is the question anybody reading it back has.',
-    )
+  if (reason.trim() === '') throw new Error('A cancellation needs a reason.')
   if (activity.standing.kind === 'cancelled')
     throw new Error(
-      `${activity.name} was already cancelled by ${activity.standing.by.fullName}. A second cancellation would overwrite the first reason.`,
+      `${activity.name} was already cancelled by ${activity.standing.by.fullName}.`,
     )
 
   const standing: ActivityStanding = {

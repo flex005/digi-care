@@ -233,7 +233,9 @@ describe('allergies', () => {
     // pattern is reinforcement; these words are the carrier.
     expect(panel?.textContent).toMatch(/Allergies and adverse reactions/)
     expect(panel?.textContent).toMatch(/Not recorded/)
-    expect(screen.getByText(/not the same as having none/i)).toBeVisible()
+    expect(
+      screen.getByText(/not be given on the assumption there are none/i),
+    ).toBeVisible()
     // The header's risk flag states it independently. Both are load-bearing.
     const flags = screen.getByRole('list', { name: 'Risk flags' })
     expect(flags.textContent).toMatch(/Allergies/)

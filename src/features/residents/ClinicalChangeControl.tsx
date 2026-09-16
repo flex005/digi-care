@@ -7,16 +7,16 @@ import styles from './profile.module.css'
  * "Changing a DNAR or ADRT raises a confirmation naming the resident and
  * warning that all staff on shift are notified."
  *
- * Every part of that sentence is load-bearing:
+ * **The notification warning is a departure.** Nothing in this build notifies
+ * anybody, so a confirmation saying staff are notified would promise an act
+ * that does not happen, and the toast after it would contradict it. The
+ * confirmation names the resident; the toast says nobody on shift was told.
  *
  *  - **naming the resident.** §2.4, and the reason this control is built in
  *    Phase 1 rather than deferred with the rest of editing. Never "Are you
  *    sure?" — always "Change the resuscitation decision for Emmanuel Okafor?".
  *    The subject comes from the route parameter, through the profile, and
  *    never from anything the user last looked at.
- *  - **all staff on shift are notified.** Named site, not "everyone". A
- *    manager covering two homes needs to know which building is about to be
- *    told, and "all staff" does not say.
  *  - **destructive styling**, because changing one of these overrides a signed
  *    clinical decision. Recording a first decision does not, so it is not
  *    styled as though it did.

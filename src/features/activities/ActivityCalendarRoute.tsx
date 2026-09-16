@@ -138,10 +138,7 @@ export function ActivityCalendarRoute() {
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Activities could not be loaded</p>
-            <p className={styles.errorBody}>
-              Nothing has been lost; this is a read. A partial week is not shown,
-              because it would read as fewer unrecorded sessions than there are.
-            </p>
+            <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>
@@ -400,12 +397,7 @@ function SessionList({
   })
 
   if (ordered.length === 0) {
-    return (
-      <p className={styles.settledNote}>
-        Nothing was planned in this range. That is a statement about the diary, not
-        about the record.
-      </p>
-    )
+    return <p className={styles.settledNote}>Nothing was planned in this range.</p>
   }
 
   return (

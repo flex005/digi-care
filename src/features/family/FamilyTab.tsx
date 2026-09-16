@@ -114,7 +114,7 @@ function FamilyAccess({
                 ? 'Nobody has been asked about Family Portal access'
                 : `Family Portal access is ${consent.kind.replace(/_/g, ' ')}`
             }
-            detail={`Naming somebody who may see ${resident.preferredName}'s record needs that decision on file first, with who made it and on what basis. It is recorded on the Consent tab, through the capacity question, and not here: a second way in would be a second record of the same fact.`}
+            detail={`Naming somebody who may see ${resident.preferredName}'s record needs Family Portal consent on file first, recorded on the Consent tab.`}
           />
           <Link
             to={`/residents/${resident.id}/consent`}
@@ -133,8 +133,8 @@ function FamilyAccess({
               ? 'One person is still named here, and the consent that allowed it no longer stands.'
               : `${members.length} people are still named here, and the consent that allowed it no longer stands.`}
           </b>{' '}
-          Nothing removes them automatically, and nothing was ever sent to them by this
-          build. Remove anybody who should no longer see {resident.preferredName}
+          Nothing removes them automatically. Remove anybody who should no longer see{' '}
+          {resident.preferredName}
           &rsquo;s updates, or record the consent again on the Consent tab if it should
           stand.
         </p>
@@ -149,7 +149,7 @@ function FamilyAccess({
         <p className={styles.noMembers} data-no-family>
           {stands
             ? `Nobody has been named. The consent stands, and no family member has been given access to ${resident.preferredName}'s updates under it.`
-            : 'Nobody is named, and no consent is on file. Both are true, and neither is a gap in the other.'}
+            : 'Nobody is named, and no consent is on file.'}
         </p>
       ) : (
         <Card>

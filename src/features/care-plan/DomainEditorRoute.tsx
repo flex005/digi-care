@@ -206,9 +206,7 @@ function Editor({
         <b>Written in {resident.preferredName}&rsquo;s own words.</b> What they need and
         how they like it done are recorded as they say them: &ldquo;I like to…&rdquo;,
         not &ldquo;resident prefers…&rdquo;. What staff will do is written to whoever
-        reads it on shift. Nothing here is filled in from an assessment: a score cannot
-        be turned into &ldquo;I need help to walk&rdquo; without putting words in
-        somebody&rsquo;s mouth.
+        reads it on shift.
       </div>
 
       <Card>

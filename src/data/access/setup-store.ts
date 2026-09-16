@@ -39,10 +39,7 @@ export function confirmStep(step: SetupStepId): void {
 }
 
 export function skipStep(step: SetupStepId): void {
-  if (REQUIRED_STEPS.includes(step))
-    throw new Error(
-      `${step} is required. Steps 1 and 2 name the organisation and its first home, and a service with neither is not one anybody can be invited into.`,
-    )
+  if (REQUIRED_STEPS.includes(step)) throw new Error(`${step} is required.`)
   confirmed.delete(step)
   skipped.add(step)
 }

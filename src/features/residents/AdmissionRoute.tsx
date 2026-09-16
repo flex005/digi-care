@@ -192,10 +192,8 @@ export function AdmissionRoute() {
       <header>
         <h1 className={styles.pageTitle}>Admit a resident</h1>
         <p className={styles.pageSubtitle}>
-          Five steps, and only the first is required. Everything after it can be left
-          for the day somebody knows the answer: a blank here is recorded as nobody
-          having recorded it, and every screen shows it as the gap it is from the first
-          minute.
+          Five steps, and only the first is required; anything left blank shows as not
+          recorded.
         </p>
 
         {/*
@@ -255,9 +253,7 @@ export function AdmissionRoute() {
                   />
                   {/* Blank is a real answer, and it stays blank. */}
                   <span className={styles.hint}>
-                    What staff will call them. If they have not said yet, leave it
-                    blank, it renders as not recorded rather than defaulting to their
-                    legal name.
+                    What staff will call them; leave it blank if they have not said yet.
                   </span>
                 </label>
               </div>
@@ -326,8 +322,6 @@ export function AdmissionRoute() {
                 <p className={styles.allergyTitle}>Does {name} have any allergies?</p>
                 <p className={styles.allergyBody}>
                   Their first medication round may happen before anybody asks again.
-                  This is the only clinical question on this form, and it is here
-                  because not asking it today is the version that hurts somebody.
                 </p>
 
                 <div className={styles.choices}>
@@ -403,9 +397,7 @@ export function AdmissionRoute() {
                     />
                     <b>No known allergies</b>
                     <span className={styles.choiceHint}>
-                      A recorded negative, not a blank, and it needs a source, because
-                      &ldquo;no known allergies&rdquo; with nobody&rsquo;s name on it is
-                      a guess wearing a record.
+                      A recorded negative, and it needs a source.
                     </span>
                   </label>
 
@@ -438,8 +430,7 @@ export function AdmissionRoute() {
                     />
                     <b>Not known yet</b>
                     <span className={styles.choiceHint}>
-                      Nobody has been able to find out. Honest, and it will render as a
-                      gap on every screen until somebody does.
+                      Nobody has been able to find out.
                     </span>
                   </label>
 
@@ -464,10 +455,7 @@ export function AdmissionRoute() {
              */}
             <section className={styles.section} data-section="identity-more">
               <h2 className={styles.sectionTitle}>More about them</h2>
-              <p className={styles.sectionNote}>
-                None of this is required. Anything left blank is recorded as nobody
-                having recorded it, which is what it is.
-              </p>
+              <p className={styles.sectionNote}>None of this is required.</p>
 
               <div className={styles.two}>
                 <div className={styles.field}>
@@ -612,10 +600,7 @@ export function AdmissionRoute() {
              * six-field form was built on.
              */}
             <p className={styles.sectionNote} data-diagnosis-note>
-              If the discharge summary has not arrived, leave this blank. A diagnosis
-              entered on the day somebody knows least is indistinguishable from a
-              recorded one for as long as the record lasts, and every screen will show
-              this as unrecorded until somebody knows.
+              If the discharge summary has not arrived, leave this blank.
             </p>
             <div className={styles.two}>
               <label className={styles.field}>
@@ -662,13 +647,7 @@ export function AdmissionRoute() {
               <b>
                 A DNAR form can be filed with this admission, and filing it does not
                 record the decision.
-              </b>{' '}
-              A resuscitation decision carries the signature of the clinician who made
-              it; this product holds documents and does not capture signatures, so
-              filing the form leaves the decision unrecorded and this resident&rsquo;s
-              header will say so. That is the honest state: a document on file, and the
-              record that should point at it still empty. The decision is recorded under
-              Future plans, by somebody who can attest to it.
+              </b>
             </p>
 
             <div className={styles.dnarFile} data-dnar-file>
@@ -706,11 +685,8 @@ export function AdmissionRoute() {
             </p>
 
             <p className={styles.sectionNote} data-flags-note>
-              The five risk flags are not asked here either. Every one of the nine
-              assessments starts never assessed, which is not the same as low risk, and
-              the badge strip on this resident&rsquo;s header will say so from the first
-              minute. Answering them is completing an assessment, not ticking a box on
-              an admission form.
+              The risk flags are not asked here: every assessment starts never assessed,
+              which is not low risk.
             </p>
           </section>
         ) : null}
@@ -732,14 +708,8 @@ export function AdmissionRoute() {
              * else means a deadline nothing enforces.
              */}
             <p className={styles.sectionNote} data-no-dates>
-              <b>Nothing here is given a date, and that is stronger than a date.</b> All
-              ten care plan domains start unwritten and all nine assessments start never
-              assessed. Every screen in the product shows those gaps for as long as they
-              last: the care plan queue leads on domains nobody has written, the
-              assessment list leads on risks nobody has assessed, and the header badge
-              strip carries them beside this person&rsquo;s name. A target date would
-              add a deadline nothing enforces on top of a gap that is already visible
-              everywhere.
+              <b>Nothing here is given a date.</b> All ten care plan domains start
+              unwritten and all nine assessments start never assessed.
             </p>
           </section>
         ) : null}
@@ -770,10 +740,7 @@ export function AdmissionRoute() {
               Everything else about {name} starts unrecorded, and that is correct
             </p>
             <p className={styles.gapsBody}>
-              Admission does not create a complete record. It creates a person with a
-              name, a room and a set of gaps, and every one of those will render as a
-              gap rather than as nothing, from the moment they are admitted. This is
-              where each is recorded when somebody knows.
+              This is where each is recorded when somebody knows.
             </p>
           </div>
 
@@ -822,7 +789,7 @@ export function AdmissionRoute() {
             variant="panel"
             caption="What the profile header will say"
             label="Allergies not recorded"
-            detail="Nobody has recorded whether this person has any allergies. It is not the same as none, and every medication screen will say so until somebody finds out."
+            detail="Nobody has recorded whether this person has any allergies. It is not the same as none."
           />
         </div>
       ) : null}

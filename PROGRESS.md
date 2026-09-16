@@ -14379,3 +14379,67 @@ Tests that pinned cut sentences were changed to assert what remains:
 `access-list`, `family`, `future-plans`, `important-people`,
 `general-information` and `team`. The export suite's "it says what it would
 contain" block went with the contents it asserted.
+
+## Page copy cut to the same rule, and the notification promise dropped
+
+**The resuscitation and ADRT confirmations no longer say staff on shift are
+notified.** FRONTEND_PRD §6.2 asks for that warning. Nothing in this build
+notifies anybody, so the sentence promised an act that does not happen, and the
+toast afterwards ("Nobody on shift at … was notified") contradicted it: the
+dialog was wrong, not merely unfulfilled. Recorded as a departure in
+`docs/AM_PRD_STATUS.md` and at `ClinicalChangeControl`. The DNAR test now
+asserts the confirmation does not mention notification. Mutation, confirmed
+landed with `grep -c` (1): "and staff on shift are notified" put back into the
+DNAR description failed `names the resident, and promises no notification`;
+restored, count 0.
+
+The risk re-score panel said "Recording this would notify every member of staff
+on shift … This build has no notification system". It is now an instruction:
+nobody on shift is notified; tell staff that the risk has risen.
+
+**Ordinary pages got the dialog rule.** The sweep was driven by an inventory
+rather than by memory: every JSX text block and string literal of 90
+characters or more in product code, 430 of them, read one by one, followed by
+a marker scan ("in this build", "real deployment", "because", "rather than",
+"reload" and similar) for shorter lines. What went:
+
+- the second sentence of every "Nothing has been lost; this is a read" error,
+  which explained why a partial list is not shown (20 screens);
+- "That is a statement about the filters, not about the record" after every
+  empty filter;
+- no-backend prose: Settings, the activity log, report an incident, the setup
+  wizard, the inspection pack, report export, the document viewer, My
+  permissions, the permission matrix's "not security" notice, sign-in's side
+  panel, "not retrievable in this build";
+- design explanations: why a column, sort, list, date, field or control is or
+  is not there, across admission (including the risk-flags note), the queues,
+  reports, compliance, team, consent and medications;
+- the reasoning half of the store refusals, which reach the screen as error
+  text ("A second acknowledgement would overwrite the first, and who picked it
+  up is the fact the log exists for" is now "inc-903 was acknowledged by …").
+
+What stayed, as one sentence: an unrecorded allergy means medication must not
+be given on the assumption there are none; in the absence of a resuscitation
+decision CPR is attempted; the placeholder risk instrument says to make no
+clinical decision from its score; the compliance mapping says it is a
+placeholder; a subject access request has a statutory clock; withdrawing a
+consent removes nothing, and each remaining effect is somebody's job; a
+never-counted drug says who counts it and with two signatures; no 24-hour
+maximum means checking the prescription; prescriptions are recorded and
+interactions are not checked; a DNAR form filed at admission does not record
+the decision; the family message screen says to telephone when nobody is
+named; the setup invitation says nothing is emailed. Refusals keep their
+refusal and lose the argument for it.
+
+Two stale claims went with the cut: a dose that does not reconcile said its
+incident record "arrives in Phase 4", and the not-found page said the sidebar
+shows which phase each module arrives in.
+
+The cleanup pass that squeezed stray spaces also squeezed two separators,
+`join('; ')` to `join(';')`, in Settings and the activity log. Found by
+diffing for exactly that shape, and fixed.
+
+45 tests pinned cut sentences. Each now asserts what remains; where the
+sentence was the whole assertion, the structural half stays (no numeric on the
+staff profile, no download control, columns with no omission). Two tests that
+asserted the "not security" notice came first were removed with it.

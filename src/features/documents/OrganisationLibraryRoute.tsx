@@ -84,8 +84,8 @@ export function OrganisationLibraryRoute() {
         emphasis="lead"
       />
       <p className={styles.coverageNote}>
-        Either a date, or somebody recording that the document does not expire. Where
-        there is neither, nothing can tell you whether the document is still valid.
+        Either a date or a recorded decision that it does not expire; with neither,
+        nobody can tell whether it is still valid.
       </p>
 
       <Card>

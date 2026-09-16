@@ -105,11 +105,7 @@ export function RoundRoute() {
       <div className={styles.page}>
         <Card padded>
           <p className={styles.errorTitle}>This round could not be loaded</p>
-          <p className={styles.errorBody}>
-            Nothing has been lost; this is a read. No round is shown rather than a
-            partial one, because a round missing an unknown number of residents is one
-            somebody would work through and believe finished.
-          </p>
+          <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
           <Button variant="secondary" onClick={resource.retry}>
             Try again
           </Button>

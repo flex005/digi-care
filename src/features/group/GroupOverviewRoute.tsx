@@ -153,11 +153,7 @@ export function GroupOverviewRoute() {
       <Card>
         <div className={styles.groupHead}>
           <h2 className={styles.groupTitle}>Across both homes</h2>
-          <p className={styles.groupNote}>
-            Each figure names both homes, because a rate over{' '}
-            {formatCount(totals.residents)} residents clears any population floor while
-            hiding a {formatCount(totals.smallest)}-resident home inside it.
-          </p>
+          <p className={styles.groupNote}>Each figure names both homes.</p>
         </div>
 
         <ul className={styles.groupRows}>
@@ -182,12 +178,7 @@ export function GroupOverviewRoute() {
         {/* Inert, because nothing here is a gap anybody can close. */}
         <div className={styles.noRating} data-no-rating>
           <p>
-            <b>There is no group rating on this screen, and there will not be one.</b> A
-            rating is a judgement and judgements belong on the compliance panel, per
-            home. A single figure for the organisation would be the most reassuring
-            thing this product could render, and it would be most reassuring exactly
-            when one home is thinnest: no arithmetic turns one home&rsquo;s Insufficient
-            Evidence and another&rsquo;s amber into a number that means anything.
+            <b>There is no group rating on this screen, and there will not be one.</b>
           </p>
         </div>
       </Card>

@@ -72,9 +72,7 @@ export function ReportIndexRoute() {
           </p>
           <p className={styles.heroBody}>
             of {formatCount(headline.reports)}, over the last{' '}
-            {pluralise(REPORT_PERIOD_DAYS, 'day')}. Each of them still opens and still
-            shows its table: the finding above it is what stops the table being read as
-            a conclusion.
+            {pluralise(REPORT_PERIOD_DAYS, 'day')}.
           </p>
           <div className={styles.heroSplit}>
             <div>
@@ -113,7 +111,7 @@ export function ReportIndexRoute() {
             </p>
             <p className={styles.miniBody}>
               of {formatCount(headline.rows)}. Each keeps its counts and loses only its
-              rate: removing them would make every table look complete.
+              rate.
             </p>
           </section>
         </div>
@@ -123,9 +121,8 @@ export function ReportIndexRoute() {
             <h2 className={styles.chartTitle}>What each report has to work with</h2>
             <p className={styles.chartNote}>
               Rows in the last {pluralise(REPORT_PERIOD_DAYS, 'day')}, split by whether
-              the row has enough behind it to carry a rate. The hatched part is not a
-              shortfall against a target: it is how many rows can state a count and
-              nothing more.
+              the row has enough behind it to carry a rate. The hatched part is rows
+              that can state a count and nothing more.
             </p>
             <div className={styles.legend}>
               <span className={styles.legendItem}>
@@ -224,9 +221,7 @@ export function ReportIndexRoute() {
         <h2 className={styles.groupTitle}>Drill-downs, not reports</h2>
         <div className={styles.drillDowns}>
           <p className={styles.drillIntro}>
-            Each of these is a compliance check with a table under it, so each opens
-            from that check rather than having a screen of its own, which is also where
-            a reader already is when the question occurs to them.
+            Each of these opens from its compliance check.
           </p>
           <ul className={styles.drillList}>
             {DRILL_DOWNS.map((drill) => (

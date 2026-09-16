@@ -3,7 +3,6 @@ import { Unrecorded } from '@/components/status'
 import { WAKING_HOURS, formatDuration } from '@/lib/shift'
 import { useSiteFormat } from '@/app/session/use-session'
 import styles from './notes.module.css'
-import { gapThresholdWakingMinutes } from '@/data/access/settings-store'
 
 /**
  * A stretch of time with nothing written in it, rendered as an object.
@@ -67,14 +66,7 @@ export function GapMarker({ gap }: { gap: TimelineGap }) {
           <span data-numeric>{String(WAKING_HOURS.from).padStart(2, '0')}:00</span>
           {gap.wakingMinutes > 0
             ? `, and ${formatDuration(gap.wakingMinutes)} of this stretch was waking time.`
-            : '.'}{' '}
-          {/* Why this stretch is quiet and the hatched ones are not. Without
-              it, a reader comparing an eleven-hour overnight against a
-              five-hour omission has no way to know that the longer one is
-              the untroubling one, and the ranking looks arbitrary. */}
-          Overnight time does not count toward the omission threshold, which is{' '}
-          {formatDuration(gapThresholdWakingMinutes())} of waking time, so this stretch
-          is not an omission.
+            : '.'}
         </span>
       </div>
     </li>

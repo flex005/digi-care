@@ -137,7 +137,7 @@ describe('an obligation with nothing against it is not settled', () => {
 
     const block = container.querySelector('[data-notification="not_yet_decided"]')!
     expect(block.querySelector('[data-state="unrecorded"]')).toBeTruthy()
-    expect(block.textContent).toMatch(/cannot be closed until one exists/)
+    expect(block.textContent).toMatch(/cannot be closed until somebody does/)
   })
 
   it('renders a notified decision settled, with a name and a reference', async () => {

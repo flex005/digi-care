@@ -125,7 +125,7 @@ describe('the order of the acts is the status union, and it is enforced', () => 
     const incident = unacknowledged()
     acknowledge(incident, staffOkonkwo)
     expect(() => acknowledge(withIncidentEdits(incident), staffOkonkwo)).toThrow(
-      /would overwrite the first/i,
+      /was acknowledged by/i,
     )
   })
 

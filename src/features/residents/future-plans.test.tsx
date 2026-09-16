@@ -127,7 +127,7 @@ describe('the resuscitation decision', () => {
     )
     const panel = container.querySelector('[data-resuscitation]')
     expect(panel?.textContent).toMatch(/For resuscitation/)
-    expect(panel?.textContent).toMatch(/it is a decision, not the absence of one/i)
+    expect(panel?.textContent).toMatch(/CPR is to be attempted/)
   })
 
   it('hatches an absent decision and says what happens without one', async () => {
@@ -146,7 +146,7 @@ describe('the resuscitation decision', () => {
 })
 
 describe('changing a DNAR', () => {
-  it('names the resident and the site whose staff are notified', async () => {
+  it('names the resident, and promises no notification', async () => {
     const user = userEvent.setup()
     renderPlans('res-okafor')
     const trigger = await screen.findByRole('button', {
@@ -160,9 +160,9 @@ describe('changing a DNAR', () => {
       /Change the resuscitation decision for Emmanuel\?/,
     )
     expect(dialog.textContent).toMatch(/overrides a signed clinical decision/)
-    // Named site, not "all staff" — a manager covering two homes needs to
-    // know which building is about to be told.
-    expect(dialog.textContent).toMatch(/on shift at Rosewood Court is notified/)
+    // A departure from PRD §6.2: nothing notifies anybody, so the confirmation
+    // does not say staff are notified. The toast afterwards names the site.
+    expect(dialog.textContent).not.toMatch(/notified/)
   }, 20000)
 
   it('writes nothing, and says so rather than faking a save', async () => {

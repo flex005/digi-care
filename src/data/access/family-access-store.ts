@@ -119,9 +119,7 @@ export function grantAccess(input: {
   by: StaffRef
 }): FamilyMember {
   if (input.name.trim() === '' || input.relationship.trim() === '')
-    throw new Error(
-      'A family member is a person and a relationship. "Next of kin" with no name is not somebody anybody can ring, and a name with no relationship is not a basis for showing them a care record.',
-    )
+    throw new Error('A family member needs a name and a relationship.')
   issued += 1
   const at = appNow().toISOString() as IsoDateTime
   const member: FamilyMember = {
@@ -191,10 +189,7 @@ export function editMember(
   if (emailValue(email) !== emailValue(now.email)) changed.push('email')
   if (input.level !== now.level) changed.push('level')
 
-  if (changed.length === 0)
-    throw new Error(
-      'Nothing about this family member changed. An edit that rewrites a record into what it already said is a record of an act that did not happen.',
-    )
+  if (changed.length === 0) throw new Error('Nothing about this family member changed.')
 
   const revision: FamilyRevision = {
     name: input.name.trim(),

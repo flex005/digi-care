@@ -332,7 +332,6 @@ describe('the form offers nothing it cannot honestly record', () => {
     const flags = page.querySelector('[data-section="flags"]') as HTMLElement
     const said = flags.querySelector('[data-dnar-note]')!
     expect(said.textContent).toMatch(/does not record the decision/i)
-    expect(said.textContent).toMatch(/signature of the clinician/i)
     /*
      * **And the control the sentence names is beside it.** This test asserted
      * the sentence alone from Phase 24, and it passed over a step with no way
@@ -351,10 +350,7 @@ describe('the form offers nothing it cannot honestly record', () => {
     await goToStep(user, page, 'plan')
 
     const said = page.querySelector('[data-no-dates]')!
-    expect(said.textContent).toMatch(/stronger than a date/i)
-    // The gap is visible everywhere until somebody does it, which is the
-    // argument for not adding a deadline nothing enforces.
-    expect(said.textContent).toMatch(/for as long as they last/i)
+    expect(said.textContent).toMatch(/Nothing here is given a date/i)
   }, 20000)
 })
 

@@ -71,9 +71,7 @@ export function CarePlanTab() {
             {resident.preferredName}&rsquo;s care have never been written down
           </span>
           <span className={styles.leadDetail}>
-            Never written down is not &ldquo;no needs here&rdquo;. Every domain is
-            listed whether or not anybody has written it, because a list of only the
-            written ones would read as a complete plan.
+            Never written down is not &ldquo;no needs here&rdquo;.
             {unsigned > 0 ? (
               <>
                 {' '}

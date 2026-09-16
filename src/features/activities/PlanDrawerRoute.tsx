@@ -115,8 +115,7 @@ function Plan({ data }: { data: Loaded }) {
             <span data-numeric>{formatCount(neverAsked.length)}</span> of{' '}
             <span data-numeric>{formatCount(invited.length)}</span> invited have never
             been asked what they like doing. Their social and emotional wellbeing care
-            plan domain has not been written, which is where that question lives, open
-            the domain to ask them.
+            plan domain has not been written: open the domain to ask them.
           </p>
         ) : null}
 

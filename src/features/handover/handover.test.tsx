@@ -554,7 +554,7 @@ describe('the stale state', () => {
     // to ask both shifts.
     const row = container.querySelector('[data-unsigned]')
     expect(row?.textContent).toMatch(
-      /nobody recorded receiving it|never signed to say what they were handing over|no record that this shift change was handed over or taken/i,
+      /never accepted by|never signed to say what they were handing over|shift nor the/i,
     )
   })
 })

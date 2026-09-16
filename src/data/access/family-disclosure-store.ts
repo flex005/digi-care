@@ -116,9 +116,7 @@ export function share(
       'This is already shared. A second sharing would add an entry saying nothing changed.',
     )
   if (subject.kind === 'incident' && subject.message.trim() === '')
-    throw new Error(
-      'A family message with nothing in it is a disclosure of nothing. Write what the family are being told, in plain language.',
-    )
+    throw new Error('Write what the family are being told.')
   return record(residentId, subject, 'shared', by)
 }
 

@@ -101,10 +101,7 @@ export function ResidentProfileRoute() {
         <div className={styles.errorPanel}>
           <p className={styles.errorTitle}>This resident could not be loaded</p>
           <p className={styles.errorBody}>
-            <code>{residentId}</code> did not resolve to a resident. Nothing is shown
-            rather than a partial header, because a subject header that is missing half
-            its facts is one somebody can act on, and acting on the wrong subject is the
-            failure this header exists to prevent.
+            <code>{residentId}</code> did not resolve to a resident.
           </p>
           <Button variant="secondary" onClick={resource.retry}>
             Try again

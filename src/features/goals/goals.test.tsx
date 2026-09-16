@@ -394,9 +394,8 @@ describe('the goals queue', () => {
 
     const lead = container.querySelector('[data-past-target]')
     expect(lead?.textContent).toMatch(/nobody has said what happened/)
-    // A goal with no date is not late and is not counted — said, not implied.
-    expect(lead?.textContent).toMatch(/no date at all/)
-    expect(lead?.textContent).toMatch(/is not late and is not counted here/)
+    // A goal with no date is not counted — said, not implied.
+    expect(lead?.textContent).toMatch(/no date at all and are not counted here/)
   })
 
   it('sorts longest past its date first, because the wait is the finding', async () => {

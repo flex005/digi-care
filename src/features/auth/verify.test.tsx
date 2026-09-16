@@ -159,8 +159,5 @@ describe('the signing code chosen at setup is the one the product asks for', () 
 
     const said = container.querySelector('[data-pin-collision]')!
     expect(said.textContent).toMatch(/nothing stops two people choosing the same/i)
-    // And what is actually lost: a property held by construction becoming one
-    // held by whoever runs the deployment.
-    expect(said.textContent).toMatch(/derived from your account/i)
   })
 })

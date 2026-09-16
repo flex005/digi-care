@@ -92,8 +92,8 @@ export function InterimRoute() {
       <header>
         <h2 className={styles.title}>Add an interim medication</h2>
         <p className={styles.subtitle}>
-          For what arrives between cycles: a hospital discharge, a GP visit. This screen
-          records a prescription that exists somewhere else. It does not create one.
+          For what arrives between cycles, such as a hospital discharge or a GP visit:
+          it records a prescription made somewhere else.
         </p>
       </header>
 
@@ -106,9 +106,7 @@ export function InterimRoute() {
               The source is answered first, and it is required
             </p>
             <p className={styles.sourceBody}>
-              A medication with no source is a drug nobody can trace to a prescriber.
-              Every route below leaves a document or a name behind it, and the MAR chart
-              shows which.
+              Every route below leaves a document or a name the MAR chart shows.
             </p>
 
             <div className={styles.options}>
@@ -139,9 +137,8 @@ export function InterimRoute() {
              * wasting somebody's shift.
              */}
             <p className={styles.refusal} data-cd-refusal>
-              A controlled drug cannot be added by this route. It needs a written
-              prescription meeting the legal requirements, and no interim path
-              substitutes for one.
+              A controlled drug cannot be added by this route: it needs a written
+              prescription.
             </p>
           </div>
 
@@ -150,8 +147,7 @@ export function InterimRoute() {
               <p className={styles.verbalTitle}>A verbal order carries a follow-up</p>
               <p className={styles.verbalBody}>
                 A second member of staff witnesses the call, and it must be confirmed in
-                writing within 24 hours. Both are recorded here; the written
-                confirmation stays outstanding on the record until somebody files it.
+                writing within 24 hours.
               </p>
               <label className={styles.field}>
                 <span className={styles.label}>Who witnessed the call</span>

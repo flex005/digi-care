@@ -39,11 +39,6 @@ export function NoAccess({ moduleId, act }: { moduleId?: string; act?: AdminAct 
             Your role is {viewer.roleName}, and {label} is not one of the modules it
             opens.
           </p>
-          <p className={styles.body}>
-            That is a decision about the role rather than about you, and it is not a
-            module waiting on a later phase. {label} is built, and the roles that hold
-            it use it every day.
-          </p>
         </>
       ) : (
         <>
@@ -53,8 +48,7 @@ export function NoAccess({ moduleId, act }: { moduleId?: string; act?: AdminAct 
             Your role is {viewer.roleName}. You can open{' '}
             {PERMISSION_MODULES.find((entry) => entry.id === act.module)?.label ??
               act.module}{' '}
-            and read all of it. This one screen belongs to the person the service is
-            registered to.
+            and read all of it.
           </p>
         </>
       )}
