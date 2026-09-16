@@ -57,7 +57,7 @@ export function PrimaryContactControl({
         onOpenChange={setConfirmed}
         tone="caution"
         title={`No change was made to ${residentName}'s record`}
-        description="Recording a primary contact needs resident editing, which no phase has built yet. The confirmation you just saw is the real one; only the write is missing."
+        description="The primary contact has not changed."
       />
     </div>
   )

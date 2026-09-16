@@ -263,7 +263,7 @@ function Editor({
                   Version <span data-numeric>{versions}</span> is signed.
                 </strong>{' '}
                 It is what staff follow from now, and it is beneath each box as the
-                previous version. Held in memory only and gone on reload.
+                previous version.
               </>
             ) : waiting.length === 0 ? (
               <>
@@ -375,9 +375,8 @@ function Editor({
         description={
           <span className={styles.confirmBody}>
             <span>
-              This becomes the version staff follow, and the one the Needs tab shows.
-              The previous version stays on the record as history rather than being
-              replaced.
+              This becomes the version staff follow; the previous version stays as
+              history.
             </span>
             {/* Named individually, never counted. A figure says how much work
                 vanished; the names say what it was. */}
@@ -396,10 +395,6 @@ function Editor({
                 {format.date(nextReviewFrom(now, reviewIntervalMonths()))}
               </span>
               .
-            </span>
-            <span>
-              Held in memory only for this session and gone on reload. There is no
-              backend in this build, so nothing here reaches a real record.
             </span>
           </span>
         }
@@ -424,14 +419,7 @@ function Editor({
         confirmLabel="Discard draft"
         description={
           <span className={styles.confirmBody}>
-            <span>
-              The draft is removed and the boxes are cleared. Nothing signed is touched.
-              The version staff follow stays exactly as it is.
-            </span>
-            <span>
-              An abandoned draft leaves no trace in the version history, because nobody
-              followed it.
-            </span>
+            <span>The draft is removed; nothing signed is touched.</span>
           </span>
         }
         onConfirm={() => {
@@ -450,7 +438,6 @@ function Editor({
             ? 'Care plan finalised'
             : `Care plan finalised: ${pluralise(closes.length, 'review')} closed`
         }
-        description="Held in memory only and gone on reload."
       />
 
       <Toast
@@ -462,8 +449,8 @@ function Editor({
         title={notice === 'draft_discarded' ? 'Draft discarded' : 'Draft saved'}
         description={
           notice === 'draft_discarded'
-            ? 'The domain reads exactly as it did before anybody started. Held in memory only, like everything else in this build.'
-            : 'Held in memory only and gone on reload. It is not signed, so it is not what staff follow.'
+            ? 'The domain reads exactly as it did before.'
+            : 'It is not signed, so it is not what staff follow.'
         }
       />
 

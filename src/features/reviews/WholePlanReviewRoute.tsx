@@ -165,8 +165,7 @@ export function WholePlanReviewRoute() {
                 {outstanding.length === 0
                   ? 'nothing outstanding'
                   : pluralise(outstanding.length, 'outstanding domain')}
-                , and it will say so wherever it is read. Held in memory only and gone
-                on reload.
+                , and it will say so wherever it is read.
               </>
             )}
           </p>
@@ -220,10 +219,6 @@ export function WholePlanReviewRoute() {
                 {outstanding.map(({ domain }) => domain.name).join(', ')}.
               </span>
             )}
-            <span>
-              Held in memory only for this session and gone on reload. There is no
-              backend in this build, so nothing here reaches a real record.
-            </span>
           </span>
         }
         onConfirm={() => {
@@ -242,7 +237,6 @@ export function WholePlanReviewRoute() {
             ? 'Care plan review recorded'
             : `Care plan review recorded: ${pluralise(outstanding.length, 'domain')} outstanding`
         }
-        description="Held in memory only and gone on reload."
       />
 
       {error === '' ? null : <p className={styles.errorBody}>{error}</p>}

@@ -173,7 +173,7 @@ describe('the invite drawer asks for residents only where the question applies',
     )
   }, 20000)
 
-  it('does not offer a registered manager, and says why rather than omitting it', async () => {
+  it('does not offer a registered manager', async () => {
     const user = userEvent.setup()
     renderDrawer()
     await user.click(screen.getByRole('button', { name: /Invite staff member/i }))
@@ -183,9 +183,5 @@ describe('the invite drawer asks for residents only where the question applies',
       expect(dialog.querySelector('[data-role-option="care_worker"]')).toBeTruthy(),
     )
     expect(dialog.querySelector('[data-role-option="registered_manager"]')).toBeNull()
-    // Absence with no explanation reads as a role the product does not have.
-    expect(dialog.querySelector('[data-cannot-invite-admin]')?.textContent).toMatch(
-      /not an act this platform performs/i,
-    )
   }, 20000)
 })

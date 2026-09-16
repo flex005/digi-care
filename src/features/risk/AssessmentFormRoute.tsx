@@ -368,7 +368,7 @@ export function AssessmentFormRoute() {
         }}
         tone="positive"
         title="Assessment recorded"
-        description={`${template.name} for ${resident.fullLegalName}. Held in memory only and gone on reload.`}
+        description={`${template.name} for ${resident.fullLegalName}.`}
       />
     </div>
   )
@@ -620,7 +620,7 @@ function CompareBlock({
                   {entry.overdue ? ', already past its 48 hours' : ''}.
                 </span>
               ))}
-              <span>In this build nothing is stored and no notification is sent.</span>
+              <span>No notification is sent.</span>
             </span>
           }
           onConfirm={() => {
@@ -643,7 +643,7 @@ function CompareBlock({
             ? 'Assessment recorded'
             : `Assessment recorded: ${pluralise(closes.length, 'review')} closed`
         }
-        description="Recorded against this resident, held in memory only and gone on reload."
+        description="Recorded against this resident."
       />
 
       {error === '' ? null : <p className={styles.errorBody}>{error}</p>}

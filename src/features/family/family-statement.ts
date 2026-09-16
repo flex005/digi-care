@@ -25,10 +25,6 @@
  * that goes stale is always whichever the reader is looking at.
  */
 
-/** The fact, in one sentence, where a screen needs the shorter form. */
-export const NOTHING_WAS_SENT =
-  'Nothing was sent. The Family Portal is a separate product and this build does not contain it, so no email, notification or message reaches anybody.'
-
 /**
  * What to do instead, at the moment of the act.
  *
@@ -36,10 +32,9 @@ export const NOTHING_WAS_SENT =
  * care note is not, and one instruction covering both would be wrong for each.
  */
 export const TELL_THEM = {
-  incident: 'Nobody has been told. If this family needs to know today, telephone them.',
-  note: 'Nobody has been told. This records that the note could be shown, and nothing more.',
-  access:
-    'Nothing has been sent to them. Recording this gives nobody access, and no invitation will arrive.',
+  incident: 'Nobody has been told: if this family needs to know today, telephone them.',
+  note: 'Nobody has been told: this only records that the note could be shown.',
+  access: 'Nothing is sent to them: tell them yourself that they have access.',
 } as const
 
 /**

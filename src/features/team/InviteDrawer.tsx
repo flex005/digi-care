@@ -94,7 +94,7 @@ export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
         open={open}
         onOpenChange={(next) => (next ? undefined : (reset(), setOpen(false)))}
         title="Invite somebody to the team"
-        description="They land on the team record with their account not yet set up, which is what an invitation is for. Granting access is a second act with a name on it."
+        description="They land on the team record with their account not yet set up."
       >
         <div className={styles.inviteForm} data-invite-form>
           <label className={styles.field}>
@@ -107,9 +107,7 @@ export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
             />
             {existing !== undefined ? (
               <span className={styles.fieldError} data-already-on-team>
-                {existing.ref.fullName} is already on the team record. Their homes can
-                be changed on their own page; changing a role is not something this
-                build does, and adding them twice would not do it either.
+                {existing.ref.fullName} is already on the team record.
               </span>
             ) : null}
           </label>
@@ -135,11 +133,6 @@ export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
                 ),
               )}
             </div>
-            <p className={styles.hint} data-cannot-invite-admin>
-              A registered manager is not on this list. Registering somebody as the
-              person a service is registered to is not an act this platform performs,
-              and it is not missing from the product.
-            </p>
           </div>
 
           <div className={styles.field}>
@@ -173,10 +166,6 @@ export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
           {isCareWorker ? (
             <div className={styles.field} data-assignment-field>
               <span className={styles.fieldLabel}>Which residents?</span>
-              <p className={styles.hint}>
-                This decides what they see in the care worker app. It changes nothing on
-                this platform, and no gap here is attributed to whoever was assigned.
-              </p>
               <div className={styles.roleChoices}>
                 {(
                   [
@@ -200,13 +189,6 @@ export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
                   </label>
                 ))}
               </div>
-              {cover === 'never_set' ? (
-                <p className={styles.hint} data-cover-gap>
-                  Their record will say nobody has decided, which is what it will be.
-                  Covering the whole home is a decision somebody takes, and it carries
-                  their name.
-                </p>
-              ) : null}
               {cover === 'assigned' ? (
                 <ul className={styles.residentChoices} data-resident-choices>
                   {choices.map((resident) => (
@@ -243,7 +225,7 @@ export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
             <p className={styles.hint}>
               {siteIds.length === 0
                 ? 'Choose at least one home.'
-                : `${pluralise(siteIds.length, 'home')} · nothing here is sent anywhere, and it is gone on reload.`}
+                : `${pluralise(siteIds.length, 'home')} · no invitation is sent`}
             </p>
             <Button disabled={!ready} onClick={submit} data-invite-submit>
               Add to the team

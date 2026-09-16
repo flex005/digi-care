@@ -216,7 +216,7 @@ describe('the tab is a list with an action, not a form on a page', () => {
      * been told.
      */
     expect(dialog.querySelector('[data-nothing-sent]')!.textContent).toMatch(
-      /nothing has been sent to them/i,
+      /nothing is sent to them/i,
     )
   }, 30000)
 

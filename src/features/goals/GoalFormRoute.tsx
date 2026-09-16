@@ -172,9 +172,7 @@ export function GoalFormRoute() {
           <span className={styles.footState}>
             {target === ''
               ? 'With no target date, this goal can never be late and will not appear on the goals queue.'
-              : `Its target date is ${format.date(target as IsoDate)}.`}{' '}
-            Held in memory only for this session and gone on reload. There is no backend
-            in this build, so nothing here reaches a real record.
+              : `Its target date is ${format.date(target as IsoDate)}.`}
           </span>
         }
         onConfirm={() => {
@@ -190,7 +188,7 @@ export function GoalFormRoute() {
         title="Goal not stored"
         // The export stub's treatment, for the export stub's reason: a control
         // that appears to save and does not is worse than one that says so.
-        description="This build has no backend and no goal store. The text stays on this screen and is gone the moment you leave it."
+        description="The goal was not saved; it is gone once you leave this screen."
       />
     </div>
   )

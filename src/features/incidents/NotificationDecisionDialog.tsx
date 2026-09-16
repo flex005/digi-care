@@ -100,14 +100,9 @@ export function NotificationDecisionDialog({
             data-decision-reason
           />
           {/*
-           * Required, and said before it is enforced. "Not required" with no
-           * reason cannot be told from nobody having considered it, which is
-           * exactly the state this decision exists to leave.
+           * Required: "not required" with no reason cannot be told from nobody
+           * having considered it. The button stays disabled until it is written.
            */}
-          <span className={styles.decideHint}>
-            In words, and it goes on the record. A judgement with nothing behind it
-            reads the same as no judgement at all.
-          </span>
         </label>
       ) : null}
 
@@ -121,17 +116,13 @@ export function NotificationDecisionDialog({
             data-decision-reference
             autoComplete="off"
           />
-          <span className={styles.decideHint}>
-            The reference the CQC gave it, so somebody can find the notification again.
-            A record that it was told with nothing to look up is not one.
-          </span>
+          <span className={styles.decideHint}>The reference the CQC gave it.</span>
         </label>
       ) : null}
 
       {step === 'required' ? (
         <p className={styles.decideHint}>
-          This records the duty, not its discharge. The incident will show as required
-          and not yet notified until somebody records the notification.
+          This records the duty only: the CQC has not been told.
         </p>
       ) : null}
     </Dialog>

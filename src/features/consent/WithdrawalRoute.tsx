@@ -173,10 +173,6 @@ export function WithdrawalRoute() {
                 <br />
               </span>
             ))}
-            <span>
-              Held in memory only for this session and gone on reload. There is no
-              backend in this build.
-            </span>
           </span>
         }
         onConfirm={() => {
@@ -198,7 +194,7 @@ export function WithdrawalRoute() {
         onOpenChange={setRecorded}
         tone="positive"
         title="Consent withdrawn"
-        description={`Recorded against ${resident.fullLegalName}, with what withdrawing did not undo. Held in memory only and gone on reload.`}
+        description={`Recorded against ${resident.fullLegalName}, with what withdrawing did not undo.`}
       />
     </div>
   )

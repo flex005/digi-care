@@ -121,8 +121,8 @@ export function ClinicalChangeControl({
                * — the same distinction as prescribing and as "not held here": a
                * gap somebody can close against one nothing on any screen can.
                */
-              `Recording this needs a clinician's signature and a document reference, and diGi-Care captures neither, it records the decision somebody else made. Nobody on shift at ${siteName} was notified, because nothing changed.`
-            : `Held in memory only and gone on reload. Everybody on shift at ${siteName} would be notified.`
+              `Nobody on shift at ${siteName} was notified, because this needs a clinician's signature and nothing changed.`
+            : `Nobody on shift at ${siteName} has been told.`
         }
       />
     </div>

@@ -87,8 +87,8 @@ export function SignaturePanel({
         }`,
         description:
           notReviewed > 0
-            ? `Those ${notReviewed} are recorded as not reviewed, not as well. The counts are stored with your signature. In this build it is held in memory and will be gone on reload.`
-            : 'The counts are stored with your signature. In this build it is held in memory and will be gone on reload.',
+            ? `Those ${notReviewed} are recorded as not reviewed, not as well.`
+            : 'The counts are stored with your signature.',
       })
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'Nothing was signed')
@@ -166,8 +166,8 @@ export function SignaturePanel({
                   <>
                     <p>
                       {notReviewed > 0
-                        ? `${reviewed} of ${total} residents have been reviewed. ${notReviewed} have not been looked at at all, and your signature will record that. It does not mean they are well.`
-                        : `All ${total} residents at ${siteName} have been reviewed. Your name and the time are recorded against this handover and cannot be edited afterwards.`}
+                        ? `${notReviewed} of ${total} residents have not been looked at at all; your signature records that, and does not mean they are well.`
+                        : `All ${total} residents at ${siteName} have been reviewed, and your signature cannot be edited afterwards.`}
                     </p>
                     {/* Who signed, not that somebody clicked. */}
                     <SigningIdentity

@@ -519,13 +519,6 @@
   font-weight: var(--weight-extrabold);
 }
 
-.lossBody {
-  max-width: 70ch;
-  margin-top: var(--space-4);
-  font-size: var(--text-caption-size);
-  line-height: var(--text-body-line);
-}
-
 .lossList {
   display: flex;
   flex-direction: column;

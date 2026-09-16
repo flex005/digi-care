@@ -157,8 +157,8 @@ export const FUTURE_PLANS_SECTIONS: FuturePlansSection[] = [
               }
               description={
                 profile.resident.futurePlans.adrt.kind === 'unrecorded'
-                  ? `An ADRT is a legally binding refusal of specific treatment. Recording one changes what staff and paramedics may do for ${profile.resident.preferredName}, and every member of staff on shift at ${profile.site.name} is notified the moment it is recorded.`
-                  : `An ADRT is a legally binding refusal of specific treatment. Changing it overrides a signed document about what may be done to ${profile.resident.preferredName}, and every member of staff on shift at ${profile.site.name} is notified the moment it changes.`
+                  ? `Recording one changes what staff and paramedics may do for ${profile.resident.preferredName}, and every member of staff on shift at ${profile.site.name} is notified.`
+                  : `Changing it overrides a signed document about what may be done to ${profile.resident.preferredName}, and every member of staff on shift at ${profile.site.name} is notified.`
               }
               confirmLabel={
                 profile.resident.futurePlans.adrt.kind === 'unrecorded'

@@ -86,7 +86,7 @@ export function CorrectionDialog({
         open={open}
         onOpenChange={setOpen}
         title={`Correct this note about ${resident.preferredName}`}
-        description="The note above stays on the record exactly as it was written, marked as superseded. This adds a second note saying what was actually the case."
+        description="The original note stays on the record, marked as superseded."
       >
         <NoteForm
           resident={resident}
@@ -107,7 +107,7 @@ export function CorrectionDialog({
         onOpenChange={setWritten}
         tone="positive"
         title={`Correction recorded for ${resident.preferredName}`}
-        description="The original note is still on the timeline, marked as superseded. Nothing was deleted."
+        description="The original note is still on the timeline, marked as superseded."
       />
     </>
   )

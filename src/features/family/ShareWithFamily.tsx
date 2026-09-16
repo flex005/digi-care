@@ -11,7 +11,7 @@ import {
   withdrawSharing,
 } from '@/data/access/family-disclosure-store'
 import { familyFor } from '@/data/access/family-access-store'
-import { NOTHING_WAS_SENT, TELL_THEM } from './family-statement'
+import { TELL_THEM } from './family-statement'
 import styles from './family.module.css'
 
 /**
@@ -93,7 +93,7 @@ export function ShareWithFamily({
       ) : null}
 
       <p className={styles.instruction} data-nothing-sent>
-        <b>{TELL_THEM.note}</b> {NOTHING_WAS_SENT}
+        <b>{TELL_THEM.note}</b>
       </p>
 
       <Button

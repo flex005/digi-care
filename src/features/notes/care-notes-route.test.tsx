@@ -532,9 +532,7 @@ describe('the queue can be worked down', () => {
       }),
     )
 
-    // Nothing in this build reaches a server, and a supervisory sign-off that
-    // looks persistent is the one most likely to be relied on.
-    const status = await screen.findByText(/held in memory and will be gone on reload/i)
+    const status = await screen.findByText(/off the queue now/i)
     expect(status).toBeVisible()
   }, 30000)
 })

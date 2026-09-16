@@ -259,8 +259,7 @@ function Grid({ data, onChanged }: { data: Loaded; onChanged: () => void }) {
                   {pluralise(counts.invited, 'invited resident')}
                 </span>{' '}
                 has an answer.
-              </strong>{' '}
-              Nothing here is stored in this build.
+              </strong>
             </>
           ) : (
             <>

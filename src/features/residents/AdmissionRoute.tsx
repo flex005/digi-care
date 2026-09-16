@@ -702,9 +702,7 @@ export function AdmissionRoute() {
               )}
             </div>
             <p className={styles.hint} data-not-stored>
-              The file itself is not stored in this build. The record will say a form
-              was filed, by you, on the admission date, and that there is nothing to
-              open.
+              The file itself is not kept; only that a form was filed is recorded.
             </p>
 
             <p className={styles.sectionNote} data-flags-note>

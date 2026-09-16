@@ -290,8 +290,7 @@ export function CapacityGateRoute() {
                   </>
                 ) : (
                   <>It names this decision only.</>
-                )}{' '}
-                Held in memory only in this build.
+                )}
               </>
             )}
           </p>
@@ -419,7 +418,7 @@ export function CapacityGateRoute() {
         onOpenChange={(open) => (open ? undefined : setRecorded('no'))}
         tone="positive"
         title="Consent decision recorded"
-        description={`Recorded against ${resident.fullLegalName}, with the assessment it rests on. Held in memory only and gone on reload.`}
+        description={`Recorded against ${resident.fullLegalName}, with the assessment it rests on.`}
       />
     </div>
   )
@@ -694,7 +693,7 @@ function DecisionStep(props: {
           ) : (
             <>
               This records the decision and the assessment it rests on, for{' '}
-              {props.residentName}. Held in memory only in this build.
+              {props.residentName}.
             </>
           )}
           {props.failure === '' ? null : (

@@ -22,7 +22,7 @@ import { resetSessionResidents } from '@/data/access/resident-store'
 import { recordConsent } from '@/data/access/client'
 import { residents } from '@/data/fixtures/residents'
 import { staffOkonkwo } from '@/data/fixtures/organisation'
-import { NOTHING_WAS_SENT, TELL_THEM } from './family-statement'
+import { TELL_THEM } from './family-statement'
 import { FamilyTab } from './FamilyTab'
 import type { CareNoteId, IsoDate } from '@/data/types'
 import { now as appNow } from '@/data/fixtures/clock'
@@ -125,7 +125,6 @@ describe('family access leans on the consent rather than recording it again', ()
 
     const said = dialog.querySelector('[data-nothing-sent]')!
     expect(said.textContent).toContain(TELL_THEM.access)
-    expect(said.textContent).toContain(NOTHING_WAS_SENT)
   }, 30000)
 })
 

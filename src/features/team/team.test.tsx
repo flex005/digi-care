@@ -273,7 +273,6 @@ describe('removing access', () => {
 
     // Records outlive access: a record of who did something is not a permission.
     expect(note.textContent).toContain('Nothing on the record changes')
-    expect(note.textContent).toContain('who gave a dose')
   })
 
   it('names the person in the question', async () => {

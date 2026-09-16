@@ -54,10 +54,7 @@ export function SignOutRoute() {
       <div className={styles.screen} data-sign-out data-already-signed-out>
         <header>
           <h1 className={styles.title}>You are already signed out</h1>
-          <p className={styles.subtitle}>
-            Nothing is held. Everything this build records lives in the browser tab it
-            was written in, and there is no session open.
-          </p>
+          <p className={styles.subtitle}>There is no session open.</p>
         </header>
         <Link to="/sign-in" className={styles.linkButton}>
           Go to sign in
@@ -70,29 +67,17 @@ export function SignOutRoute() {
     <div className={styles.screen} data-sign-out>
       <header>
         <h1 className={styles.title}>Sign out</h1>
-        <p className={styles.subtitle}>
-          The one screen in this build where an action destroys work rather than failing
-          to save it.
-        </p>
       </header>
 
       <div className={`${styles.card} ${styles.soWrap}`}>
         <div className={styles.soHead}>
           <h2>Sign out, {firstName}?</h2>
-          <p>
-            Everything diGi-Care records in this build is held in your browser&rsquo;s
-            memory. It is never sent anywhere, and signing out discards it.
-          </p>
+          <p>Signing out discards everything recorded this session.</p>
         </div>
 
         {losses.length > 0 ? (
           <div className={styles.lossBox} data-loss-box>
             <p className={styles.lossTitle}>What you would lose</p>
-            <p className={styles.lossBody}>
-              These were recorded during this session and exist nowhere else. Signing
-              out is not the same as saving and leaving, because there is nothing to
-              save to.
-            </p>
             <ul className={styles.lossList}>
               {losses.map((entry) => (
                 <li key={entry.what} className={styles.lossRow} data-loss={entry.what}>
@@ -107,7 +92,7 @@ export function SignOutRoute() {
         ) : (
           <p className={styles.nothingToLose} data-nothing-to-lose>
             Nothing has been written into the record this session, so there is nothing
-            to lose. Signing out returns you to the sign-in screen.
+            to lose.
           </p>
         )}
 

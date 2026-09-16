@@ -337,7 +337,7 @@ export function HandoverRoute() {
                                       setDone({
                                         title: `${name} recorded as ${status}`,
                                         description:
-                                          'The incoming shift will see it on this handover. In this build it is held in memory and will be gone on reload.',
+                                          'The incoming shift will see it on this handover.',
                                       })
                                       setWritten((count) => count + 1)
                                     }}

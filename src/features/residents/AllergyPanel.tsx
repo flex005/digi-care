@@ -46,9 +46,8 @@ const SEVERITY: Record<'mild' | 'moderate' | 'severe' | 'anaphylaxis', string> =
  * What recording an allergy would say, per state. Named here rather than
  * inline so all three read as one decision — the DNAR panel does the same.
  *
- * Every one names the resident and the site, because recording an allergy
- * changes what staff may give somebody and everybody on shift needs to know
- * (PRD §2.4).
+ * Every one says what the record changes for whoever gives medication; the
+ * resident is named in the question (PRD §2.4).
  */
 const CHANGE: Record<
   AllergyStatus['kind'],
@@ -58,21 +57,19 @@ const CHANGE: Record<
     button: 'Record allergies',
     action: 'Record allergies',
     description:
-      'Recording this needs a clinical source and a signature, which no phase has built yet. Nobody on shift at {site} was notified, because nothing changed. Until it is recorded, medication must not be given on the assumption there are none.',
+      'Until it is recorded, medication must not be given on the assumption there are none.',
     confirm: 'Record allergies',
   },
   none_known: {
     button: 'Change allergy record',
     action: 'Change the allergy record',
-    description:
-      '{name} is currently recorded as having no known allergies. Changing that needs a clinical source and a signature, which no phase has built yet. Nobody on shift at {site} was notified, because nothing changed.',
+    description: 'Changing it alters what staff may give {name}.',
     confirm: 'Change record',
   },
   allergies: {
     button: 'Change allergy record',
     action: 'Change the allergy record',
-    description:
-      'Changing a recorded allergy alters what staff may give {name}. It needs a clinical source and a signature, which no phase has built yet. Nobody on shift at {site} was notified, because nothing changed.',
+    description: 'Changing a recorded allergy alters what staff may give {name}.',
     confirm: 'Change record',
   },
 }
@@ -98,8 +95,7 @@ export function AllergyPanel({
   onRecordNoneKnown?: () => void
 }) {
   const copy = CHANGE[status.kind]
-  const fill = (text: string) =>
-    text.replaceAll('{name}', residentName).replaceAll('{site}', siteName)
+  const fill = (text: string) => text.replaceAll('{name}', residentName)
 
   /**
    * The write affordance allergies did not have.

@@ -225,17 +225,8 @@ export function MarChartRoute() {
             </Tooltip>
 
             {/* Beside the range control, because the range is what it would
-                export. An export button somewhere else on the page would be a
-                claim about the whole record. */}
-            <ExportControl
-              resident={resident}
-              range={range}
-              rangeLabel={rangeLabel}
-              siteName={site.name}
-              medications={grid.rows.length}
-              rounds={grid.rounds.length}
-              days={grid.days.length}
-            />
+                export. */}
+            <ExportControl />
           </div>
         </div>
 

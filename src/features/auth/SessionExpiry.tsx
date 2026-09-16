@@ -70,8 +70,7 @@ export function SessionExpiry() {
             {minutes}:{seconds}
           </span>
         </b>{' '}
-        and everything it has written will be gone. Nothing in this build is saved
-        anywhere else.
+        and everything it has written will be gone.
       </p>
       <button
         type="button"

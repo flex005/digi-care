@@ -88,7 +88,7 @@ export function NoteComposer({
         open={open}
         onOpenChange={setOpen}
         title={`Write a care note about ${resident.preferredName}`}
-        description="It is saved as written, signed with your name and the time, and cannot be edited afterwards. If it turns out to be wrong, the answer is a correction note."
+        description="It is saved as written, with your name and the time, and cannot be edited afterwards."
       >
         <NoteForm
           resident={resident}
@@ -108,7 +108,7 @@ export function NoteComposer({
         onOpenChange={setWritten}
         tone="positive"
         title={`Care note recorded for ${resident.preferredName}`}
-        description="It is on the timeline now, and cannot be edited. In this build it is held in memory and will be gone on reload."
+        description="It is on the timeline now, and cannot be edited."
       />
     </>
   )

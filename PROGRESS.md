@@ -14339,3 +14339,43 @@ test signs in, unmounts and asserts the pointer is gone; removing the cleanup
 fails it. The same run's output also showed the refusal panel saying "Your 1
 home are the ones on your record", which the plurals guard cannot see inside a
 template literal; the sentence no longer carries a count.
+
+## Dialog copy cut to one line
+
+The cuts approved before Phase 29 were never made; the site-switcher work took
+over and they were dropped. They are made now, across every Dialog, AlertDialog
+and Toast in the build rather than only the ones on the original list.
+
+What went: explanations of design decisions (why a field is required, why a
+control is placed where it is, why a role is not offered), and explanations of
+having no backend ("held in memory only and gone on reload", "nothing is saved
+to a server", "no phase has built yet"). `PROTOTYPE_STATEMENT` and
+`PROTOTYPE_WARNING` are deleted with their module; `NOTHING_WAS_SENT` is deleted
+and each family instruction is one sentence. The MAR export dialog no longer
+describes the document it would produce, so `ExportControl` takes no props.
+
+What stayed, as one sentence at the point of the act: the family "nobody has
+been told" instructions, sign-out and session expiry, the medication signing
+code and round toast (unchanged), the CQC duty line, the file-not-kept line in
+the upload drawer and at admission, the export title, and the clinical change
+notified line. The interim medication footer reads "This does not tell a
+pharmacy." The upload drawer's "Locked" line is unchanged.
+
+Found beyond the original list: the resuscitation, ADRT and allergy confirms,
+passed in as props to `ClinicalChangeControl`, each ran to two or three
+sentences, and the allergy ones said "no phase has built yet" and "nobody was
+notified" before anybody had confirmed anything. Each is now one sentence. The
+allergy confirm for an unrecorded status keeps "medication must not be given on
+the assumption there are none", which is the one a reader acts on. The
+resuscitation and ADRT confirms keep PRD §6.2's statement that staff on shift
+are notified; the stub toast after them still says nobody was, naming the site.
+
+Page copy that is not a dialog was left: Settings, the not-configured page, the
+inspection pack, the activity log, My permissions, report an incident, and the
+admission flags note.
+
+Tests that pinned cut sentences were changed to assert what remains:
+`auth`, `verify`, `export`, `care-plan`, `assignment`, `care-notes-route`,
+`access-list`, `family`, `future-plans`, `important-people`,
+`general-information` and `team`. The export suite's "it says what it would
+contain" block went with the contents it asserted.

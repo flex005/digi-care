@@ -211,7 +211,7 @@ export function NoteDetail() {
         description={
           outcome === 'undone'
             ? 'The note is waiting on a senior again, flagged by whoever flagged it, exactly as it was.'
-            : 'It is off the queue now. In this build it is held in memory and will be gone on reload.'
+            : 'It is off the queue now.'
         }
       />
     </div>

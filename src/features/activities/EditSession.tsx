@@ -90,7 +90,7 @@ export function EditSession({
         open={open}
         onOpenChange={setOpen}
         title={`Change ${activity.name}`}
-        description={`Planned by ${activity.plannedBy.displayName}, and that stays. Who is invited is not changed here.`}
+        description={`Planned by ${activity.plannedBy.displayName}.`}
         actions={
           <>
             {waiting.length > 0 ? (

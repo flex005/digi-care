@@ -120,7 +120,6 @@ function UploadForm({
         if (!next) onClose()
       }}
       title={`Add a document for ${subjectName}`}
-      description="The subject is answered first and cannot be changed once a file is chosen."
     >
       <div className={styles.drawer}>
         <section className={styles.drawerSection} data-drawer-section="subject">
@@ -177,9 +176,6 @@ function UploadForm({
                 onChange={() => setAnswer('expires')}
               />
               <b>Yes, on a date</b>
-              <span className={styles.choiceHint}>
-                It appears in expiry tracking as that date approaches.
-              </span>
             </label>
             <label className={styles.choice} data-choice="does_not_expire">
               <input
@@ -190,8 +186,7 @@ function UploadForm({
               />
               <b>No: this document does not expire</b>
               <span className={styles.choiceHint}>
-                Recorded as {currentUser.displayName}&rsquo;s decision, dated today. An
-                empty date field cannot say this.
+                Recorded as {currentUser.displayName}&rsquo;s decision, dated today.
               </span>
             </label>
           </div>
@@ -207,12 +202,6 @@ function UploadForm({
               />
             </label>
           ) : null}
-
-          <p className={styles.choiceNote} data-unanswered-note>
-            Leaving this unanswered is allowed. It renders as a gap on the library,
-            because nothing will be able to tell anybody whether the document is still
-            valid.
-          </p>
         </section>
 
         <section className={styles.drawerSection} data-drawer-section="file">
@@ -239,9 +228,7 @@ function UploadForm({
            * does not do what it appears to says so where it appears.
            */}
           <p className={styles.notStored} data-not-stored data-state="unrecorded">
-            The file itself is not stored in this build. Its details are added to the
-            library for this session and are gone on reload, and the row will say the
-            same: there is nothing to download and nothing has been saved to a server.
+            The file itself is not kept; only its details are recorded.
           </p>
         </section>
 

@@ -293,12 +293,11 @@ describe('the primary contact control', () => {
       within(dialog).getByRole('button', { name: 'Make primary contact' }),
     )
 
-    // And is honest about the half that does not exist yet, rather than
-    // faking a save on a read-only fixture.
+    // And says nothing changed, rather than faking a save on a read-only fixture.
     await waitFor(() =>
       expect(screen.getByText(/No change was made to Emmanuel's record/)).toBeVisible(),
     )
-    expect(screen.getByText(/only the write is missing/i)).toBeVisible()
+    expect(screen.getByText(/primary contact has not changed/i)).toBeVisible()
   }, 20000)
 })
 

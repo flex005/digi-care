@@ -109,13 +109,13 @@ export function PlanSession({
           if (!next) reset()
         }}
         title="Plan a session"
-        description="It goes on the calendar with your name on it, and everybody invited starts with no attendance recorded."
+        description="It goes on the calendar with your name on it."
         actions={
           <>
             <p className={styles.hint} data-plan-waiting>
               {waiting.length > 0
                 ? `Waiting on: ${waiting.join(' · ')}`
-                : `${pluralise(invited.length, 'resident')} invited · gone on reload, like everything written in this build.`}
+                : `${pluralise(invited.length, 'resident')} invited`}
             </p>
             <Button variant="ghost" onClick={() => setOpen(false)}>
               Close
@@ -170,10 +170,6 @@ export function PlanSession({
 
           <fieldset className={styles.inviteList} data-invite-list>
             <legend className={styles.fieldLabel}>Who is invited</legend>
-            <span className={styles.hint}>
-              Everybody ticked here is the denominator for this session. Nobody is
-              ticked for you.
-            </span>
             {residents.map((resident) => (
               <label
                 key={resident.id}
@@ -249,9 +245,6 @@ export function SessionTimes({
           data-field="session-ends"
         />
       </label>
-      <span className={styles.hint}>
-        In the home&rsquo;s own time, whoever is planning it.
-      </span>
     </div>
   )
 }

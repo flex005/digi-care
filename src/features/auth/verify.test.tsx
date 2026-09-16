@@ -61,7 +61,7 @@ function renderAt(path: string) {
 const live = () => invitations().find((entry) => !invitationHasExpired(entry, TODAY))!
 
 describe('the verification step says what it is not doing', () => {
-  it('says nothing was sent, on the screen rather than behind a link', async () => {
+  it('says no code was sent, on the screen rather than behind a link', async () => {
     const { container } = renderAt(
       `/verify/${staffHalloran.id}?site=site-rosewood-court`,
     )
@@ -75,7 +75,7 @@ describe('the verification step says what it is not doing', () => {
      * silently accepts anything.
      */
     const notice = container.querySelector('[data-nothing-sent]')!
-    expect(notice.textContent).toMatch(/no email was sent/i)
+    expect(notice.textContent).toMatch(/no code is sent/i)
     expect(notice.textContent).toMatch(/any six digits/i)
   })
 

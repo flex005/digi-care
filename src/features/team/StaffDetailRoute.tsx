@@ -323,7 +323,7 @@ export function StaffDetailRoute() {
             if (!next) setSuspending(false)
           }}
           title={`Suspend ${member.ref.fullName}?`}
-          description="Suspending holds access without ending it. The reason goes on the record with your name."
+          description="The reason goes on the record with your name."
           actions={
             <>
               <Button variant="ghost" onClick={() => setSuspending(false)}>
@@ -359,10 +359,6 @@ export function StaffDetailRoute() {
              * rather than a record, and the person it is about is entitled to
              * know what it says.
              */}
-            <span className={styles.formHint}>
-              In words. This is what the team screen will show, and it carries your name
-              and today&rsquo;s date.
-            </span>
           </label>
         </Dialog>
       ) : null}
@@ -374,7 +370,6 @@ export function StaffDetailRoute() {
             if (!next) setDeleting(false)
           }}
           title={`Delete ${member.ref.fullName} from the team?`}
-          description="They were added this session and have written nothing, so there is no record for the deletion to orphan."
           actions={
             <>
               <Button variant="ghost" onClick={() => setDeleting(false)}>
@@ -392,14 +387,7 @@ export function StaffDetailRoute() {
               </Button>
             </>
           }
-        >
-          <p className={styles.confirmBody}>
-            <b>Deleting is only ever available here.</b> Somebody who appears on a note,
-            a dose or a signature cannot be deleted, because the records naming them
-            would outlive the deletion and the home could no longer say who did what.
-            Removing access is the act for them, and it is not the same act.
-          </p>
-        </Dialog>
+        />
       ) : null}
 
       {confirming ? (
@@ -485,11 +473,7 @@ export function StaffDetailRoute() {
 
           {/* What does not change is the part somebody needs to be told. */}
           <p className={styles.confirmBody} data-confirm-unchanged>
-            <b>Nothing on the record changes.</b> Every care note, dose and signature{' '}
-            {member.ref.fullName} has made stays exactly where it is, with their name on
-            it. Records outlive access: a record of who did something is not a
-            permission, and removing it would leave the home unable to say who gave a
-            dose.
+            <b>Nothing on the record changes.</b>
           </p>
           <p className={styles.confirmBody}>
             It will be recorded as {formatDate(todayIso())}, by {currentUser.fullName}.

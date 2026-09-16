@@ -197,19 +197,19 @@ describe('allergies', () => {
     ).toBeVisible()
   })
 
-  it('name the resident and the site before recording nothing', async () => {
+  it('name the resident, and say what an unrecorded allergy means', async () => {
     const user = userEvent.setup()
     const notRecorded = residents.find((r) => r.allergies.kind === 'not_recorded')!
     renderTab(notRecorded.id)
     await user.click(await screen.findByRole('button', { name: /record allergies/i }))
 
-    // PRD §2.4: never "Are you sure?". And it says plainly that nothing was
-    // written and nobody was told, because a stub that looks like it worked is
-    // worse than no stub.
+    // PRD §2.4: never "Are you sure?". And it says what an unrecorded allergy
+    // means for whoever gives medication.
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog.textContent).toContain(notRecorded.preferredName)
-    expect(dialog.textContent).toMatch(/no phase has built yet/i)
-    expect(dialog.textContent).toMatch(/nobody on shift at .+ was notified/i)
+    expect(dialog.textContent).toMatch(
+      /must not be given on the assumption there are none/i,
+    )
   }, 20000)
 
   it('offer a way to change a recorded allergy too', async () => {

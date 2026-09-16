@@ -303,8 +303,7 @@ export function InterimRoute() {
                 <b>
                   This adds {name} to {resident?.fullLegalName}&rsquo;s MAR chart.
                 </b>{' '}
-                Held in memory for this session only. Nothing is sent to a pharmacy and
-                nothing is saved to a server.
+                This does not tell a pharmacy.
               </>
             )}
           </p>

@@ -89,7 +89,7 @@ export function StatusDialog({
         title={`How is ${resident.preferredName} for this handover?`}
         description={`${resident.fullLegalName}, room ${
           resident.room.kind === 'recorded' ? resident.room.value : 'not recorded'
-        }. Whatever you record here is what the incoming shift reads first.`}
+        }.`}
       >
         <div className={styles.statusForm}>
           <RadioGroup
@@ -114,10 +114,7 @@ export function StatusDialog({
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
               />
-              <span className={styles.fieldHint}>
-                Required. A status saying somebody needs attention, without saying what
-                for, is a signal the next shift cannot act on.
-              </span>
+              <span className={styles.fieldHint}>Required.</span>
             </label>
           ) : null}
 

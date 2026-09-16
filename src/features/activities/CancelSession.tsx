@@ -85,18 +85,13 @@ export function CancelSession({
       >
         <p className={styles.cancelBody} data-attendance-kept>
           {recorded === 0 ? (
-            <>
-              <b>Nobody&rsquo;s attendance has been recorded yet</b>, so there is
-              nothing here to keep or lose.
-            </>
+            <>Nobody&rsquo;s attendance has been recorded yet.</>
           ) : (
             <>
               <b>
                 {pluralise(recorded, 'attendance record')} already written stay exactly
                 as they are.
-              </b>{' '}
-              Somebody recorded those with their name and the time on them, and
-              cancelling the session does not make them untrue. Nothing is removed.
+              </b>
             </>
           )}
         </p>
@@ -109,10 +104,6 @@ export function CancelSession({
             onChange={(event) => setReason(event.target.value)}
             data-field="cancel-reason"
           />
-          <span className={styles.hint}>
-            In words, on the record for as long as the session is. &ldquo;The minibus
-            did not arrive&rdquo; is a reason; &ldquo;cancelled&rdquo; is not.
-          </span>
         </label>
       </Dialog>
     </>

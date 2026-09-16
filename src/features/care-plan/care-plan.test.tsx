@@ -524,7 +524,7 @@ describe('the domain editor', () => {
     })
   })
 
-  it('saves a draft for the session, and says it is gone on reload', async () => {
+  it('saves a draft, and says it is not what staff follow', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const { resident, record } = firstVersionOnly
     const { container } = renderAt(
@@ -537,9 +537,8 @@ describe('the domain editor', () => {
     await user.click(within(container).getByRole('button', { name: /^Save draft$/i }))
 
     await waitFor(() => expect(document.body.textContent).toMatch(/Draft saved/))
-    // Session only, gone on reload, and the screen says so rather than
-    // implying a record was written.
-    expect(document.body.textContent).toMatch(/gone on reload/)
+    // A draft is not a version, and the screen says so rather than implying
+    // a record staff follow was written.
     expect(document.body.textContent).toMatch(/not signed/)
   })
 

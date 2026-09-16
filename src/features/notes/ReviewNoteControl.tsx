@@ -126,11 +126,11 @@ export function ReviewNoteControl({
           ...(resident.room.kind === 'recorded' ? { room: resident.room.value } : {}),
         }}
         action={`Mark the ${stamp} note as reviewed`}
-        description={`This records that you looked at it, as ${currentUser.displayName}, at the time you confirm. It does not change the note, and ${
+        description={`This records that ${currentUser.displayName} looked at it; the note, and ${
           note.review.kind === 'flagged_not_reviewed'
             ? note.review.flaggedBy.displayName
             : 'whoever flagged it'
-        } stays on the record as having flagged it. You can take it back while this session is open.`}
+        } as having flagged it, stay as they are.`}
         confirmLabel="Mark reviewed"
         onConfirm={record}
       />

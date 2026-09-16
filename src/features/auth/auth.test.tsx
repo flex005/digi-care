@@ -23,7 +23,6 @@ import { SignInRoute } from './SignInRoute'
 import { SignOutRoute } from './SignOutRoute'
 import { InvitationRoute, PASSWORD_RULES } from './InvitationRoute'
 import { InvitationIndexRoute } from './InvitationIndexRoute'
-import { PROTOTYPE_STATEMENT, PROTOTYPE_WARNING } from './prototype-statement'
 import { InvitationAccessRoute } from './InvitationAccessRoute'
 import { VerifyRoute } from './VerifyRoute'
 
@@ -170,11 +169,9 @@ const settled = (container: HTMLElement, selector: string) =>
 
 describe('what this build does not do is said on the control that cannot do it', () => {
   /*
-   * **It was a banner across the top of all three screens and is now on two
-   * controls**, because five lines of preamble above a form get read as a wall
-   * and skipped. The statement did not go: it is on the recovery link, which
-   * sends nothing, and on Accept, which creates no account — the two places
-   * somebody is deciding rather than skimming.
+   * **It was a banner across the top of all three screens and is now one
+   * sentence on two controls**: the recovery link, which sends nothing, and
+   * the end of setting up, which creates no account.
    *
    * Which means the screens themselves no longer carry it, and this suite says
    * so rather than quietly dropping the assertion.
@@ -223,18 +220,7 @@ describe('what this build does not do is said on the control that cannot do it',
     await user.click(container.querySelector('[data-verify-submit]')!)
 
     const dialog = await screen.findByRole('dialog')
-    expect(dialog.textContent).toMatch(/no account was created/i)
-    expect(dialog.textContent).toMatch(/no authentication in this build/i)
-    expect(dialog.textContent).toMatch(/must not be put in front of a real home/i)
-  })
-
-  it('says the same thing in both places, from one source', () => {
-    /*
-     * Two screens saying it separately is two wordings, and the one that goes
-     * stale is whichever the reader is looking at.
-     */
-    expect(PROTOTYPE_STATEMENT).toMatch(/no authentication in this build/i)
-    expect(PROTOTYPE_WARNING).toMatch(/must not be put in front of a real home/i)
+    expect(dialog.textContent).toMatch(/no account to sign in to/i)
   })
 })
 
@@ -269,16 +255,13 @@ describe('signing in chooses the home, because the home decides the clock', () =
 
     /*
      * A control that appears to send a reset and sends nothing is the failure
-     * this build refuses everywhere else. The link is real and what it opens
-     * is the statement that used to be a banner across the top: there is no
-     * authentication, no password is checked, and nothing is protected.
+     * this build refuses everywhere else, so the link opens one sentence
+     * saying there is nothing to reset.
      */
     await user.click(container.querySelector('[data-forgotten-password]')!)
 
     const dialog = await screen.findByRole('dialog')
-    expect(dialog.textContent).toMatch(/no authentication in this build/i)
-    expect(dialog.textContent).toMatch(/nothing here is protected/i)
-    expect(dialog.textContent).toMatch(/must not be put in front of a real home/i)
+    expect(dialog.textContent).toMatch(/nothing to reset/i)
   })
 
   it('leaves the form to be a form', async () => {

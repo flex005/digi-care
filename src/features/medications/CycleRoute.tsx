@@ -266,8 +266,8 @@ export function CycleRoute() {
         }
         description={
           asking?.kind === 'stop'
-            ? 'The pharmacy has stopped supplying it and nobody here has stopped it. Stopping it is a clinical act and the reason goes on the record with your name.'
-            : 'The question goes on the record with your name. A query with nothing in it records that somebody was unhappy and not what about.'
+            ? 'The pharmacy has stopped supplying it and nobody here has stopped it.'
+            : 'The question goes on the record with your name.'
         }
         actions={
           <>

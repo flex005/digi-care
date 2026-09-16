@@ -5,7 +5,6 @@ import { Logo } from '@/components/brand/Logo'
 import type { SiteId } from '@/data/types'
 import { memberById } from '@/data/access/team-store'
 import { useSession } from '@/app/session/use-session'
-import { PROTOTYPE_STATEMENT, PROTOTYPE_WARNING } from './prototype-statement'
 import styles from './auth.module.css'
 
 /**
@@ -88,14 +87,7 @@ export function VerifyRoute() {
          * away; here withholding it leaves somebody waiting for an email.
          */}
         <p className={styles.verifyNotice} data-nothing-sent>
-          <b>No email was sent, and no code is checked.</b> {PROTOTYPE_STATEMENT} Any
-          six digits will move you on, which is what makes this a drawing of the step
-          rather than the step.
-        </p>
-
-        <p className={styles.subtitle}>
-          A real deployment sends six digits to {member.ref.fullName}
-          &rsquo;s address and accepts them for ten minutes.
+          No code is sent or checked: any six digits continue.
         </p>
 
         <div className={styles.field}>
@@ -168,7 +160,7 @@ export function VerifyRoute() {
           if (!next) navigate('/sign-in')
         }}
         title="No account was created"
-        description={PROTOTYPE_STATEMENT}
+        description="Nothing was saved, so there is no account to sign in to."
         actions={
           <Button
             variant="secondary"
@@ -180,9 +172,7 @@ export function VerifyRoute() {
             Back to sign in
           </Button>
         }
-      >
-        <p className={styles.subtitle}>{PROTOTYPE_WARNING}</p>
-      </Dialog>
+      />
     </div>
   )
 }

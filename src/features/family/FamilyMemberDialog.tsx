@@ -9,7 +9,7 @@ import {
   grantAccess,
 } from '@/data/access/family-access-store'
 import { staffLabel } from '@/data/access/team-store'
-import { NOTHING_WAS_SENT, TELL_THEM } from './family-statement'
+import { TELL_THEM } from './family-statement'
 import styles from './family.module.css'
 
 /**
@@ -137,11 +137,6 @@ function Form({
           ? `Change what is recorded for ${existing!.name}`
           : `Give somebody access to ${resident.preferredName}'s updates`
       }
-      description={
-        mode.kind === 'edit'
-          ? 'A correction, kept beside the original recording rather than in place of it.'
-          : `They go on ${resident.preferredName}'s record as somebody who may see their updates, under the consent already on file.`
-      }
       actions={
         <>
           <p className={styles.hint} data-dialog-waiting>
@@ -170,8 +165,8 @@ function Form({
            */
           <p className={styles.memberState} data-keeps-recording>
             Recorded by {staffLabel(recordedAccess(mode.member).by)} on{' '}
-            <span data-numeric>{format.dateTime(recordedAccess(mode.member).at)}</span>.
-            That stays as it is, and your name goes on the change.
+            <span data-numeric>{format.dateTime(recordedAccess(mode.member).at)}</span>;
+            your name goes on the change.
           </p>
         ) : null}
 
@@ -210,10 +205,6 @@ function Form({
            * empty string: "we have no address for her" and "she has no email"
            * are different facts about a person somebody may need to reach.
            */}
-          <span className={styles.hint}>
-            Leave it blank if nobody has taken one, and the record will say that rather
-            than showing an empty line.
-          </span>
         </label>
 
         <fieldset className={styles.levels}>
@@ -241,12 +232,6 @@ function Form({
               <span className={styles.levelMeans}>{entry.means}</span>
             </label>
           ))}
-          {mode.kind === 'edit' && level !== existing!.level ? (
-            <span className={styles.hint} data-level-appends>
-              The level they had stays on the record with the date it changed, because
-              what was shared with them while it stood was shared under it.
-            </span>
-          ) : null}
         </fieldset>
 
         {/*
@@ -255,7 +240,7 @@ function Form({
          * that decision is taken here rather than while reading a list.
          */}
         <p className={styles.instruction} data-nothing-sent>
-          <b>{TELL_THEM.access}</b> {NOTHING_WAS_SENT}
+          {TELL_THEM.access}
         </p>
 
         {failure !== '' ? (

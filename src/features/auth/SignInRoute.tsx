@@ -11,7 +11,6 @@ import { pluralise } from '@/lib/format'
 import { STAFF_ROLE_NAMES } from '@/data/types'
 import { SIGN_IN_ROLES } from '@/features/team/permissions'
 import { addressFor, memberForAddress } from './addresses'
-import { PROTOTYPE_STATEMENT, PROTOTYPE_WARNING } from './prototype-statement'
 import styles from './auth.module.css'
 
 /**
@@ -91,9 +90,10 @@ export function SignInRoute() {
              */}
             {params.get('ended') === 'inactivity' ? (
               <p className={styles.endedNotice} data-session-ended>
-                <b>Your last session ended after a spell of inactivity.</b> Anything it
-                had written is gone: this build holds every write in memory and nowhere
-                else.
+                <b>
+                  Your last session ended after a spell of inactivity, and anything it
+                  had written is gone.
+                </b>
               </p>
             ) : null}
             <p className={styles.lede}>
@@ -287,28 +287,20 @@ export function SignInRoute() {
       </div>
 
       {/*
-       * The prototype statement, on the one control that cannot honestly do
-       * what it says. It was a banner across the top of every authentication
-       * screen and still is on the invitation, where somebody is being asked
-       * to accept something; here it sits behind the click that would have
-       * exposed it anyway, so the form is a form and the fact is a sentence
-       * away rather than a paragraph in front of it.
+       * Behind the click that would have exposed it anyway, so the form is a
+       * form and the fact is a sentence away.
        */}
       <Dialog
         open={askedAboutRecovery}
         onOpenChange={(next) => setAskedAboutRecovery(next)}
         title="There is no password to recover"
-        description={`${PROTOTYPE_STATEMENT} There is no server to send a reset to and nothing stored that could be reset.`}
+        description="Any password signs you in here, so there is nothing to reset."
         actions={
           <Button variant="secondary" onClick={() => setAskedAboutRecovery(false)}>
             Close
           </Button>
         }
-      >
-        <p className={styles.dialogBody} data-recovery-note>
-          {PROTOTYPE_WARNING}
-        </p>
-      </Dialog>
+      />
     </div>
   )
 }

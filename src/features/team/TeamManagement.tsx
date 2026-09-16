@@ -110,7 +110,7 @@ export function AddMemberDialog({
       open={open}
       onOpenChange={(next) => (next ? undefined : onClose())}
       title="Add somebody to the team"
-      description="They go on the list with no access. Granting it is a second act, by a named person, and the list says so until somebody does it."
+      description="They go on the list with no access."
       actions={
         <>
           <Button variant="secondary" onClick={onClose}>
@@ -134,9 +134,7 @@ export function AddMemberDialog({
           />
           {/* Said before it is enforced, so the disabled button is never a
               puzzle: a record needs the name a rota would use. */}
-          <span className={styles.formHint}>
-            First and last, as the rota has it. Records carry this name for ever.
-          </span>
+          <span className={styles.formHint}>First and last, as the rota has it.</span>
         </label>
 
         <label className={styles.formField}>
