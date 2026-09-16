@@ -4,7 +4,7 @@ import type { Activity, ActivityId, CarePlanDomainRecord, Resident } from '@/dat
 import { getActivity } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Avatar, Button, Card } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
+import { Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
@@ -59,6 +59,8 @@ export function PlanDrawerRoute() {
           <p className={styles.loading} role="status">
             Loading this plan…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>This plan could not be loaded</p>

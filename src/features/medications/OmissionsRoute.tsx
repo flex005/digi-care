@@ -6,7 +6,7 @@ import type { Omission } from '@/data/access/client'
 import { getOmissions } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Button, Card, SelectedMark } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
+import { Unrecorded, NotYourHome } from '@/components/status'
 import { metricIcons } from '@/components/metric/metric-tiles.icons'
 import { MetricTile, MetricTiles, MetricValue } from '@/components/metric/MetricTile'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
@@ -91,6 +91,8 @@ export function OmissionsRoute() {
           <p className={styles.loading} role="status">
             Loading medication omissions…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>These omissions could not be loaded</p>

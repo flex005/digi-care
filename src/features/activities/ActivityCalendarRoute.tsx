@@ -16,6 +16,7 @@ import { zonedDate } from '@/lib/format'
 import { sessionState, unrecordedSessions } from './session-state'
 import type { SessionState } from './session-state'
 import styles from './activities.module.css'
+import { NotYourHome } from '@/components/status'
 
 /**
  * The week of activities. PRD §6.7, Phase 9.
@@ -132,6 +133,8 @@ export function ActivityCalendarRoute() {
           <p className={styles.loading} role="status">
             Loading activities…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Activities could not be loaded</p>

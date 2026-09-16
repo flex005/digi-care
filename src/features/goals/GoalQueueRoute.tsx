@@ -13,6 +13,7 @@ import { formatCount, pluralise } from '@/lib/format'
 import { GoalState } from './GoalParts'
 import { goalStanding } from './goal-timing'
 import styles from './goals.module.css'
+import { NotYourHome } from '@/components/status'
 
 /**
  * Goals across the home. PRD §6.7.
@@ -57,6 +58,8 @@ export function GoalQueueRoute() {
           <p className={styles.loading} role="status">
             Loading goals…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Goals could not be loaded</p>

@@ -5,7 +5,7 @@ import type { ResidentProfile } from '@/data/access/client'
 import { getCareNotes } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Button, Card, CardHeader } from '@/components/primitives'
-import { NeverWrittenUp } from '@/components/status'
+import { NeverWrittenUp, NotYourHome } from '@/components/status'
 import { useTimeZone } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
 import type { IsoDateTime } from '@/data/types'
@@ -108,6 +108,12 @@ export function NotesTab() {
         </p>
       </div>
     )
+  }
+
+  /* The record exists, in a home this viewer is not appointed to. */
+
+  if (resource.kind === 'refused') {
+    return <NotYourHome refusal={resource} />
   }
 
   if (resource.kind === 'error') {

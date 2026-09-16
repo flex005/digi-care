@@ -20,6 +20,7 @@ import {
   wholePlanHoldings,
 } from './whole-plan-review-store'
 import { resetSessionLog, sessionActCount } from './session-log'
+import { resetViewerScope, viewerScopeHoldings } from './viewer-scope'
 import type { SessionHolding } from './session-holding'
 
 /**
@@ -67,6 +68,7 @@ const SOURCES: (() => SessionHolding[])[] = [
   cycleHoldings,
   teamHoldings,
   settingsHoldings,
+  viewerScopeHoldings,
 ]
 
 /** Everything held, with nothing empty in it. */
@@ -120,6 +122,15 @@ export function endSession(): void {
   resetSessionTeam()
   resetSessionSettings()
   resetSessionLog()
+  /*
+   * **Last, after every store.** The dialog reports what this session wrote,
+   * and the moment a holdings function counts by asking whose work it was
+   * rather than what a store recorded, clearing this first would zero the list
+   * — a sign-out saying nothing would be lost with plenty to lose. Nothing
+   * today derives a count that way; the order costs nothing and the failure it
+   * prevents is a sign-out somebody trusted.
+   */
+  resetViewerScope()
 }
 
 export { sessionActCount }

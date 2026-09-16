@@ -13,7 +13,7 @@ import {
   SelectedMark,
   usePaged,
 } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
+import { Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
@@ -73,6 +73,8 @@ export function CarePlanQueueRoute() {
           <p className={styles.loading} role="status">
             Loading care plans…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Care plans could not be loaded</p>

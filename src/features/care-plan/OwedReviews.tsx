@@ -6,6 +6,7 @@ import { carePlanDomainName } from '@/data/access/review-flags'
 import { INCIDENT_TYPES } from '@/data/types'
 import { useSiteFormat } from '@/app/session/use-session'
 import styles from './care-plan.module.css'
+import { NotYourHome } from '@/components/status'
 
 /**
  * What this care plan owes, from incidents somebody else closed.
@@ -55,6 +56,12 @@ export function OwedReviews({
         Checking post-incident reviews…
       </p>
     )
+  }
+
+  /* The record exists, in a home this viewer is not appointed to. */
+
+  if (resource.kind === 'refused') {
+    return <NotYourHome refusal={resource} />
   }
 
   if (resource.kind === 'error') {

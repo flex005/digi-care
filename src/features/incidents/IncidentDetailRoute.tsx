@@ -18,7 +18,7 @@ import { INCIDENT_SEVERITIES, INCIDENT_TYPES, COMMUNAL_AREAS } from '@/data/type
 import { getIncidents } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Avatar, Button, Card, Tooltip } from '@/components/primitives'
-import { AllergyBadge, StatusPill, Unrecorded } from '@/components/status'
+import { AllergyBadge, StatusPill, Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { BodyMap } from '@/assets/body-map/BodyMap'
@@ -77,6 +77,8 @@ export function IncidentDetailRoute() {
           <p className={styles.loading} role="status">
             Loading this incident…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>This incident could not be loaded</p>

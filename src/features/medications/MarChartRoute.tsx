@@ -8,7 +8,7 @@ import { getMarRecords } from '@/data/access/client'
 import type { MarRecord } from '@/data/fixtures/medications'
 import { useResource } from '@/data/access/use-resource'
 import { Button, Card, Tooltip } from '@/components/primitives'
-import { AggregateFigure, Unrecorded } from '@/components/status'
+import { AggregateFigure, Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { marCellDescription } from '@/components/status/MarCell'
 import { useTimeZone } from '@/app/session/use-session'
@@ -107,7 +107,9 @@ export function MarChartRoute() {
             Nothing has been lost; this is a read. A partial MAR chart is not shown,
             because a missing cell and an unrecorded dose look identical.
           </p>
-          {resource.kind === 'error' ? (
+          {resource.kind === 'refused' ? (
+            <NotYourHome refusal={resource} />
+          ) : resource.kind === 'error' ? (
             <Button variant="secondary" onClick={resource.retry}>
               Try again
             </Button>

@@ -5,7 +5,7 @@ import { currentDetails } from '@/data/types'
 import { getResidentsBySite } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Button, Card, Pager, usePaged } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
+import { Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
@@ -69,6 +69,8 @@ export function FamilyQueueRoute() {
           <p className={styles.loading} role="status">
             Loading family access…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Family access could not be loaded</p>

@@ -15,8 +15,8 @@ browser tab until reload or sign-out. Care Worker, Family Portal and Superadmin
 are separate products and are not built here; care workers appear in this app
 as people an Admin manages, never as users.
 
-It is live at `digi-care-zeta.vercel.app`. The test suite is 74 files and
-1,342 tests as of Phase 27, alongside twelve guard scripts that check the rules
+It is live at `digi-care-zeta.vercel.app`. The test suite is 77 files and
+1,364 tests as of Phase 29, alongside thirteen guard scripts that check the rules
 mechanically (plus eslint and stylelint) and a layout check run in a real
 browser.
 
@@ -41,10 +41,20 @@ Admin-only controls rather than seeing them disabled, and gets a page saying
 why if they open one directly. This is not security; anybody can sign in as
 anybody.
 
+**A record is read at the home that holds it.** The session hands a viewer only
+the homes they are appointed to, so the site switcher is absent for somebody
+with one home and present for somebody with two, whatever their role. Every
+queue and figure follows from that, because they read the active home. The
+loaders refuse a record belonging to a home the viewer does not hold, which is
+what stops a URL reaching another home's resident: the screen says which home
+the record belongs to and which homes are yours, rather than reporting an error
+over a record that loaded or a not-found for a resident who exists.
+
 ## Deliberate departures from the PRD
 
 Each was decided and recorded, not missed.
 
+- **A Manager's homes are a property of their assignment, not of their role.** One home means no site switcher; two means one. Marie Halloran covers both homes, which the PRD's TM-04 exists for; Deborah Aluko covers one, which is the commoner case. The Admin covers both, because administering the organisation is a different fact from which service a manager is registered to.
 - **Roles.** A separate "organisation admin" role was folded into registered manager. It was one PRD role with two names, and an undocumented split had turned it into two. Only the three governance and audit roles can sign in.
 - **Nine risk assessments, not ten.** The Mental Capacity Act test is a capacity decision, not a risk, and lives with consent.
 - **No custom consent types.** A resident's consents are held as exactly eight types, and a custom type would give up the guarantee that none can be forgotten.

@@ -55,6 +55,9 @@ import type {
 } from '../types'
 import { subjectResidentId } from '../types'
 import { organisation, sites, staff } from '../fixtures/organisation'
+import { configuredSites } from './settings-store'
+import { viewerHolds, viewerHomes } from './viewer-scope'
+import { RecordNotYours } from './record-not-yours'
 import { goalProgressNotes, goals, goalsFor } from '../fixtures/goals'
 import { activityById } from '../fixtures/activities'
 import { activitiesAt, withActivityEdits } from './activity-store'
@@ -200,6 +203,41 @@ function reject(message: string): Promise<never> {
   })
 }
 
+/**
+ * A record in a home this viewer is not appointed to.
+ *
+ * **One place to be right.** Per route, the next route forgets and the failure
+ * is silent, because a route that does not check simply returns the data. Here
+ * every screen reading that record is refused by the same line.
+ *
+ * Returns a rejected promise rather than throwing: `useResource` calls
+ * `load()` and chains, so a synchronous throw escapes the chain entirely.
+ *
+ * **Nobody signed in means no scope, not an empty scope.** Every product
+ * screen sits behind the sign-in gate, so a loader reached with no viewer is a
+ * sign-in screen or a test; refusing everything there would be a different
+ * product rather than a safer one, and it would turn 1,300 tests that never
+ * sign in red for a reason unrelated to what they assert — noise that teaches
+ * people to work around a check rather than satisfy it.
+ */
+function notYours(siteId: SiteId, what: string): Promise<never> | undefined {
+  if (viewerHolds(siteId)) return undefined
+  const named = (id: SiteId) =>
+    configuredSites().find((site) => site.id === id)?.name ?? id
+  const yours = (viewerHomes() ?? []).map(named)
+  return new Promise((_, fail) => {
+    setTimeout(() => fail(new RecordNotYours(what, named(siteId), yours)), LATENCY_MS)
+  })
+}
+
+/** The same question, asked of a record that names its own resident. */
+function notYoursResident(resident: {
+  siteId: SiteId
+  fullLegalName: string
+}): Promise<never> | undefined {
+  return notYours(resident.siteId, `${resident.fullLegalName}'s record`)
+}
+
 export function getOrganisation(): Promise<Organisation> {
   return resolve(organisation)
 }
@@ -217,6 +255,8 @@ export function getResidents(): Promise<Resident[]> {
 }
 
 export function getResidentsBySite(siteId: SiteId): Promise<Resident[]> {
+  const refused = notYours(siteId, 'The residents of that home')
+  if (refused) return refused
   return resolve(residentsBySite(siteId))
 }
 
@@ -228,6 +268,8 @@ export function getResidentsBySite(siteId: SiteId): Promise<Resident[]> {
 export function getResident(id: ResidentId): Promise<Resident> {
   const resident = residentById(id)
   if (!resident) return reject(`No resident with id ${id}`)
+  const refused = notYoursResident(resident)
+  if (refused) return refused
   return resolve(resident)
 }
 
@@ -242,6 +284,8 @@ export function getLatestCareNote(residentId: ResidentId): Promise<CareNote | 'n
 
 /** Every note for every resident at a site. The cross-resident view. */
 export function getCareNotesForSite(siteId: SiteId): Promise<CareNote[]> {
+  const refused = notYours(siteId, 'The care notes of that home')
+  if (refused) return refused
   return resolve(notesForResidents(residentsBySite(siteId).map((r) => r.id)))
 }
 
@@ -457,6 +501,8 @@ export function reviewRecordedThisSession(noteId: CareNoteId): boolean {
 }
 
 export function getHandoverBoard(siteId: SiteId): Promise<HandoverBoard> {
+  const refused = notYours(siteId, 'That home’s handover')
+  if (refused) return refused
   const board = boardFor(siteId)
   if (!board) return reject(`No open handover for ${siteId}`)
   return resolve(board)
@@ -583,6 +629,8 @@ export function getOmissions(
   siteId: SiteId,
   since: IsoDateTime,
 ): Promise<{ omissions: Omission[]; dueInRange: number }> {
+  const refused = notYours(siteId, 'That home’s omissions')
+  if (refused) return refused
   const atSite = residentsBySite(siteId)
   const byResident = new Map(atSite.map((resident) => [resident.id, resident]))
   const floor = new Date(since).getTime()
@@ -649,6 +697,8 @@ export function getRegister(siteId: SiteId): Promise<{
   movements: RegisterMovement[]
   records: MarRecord[]
 }> {
+  const refused = notYours(siteId, 'That home’s controlled drug register')
+  if (refused) return refused
   const atSite = residentsBySite(siteId)
   const ids = new Set(atSite.map((resident) => resident.id))
   const controlled = atSite
@@ -682,6 +732,8 @@ export function getIncidents(siteId: SiteId): Promise<{
   incidents: Incident[]
   residents: Resident[]
 }> {
+  const refused = notYours(siteId, 'The incidents of that home')
+  if (refused) return refused
   const atSite = residentsBySite(siteId)
   const ids = new Set(atSite.map((resident) => resident.id))
   return resolve({
@@ -846,6 +898,8 @@ export function getResidentGoals(
 export function getActivities(
   siteId: SiteId,
 ): Promise<{ activities: Activity[]; residents: Resident[] }> {
+  const refused = notYours(siteId, 'That home’s activities')
+  if (refused) return refused
   return resolve({
     /*
      * Through this session's writes, so a session planned or cancelled a
@@ -879,6 +933,8 @@ export function getGoalsBySite(siteId: SiteId): Promise<{
   goals: Goal[]
   progress: GoalProgressNote[]
 }> {
+  const refused = notYours(siteId, 'The goals of that home')
+  if (refused) return refused
   const atSite = residentsBySite(siteId)
   const ids = new Set(atSite.map((resident) => resident.id))
   const inScope = goals.filter((goal) => ids.has(goal.residentId))
@@ -902,6 +958,8 @@ export function getResidentDocuments(
 ): Promise<{ resident: Resident; documents: DocumentRecord[] }> {
   const resident = fixtureResidentById(residentId)
   if (!resident) return reject(`No resident with id ${residentId}`)
+  const refused = notYoursResident(resident)
+  if (refused) return refused
   return resolve({ resident, documents: residentDocuments(residentId) })
 }
 
@@ -910,6 +968,8 @@ export function getSiteDocuments(siteId: SiteId): Promise<{
   documents: DocumentRecord[]
   residents: Resident[]
 }> {
+  const refused = notYours(siteId, 'The documents of that home')
+  if (refused) return refused
   return resolve({
     documents: siteDocuments(siteId),
     residents: residentsBySite(siteId),
@@ -1168,6 +1228,8 @@ export function undoWholePlanReviewRecord(token: WholePlanReviewToken): Promise<
 export function getRound(
   siteId: SiteId,
 ): Promise<{ residents: Resident[]; medications: Medication[]; records: MarRecord[] }> {
+  const refused = notYours(siteId, 'That home’s medication round')
+  if (refused) return refused
   const atSite = residentsBySite(siteId)
   const ids = new Set(atSite.map((resident) => resident.id))
   return resolve({
@@ -1472,6 +1534,8 @@ export interface ResidentProfile {
 export function getResidentProfile(id: ResidentId): Promise<ResidentProfile> {
   const resident = residentById(id)
   if (!resident) return reject(`No resident with id ${id}`)
+  const refused = notYoursResident(resident)
+  if (refused) return refused
 
   const site = sites.find((entry) => entry.id === resident.siteId)
   if (!site) return reject(`Resident ${id} belongs to an unknown site`)
@@ -1493,6 +1557,15 @@ export function getResidentProfile(id: ResidentId): Promise<ResidentProfile> {
 export function getResidentSummaries(
   scope: SiteId | 'all',
 ): Promise<ResidentSummary[]> {
+  /*
+   * **`'all'` is not a home, so it is not refused here.** The only screen
+   * asking for it is the group overview, which is Admin-only and already
+   * gated; a specific home is checked like any other record.
+   */
+  if (scope !== 'all') {
+    const refused = notYours(scope, 'The residents of that home')
+    if (refused) return refused
+  }
   const inScope = scope === 'all' ? residents() : residentsBySite(scope)
   return resolve(
     inScope.map((resident) => ({

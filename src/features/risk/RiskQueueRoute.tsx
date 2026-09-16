@@ -12,7 +12,7 @@ import {
   SelectedMark,
   usePaged,
 } from '@/components/primitives'
-import { StatusPill, Unrecorded } from '@/components/status'
+import { StatusPill, Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
@@ -72,6 +72,8 @@ export function RiskQueueRoute() {
           <p className={styles.loading} role="status">
             Loading risk assessments…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Risk assessments could not be loaded</p>

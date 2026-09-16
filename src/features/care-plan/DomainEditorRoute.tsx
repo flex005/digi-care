@@ -27,7 +27,7 @@ import type { ClosableFlag } from '@/data/access/review-flags'
 import type { ClearingToken } from '@/data/access/review-flag-store'
 import type { FinaliseToken } from '@/data/access/care-plan-draft-store'
 import { AlertDialog, Button, Card, Toast } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
+import { Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { pluralise } from '@/lib/format'
@@ -44,6 +44,7 @@ import {
 } from './plan-fields'
 
 import styles from './care-plan.module.css'
+import type { AsyncResource } from '@/data/access/resource'
 
 /**
  * Writing one care plan domain. PRD §6.7.
@@ -157,6 +158,19 @@ function Editor({
     [resident.id],
   )
   const incidents = useResource<Incident[]>(loadIncidents, [resident.id, writes])
+
+  /*
+   * **Said here as well as in `Closes`.** The child renders the refusal in its
+   * own sentence, which is right for the line it occupies — but a screen whose
+   * whole subject is one resident's care plan should not go on drawing an
+   * editor for a record belonging to a home this viewer is not appointed to.
+   * The guard asks this file about its own resource for the same reason: a
+   * screen that handles a state only through a child is one refactor away from
+   * handling it nowhere.
+   */
+  if (incidents.kind === 'refused') {
+    return <NotYourHome refusal={incidents} />
+  }
   const closes =
     incidents.kind === 'ready'
       ? flagsClosedBy({
@@ -552,9 +566,26 @@ function Closes({
 }: {
   closes: ClosableFlag[]
   domainName: string
-  loading: 'loading' | 'ready' | 'error'
+  /*
+   * **The resource's own union, not a copy of it.** This was written out as
+   * `'loading' | 'ready' | 'error'`, which was true until `AsyncResource`
+   * gained a fourth member and then quietly was not: a copied rule is a second
+   * rule, and the original is still free to move. Taking the type from the
+   * source means a new member breaks the build here rather than being narrowed
+   * away at the call site.
+   */
+  loading: AsyncResource<unknown>['kind']
 }) {
   if (loading === 'loading') return <> Checking post-incident reviews…</>
+  if (loading === 'refused') {
+    return (
+      <>
+        {' '}
+        Whether finalising would close a post-incident review cannot be read here: those
+        incidents belong to a home you are not appointed to.
+      </>
+    )
+  }
   if (loading === 'error') {
     return (
       <>

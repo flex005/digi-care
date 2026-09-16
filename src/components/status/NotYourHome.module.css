@@ -1,0 +1,29 @@
+/*
+ * A record belonging to another home. Phase 29.
+ *
+ * Quiet on purpose. Nothing is missing, so it never takes the hatch; nothing
+ * is wrong, so it never takes caution. A boundary stated plainly.
+ */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-20);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-sunken);
+  max-width: 64ch;
+}
+
+.title {
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+}
+
+.body {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}

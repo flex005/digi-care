@@ -5,7 +5,7 @@ import type { MarRecord } from '@/data/fixtures/medications'
 import { getRegister } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Button, Card } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
+import { Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
@@ -54,6 +54,8 @@ export function RegisterRoute() {
           <p className={styles.loading} role="status">
             Loading the controlled drug register…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>The register could not be loaded</p>

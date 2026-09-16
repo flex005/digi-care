@@ -1,15 +1,17 @@
 /**
  * Organisation, sites and staff. PRD §5.2.
  *
- * 15 staff, every role in the model held by at least one of them, including
- * one deactivated — records outlive access (PRD §5.3), and a care note
- * authored by somebody who has since left must still render its author.
+ * Every role in the model is held by at least one of them, including one
+ * deactivated — records outlive access (PRD §5.3), and a care note authored by
+ * somebody who has since left must still render its author.
  *
- * The count was "14 across the seven roles" and both figures were wrong: 15
- * people, and six roles since `organisation_admin` turned out to be an
- * undocumented split of `registered_manager`. A docblock cannot derive a
- * number, so the property worth stating is the one a guard can hold, and
- * `authority.test.tsx` holds it: no role is left without somebody.
+ * **The count is not written here, and that is the point.** It said "14 across
+ * the seven roles", then 15, and was wrong both times: a docblock cannot
+ * derive a number and nothing makes it fall when the list grows. It went stale
+ * again in Phase 29 when a second deputy manager landed. The property worth
+ * stating is the one a guard can hold, and two do: `fixtures.test.ts` counts
+ * the list itself, and `authority.test.tsx` holds that no role is left without
+ * somebody.
  */
 
 import type { Organisation, Site, StaffRef } from '../types'
@@ -66,6 +68,26 @@ export const staffHalloran = makeStaff(
   'm-halloran',
   'M. Halloran',
   'Marie Halloran',
+  'deputy_manager',
+)
+/*
+ * **The second manager, and the commoner case.** Marie Halloran covers both
+ * homes, which is real and is what AM v2.0's TM-04 exists for. A deputy
+ * appointed to one home is the ordinary arrangement, and until Phase 29 the
+ * fixtures had nobody in it — so the state where a manager has one home and no
+ * site switcher could not be reached, reviewed or gated. A branch no fixture
+ * reaches is a branch nobody has seen.
+ *
+ * **Deliberately not in `managers` below.** That list is the pool fixture
+ * generation draws record authors from, so adding her would rewrite who
+ * recorded every consent, document, goal and review in the build, without a
+ * single record having changed. She is a member of the team, not a name the
+ * generator reaches for.
+ */
+export const staffAluko = makeStaff(
+  'd-aluko',
+  'D. Aluko',
+  'Deborah Aluko',
   'deputy_manager',
 )
 export const staffNwosu = makeStaff(
@@ -197,6 +219,7 @@ export const staffAdeyinka = makeStaff(
 )
 
 export const staff: StaffRef[] = [
+  staffAluko,
   staffAdeyinka,
   staffOgundipe,
   staffMarsden,

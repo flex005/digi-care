@@ -10,6 +10,7 @@ import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { CrossSiteBanner } from '@/features/group/CrossSiteBanner'
 import { ProfileHeader } from './ProfileHeader'
 import styles from './profile.module.css'
+import { NotYourHome } from '@/components/status'
 
 /**
  * A resident's profile. PRD §6.2.
@@ -94,6 +95,8 @@ export function ResidentProfileRoute() {
         <p className={styles.loadingNote} role="status">
           Loading resident…
         </p>
+      ) : resource.kind === 'refused' ? (
+        <NotYourHome refusal={resource} />
       ) : resource.kind === 'error' ? (
         <div className={styles.errorPanel}>
           <p className={styles.errorTitle}>This resident could not be loaded</p>

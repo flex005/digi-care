@@ -16,7 +16,12 @@ import {
   SelectedMark,
   Toast,
 } from '@/components/primitives'
-import { AggregateFigure, NeverWrittenUp, Unrecorded } from '@/components/status'
+import {
+  AggregateFigure,
+  NeverWrittenUp,
+  Unrecorded,
+  NotYourHome,
+} from '@/components/status'
 import { SHIFTS, SHIFT_NAMES } from '@/lib/shift'
 import { formatCount, pluralise, type TimeZone } from '@/lib/format'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
@@ -174,6 +179,8 @@ export function CareNotesRoute() {
           <p className={styles.loading} role="status">
             Loading care notes…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>These care notes could not be loaded</p>

@@ -12,7 +12,7 @@ import { DID_NOT_ATTEND_REASONS } from '@/data/types'
 import { getActivity } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Avatar, Button, Card, Select } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
+import { Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSiteFormat } from '@/app/session/use-session'
@@ -84,6 +84,8 @@ export function AttendanceRoute() {
           <p className={styles.loading} role="status">
             Loading this session…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>This session could not be loaded</p>

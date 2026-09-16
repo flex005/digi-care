@@ -17,9 +17,21 @@ import styles from './group.module.css'
  * fix is to say which governs the timestamps, not to remove one.
  */
 export function CrossSiteBanner({ recordSite }: { recordSite: Site }) {
-  const { activeSite, setActiveSite } = useSession()
+  const { activeSite, setActiveSite, sites } = useSession()
 
   if (activeSite.id === recordSite.id) return null
+
+  /*
+   * **The offer is only made to somebody who can take it.** From Phase 29 the
+   * session hands a viewer the homes they are appointed to, so a manager
+   * appointed to one cannot switch to another — and a button that would not
+   * work is worse than no button: it says the reader could be reading this
+   * home's records if they chose to.
+   *
+   * The sentence above it does not move. Which home's zone governs the
+   * timestamps is a fact about the record, and it is true whoever is reading.
+   */
+  const canSwitch = sites.some((site) => site.id === recordSite.id)
 
   return (
     <div className={styles.crossSite} data-cross-site={recordSite.id}>
@@ -34,15 +46,17 @@ export function CrossSiteBanner({ recordSite }: { recordSite: Site }) {
           selected.
         </p>
       </div>
-      <div className={styles.crossSiteAction}>
-        <Button
-          variant="secondary"
-          data-switch-site={recordSite.id}
-          onClick={() => setActiveSite(recordSite)}
-        >
-          Switch to {recordSite.name}
-        </Button>
-      </div>
+      {canSwitch ? (
+        <div className={styles.crossSiteAction}>
+          <Button
+            variant="secondary"
+            data-switch-site={recordSite.id}
+            onClick={() => setActiveSite(recordSite)}
+          >
+            Switch to {recordSite.name}
+          </Button>
+        </div>
+      ) : null}
     </div>
   )
 }

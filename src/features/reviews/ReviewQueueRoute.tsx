@@ -12,7 +12,7 @@ import {
   SelectedMark,
   usePaged,
 } from '@/components/primitives'
-import { AggregateFigure, Unrecorded } from '@/components/status'
+import { AggregateFigure, Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
@@ -72,6 +72,8 @@ export function ReviewQueueRoute() {
           <p className={styles.loading} role="status">
             Loading reviews…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Reviews could not be loaded</p>

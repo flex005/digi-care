@@ -18,7 +18,7 @@ import {
 import { getIncidents } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Button, Card, Select, SelectedMark } from '@/components/primitives'
-import { StatusPill, Unrecorded } from '@/components/status'
+import { StatusPill, Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
@@ -96,6 +96,8 @@ export function IncidentLogRoute() {
           <p className={styles.loading} role="status">
             Loading incidents…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>The incident log could not be loaded</p>

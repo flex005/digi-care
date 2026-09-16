@@ -9,6 +9,7 @@ import { now as appNow } from '@/data/fixtures/clock'
 
 import { useCallback, useEffect, useState } from 'react'
 import type { AsyncResource } from './resource'
+import { isNotYours } from './record-not-yours'
 import type { IsoDateTime } from '../types'
 
 function nowIso(): IsoDateTime {
@@ -35,6 +36,21 @@ export function useResource<T>(
       })
       .catch((error: unknown) => {
         if (cancelled) return
+        /*
+         * A refusal is not a failure, so it does not become one here. The
+         * record loaded; this viewer is not appointed to the home it belongs
+         * to, and the screen says that rather than offering a retry that would
+         * fail again for the same reason.
+         */
+        if (isNotYours(error)) {
+          setResource({
+            kind: 'refused',
+            what: error.what,
+            home: error.home,
+            yours: error.yours,
+          })
+          return
+        }
         setResource({
           kind: 'error',
           message: error instanceof Error ? error.message : 'Could not load this data.',

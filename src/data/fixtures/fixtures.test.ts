@@ -74,7 +74,13 @@ describe('fixture volume: PRD §5.2', () => {
      * precedent recorded above is that he corrects the figure in the PRD
      * rather than have the fixture obey a stale one.
      */
-    expect(staff).toHaveLength(17)
+    /*
+     * Eighteen from Phase 29: a second deputy manager, appointed to one home.
+     * Marie Halloran covers both, and until now nobody covered one — so the
+     * ordinary arrangement, and the state where a manager has no site
+     * switcher, existed nowhere in the fixtures.
+     */
+    expect(staff).toHaveLength(18)
 
     const held = new Set(staff.map((member) => member.role))
     const unheld = (Object.keys(STAFF_ROLE_NAMES) as StaffRole[]).filter(

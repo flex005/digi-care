@@ -27,6 +27,29 @@ export type AsyncResource<T> =
   | { kind: 'loading' }
   | { kind: 'ready'; data: T; fetchedAt: IsoDateTime }
   | { kind: 'error'; message: string; retry: () => void }
+  /**
+   * The record exists, in a home this viewer is not appointed to.
+   *
+   * **A fourth member rather than an error, because it is not one.** Nothing
+   * failed: the record is there and it loaded. Rendering it through `error`
+   * would put "could not be loaded" over a record that loaded perfectly, which
+   * is the product misdescribing its own state — the same lie as a not-found
+   * for a resident who exists, one layer up.
+   *
+   * It carries both homes so the panel can name them. A ternary is not
+   * exhaustive, so the compiler will not force a screen to handle this;
+   * `scripts/check-refusal-handled.mjs` does, and a consumer that ignores it
+   * falls through to the ready branch and reads `data` that is not there.
+   */
+  | {
+      kind: 'refused'
+      /** The record, in words: "Nathaniel Brennan's record". */
+      what: string
+      /** The home it belongs to. */
+      home: string
+      /** The homes this viewer is appointed to. */
+      yours: string[]
+    }
 
 /*
  * `AccessMode` was declared here and is gone. It said read-only is a property

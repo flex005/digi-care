@@ -18,7 +18,7 @@ import {
 } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { AlertDialog, Avatar, Button, Card, Toast } from '@/components/primitives'
-import { AllergyBadge } from '@/components/status'
+import { AllergyBadge, NotYourHome } from '@/components/status'
 import { useSession } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatDate, zonedDate } from '@/lib/format'
@@ -92,6 +92,12 @@ export function RoundRoute() {
         </p>
       </div>
     )
+  }
+
+  /* The record exists, in a home this viewer is not appointed to. */
+
+  if (resource.kind === 'refused') {
+    return <NotYourHome refusal={resource} />
   }
 
   if (resource.kind === 'error') {

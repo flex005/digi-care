@@ -14,6 +14,7 @@ export { RiskBadge } from './RiskBadge'
 export { ResuscitationBadge } from './ResuscitationBadge'
 export { MarCell, marCellDescription } from './MarCell'
 export { ReviewBadge } from './ReviewBadge'
+export { NotYourHome } from './NotYourHome'
 export { ConsentBadge } from './ConsentBadge'
 export { AggregateFigure } from './AggregateFigure'
 

@@ -29,7 +29,7 @@ import { useSession } from '@/app/session/use-session'
  * exception in a file of them.
  */
 export function SignInAs({ as: role }: { as: StaffRole }) {
-  const { signInAs, sites } = useSession()
+  const { signInAs, sites, signIn } = useSession()
 
   useEffect(() => {
     const member = teamMembers().find(
@@ -39,11 +39,19 @@ export function SignInAs({ as: role }: { as: StaffRole }) {
       throw new Error(
         `No member of staff with access holds the role ${role}, so no test can render the product as one. Either the fixtures lost somebody or the role is not reachable by anybody.`,
       )
+    /*
+     * **Already signed in as this person: nothing to do.** Signing in again
+     * changes the session, which re-runs this effect, which signs in again.
+     * `SessionProvider` now keeps `sites` stable, which is the real fix; this
+     * is the second one, so the helper cannot loop even if something else
+     * unsettles its dependencies later.
+     */
+    if (signIn.kind === 'signed_in' && signIn.member.id === member.id) return
     const site = sites.find((entry) => member.siteIds.includes(entry.id))
     if (site === undefined)
       throw new Error(`${role} belongs to a site that is not configured.`)
     signInAs(member, site)
-  }, [role, signInAs, sites])
+  }, [role, signInAs, sites, signIn])
 
   return null
 }

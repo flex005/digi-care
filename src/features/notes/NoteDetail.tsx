@@ -5,7 +5,7 @@ import type { ResidentProfile } from '@/data/access/client'
 import { getCareNote } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Button, Card, CardHeader, Toast } from '@/components/primitives'
-import { StatusPill } from '@/components/status'
+import { StatusPill, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useViewer } from '@/app/session/use-viewer'
 import { NoteCard } from './NoteCard'
@@ -51,6 +51,8 @@ export function NoteDetail() {
         <p className={styles.loading} role="status">
           Loading this note…
         </p>
+      ) : resource.kind === 'refused' ? (
+        <NotYourHome refusal={resource} />
       ) : resource.kind === 'error' ? (
         <Card padded>
           <p className={styles.errorTitle}>This note could not be loaded</p>

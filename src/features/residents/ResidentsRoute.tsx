@@ -12,7 +12,7 @@ import {
   TableCell,
   TableRow,
 } from '@/components/primitives'
-import { ReviewBadge, Unrecorded } from '@/components/status'
+import { ReviewBadge, Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
@@ -130,6 +130,16 @@ export function ResidentsRoute() {
   const [period, setPeriod] = useState<AnalyticsPeriod>(DEFAULT_PERIOD)
   const isLoading = simulation === 'loading' || resource.kind === 'loading'
   const isError = simulation === 'error' || resource.kind === 'error'
+
+  /*
+   * **Before anything is derived from it.** This screen reads its data into
+   * `summaries` rather than branching on the resource, so a refusal would fall
+   * through as an empty list — a home with no residents, which is a different
+   * claim from a home this viewer is not appointed to.
+   */
+  if (resource.kind === 'refused') {
+    return <NotYourHome refusal={resource} />
+  }
 
   return (
     <div className={styles.page}>

@@ -13,7 +13,7 @@ import {
   SelectedMark,
   Toast,
 } from '@/components/primitives'
-import { Settled } from '@/components/status'
+import { Settled, NotYourHome } from '@/components/status'
 import { SHIFT_NAMES } from '@/lib/shift'
 import { formatDate } from '@/lib/format'
 import { useSession } from '@/app/session/use-session'
@@ -97,6 +97,12 @@ export function HandoverRoute() {
         Loading the handover…
       </p>
     )
+  }
+
+  /* The record exists, in a home this viewer is not appointed to. */
+
+  if (resource.kind === 'refused') {
+    return <NotYourHome refusal={resource} />
   }
 
   if (resource.kind === 'error') {

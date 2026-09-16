@@ -14191,3 +14191,151 @@ it holds `var(--space-12) var(--space-16)`. Both probes were accurate about
 the wrong subject. What settled each was a different instrument: the position
 of the text and the last control, at 17px each, and a byte comparison showing
 the deployed stylesheet is the file the verified build produced.
+
+# Phase 29 — a record is read at the home that holds it
+
+Frank: a Manager is appointed to one home and cannot switch; the switcher must
+be absent rather than disabled; and check whether this reaches further than the
+switcher.
+
+## It reached a good deal further, and the worst of it was a write
+
+The switcher was the visible half. Underneath, `SessionProvider` handed every
+viewer **every configured home** and defaulted the active one to Rosewood
+before anybody signed in. Two consequences, and the second is the one that
+matters.
+
+**Reads.** 45 files read the active site and 56 call sites use `activeSite.id`,
+so every queue and every figure was whichever home the reader last selected.
+Those all became correct the moment the session could only hand over the
+viewer's own homes: one change, not 56.
+
+**A write.** Of the twelve screens reading the *full* list, admission is the
+one that wrote: a Manager could have **admitted a resident into another home**.
+It is the hardest of the twelve to notice afterwards, because nothing on any
+screen would say so — the resident would simply be at the wrong home, filed
+correctly, with every subsequent figure counting them there.
+
+**And the URL.** Confirmed by rendering rather than by reading the code: signed
+in as a deputy manager with Rosewood active, opening an Ashgrove resident's URL
+rendered the entire profile, Ashgrove named on the screen, no refusal. The
+shell's gate is per module; `getResident` took an id and no home.
+
+## The fixture came first, so both branches existed before either was gated
+
+Marie Halloran stays at both homes — a deputy covering two sites is real and is
+what AM v2.0's TM-04 exists for. Deborah Aluko is new, appointed to one, which
+is the commoner case and the one with no switcher; she sorts first by name, so
+she is who the sign-in screen offers for Deputy manager. The Admin now covers
+both: Ruth Clarke being Ashgrove's registered manager is a fact about that
+service's registration, and Adaeze Okonkwo administering the organisation is a
+different fact. Without that, "the switcher is a property of the assignment"
+and "an Admin's switcher is unchanged" could not both hold.
+
+She is **not** in `managers`, the pool fixture generation draws record authors
+from: adding her there would have rewritten who recorded every consent,
+document, goal and review in the build without a single record changing.
+
+## The rule, and the fallback that was an assumption
+
+The session hands a viewer the homes they are appointed to. No role clause
+anywhere: one home means no switcher, two means one, whoever holds them.
+`TopBar` needed no change — it has drawn a switcher only for more than one home
+since Phase 0 and was simply being handed homes that were not the viewer's.
+
+The fallback moved from `sites[0]` to the first home the viewer *holds*. Frank
+named why that matters and it is now a §8 entry: a fallback correct for the
+common case does not fail loudly on the uncommon one, it produces a plausible
+wrong answer, which is why nobody finds it.
+
+## Enforcement at the loaders, and why it could not be the session
+
+Fourteen loaders now refuse a record belonging to a home the viewer does not
+hold — the site-keyed group by their argument, the id-keyed group through the
+record's own resident. Per route was rejected for the reason Frank gave: the
+next route forgets, and the failure is silent because a route that does not
+check simply returns the data.
+
+**The loaders cannot ask the session, by construction rather than by
+arrangement.** `client.ts` is a plain module; the session is React context,
+readable only during a render, and a loader called from `useResource` runs
+outside one. The obvious fix looks available and is not. So `viewer-scope.ts`
+holds **an id and nothing else**, set on sign-in, and `viewerHomes()` derives
+through `memberById(id).siteIds` at the moment of the call. `StaffMember.siteIds`
+stays the only owner, and an admin reassigning somebody's homes mid-session
+takes effect on the next read — asserted, because a copied scope would go stale
+at precisely the moment access changed.
+
+It is cleared **last** in `endSession()`, after every store. Nothing today
+counts losses by asking whose work it was, but the moment something does,
+clearing first would zero the sign-out dialog — a screen saying nothing would
+be lost with plenty to lose.
+
+## A refusal is not an error
+
+`AsyncResource` gained a fourth member. Rendering this through `error` would
+put "could not be loaded" over a record that loaded perfectly, and a not-found
+would have the product lying about what is on the record. What is true is
+narrower: this belongs to Ashgrove Lodge, and you are appointed to Rosewood
+Court. The panel names both, because a refusal saying only "not yours" leaves a
+reader unable to tell a mistake from a boundary.
+
+A ternary is not exhaustive, so the compiler will not force 26 screens to
+handle it: `scripts/check-refusal-handled.mjs` does, and it states the count it
+reached rather than printing a tick.
+
+## Three findings from the work itself
+
+**The guard passed the wrong file twice.** Matching `'refused'` anywhere passed
+the consent dashboard, which filters consents somebody refused — a different
+fact wearing the same word. Tightening to `.kind === 'refused'` passed it
+again, because line 123 reads `row.status.kind === 'refused'`: the word was
+fixed and the subject was not. It now takes the variable name from the
+`useResource` assignment and asks that variable, and treats a file whose
+subject it cannot identify as a finding rather than a pass.
+
+**A test harness that died tidying up.** Four scope tests failed with
+`TypeError: destroy is not a function` and their assertions had never run: an
+effect written as a concise arrow returned `Array.push`'s number, which React
+took for a cleanup function. §8 entry written; the fix is one pair of braces.
+
+**A twenty-six-minute hang that was a pipe.** A sweep sat with a zero-byte
+output file. It was alive — two workers at 150% of a core — and the output was
+buffered behind `grep | head`. §8 entry written: check the process before the
+output, and write a long run to a file rather than through a pipe.
+
+## Correction: the runs that would not finish were a render loop, not the machine
+
+Recorded above as a buffered pipe, and then offered to Frank as memory
+pressure. Both were wrong, and he agreed with the second on the report — his
+half, and the third time a claim was confirmed without asking what backed it.
+
+`SessionProvider` memoised the viewer's homes on `signIn`, which stores a new
+timestamp on every sign-in, so the array took a new identity each time even for
+identical homes. `SignInAs`, the test helper, re-ran whenever `sites` changed and
+signed in again. Every test that signed in looped until its worker exhausted its
+heap; with the heap raised to 4 GB, one worker reached 4,090 MB and aborted, and
+not a single test file reported in fifteen minutes against a test stage that took
+47 seconds that morning.
+
+Two fixes, both made: the homes are now memoised on which homes they are, so the
+array changes only when they do; and the helper does nothing when that person is
+already signed in, so it cannot loop even if something else unsettles it. A test
+signs the same person in twice and asserts the same array comes back.
+
+The product was checked rather than assumed: the only place real code calls
+`signInAs` is the Verify button's `onClick` in `VerifyRoute.tsx`, not an effect.
+
+With the loop gone the suite ran to completion and failed twice, both in the
+handover's thin-site tests, and the cause was the pointer rather than the test.
+Earlier tests in that file signed in as a senior carer at Rosewood; testing
+library unmounted the `SessionProvider` afterwards, and nothing cleared the
+module-level pointer — so the thin-site tests, which sign in as nobody, ran as
+that leftover viewer and were refused Ashgrove's handover. Access outliving the
+session that authorised it, which is what Frank's constraint on the pointer was
+about, arriving through an unmount rather than a sign-out. The provider now
+clears it when it goes, as well as `endSession` clearing it on sign-out, and a
+test signs in, unmounts and asserts the pointer is gone; removing the cleanup
+fails it. The same run's output also showed the refusal panel saying "Your 1
+home are the ones on your record", which the plurals guard cannot see inside a
+template literal; the sentence no longer carries a count.

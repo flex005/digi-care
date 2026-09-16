@@ -17,6 +17,7 @@ import {
   staffAdeyinka,
   staffBennett,
   staffDeactivated,
+  staffAluko,
   staffOkonkwo,
   staffClarke,
   staffEze,
@@ -45,6 +46,24 @@ import { daysAgo, toIsoDate } from '../fixtures/generate'
  * anything to show and the only reason `siteIds` is a list.
  */
 const SITES: Partial<Record<StaffId, SiteId[]>> = {
+  /*
+   * **One home, said explicitly rather than left to the default.** A manager
+   * appointed to a single home is the ordinary case and the one with no site
+   * switcher; Marie Halloran below covers both, which AM v2.0's TM-04 exists
+   * for. Both states have to exist in the fixtures before either is gated, or
+   * the rule is written against a branch nobody can reach.
+   */
+  [staffAluko.id]: ['site-rosewood-court'],
+  /*
+   * **The Admin administers the organisation, and that is a different fact
+   * from who a service is registered to.** Ruth Clarke is Ashgrove's
+   * registered manager; Adaeze Okonkwo administers both homes, which is what
+   * `siteIds` is for and what the source PRD's group-administrator persona
+   * describes. Holding one home would have made the site switcher's rule two
+   * rules — more than one home, or a role — and a control whose presence is a
+   * fact about the reader rather than about their assignment.
+   */
+  [staffOkonkwo.id]: ['site-rosewood-court', 'site-ashgrove-lodge'],
   [staffPatel.id]: ['site-ashgrove-lodge'],
   [staffClarke.id]: ['site-ashgrove-lodge'],
   [staffOgundipe.id]: ['site-ashgrove-lodge'],

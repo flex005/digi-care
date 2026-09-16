@@ -5,7 +5,7 @@ import { CONSENT_TYPES } from '@/data/types'
 import { getResidentsBySite } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Button, Card, Pager, SelectedMark, usePaged } from '@/components/primitives'
-import { ConsentBadge } from '@/components/status'
+import { ConsentBadge, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession } from '@/app/session/use-session'
@@ -58,6 +58,8 @@ export function ConsentDashboardRoute() {
           <p className={styles.loading} role="status">
             Loading consents…
           </p>
+        ) : resource.kind === 'refused' ? (
+          <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
             <p className={styles.errorTitle}>Consents could not be loaded</p>

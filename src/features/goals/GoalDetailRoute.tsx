@@ -13,6 +13,7 @@ import { GoalMeta, GoalState, GoalStatement } from './GoalParts'
 import { goalStanding } from './goal-timing'
 import styles from './goals.module.css'
 import { staffLabel } from '@/data/access/team-store'
+import { NotYourHome } from '@/components/status'
 
 /**
  * One goal, and what has happened since it was set. PRD §6.7.
@@ -38,6 +39,12 @@ export function GoalDetailRoute() {
         </p>
       </div>
     )
+  }
+
+  /* The record exists, in a home this viewer is not appointed to. */
+
+  if (resource.kind === 'refused') {
+    return <NotYourHome refusal={resource} />
   }
 
   if (resource.kind === 'error') {

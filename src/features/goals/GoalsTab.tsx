@@ -16,6 +16,7 @@ import {
   longEnoughToExpectAGoal,
 } from './goal-timing'
 import styles from './goals.module.css'
+import { NotYourHome } from '@/components/status'
 
 /**
  * A resident's goals. PRD §6.7, Phase 8.
@@ -46,6 +47,12 @@ export function GoalsTab() {
         </p>
       </div>
     )
+  }
+
+  /* The record exists, in a home this viewer is not appointed to. */
+
+  if (resource.kind === 'refused') {
+    return <NotYourHome refusal={resource} />
   }
 
   if (resource.kind === 'error') {
