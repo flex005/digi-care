@@ -20,8 +20,19 @@ export type {
 
 export { STAFF_ROLE_NAMES } from './primitives'
 
-export type { FamilyAccessLevel, FamilyMember } from './family'
-export { ACCESS_LEVELS } from './family'
+export type {
+  FamilyAccessLevel,
+  FamilyField,
+  FamilyMember,
+  FamilyRevision,
+} from './family'
+export {
+  ACCESS_LEVELS,
+  currentDetails,
+  levelHistory,
+  levelLabel,
+  recordedAccess,
+} from './family'
 
 export type {
   MarCellState,

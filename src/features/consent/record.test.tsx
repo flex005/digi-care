@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter, RouterProvider } from 'react-router-dom'
+import { Outlet, createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
 import { TooltipProvider, ToastProvider } from '@/components/primitives'
 import { SignInAs } from '@/test/sign-in-as'
@@ -9,7 +9,7 @@ import { ResidentProfileRoute } from '@/features/residents/ResidentProfileRoute'
 import { residentById } from '@/data/fixtures/residents'
 import { resetSessionResidents, withResidentEdits } from '@/data/access/resident-store'
 import { resetSessionFamilyAccess } from '@/data/access/family-access-store'
-import { FamilyAccessSection } from '@/features/family/FamilyAccessSection'
+import { FamilyTab } from '@/features/family/FamilyTab'
 import type { ResidentId } from '@/data/types'
 import { CapacityGateRoute } from './CapacityGateRoute'
 
@@ -116,20 +116,35 @@ describe('a consent can be recorded, and the record changes', () => {
     )
 
     /*
-     * The dependency that made this the first fix. Before, the family section
-     * refused to show its form for this resident and nothing on any screen
-     * could change that.
+     * The dependency that made this the first fix. Before, the family tab
+     * refused to offer the act for this resident and nothing on any screen
+     * could change that. From Phase 27 the act is a button that opens a
+     * dialog, so what proves the gate opened is the control being there.
      */
+    const tabRouter = createMemoryRouter(
+      [
+        {
+          path: '/',
+          element: (
+            <Outlet context={{ resident: current(UNASKED), refresh: () => {} }} />
+          ),
+          children: [{ index: true, element: <FamilyTab /> }],
+        },
+      ],
+      { initialEntries: ['/'] },
+    )
     const family = render(
       <SessionProvider>
         <TooltipProvider>
-          <SignInAs as="registered_manager" />
-          <FamilyAccessSection resident={current(UNASKED)} onChanged={() => {}} />
+          <ToastProvider>
+            <SignInAs as="registered_manager" />
+            <RouterProvider router={tabRouter} />
+          </ToastProvider>
         </TooltipProvider>
       </SessionProvider>,
     )
     await waitFor(() =>
-      expect(family.container.querySelector('[data-grant-form]')).toBeTruthy(),
+      expect(family.container.querySelector('[data-add-family]')).toBeTruthy(),
     )
     expect(family.container.querySelector('[data-consent-missing]')).toBeNull()
   }, 30000)

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { AnyConsent, FamilyMember, Resident } from '@/data/types'
+import { currentDetails } from '@/data/types'
 import { getResidentsBySite } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { Button, Card, Pager, usePaged } from '@/components/primitives'
@@ -238,7 +239,7 @@ function Found({
                           variant="chip"
                           label="Access without a consent"
                           detail={row.members
-                            .map((member: FamilyMember) => member.name)
+                            .map((member: FamilyMember) => currentDetails(member).name)
                             .join(', ')}
                         />
                       </span>

@@ -16,7 +16,7 @@ are separate products and are not built here; care workers appear in this app
 as people an Admin manages, never as users.
 
 It is live at `digi-care-zeta.vercel.app`. The test suite is 74 files and
-1,336 tests as of Phase 26, alongside twelve guard scripts that check the rules
+1,342 tests as of Phase 27, alongside twelve guard scripts that check the rules
 mechanically (plus eslint and stylelint) and a layout check run in a real
 browser.
 
@@ -30,7 +30,7 @@ browser.
 | **Residents** | Admission in five steps shown one at a time, of which only the first is required, with a DNAR form that can be filed as part of it (see the departures). Writing and finalising care plan domains, with version history. |
 | **Incidents** | Acknowledging, the manager's own review kept separate from what the reporter wrote, and closing only once there is a root cause and a decision about telling the CQC. |
 | **Compliance** | The five Key Questions and statutory notifications. Filing a notification and opening the inspection pack are Admin-only. |
-| **Family Portal management** | Its own module from Phase 26: a resident tab listing everybody named for that person, with their relationship, email and access level, and a cross-resident screen leading on residents who agreed and have nobody named. Naming somebody is allowed only once that resident's Family Portal consent is on file. Sharing a care note, and writing a plain-language message about an incident, both kept as an append-only history. **Nothing reaches a family**, and every control says so as an instruction: *if this family needs to know today, telephone them.* |
+| **Family Portal management** | Its own module: a resident tab listing everybody named for that person — name, relationship, email, access level, who recorded it and when — each with Edit and Remove, and an Add button opening a dialog rather than a form standing open on the page. A cross-resident screen leads on residents who agreed and have nobody named. Naming somebody is allowed only once that resident's Family Portal consent is on file. Sharing a care note, and writing a plain-language message about an incident, both kept as an append-only history. **Nothing reaches a family**, and every control says so as an instruction: *if this family needs to know today, telephone them.* |
 | **Activities** | Calendar, planning a session, changing one before it starts, recording attendance, and cancelling a session with a reason. |
 | **Consent** | The consent page; recording a decision after the capacity assessment, on the resident's own authority, as a best-interests decision, or by an attorney where a health and welfare LPA is on file; and withdrawal. |
 | **Documents, Reports** | Both built. |
@@ -53,7 +53,9 @@ Each was decided and recorded, not missed.
 - **Refused in authentication:** single active session, a device and IP list (these would be invented records), and "since your last login" (there is no last login to compare against). The password strength bar shows "N of 5 rules met" rather than Weak/Fair/Strong.
 - **Family access is never shown as "Invited"**, because nothing is sent and nothing can become Active. An email address is recorded on a family member as a contact detail, and nothing in this build sends to it.
 - **The Family Portal module never records a consent.** Whether a family may see anything is the resident's consent, owned by the Consent tab; who is named is owned by the Family Portal tab. A guard fails the build if the family module ever reaches a consent writer.
-- **People named before a consent was withdrawn are shown, not hidden.** They keep access until somebody removes them, so the screen that names them shows them with a Remove control, and the module screen counts them as a separate finding.
+- **People named before a consent was withdrawn are shown, not hidden.** They keep access until somebody removes them, so the screen that names them shows them with a Remove control, and the module screen counts them as a separate finding. There is no Edit there and no Add: correcting what an unauthorised access says is not the act somebody needs, and ending it is.
+- **A family member is an append-only list of revisions**, so a correction keeps who granted the access and when, and adds who changed it, what they changed and when. Remove-and-re-add would discard the record of the decision.
+- **An access level appends rather than replaces.** It can be changed — the same person under the same authorisation — but the earlier level stays on the record, because the disclosure log says what was shared while it stood. A mistyped email replaces, because it was never true.
 - **Admission departs from the PRD in four places, all for one reason.** A form that requires something on the day somebody arrives will get it invented. A resident arriving from hospital at nine in the evening may have no discharge summary and no practice details with them. The PRD asks for a complete record, and a complete record is better than an incomplete one. But the question is whether requiring an answer produces a complete record or a plausible one. A gap that every screen shows is honest, and an invented answer is indistinguishable from a recorded one for as long as the record lasts. So:
   1. **Contact and GP (step 2) is not required.** The PRD marks it required.
   2. **A DNAR decision is never recorded because a form was filed.** The decision needs a clinician's signature, which this build does not capture. The form is filed and the decision stays unrecorded.

@@ -14039,3 +14039,72 @@ budget, not its reach**, and the two are indistinguishable from the output.
 That is why the remainder is printed now and why the declared set is the fix
 rather than a larger cap — a larger cap moves the boundary and keeps the
 property that nothing announces what fell off it.
+
+# Phase 27 — the Family Portal tab rebuilt, and corrections
+
+## What moved
+
+The Consent tab was already clear of the family list in Phase 26; what it
+keeps is the `family_portal` consent itself, sought and recorded there like
+the other seven types, plus a link through to the tab. A link is navigation,
+not a second copy of a fact, so it stays.
+
+The tab is now **a list with an action**. Who has access, each with name,
+relationship, email, access level, who recorded it and when, and Edit and
+Remove beside them. An "Add a family member" button opens a dialog; the form
+is not on the page when nobody is adding anybody. Where nobody is named, the
+tab says that as the state it is rather than rendering an empty list. The
+consent's basis line sits above the list, read from the consent record and
+never written here, because it is the justification for showing a record to a
+third party and belongs above the names it authorises.
+
+**The statement that nothing is sent moved into the dialog.** On the tab it
+was a standing notice nobody reads by the second visit. In the dialog it is in
+front of somebody at the moment they would otherwise assume a family member
+has been told, which is the act it exists to prevent.
+
+## Editing, and what an edit must not destroy
+
+Remove-and-re-add is not a correction: it discards who granted the access and
+when, which is the record of the decision rather than a detail of it. So a
+member is now **an append-only list of revisions** — the care plan's shape —
+each carrying its author, its instant and the fields it touched. The first
+revision is the recording and never moves; the current details are the last.
+
+**Frank asked whether an edit may change the access level.** It may: the same
+person under the same authorisation, with only the amount they see changed.
+Where this build differs from a plain edit is that the level **appends rather
+than replaces**. A mistyped email was never true, so correcting it leaves
+nothing behind worth keeping. A level *was* true for a period, and the
+disclosure log records what was shared during it — so "was she on Basic when
+that note was shared?" is answerable only while the earlier level is still on
+the record. Holding every field in one revision list gives the level history
+for free and leaves no way for a history and a current value to disagree.
+
+Two smaller rulings, both stated where they are enforced. An edit that changes
+nothing is refused rather than stored, because a revision saying somebody
+rewrote a record into what it already said is a record of an act that did not
+happen. And where a consent no longer stands, the people already named stay
+visible with Remove, but there is no Edit and no Add: correcting what an
+unauthorised access says is not the act somebody needs, and ending it is.
+
+## Fixtures
+
+Two seeded members now carry a second revision — one email corrected, one
+level raised — because a screen that has never met a corrected record is a
+screen nobody has seen working, and the level history had no fixture reaching
+it at all.
+
+## Mutations
+
+Three, each confirmed landed before the verdict was read, each restored:
+
+| Broken | Failed |
+| --- | --- |
+| An edit replaces the recording instead of appending | `appends a revision rather than replacing the recording`, and two more |
+| The level history keeps only the newest level | `keeps the level somebody held before it was raised`, and the fixture check |
+| The dialog drops the statement that nothing is sent | `says what to do instead, where the recording happens` |
+
+The second is worth keeping: collapsing the history also failed the fixture
+test, because a fixture reaching a state and a screen rendering it are two
+claims and both were being made.

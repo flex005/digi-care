@@ -374,3 +374,49 @@
   gap: var(--space-20);
   padding: var(--space-20) 0;
 }
+
+/* The tab's head: what the screen is, and the one act it offers. Phase 27. */
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.memberActions {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+/* What an edit added, beside what the recording said. */
+.memberChange {
+  display: block;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}
+
+.dialogForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.dialogForm input[type='text'],
+.dialogForm input[type='email'] {
+  padding: var(--space-8);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-size);
+}
+
+.hint {
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}

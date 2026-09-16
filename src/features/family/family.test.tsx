@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
-import { createMemoryRouter, RouterProvider } from 'react-router-dom'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { Outlet, createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
-import { TooltipProvider } from '@/components/primitives'
+import { ToastProvider, TooltipProvider } from '@/components/primitives'
 import { SignInAs } from '@/test/sign-in-as'
 import {
   disclosureHistory,
@@ -22,7 +23,7 @@ import { recordConsent } from '@/data/access/client'
 import { residents } from '@/data/fixtures/residents'
 import { staffOkonkwo } from '@/data/fixtures/organisation'
 import { NOTHING_WAS_SENT, TELL_THEM } from './family-statement'
-import { FamilyAccessSection } from './FamilyAccessSection'
+import { FamilyTab } from './FamilyTab'
 import type { CareNoteId, IsoDate } from '@/data/types'
 import { now as appNow } from '@/data/fixtures/clock'
 import { zonedDate } from '@/lib/format'
@@ -49,13 +50,14 @@ afterEach(() => {
 const someone = () =>
   residents.find((r) => r.consents.family_portal.kind === 'not_sought')!
 
-function renderSection(residentId: string) {
+function renderTab(residentId: string) {
   const resident = residents.find((r) => r.id === residentId)!
   const router = createMemoryRouter(
     [
       {
         path: '/',
-        element: <FamilyAccessSection resident={resident} onChanged={() => {}} />,
+        element: <Outlet context={{ resident, refresh: () => {} }} />,
+        children: [{ index: true, element: <FamilyTab /> }],
       },
     ],
     { initialEntries: ['/'] },
@@ -63,27 +65,16 @@ function renderSection(residentId: string) {
   return render(
     <SessionProvider>
       <TooltipProvider>
-        <SignInAs as="registered_manager" />
-        <RouterProvider router={router} />
+        <ToastProvider>
+          <SignInAs as="registered_manager" />
+          <RouterProvider router={router} />
+        </ToastProvider>
       </TooltipProvider>
     </SessionProvider>,
   )
 }
 
 describe('family access leans on the consent rather than recording it again', () => {
-  it('refuses to name anybody until the consent is on file, and says where', async () => {
-    const resident = someone()
-    const { container } = renderSection(resident.id)
-
-    await waitFor(() =>
-      expect(container.querySelector('[data-consent-missing]')).toBeTruthy(),
-    )
-    // No second way in: the form is not there at all, and the screen names the
-    // record that authorises it.
-    expect(container.querySelector('[data-grant-form]')).toBeNull()
-    expect(container.querySelector('[data-open-consent]')).toBeTruthy()
-  }, 20000)
-
   it('offers no "Invited" state anywhere', async () => {
     const resident = residents.find((r) => r.consents.family_portal.kind === 'given')
     if (resident === undefined) return
@@ -96,7 +87,7 @@ describe('family access leans on the consent rather than recording it again', ()
       by: staffOkonkwo,
     })
 
-    const { container } = renderSection(resident.id)
+    const { container } = renderTab(resident.id)
     await waitFor(() =>
       expect(container.querySelector('[data-access-state]')).toBeTruthy(),
     )
@@ -112,21 +103,30 @@ describe('family access leans on the consent rather than recording it again', ()
     )
   }, 20000)
 
-  it('says what to do instead, on the control rather than behind a click', async () => {
+  it('says what to do instead, where the recording happens', async () => {
+    const user = userEvent.setup()
     const resident = residents.find((r) => r.consents.family_portal.kind === 'given')
     if (resident === undefined) return
 
-    const { container } = renderSection(resident.id)
+    const { container } = renderTab(resident.id)
     await waitFor(() =>
-      expect(container.querySelector('[data-grant-form]')).toBeTruthy(),
+      expect(container.querySelector('[data-add-family]')).toBeTruthy(),
     )
 
-    const said = container.querySelector('[data-nothing-sent]')!
-    // An instruction, not a caveat: it says what to do, because the risk is
-    // somebody believing the act happened and skipping the real one.
+    /*
+     * **In the dialog from Phase 27, not on the tab.** An instruction, not a
+     * caveat: it says what to do, because the risk is somebody believing the
+     * act happened and skipping the real one — and that belief forms at the
+     * moment of recording, not while reading a list.
+     */
+    expect(container.querySelector('[data-nothing-sent]')).toBeNull()
+    await user.click(container.querySelector('[data-add-family]')!)
+    const dialog = await screen.findByRole('dialog')
+
+    const said = dialog.querySelector('[data-nothing-sent]')!
     expect(said.textContent).toContain(TELL_THEM.access)
     expect(said.textContent).toContain(NOTHING_WAS_SENT)
-  }, 20000)
+  }, 30000)
 })
 
 describe('recording a consent is an act the build now has', () => {
