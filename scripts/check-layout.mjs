@@ -373,7 +373,18 @@ try {
     })
   }
 
-  console.log(`  ${visited} screens crawled at ${MIN_WIDTH}px\n`)
+  /*
+   * **The remainder, because a count at its cap reports a budget rather than a
+   * reach.** The crawl never exhausts — every care note is a screen — so it
+   * stops at MAX_SCREENS with a queue still full, and "70 screens crawled" is
+   * the same sentence whether it covered the product or a corner of it. That
+   * is not hypothetical: it signed in as a care worker for sixteen phases,
+   * could not reach Compliance, Reports or Settings, and said 70 throughout.
+   * A number that can rise is a regression somebody can see.
+   */
+  console.log(
+    `  ${visited} screens crawled at ${MIN_WIDTH}px, ${queue.length} queued and not visited\n`,
+  )
 } finally {
   await browser.close()
   server.kill()

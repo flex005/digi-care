@@ -14014,3 +14014,28 @@ printing a tick over whatever it happened to read.
 | A `recordConsent` call added to `FamilyTab` | the guard failed, naming `FamilyTab.tsx:29` |
 
 Both confirmed landed before the verdict was read, and both restored.
+
+## The layout crawl reports a budget, not a reach
+
+Frank's call, and the smaller half is done: the crawl now prints the queue
+remainder beside its count, so the line reads *70 screens crawled at 1280px,
+1,089 queued and not visited*. A number that can rise is a regression somebody
+can see; a bare count at its cap is the same sentence whatever it covered.
+
+**The real fix is not done, and it is this**: crawl a declared set — every
+sidebar module, plus one resident's tabs — rather than a breadth-first sweep
+truncated at 70. A declared set cannot silently stop covering something. A
+truncated sweep drops whatever sorts last and reports the same number either
+way, so the thing it stops covering is invisible by construction.
+
+**Why that matters is not hypothetical, and it has already happened here.** The
+crawl signed in as whoever the form prefilled, which is a care worker. When the
+rail started filtering by role in Phase 17, the crawl could no longer reach
+Compliance, Reports or Settings, because it follows links and those links were
+not drawn for that role. It went on reporting 70 screens for phases, because it
+was already at its cap: the screens it lost were replaced in the count by
+screens it had previously had no budget for. **A guard at a cap reports its
+budget, not its reach**, and the two are indistinguishable from the output.
+That is why the remainder is printed now and why the declared set is the fix
+rather than a larger cap — a larger cap moves the boundary and keeps the
+property that nothing announces what fell off it.
