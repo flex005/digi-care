@@ -330,3 +330,56 @@ describe('the page, the tab and the tab’s heading are three different names', 
     }
   }, 30000)
 })
+
+describe('the wizard’s way out is true from wherever somebody came', () => {
+  function renderFrom(start: string) {
+    const router = createMemoryRouter(
+      [
+        { path: '/', element: <p data-dashboard-standin>the dashboard</p> },
+        { path: '/settings/organisation', element: <SettingsRoute /> },
+        { path: '/settings/setup', element: <SetupWizardRoute /> },
+      ],
+      { initialEntries: [start] },
+    )
+    return render(
+      <SessionProvider>
+        <TooltipProvider>
+          <ToastProvider>
+            <SignInAs as="registered_manager" />
+            <RouterProvider router={router} />
+          </ToastProvider>
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+  }
+
+  it('goes back to the organisation for somebody who came from it', async () => {
+    const user = userEvent.setup()
+    const { container } = renderFrom('/settings/organisation')
+    await waitFor(() =>
+      expect(container.querySelector('[data-open-setup]')).toBeTruthy(),
+    )
+    await user.click(container.querySelector('[data-open-setup]')!)
+    await waitFor(() =>
+      expect(container.querySelector('[data-setup-exit]')).toBeTruthy(),
+    )
+    const exit = container.querySelector('[data-setup-exit]')!
+    expect(exit.textContent).toBe('Back to the organisation')
+    expect(exit.getAttribute('href')).toBe('/settings/organisation')
+  }, 20000)
+
+  it('offers the dashboard to somebody who did not, such as from sign-in', async () => {
+    /*
+     * Somebody who arrived from sign-in has not been to the Organisation tab,
+     * so going there is not going back. The dashboard is true from either
+     * direction, and it is what anything but the Organisation tab gets.
+     */
+    const { container } = renderFrom('/settings/setup')
+    await waitFor(() =>
+      expect(container.querySelector('[data-setup-exit]')).toBeTruthy(),
+    )
+    const exit = container.querySelector('[data-setup-exit]')!
+    expect(exit.textContent).toBe('Go to the dashboard')
+    expect(exit.getAttribute('href')).toBe('/')
+  }, 20000)
+})

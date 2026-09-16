@@ -122,7 +122,51 @@ try {
   await page.waitForSelector('[data-verify]', { timeout: 15000 })
   await page.fill('[data-field="code"]', '123456')
   await page.click('[data-verify-submit]')
-  await page.waitForSelector('main', { timeout: 15000 })
+
+  /*
+   * **The setup offer, named before it could fail unnamed.** From this phase
+   * the registered manager is offered the organisation setup after verifying,
+   * rather than landing on the dashboard. Left alone, the crawl would have
+   * waited fifteen seconds for a `main` that the offer does not have and
+   * failed saying only that — the uninformative timeout §8 describes, which
+   * this time was written down before it happened rather than after.
+   *
+   * The offer is a screen at 1280 too, so it is held to the same sideways-scroll
+   * rule before the crawl takes the dashboard way out.
+   */
+  const offered = await page
+    .waitForSelector('[data-setup-offer]', { timeout: 15000 })
+    .then(() => true)
+    .catch(() => false)
+  if (!offered) {
+    console.error(
+      '✖ layout: verified as the registered manager, and the setup offer did not appear. Either the offer moved or the sign-in did not take the role the crawl asked for.',
+    )
+    process.exit(1)
+  }
+  visited += 1
+  const offerScrolls = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  )
+  if (offerScrolls > 1) {
+    findings.push({
+      route: '/verify (setup offer)',
+      why: `the page scrolls sideways by ${offerScrolls}px`,
+      label: 'the document',
+      text: '',
+    })
+  }
+  await page.click('[data-offer-dashboard]')
+  const landed = await page
+    .waitForSelector('main', { timeout: 15000 })
+    .then(() => true)
+    .catch(() => false)
+  if (!landed) {
+    console.error(
+      '✖ layout: chose "Go to the dashboard" on the setup offer, and the dashboard did not appear.',
+    )
+    process.exit(1)
+  }
 
   /*
    * And the crawl proves it got the role it asked for rather than assuming it.

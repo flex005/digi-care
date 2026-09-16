@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
 import { Button, Card } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
@@ -21,6 +21,7 @@ import {
 } from '@/data/access/setup-store'
 import { teamMembers } from '@/data/access/team-store'
 import { InviteDrawer } from '@/features/team/InviteDrawer'
+import { cameFromOrganisation } from './setup-origin'
 import styles from './setup.module.css'
 
 /**
@@ -49,6 +50,7 @@ const ORDER: readonly { id: SetupStepId; name: string; required: boolean }[] = [
 
 export function SetupWizardRoute() {
   const { organisation, activeSite, reloadSites } = useSession()
+  const fromOrganisation = cameFromOrganisation(useLocation().state)
   const [step, setStep] = useState<SetupStepId>(
     () => resumeAt(ORDER.map((entry) => entry.id)) ?? 'organisation',
   )
@@ -332,9 +334,15 @@ export function SetupWizardRoute() {
         {requiredDone()
           ? 'The two required steps are confirmed. Anything skipped can be done from Settings or the team list at any time.'
           : `Step ${index + 1} of ${ORDER.length}. The organisation and its first home have to be confirmed before setup is done.`}{' '}
-        <Link to="/settings/organisation" className={styles.link}>
-          Back to the organisation
-        </Link>
+        {fromOrganisation ? (
+          <Link to="/settings/organisation" className={styles.link} data-setup-exit>
+            Back to the organisation
+          </Link>
+        ) : (
+          <Link to="/" className={styles.link} data-setup-exit>
+            Go to the dashboard
+          </Link>
+        )}
       </p>
     </div>
   )

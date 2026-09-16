@@ -14504,3 +14504,60 @@ it lands on "Set up Thornfield Care Group"; the wizard's Back link returns to
 `/settings/organisation`; the home tab has no setup link.
 
 §8 has the entry: a reachability guard finds a link, not a visible one.
+
+## The setup wizard offered after verification
+
+AM v2.0 AUTH-05 puts the organisation setup straight after an Admin verifies
+on first login. It had been reachable only from Settings, because nothing here
+remembers whether it has run. It is now offered after verification to whoever
+holds `set_up_organisation`, which is the registered manager: a screen reading
+"Set up Thornfield Care Group?", "It can be done now, or later from Settings.",
+with **Go to the dashboard** and **Set it up**. Managers and the auditor go
+straight to the dashboard as before. The Settings → Organisation button stays
+as the way back in. It is a second state of the verify screen rather than a
+new route, so there is nothing new for the reachability guard to find.
+
+**Offered on every sign-in, and that is right.** Nothing records a sign-in, so
+the first cannot be told from any other. But signing out discards everything
+the wizard wrote (setup, settings and site configuration are all on the
+session-losses list), so every sign-in genuinely starts with the organisation
+unset by it. Offering it each time is not a nuisance, it is the state of the
+build made visible, and the Admin chooses rather than the app remembering.
+
+**Not a welcome.** The organisation has two homes and eighteen people. A
+screen saying "welcome" or "get started" would be a claim about what has
+happened before, and a test asserts the offer says none of those.
+
+**The wizard's way out is true from either direction.** "Back to the
+organisation" is right for somebody who opened it from the Organisation tab and
+wrong for somebody who arrived from sign-in, who has not been there. The
+origin can be told apart: the Settings button passes it in the navigation's
+state, read by `cameFromOrganisation()`. Anything else gets "Go to the
+dashboard", which is true from any direction, including a typed address.
+
+**The layout crawl learned the step in the same change.** It signs in as the
+registered manager, so it would have waited fifteen seconds for a `main` the
+offer does not have and failed naming only that: the uninformative timeout
+§8 describes. It now waits for the offer and fails saying the offer did not
+appear, checks the offer does not scroll sideways at 1280, takes "Go to the
+dashboard", and fails saying so if the dashboard does not appear. §8 has a
+note on the entry: caught before the failure, the first time that has
+happened.
+
+Tests, each mutated before trusting, each mutation confirmed landed (count 1)
+and restored from a backup:
+- the offer never shown failed `offers it to the person who holds the act`,
+  `goes to the dashboard when that is the choice` and `opens the wizard when
+  that is the choice`;
+- the offer shown to everybody failed `does not offer it to a manager`;
+- the origin removed from the Settings button failed `goes back to the
+  organisation for somebody who came from it`;
+- every origin read as the organisation failed `offers the dashboard to
+  somebody who did not, such as from sign-in`.
+
+Checked in a browser at 1280: as Okonkwo the offer appears; Set it up opens the
+wizard, whose exit reads "Go to the dashboard" and lands on `/`; opened from
+Settings → Organisation the exit reads "Back to the organisation"; Go to the
+dashboard lands on `/`; as Halloran there is no offer and the dashboard opens.
+The first screenshot had the two buttons against the sentence above them;
+they now have their own space, matching the verify card they follow.

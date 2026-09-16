@@ -7,6 +7,7 @@ import { Unrecorded } from '@/components/status'
 import { formatCount } from '@/lib/format'
 import { changedFigures, figures, setFigure } from '@/data/access/settings-store'
 import { CLOCK_IS_OVERRIDDEN, clockHref } from '@/data/fixtures/clock'
+import { SETUP_FROM_ORGANISATION } from '@/features/settings/setup-origin'
 import styles from './group.module.css'
 
 /**
@@ -95,6 +96,7 @@ export function SettingsRoute() {
           <Link
             to="../setup"
             relative="path"
+            state={{ from: SETUP_FROM_ORGANISATION }}
             className={buttonClassName()}
             data-open-setup
           >

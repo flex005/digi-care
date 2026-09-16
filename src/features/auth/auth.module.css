@@ -658,6 +658,11 @@
   padding: var(--space-32);
 }
 
+/* The setup offer's two choices, clear of the sentence they answer. */
+.offerActions {
+  margin-top: var(--space-24);
+}
+
 .verifyCard .field {
   margin-bottom: var(--space-12);
 }

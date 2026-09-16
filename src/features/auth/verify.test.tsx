@@ -10,7 +10,7 @@ import {
   signingCodeFor,
   teamMembers,
 } from '@/data/access/team-store'
-import { staffHalloran } from '@/data/fixtures/organisation'
+import { staffHalloran, staffOkonkwo } from '@/data/fixtures/organisation'
 import { InvitationRoute } from './InvitationRoute'
 import { VerifyRoute } from './VerifyRoute'
 import { SignInRoute } from './SignInRoute'
@@ -46,6 +46,7 @@ function renderAt(path: string) {
       { path: '/invitation/:staffId', element: <InvitationRoute /> },
       { path: '/verify/:staffId', element: <VerifyRoute /> },
       { path: '/', element: <p>the product</p> },
+      { path: '/settings/setup', element: <p>the setup wizard</p> },
     ],
     { initialEntries: [path] },
   )
@@ -111,6 +112,66 @@ describe('the verification step says what it is not doing', () => {
     await user.click(container.querySelector('[data-verify-submit]')!)
 
     await waitFor(() => expect(container.textContent).toContain('the product'))
+  }, 20000)
+})
+
+describe('after verifying, the registered manager is offered the organisation setup', () => {
+  async function verifiedAs(staffId: string) {
+    const user = userEvent.setup()
+    const view = renderAt(`/verify/${staffId}?site=site-rosewood-court`)
+    await waitFor(() =>
+      expect(view.container.querySelector('[data-verify]')).toBeTruthy(),
+    )
+    await user.type(view.container.querySelector('[data-field="code"]')!, '123456')
+    await user.click(view.container.querySelector('[data-verify-submit]')!)
+    return { user, ...view }
+  }
+
+  it('offers it to the person who holds the act, rather than skipping to the dashboard', async () => {
+    /*
+     * AM v2.0 AUTH-05 runs the wizard on the first Admin's first sign-in.
+     * Nothing here remembers a sign-in, so it is offered on every one and the
+     * Admin chooses. Signing out discards what the wizard wrote, so each
+     * sign-in does start with the organisation unset by it.
+     */
+    const { container } = await verifiedAs(staffOkonkwo.id)
+    await waitFor(() =>
+      expect(container.querySelector('[data-setup-offer]')).toBeTruthy(),
+    )
+    expect(container.textContent).not.toContain('the product')
+
+    /*
+     * Not a welcome. The organisation has two homes and a team, so a screen
+     * greeting somebody as new would be a claim about what has happened
+     * before.
+     */
+    const offer = container.querySelector('[data-setup-offer]')!
+    expect(offer.textContent).not.toMatch(/welcome|first time|get started/i)
+    expect(offer.textContent).toMatch(/now, or later from Settings/)
+  }, 20000)
+
+  it('goes to the dashboard when that is the choice', async () => {
+    const { user, container } = await verifiedAs(staffOkonkwo.id)
+    await waitFor(() =>
+      expect(container.querySelector('[data-offer-dashboard]')).toBeTruthy(),
+    )
+    await user.click(container.querySelector('[data-offer-dashboard]')!)
+    await waitFor(() => expect(container.textContent).toContain('the product'))
+  }, 20000)
+
+  it('opens the wizard when that is the choice', async () => {
+    const { user, container } = await verifiedAs(staffOkonkwo.id)
+    await waitFor(() =>
+      expect(container.querySelector('[data-offer-setup]')).toBeTruthy(),
+    )
+    await user.click(container.querySelector('[data-offer-setup]')!)
+    await waitFor(() => expect(container.textContent).toContain('the setup wizard'))
+  }, 20000)
+
+  it('does not offer it to a manager, who cannot set up the organisation', async () => {
+    const { container } = await verifiedAs(staffHalloran.id)
+    await waitFor(() => expect(container.textContent).toContain('the product'))
+    expect(container.querySelector('[data-setup-offer]')).toBeNull()
   }, 20000)
 })
 

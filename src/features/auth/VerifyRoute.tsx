@@ -4,6 +4,7 @@ import { Button, Dialog } from '@/components/primitives'
 import { Logo } from '@/components/brand/Logo'
 import type { SiteId } from '@/data/types'
 import { memberById } from '@/data/access/team-store'
+import { mayDo } from '@/features/team/permissions'
 import { useSession } from '@/app/session/use-session'
 import styles from './auth.module.css'
 
@@ -34,7 +35,7 @@ export function VerifyRoute() {
   const { staffId } = useParams<{ staffId: string }>()
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const { sites, signInAs } = useSession()
+  const { sites, signInAs, organisation } = useSession()
 
   const member = useMemo(() => (staffId ? memberById(staffId) : undefined), [staffId])
   const site = sites.find((entry) => entry.id === (params.get('site') as SiteId))
@@ -50,6 +51,16 @@ export function VerifyRoute() {
    * step that is no longer the end of anything.
    */
   const [finished, setFinished] = useState(false)
+  /*
+   * **Setting up the organisation, offered rather than remembered.** AM v2.0
+   * AUTH-05 runs the wizard once, on the first Admin's first sign-in. Nothing
+   * here records a sign-in, so "first" cannot be told apart from any other, and
+   * a flag would be a claim about history this build does not hold. Signing out
+   * discards everything the wizard wrote, so every sign-in does start with the
+   * organisation unset by it: offering it each time is the state of the build
+   * made visible, and the person who holds the act chooses.
+   */
+  const [offeringSetup, setOfferingSetup] = useState(false)
 
   useEffect(() => {
     const timer = setInterval(() => setLeft((value) => Math.max(0, value - 1)), 1000)
@@ -65,6 +76,31 @@ export function VerifyRoute() {
             This link names somebody the team record does not hold.{' '}
             <Link to="/sign-in">Back to sign in</Link>
           </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (offeringSetup) {
+    return (
+      <div className={`${styles.screen} ${styles.centred}`} data-setup-offer>
+        <div className={`${styles.card} ${styles.verifyCard}`}>
+          <Logo height={32} title="Radiant digicare" />
+          {/* Not a welcome: the organisation already has homes and a team. */}
+          <h1 className={styles.title}>Set up {organisation.name}?</h1>
+          <p className={styles.subtitle}>It can be done now, or later from Settings.</p>
+          <div className={`${styles.actions} ${styles.offerActions}`}>
+            <Button
+              variant="secondary"
+              data-offer-dashboard
+              onClick={() => navigate('/')}
+            >
+              Go to the dashboard
+            </Button>
+            <Button data-offer-setup onClick={() => navigate('/settings/setup')}>
+              Set it up
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -145,7 +181,8 @@ export function VerifyRoute() {
               }
               if (site === undefined) return
               signInAs(member, site)
-              navigate('/')
+              if (mayDo(member.role, 'set_up_organisation')) setOfferingSetup(true)
+              else navigate('/')
             }}
           >
             {fromInvitation ? 'Finish setting up' : 'Verify and sign in'}
