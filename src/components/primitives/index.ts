@@ -11,7 +11,7 @@
 export { Avatar } from './Avatar'
 export type { AvatarProps, AvatarSize } from './Avatar'
 
-export { Button } from './Button'
+export { Button, buttonClassName } from './Button'
 export type { ButtonProps, ButtonSize, ButtonVariant } from './Button'
 
 export { Card, CardHeader } from './Card'

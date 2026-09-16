@@ -19,6 +19,25 @@
   font-weight: var(--weight-bold);
 }
 
+/*
+ * A settings tab's own heading names what the tab holds, the organisation or
+ * the home, so it does not repeat the page title and the tab above it.
+ */
+.tabHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.tabTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--weight-bold);
+}
+
 .pageSubtitle {
   margin-top: var(--space-4);
   max-width: 90ch;

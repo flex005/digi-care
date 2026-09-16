@@ -10,7 +10,7 @@ import { teamMembers } from '@/data/access/team-store'
 import { AppShell } from '@/components/shell/AppShell'
 import { TooltipProvider, ToastProvider } from '@/components/primitives'
 import { ComplianceOverviewRoute } from '@/features/compliance/ComplianceOverviewRoute'
-import { SettingsRoute } from '@/features/group/SettingsRoute'
+import { HomeSettingsRoute } from '@/features/group/HomeSettingsRoute'
 import { RolePermissions } from '@/features/me/RolePermissions'
 import { router } from './routes'
 import { navItems } from './nav-items.icons'
@@ -408,8 +408,8 @@ describe('the four acts are absent for a manager and present for the registered 
   it('renders settings as values for a deputy manager and as controls for the manager', async () => {
     const reading = renderScreenAs(
       'deputy_manager',
-      <SettingsRoute />,
-      '/settings/figures',
+      <HomeSettingsRoute />,
+      '/settings/home',
     )
     await waitFor(() =>
       expect(reading.container.querySelector('[data-settings-read-only]')).toBeTruthy(),
@@ -424,8 +424,8 @@ describe('the four acts are absent for a manager and present for the registered 
 
     const writing = renderScreenAs(
       'registered_manager',
-      <SettingsRoute />,
-      '/settings/figures',
+      <HomeSettingsRoute />,
+      '/settings/home',
     )
     await waitFor(() =>
       expect(

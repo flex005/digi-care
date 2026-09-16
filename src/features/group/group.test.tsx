@@ -19,6 +19,7 @@ import {
 } from '@/data/access/settings-store'
 import { GroupOverviewRoute } from './GroupOverviewRoute'
 import { SettingsRoute } from './SettingsRoute'
+import { HomeSettingsRoute } from './HomeSettingsRoute'
 import { ChangedFiguresBanner } from './ChangedFiguresBanner'
 import { loadGroup } from './group-figures'
 
@@ -65,6 +66,7 @@ function renderAt(path: string) {
       { path: '/', element: <DashboardStandIn /> },
       { path: 'group', element: <GroupOverviewRoute /> },
       { path: 'settings', element: <SettingsRoute /> },
+      { path: 'settings/home', element: <HomeSettingsRoute /> },
     ],
     { initialEntries: [path] },
   )
@@ -84,7 +86,9 @@ const settled = (container: HTMLElement) =>
   waitFor(
     () =>
       expect(
-        container.querySelector('[data-group-overview], [data-settings]'),
+        container.querySelector(
+          '[data-group-overview], [data-settings], [data-home-settings]',
+        ),
       ).toBeTruthy(),
     { timeout: 20000 },
   )
@@ -253,6 +257,12 @@ describe('accessibility', () => {
 
   it('has no violations on settings', async () => {
     const { container } = renderAt('/settings')
+    await settled(container)
+    expect(await axe(container)).toHaveNoViolations()
+  }, 40000)
+
+  it('has no violations on a home’s own settings', async () => {
+    const { container } = renderAt('/settings/home')
     await settled(container)
     expect(await axe(container)).toHaveNoViolations()
   }, 40000)

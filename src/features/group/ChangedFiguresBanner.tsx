@@ -34,8 +34,12 @@ export function ChangedFiguresBanner() {
         . Anything on this screen derived from {changed.length === 1 ? 'it' : 'them'}{' '}
         was drawn against the changed value.
       </p>
-      <Link to="/settings" className={styles.changedLink} data-changed-link>
-        Settings
+      <Link
+        to="/settings/organisation"
+        className={styles.changedLink}
+        data-changed-link
+      >
+        Organisation settings
       </Link>
     </div>
   )

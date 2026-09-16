@@ -34,7 +34,7 @@ browser.
 | **Activities** | Calendar, planning a session, changing one before it starts, recording attendance, and cancelling a session with a reason. |
 | **Consent** | The consent page; recording a decision after the capacity assessment, on the resident's own authority, as a best-interests decision, or by an attorney where a health and welfare LPA is on file; and withdrawal. |
 | **Documents, Reports** | Both built. |
-| **Settings** | Home name and timezone; adjustable figures; which risk assessments, care plan domains and consents a home uses; review frequency; default family access level. The organisation name is set in the wizard. Round times shown read-only. |
+| **Settings** | Four tabs: Team, Homes, This home and Organisation. **This home**: its name and timezone, and which risk assessments, care plan domains and consents it uses. **Organisation**: the figures every home runs on, including review frequency, with round times shown read-only, and a **Set up the organisation** button at the top that opens the wizard at `/settings/setup`, where the organisation name is set. |
 
 **Admin vs Manager** is enforced in what renders: a Manager does not see the
 Admin-only controls rather than seeing them disabled, and gets a page saying

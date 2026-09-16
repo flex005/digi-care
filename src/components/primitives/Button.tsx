@@ -32,6 +32,21 @@ const SIZE: Record<ButtonSize, string> = {
   large: styles.large,
 }
 
+/**
+ * The button's classes, for a control that navigates.
+ *
+ * A way into another screen is a link, so a crawler, a screen reader and a
+ * middle-click all treat it as one. It still has to look like a control: a
+ * link drawn as body text is present in the DOM and invisible to a reader,
+ * which is how the setup wizard was reachable and could not be found.
+ */
+export function buttonClassName({
+  variant = 'primary',
+  size = 'medium',
+}: { variant?: ButtonVariant; size?: ButtonSize } = {}): string {
+  return [styles.button, VARIANT[variant], SIZE[size]].join(' ')
+}
+
 export function Button({
   variant = 'primary',
   size = 'medium',
@@ -43,7 +58,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={[styles.button, VARIANT[variant], SIZE[size], className]
+      className={[buttonClassName({ variant, size }), className]
         .filter(Boolean)
         .join(' ')}
       {...rest}

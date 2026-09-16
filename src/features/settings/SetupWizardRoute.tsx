@@ -332,8 +332,8 @@ export function SetupWizardRoute() {
         {requiredDone()
           ? 'The two required steps are confirmed. Anything skipped can be done from Settings or the team list at any time.'
           : `Step ${index + 1} of ${ORDER.length}. The organisation and its first home have to be confirmed before setup is done.`}{' '}
-        <Link to="/settings/figures" className={styles.link}>
-          Back to Settings
+        <Link to="/settings/organisation" className={styles.link}>
+          Back to the organisation
         </Link>
       </p>
     </div>

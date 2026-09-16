@@ -2,28 +2,27 @@ import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
-import { ConfiguredLists } from './ConfiguredLists'
-import { NotConfiguredHere } from './NotConfiguredHere'
-import { Card } from '@/components/primitives'
+import { Card, buttonClassName } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { formatCount } from '@/lib/format'
-import {
-  TIME_ZONES,
-  changedFigures,
-  figures,
-  setFigure,
-  setSiteName,
-  setSiteTimeZone,
-} from '@/data/access/settings-store'
+import { changedFigures, figures, setFigure } from '@/data/access/settings-store'
 import { CLOCK_IS_OVERRIDDEN, clockHref } from '@/data/fixtures/clock'
 import styles from './group.module.css'
 
 /**
- * Site settings. PRD §6.7, Phase 15.
+ * Organisation settings. PRD §6.7, Phase 15; split from the home's own
+ * settings in Phase 29.
  *
- * The sentence: **which site this is, then the figures that genuinely change
- * what a screen says, then the ones that are fixed at generation — stated as
- * fixed, with their values, rather than offered as controls.**
+ * The sentence: **the way into setting up the organisation, then the figures
+ * every home runs on that genuinely change what a screen says, then the ones
+ * that are fixed at generation — stated as fixed, with their values, rather
+ * than offered as controls.**
+ *
+ * **Why this is its own tab.** It shared one with a home's name, timezone and
+ * the assessments that home carries, under a heading that named the home. The
+ * figures are held once for the whole organisation and the wizard sets up the
+ * organisation, so a tab headed by one home was describing two scopes as one.
+ * A home's own settings are on the tab beside this.
  *
  * **Settable if and only if it is read at render.** A figure baked into the
  * fixtures cannot be changed by a control, because the records were produced
@@ -55,7 +54,7 @@ const CLOCK_CHOICES: { value: string; label: string; what: string }[] = [
 ]
 
 export function SettingsRoute() {
-  const { activeSite, reloadSites } = useSession()
+  const { organisation } = useSession()
   const viewer = useViewer()
   /*
    * **Read-only rather than absent, and that is AM v2.0 asking for the right
@@ -75,86 +74,44 @@ export function SettingsRoute() {
 
   return (
     <div className={styles.page} data-settings>
-      <header>
-        <h1 className={styles.pageTitle}>Settings</h1>
-        {mayConfigure ? null : (
-          <p className={styles.readOnlyNote} data-settings-read-only>
-            <b>These are read-only for you.</b> Your role is {viewer.roleName};
-            configuring the service belongs to the person it is registered to.
-          </p>
-        )}
-        <p className={styles.pageSubtitle}>{activeSite.name}.</p>
+      <header className={styles.tabHead}>
+        <div>
+          <h2 className={styles.tabTitle} data-tab-heading>
+            {organisation.name}
+          </h2>
+          <p className={styles.pageSubtitle}>Settings that apply to every home.</p>
+        </div>
         {/*
-         * The way into the setup wizard. AM v2.0 runs it on the first Admin's
-         * first sign-in; with no accounts that moment does not exist here, so
-         * it is reached from the screen whose settings it writes, by whoever
-         * holds the act.
+         * The way into the setup wizard, and the first control on the tab.
+         * AM v2.0 runs it on the first Admin's first sign-in; with no accounts
+         * that moment does not exist here, so it is reached from the tab for
+         * the thing it sets up.
+         *
+         * **A button, because it was a link drawn as the grey line above it.**
+         * The route was reachable, a test found the link, and the person it
+         * was built for could not find it on the screen.
          */}
         {viewer.may('set_up_organisation') ? (
-          <p className={styles.pageSubtitle}>
-            <Link to="../setup" relative="path" data-open-setup>
-              Open organisation setup
-            </Link>
-          </p>
+          <Link
+            to="../setup"
+            relative="path"
+            className={buttonClassName()}
+            data-open-setup
+          >
+            Set up the organisation
+          </Link>
         ) : null}
       </header>
+      {mayConfigure ? null : (
+        <p className={styles.readOnlyNote} data-settings-read-only>
+          <b>These are read-only for you.</b> Your role is {viewer.roleName};
+          configuring the service belongs to the person it is registered to.
+        </p>
+      )}
 
       <Card>
-        <section className={styles.settingsSection} data-settings-section="site">
-          <h2 className={styles.settingsTitle}>This home</h2>
-          <p className={styles.settingsNote}>
-            The zone decides what every clinical timestamp in this home says.
-          </p>
-
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>Name</span>
-            {mayConfigure ? (
-              <input
-                type="text"
-                defaultValue={activeSite.name}
-                data-setting="site-name"
-                onBlur={(event) => {
-                  setSiteName(
-                    activeSite.id,
-                    event.target.value.trim() || activeSite.name,
-                  )
-                  reloadSites()
-                }}
-              />
-            ) : (
-              <span className={styles.readOnlyValue} data-setting-value="site-name">
-                {activeSite.name}
-              </span>
-            )}
-          </label>
-
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>Timezone</span>
-            {mayConfigure ? (
-              <select
-                value={activeSite.timeZone}
-                data-setting="site-timezone"
-                onChange={(event) => {
-                  setSiteTimeZone(activeSite.id, event.target.value)
-                  reloadSites()
-                }}
-              >
-                {TIME_ZONES.map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <span className={styles.readOnlyValue} data-setting-value="site-timezone">
-                {activeSite.timeZone}
-              </span>
-            )}
-          </label>
-        </section>
-
         <section className={styles.settingsSection} data-settings-section="adjustable">
-          <h2 className={styles.settingsTitle}>Figures this build runs on</h2>
+          <h3 className={styles.settingsTitle}>Figures every home runs on</h3>
           <p className={styles.settingsNote}>
             Changing one changes what every screen says, immediately.
           </p>
@@ -211,18 +168,8 @@ export function SettingsRoute() {
           </ul>
         </section>
 
-        {mayConfigure ? (
-          <ConfiguredLists
-            siteId={activeSite.id}
-            siteName={activeSite.name}
-            onChanged={bump}
-          />
-        ) : null}
-
-        <NotConfiguredHere />
-
         <section className={styles.settingsSection} data-settings-section="clock">
-          <h2 className={styles.settingsTitle}>The instant the record is drawn at</h2>
+          <h3 className={styles.settingsTitle}>The instant the record is drawn at</h3>
           <p className={styles.settingsNote}>
             Moving the clock reloads and draws the whole record again at that time.
           </p>
@@ -257,7 +204,7 @@ export function SettingsRoute() {
         </section>
 
         <section className={styles.settingsSection} data-settings-section="fixed">
-          <h2 className={styles.settingsTitle}>Fixed at fixture generation</h2>
+          <h3 className={styles.settingsTitle}>Fixed at fixture generation</h3>
           <p className={styles.settingsNote}>
             These are read-only: the record was produced against them.
           </p>

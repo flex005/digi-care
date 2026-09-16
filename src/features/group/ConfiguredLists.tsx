@@ -76,7 +76,7 @@ export function ConfiguredLists({
           className={styles.settingsSection}
           data-settings-section={set.id}
         >
-          <h2 className={styles.settingsTitle}>{set.title}</h2>
+          <h3 className={styles.settingsTitle}>{set.title}</h3>
           <p className={styles.settingsNote}>{set.note}</p>
           <p className={styles.settingsNote}>
             <b>Turning one off clears nothing already recorded</b>, and an unanswered

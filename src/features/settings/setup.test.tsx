@@ -4,7 +4,11 @@ import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
 import { useSession } from '@/app/session/use-session'
-import { TooltipProvider, ToastProvider } from '@/components/primitives'
+import {
+  TooltipProvider,
+  ToastProvider,
+  buttonClassName,
+} from '@/components/primitives'
 import { SignInAs } from '@/test/sign-in-as'
 import { mayDo } from '@/features/team/permissions'
 import { isActive, resetSessionSiteConfig } from '@/data/access/site-config-store'
@@ -17,6 +21,8 @@ import {
 import { resetSessionSettings } from '@/data/access/settings-store'
 import { resetSessionTeam, teamMembers } from '@/data/access/team-store'
 import { SettingsRoute } from '@/features/group/SettingsRoute'
+import { HomeSettingsRoute } from '@/features/group/HomeSettingsRoute'
+import { SettingsShellRoute } from './SettingsShellRoute'
 import { SetupWizardRoute } from './SetupWizardRoute'
 
 /**
@@ -217,10 +223,10 @@ describe('who may open it, and where it is reached from', () => {
     expect(mayDo('auditor', 'set_up_organisation')).toBe(false)
   })
 
-  it('is linked from the Settings screen for the person who holds it', async () => {
+  it('is a button at the top of the organisation tab, for the person who holds it', async () => {
     const router = createMemoryRouter(
-      [{ path: '/settings/figures', element: <SettingsRoute /> }],
-      { initialEntries: ['/settings/figures'] },
+      [{ path: '/settings/organisation', element: <SettingsRoute /> }],
+      { initialEntries: ['/settings/organisation'] },
     )
     const { container } = render(
       <SessionProvider>
@@ -238,8 +244,89 @@ describe('who may open it, and where it is reached from', () => {
     await waitFor(() =>
       expect(container.querySelector('[data-open-setup]')).toBeTruthy(),
     )
-    expect(container.querySelector('[data-open-setup]')!.getAttribute('href')).toBe(
-      '/settings/setup',
-    )
+    const open = container.querySelector('[data-open-setup]')!
+    expect(open.getAttribute('href')).toBe('/settings/setup')
+
+    /*
+     * **And it can be seen as a way in, which the href never said.** It was a
+     * link inside a grey subtitle, styled as the line above it, and this test
+     * passed while the person it was built for could not find it. jsdom
+     * applies no CSS, so this holds what a test can hold: the control is the
+     * button primitive, and it sits in the tab's header ahead of every
+     * section. Whether it reads as a button is a screenshot's question.
+     */
+    expect(open.className).toBe(buttonClassName())
+    expect(open.closest('header')).toBeTruthy()
+    const firstSection = container.querySelector('[data-settings-section]')!
+    expect(
+      open.compareDocumentPosition(firstSection) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
   }, 20000)
+
+  it('is not on a home’s own tab, because it sets up the organisation', async () => {
+    const router = createMemoryRouter(
+      [{ path: '/settings/home', element: <HomeSettingsRoute /> }],
+      { initialEntries: ['/settings/home'] },
+    )
+    const { container } = render(
+      <SessionProvider>
+        <TooltipProvider>
+          <SignInAs as="registered_manager" />
+          <RouterProvider router={router} />
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+    await waitFor(() =>
+      expect(container.querySelector('[data-setting="site-name"]')).toBeTruthy(),
+    )
+    expect(container.querySelector('[data-open-setup]')).toBeNull()
+  }, 20000)
+})
+
+describe('the page, the tab and the tab’s heading are three different names', () => {
+  it('names the module, then the tab, then what the tab holds', async () => {
+    /*
+     * The Settings tab read "Settings", under a tab labelled "Settings", under
+     * a page titled "Settings": three elements claiming one name, so the
+     * screen could not say what it was. The module is Settings, the tab names
+     * a scope, and the heading inside names the organisation or the home.
+     */
+    for (const [path, tabLabel] of [
+      ['/settings/organisation', 'Organisation'],
+      ['/settings/home', 'This home'],
+    ] as const) {
+      const router = createMemoryRouter(
+        [
+          {
+            path: '/settings',
+            element: <SettingsShellRoute />,
+            children: [
+              { path: 'organisation', element: <SettingsRoute /> },
+              { path: 'home', element: <HomeSettingsRoute /> },
+            ],
+          },
+        ],
+        { initialEntries: [path] },
+      )
+      const { container, unmount } = render(
+        <SessionProvider>
+          <TooltipProvider>
+            <SignInAs as="registered_manager" />
+            <RouterProvider router={router} />
+          </TooltipProvider>
+        </SessionProvider>,
+      )
+      await waitFor(() =>
+        expect(container.querySelector('[data-tab-heading]')).toBeTruthy(),
+      )
+      const shell = container.querySelector('[data-settings-shell]')!
+      const title = shell.querySelector('h1')!.textContent
+      const tab = shell.querySelector('[aria-current="page"]')!.textContent
+      const heading = shell.querySelector('[data-tab-heading]')!.textContent
+      expect(title, path).toBe('Settings')
+      expect(tab, path).toBe(tabLabel)
+      expect(new Set([title, tab, heading]).size, path).toBe(3)
+      unmount()
+    }
+  }, 30000)
 })

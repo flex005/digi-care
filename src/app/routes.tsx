@@ -57,6 +57,7 @@ import { ActivityLogRoute } from '@/features/team/ActivityLogRoute'
 import { GroupOverviewRoute } from '@/features/group/GroupOverviewRoute'
 import { SettingsRoute } from '@/features/group/SettingsRoute'
 import { SettingsShellRoute } from '@/features/settings/SettingsShellRoute'
+import { HomeSettingsRoute } from '@/features/group/HomeSettingsRoute'
 import { SetupWizardRoute } from '@/features/settings/SetupWizardRoute'
 import { AdmissionRoute } from '@/features/residents/AdmissionRoute'
 import { AttendanceRoute } from '@/features/activities/AttendanceRoute'
@@ -197,9 +198,10 @@ export const router = createBrowserRouter([
           { path: 'permissions', element: <PermissionMatrixRoute /> },
           { path: 'activity', element: <ActivityLogRoute /> },
           { path: 'homes', element: <GroupOverviewRoute /> },
-          { path: 'figures', element: <SettingsRoute /> },
+          { path: 'home', element: <HomeSettingsRoute /> },
+          { path: 'organisation', element: <SettingsRoute /> },
           { path: 'team/:staffId', element: <StaffDetailRoute /> },
-          // Phase 23. Reached from the Settings tab, and refused by the shell
+          // Phase 23. Reached from the Organisation tab, and refused by the shell
           // for anybody who does not hold `set_up_organisation`.
           { path: 'setup', element: <SetupWizardRoute /> },
         ],

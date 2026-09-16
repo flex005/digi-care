@@ -60,7 +60,7 @@ const BECAUSE: Record<(typeof ABSENT)[number]['because'], string> = {
 export function NotConfiguredHere() {
   return (
     <section className={styles.settingsSection} data-not-configured>
-      <h2 className={styles.settingsTitle}>Not configured here, and why</h2>
+      <h3 className={styles.settingsTitle}>Not configured here, and why</h3>
       <p className={styles.settingsNote}>
         Four sections of the source specification&rsquo;s settings screen are not here.
       </p>

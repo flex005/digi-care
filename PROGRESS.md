@@ -14455,3 +14455,52 @@ label goes to the screen reader. Checked in a real browser rather than in
 jsdom: screenshots of both bars side by side, and each dropdown driven by
 clicking an option, with the filter claim read back after each ("Role = Care
 worker: Showing 7 of 18 on the team").
+
+## The setup wizard's way in, and the Settings tab split by scope
+
+Frank signed in as Adaeze Okonkwo, opened Settings and could not find the
+organisation setup wizard. It was reachable: `/settings/setup`, linked from the
+third tab. The link was the second grey line under the tab's heading, computed
+colour `rgb(110, 102, 136)` like the line above it, weight 400, no underline.
+The test for it asserted the link existed and its href; both were true.
+
+**The decision: one home's settings and the organisation's do not belong on one
+tab.** The tab held three scopes under one heading naming nothing in
+particular: the active home's name and timezone and what it carries out
+(per home), the adjustable and fixed figures (held once in `settings-store`
+for every home), and the way into the wizard (the organisation). The wizard
+itself writes the organisation name, a first home and its templates, and a
+first invitation. So the tab is now two:
+
+- **This home** (`/settings/home`), headed by the home's name: name and
+  timezone, the assessments, domains and consents it carries, and the sections
+  not configured here, three of whose four are worded per home.
+- **Organisation** (`/settings/organisation`), headed by the organisation's
+  name: a **Set up the organisation** button first, then the figures every home
+  runs on, the clock, the fixed figures, and the changed-figures panel.
+
+`/settings/figures` is gone. The wizard's "Back" link and the changed-figures
+banner now point at the Organisation tab.
+
+The button is a `<Link>` with the button primitive's classes, through a new
+`buttonClassName()` export on `Button`, so it stays a link to a crawler and a
+screen reader and looks like a control to a reader. The three "Settings"
+headings are now "Settings" (the module), the tab label, and the home's or the
+organisation's name, as an `h2`; the section titles under it moved to `h3`.
+
+Tests: the setup-link test now asserts the control has the button primitive's
+classes and sits in the tab header ahead of every section, and a new test
+asserts the home tab has no setup link. A new test renders the shell on both
+tabs and asserts the title, the active tab and the tab's heading are three
+different strings. Both mutated before trusting: the tab heading put back to
+"Settings" (confirmed landed, count 1) failed `names the module, then the tab,
+then what the tab holds` with "expected 2 to be 3"; the link put back inside a
+grey subtitle (confirmed landed, count 1) failed `is a button at the top of the
+organisation tab` on the class. Restored from a backup both times.
+
+Checked in a browser as Okonkwo: tabs read Team · Homes · This home ·
+Organisation; the button is at the top right of the Organisation tab; clicking
+it lands on "Set up Thornfield Care Group"; the wizard's Back link returns to
+`/settings/organisation`; the home tab has no setup link.
+
+§8 has the entry: a reachability guard finds a link, not a visible one.

@@ -18,7 +18,7 @@ import styles from './settings-shell.module.css'
  * `reachability.test.tsx` to check the router against in both directions.
  */
 /**
- * All three, always, as the declaration the reachability guard reads.
+ * All four, always, as the declaration the reachability guard reads.
  *
  * **What a role sees is a filter over this and never a shorter list.** A tab
  * strip built per role would be a second declaration of what the module
@@ -28,7 +28,8 @@ import styles from './settings-shell.module.css'
 export const SETTINGS_TABS: ScreenTab[] = [
   { label: 'Team', path: '.', end: true },
   { label: 'Homes', path: 'homes' },
-  { label: 'Settings', path: 'figures' },
+  { label: 'This home', path: 'home' },
+  { label: 'Organisation', path: 'organisation' },
 ]
 
 /** The act a tab needs, where it needs one. Homes is the group overview. */
