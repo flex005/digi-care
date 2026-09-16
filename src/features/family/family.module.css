@@ -44,18 +44,25 @@
 .members {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
   list-style: none;
   padding: 0;
-  margin: 0 0 var(--space-16);
+  margin: 0;
 }
 
+/*
+ * **Padded on all four sides, because the row sits inside a card.** It used to
+ * be a section on a page, where the section's own padding held it off the
+ * edge; in a card there is nothing between the row and the border, so a name
+ * and the controls beside it ran flush to it. The queue's rows one screen
+ * along already use this inset, and two lists of people in one module reading
+ * differently is the drift the one-shape rule exists to stop.
+ */
 .member {
   display: flex;
   gap: var(--space-16);
   align-items: baseline;
   justify-content: space-between;
-  padding: var(--space-8) 0;
+  padding: var(--space-12) var(--space-16);
   border-bottom: 1px solid var(--border-subtle);
 }
 

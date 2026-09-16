@@ -14108,3 +14108,24 @@ Three, each confirmed landed before the verdict was read, each restored:
 The second is worth keeping: collapsing the history also failed the fixture
 test, because a fixture reaching a state and a screen rendering it are two
 claims and both were being made.
+
+## The member rows had no side padding
+
+Frank spotted it on the deployed build: inside the card, a family member's
+name and the Edit and Remove buttons ran flush to the card's border. The row
+carried `padding: var(--space-8) 0` from Phase 21, when the list was a section
+on a page and the section's own padding held it off the edge. Phase 27 put it
+in a card, where nothing else does. It now uses `var(--space-12)
+var(--space-16)`, the inset the module screen's rows already use — two lists
+of people in one module reading differently is the drift the one-shape rule
+exists to stop. The `gap` on the list went with it, since the rows are
+separated by their own rule.
+
+**And the first measurement of the fix was wrong in a way worth recording.**
+The probe measured the row's own bounding box against the card's, and reported
+a 1px inset — which is the card's border, and would have read the same before
+and after. Padding is interior: the row spans the card either way. What
+answers the question is the position of the text and of the last control,
+which came back at 17px each against a computed `12px 16px`. It is the
+wrong-subject class in miniature: the measurement was accurate and it was
+about the wrong box.
