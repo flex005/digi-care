@@ -14443,3 +14443,15 @@ diffing for exactly that shape, and fixed.
 sentence was the whole assertion, the structural half stays (no numeric on the
 staff profile, no download control, columns with no omission). Two tests that
 asserted the "not security" notice came first were removed with it.
+
+## Team list filters take the residents list's shape
+
+The team list's four filters were an unstyled browser `<input>` and three
+native `<select>`s under uppercase labels, the only filter bar in the product
+drawn that way. They are now the residents list's search box, with its icon and
+placeholder, and three of the shared `Select` primitive, whose placeholder
+carries the meaning ("Every home", "Every role", "Any standing") and whose
+label goes to the screen reader. Checked in a real browser rather than in
+jsdom: screenshots of both bars side by side, and each dropdown driven by
+clicking an option, with the filter claim read back after each ("Role = Care
+worker: Showing 7 of 18 on the team").

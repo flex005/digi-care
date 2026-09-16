@@ -788,15 +788,52 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-12);
-  padding: var(--space-12) var(--space-20);
+  align-items: center;
+  padding: var(--space-16) var(--space-20);
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.searchField {
+/* The residents list's search box, so the two filter bars read as one control. */
+.search {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-8);
+  align-items: center;
+  flex: 1 1 16rem;
   min-width: 12rem;
+  max-width: 24rem;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink-500);
+}
+
+/* Labelled for a screen reader; the placeholder is not a label. */
+.searchLabel {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+}
+
+.search input:focus {
+  outline: none;
+}
+
+.search:focus-within {
+  border-color: var(--purple-600);
 }
 
 .filterClaim {

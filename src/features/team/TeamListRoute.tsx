@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSession } from '@/app/session/use-session'
-import { Avatar, Card } from '@/components/primitives'
+import { Avatar, Card, Select } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { STAFF_ROLE_NAMES } from '@/data/types'
 import type { SiteId, StaffRole, StaffStanding } from '@/data/types'
@@ -126,66 +126,58 @@ export function TeamListRoute() {
          * the view.
          */}
         <div className={styles.filterBar} data-team-filters>
-          <label className={styles.searchField}>
-            <span className={styles.fieldLabel}>Search by name</span>
+          <label className={styles.search}>
+            <span className={styles.searchLabel}>Search by name</span>
+            <Icon name="search/search-02" size={16} aria-hidden />
             <input
               type="search"
               value={search}
+              placeholder="Search by name"
               onChange={(event) => setSearch(event.target.value)}
               data-field="team-search"
             />
           </label>
 
-          <label className={styles.searchField}>
-            <span className={styles.fieldLabel}>Home</span>
-            <select
-              value={siteFilter}
-              onChange={(event) => setSiteFilter(event.target.value as 'all' | SiteId)}
-              data-filter="site"
-            >
-              <option value="all">Every home</option>
-              {sites.map((site) => (
-                <option key={site.id} value={site.id}>
-                  {site.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Select
+            label="Home"
+            placeholder="Every home"
+            value={siteFilter}
+            onValueChange={(value) => setSiteFilter(value as 'all' | SiteId)}
+            options={[
+              { value: 'all', label: 'Every home' },
+              ...sites.map((site) => ({ value: site.id, label: site.name })),
+            ]}
+          />
 
-          <label className={styles.searchField}>
-            <span className={styles.fieldLabel}>Role</span>
-            <select
-              value={roleFilter}
-              onChange={(event) =>
-                setRoleFilter(event.target.value as 'all' | StaffRole)
-              }
-              data-filter="role"
-            >
-              <option value="all">Every role</option>
-              {(Object.keys(STAFF_ROLE_NAMES) as StaffRole[]).map((role) => (
-                <option key={role} value={role}>
-                  {STAFF_ROLE_NAMES[role]}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Select
+            label="Role"
+            placeholder="Every role"
+            value={roleFilter}
+            onValueChange={(value) => setRoleFilter(value as 'all' | StaffRole)}
+            options={[
+              { value: 'all', label: 'Every role' },
+              ...(Object.keys(STAFF_ROLE_NAMES) as StaffRole[]).map((role) => ({
+                value: role,
+                label: STAFF_ROLE_NAMES[role],
+              })),
+            ]}
+          />
 
-          <label className={styles.searchField}>
-            <span className={styles.fieldLabel}>Access</span>
-            <select
-              value={standingFilter}
-              onChange={(event) =>
-                setStandingFilter(event.target.value as 'all' | StaffStanding['kind'])
-              }
-              data-filter="standing"
-            >
-              <option value="all">Any standing</option>
-              <option value="has_access">Has access</option>
-              <option value="never_given_access">Never set up</option>
-              <option value="suspended">Suspended</option>
-              <option value="no_longer_has_access">No longer has access</option>
-            </select>
-          </label>
+          <Select
+            label="Access"
+            placeholder="Any standing"
+            value={standingFilter}
+            onValueChange={(value) =>
+              setStandingFilter(value as 'all' | StaffStanding['kind'])
+            }
+            options={[
+              { value: 'all', label: 'Any standing' },
+              { value: 'has_access', label: 'Has access' },
+              { value: 'never_given_access', label: 'Never set up' },
+              { value: 'suspended', label: 'Suspended' },
+              { value: 'no_longer_has_access', label: 'No longer has access' },
+            ]}
+          />
         </div>
 
         <p className={styles.filterClaim} data-filter-claim>
