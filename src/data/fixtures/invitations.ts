@@ -23,8 +23,16 @@ export interface Invitation {
   expiresOn: IsoDate
 }
 
-/** How long an invitation is good for. One owner, so both sides read it. */
-export const INVITATION_DAYS = 7
+/**
+ * How long an invitation is good for. One owner, so both sides read it.
+ *
+ * **72 hours, which is three days**, as the Care Worker PRD states (AUTH-01).
+ * Both products read this constant, because an invitation is sent from one and
+ * accepted in the other, and a link cannot be good for a week on the manager's
+ * screen and three days on the carer's. Invitations are dated rather than
+ * timed, so 72 hours is counted as three days from the day it was sent.
+ */
+export const INVITATION_DAYS = 3
 
 /**
  * Everybody waiting on one.

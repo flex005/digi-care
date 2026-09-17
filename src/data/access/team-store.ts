@@ -26,6 +26,7 @@ import {
   staffOgundipe,
   staffPatel,
   staffAkinyemi,
+  staffPrice,
 } from '../fixtures/organisation'
 import { daysAgo, toIsoDate } from '../fixtures/generate'
 
@@ -84,7 +85,7 @@ const SITES: Partial<Record<StaffId, SiteId[]>> = {
  * Who has access, and who does not.
  *
  * Four standings, all four reached: Joseph Whitfield left, Folake Adebayo is
- * suspended pending a review, and four people are on the team with access
+ * suspended pending a review, and five people are on the team with access
  * never set up — a gap rather than a decision, and the one that takes the
  * hatch. Everybody else has access.
  *
@@ -120,7 +121,7 @@ const STANDINGS: Partial<Record<StaffId, StaffStanding>> = {
   },
   /*
    * The lapsed governance invitation: five weeks, against INVITATION_DAYS of
-   * seven. A deputy manager at the second site whose account nobody followed
+   * three. A deputy manager at the second site whose account nobody followed
    * up, which is a finding about the home rather than about the fixture.
    */
   [staffOgundipe.id]: {
@@ -147,6 +148,15 @@ const STANDINGS: Partial<Record<StaffId, StaffStanding>> = {
   [staffAdeyinka.id]: {
     kind: 'never_given_access',
     addedOn: toIsoDate(daysAgo(2)),
+    addedBy: staffOkonkwo,
+  },
+  /*
+   * The expired invitation for somebody who would accept it in the Care Worker
+   * product: nine days old, against invitations good for three.
+   */
+  [staffPrice.id]: {
+    kind: 'never_given_access',
+    addedOn: toIsoDate(daysAgo(9)),
     addedBy: staffOkonkwo,
   },
 }

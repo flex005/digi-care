@@ -14642,3 +14642,24 @@ The two colour-alone places:
 The token was not darkened: that would change every caution state in both products to fix two places.
 
 The two never-drawn classes, 15 and 21, are dead CSS. They were left alone, because removing them is unrelated to the question.
+
+## Invitations good for 72 hours, and an expired one for a senior carer (17/09/2026)
+
+Fixture changes made from the Care Worker build, copied here file for file so both products describe one organisation:
+
+- **`INVITATION_DAYS` is 3**, from 7. The Care Worker PRD sets 72 hours; an invitation is sent from this product and accepted in that one, so both read one constant.
+- **Hannah Price, a senior carer, is on the team with an invitation sent nine days ago**, so the Care Worker product's expired invitation is reachable. She is in `staff` only, never `carersAndSeniors`, so no seeded record moves; `fixtures.test.ts` now counts nineteen staff.
+
+The suite was run after the change: 77 files, 1,366 tests, all passing. No test here names her or the invitation length, so the Team screens and the invitation screens were not looked at.
+
+### Looked at, with the new fixtures (17/09/2026)
+
+Screenshots of a fresh build, confirmed by the bundle on disk and the bundle the preview served (`index-ClE82GDM.js`, containing `h-price` and `getUTCDate()+3`).
+
+- **72 hours reads correctly wherever an invitation date appears.** The invitation list: Eleanor Marsden and Funke Adeyinka, sent 15/09/2026, expire 18/09/2026; Bisi Ogundipe, sent 13/08, expired 16/08; Laura Bennett, sent 10/08, expired 13/08. No screen names the length in words, and the Team screen's text contains no "7 days", "seven" or "week".
+- **Hannah Price's expired invitation renders as lapsed on the invitation screens.** The list shows "Expired 11/09/2026". Her invitation page says "This invitation expired on 11/09/2026 and cannot be accepted. Ask Adaeze Okonkwo to send a new one.", with no form and the accept button disabled.
+- **The Team screens have no lapsed state, for anybody.** Her row and her profile say "Never given access, on the team since 08/09/2026, added by A. Okonkwo, and never set up", word for word the shape of Funke Adeyinka's live invitation. An admin reading the team cannot tell an invitation that can still be accepted from one that cannot. Not introduced by this change: Ogundipe's and Bennett's already read the same way. But at seven days most unaccepted invitations were still live, and at three most are not.
+- **The dashboard banner reads differently at 72 hours.** "3 invitations nobody has accepted" lists Ogundipe, Price and Bennett, all three expired, and says nothing about expiry. It shows invitations older than two days, so at three days' life almost everything on it has already lapsed. It is true, and it omits the fact an admin would act on.
+- **The invitation screen's access sentence disagrees with the Care Worker role table.** For Hannah Price, a senior carer, it says "Read: … Compliance, Reports"; the Care Worker PRD gives senior carers no access to either. For Funke Adeyinka, a care worker, it says "Record: … Risk Assessments, … Consent"; the Care Worker PRD refuses both to care workers. The sentence is derived from this build's permission matrix, which describes access in this product, but it is shown to somebody who will use the other.
+
+None of the three findings is fixed here.

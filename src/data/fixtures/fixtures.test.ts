@@ -80,7 +80,11 @@ describe('fixture volume: PRD §5.2', () => {
      * ordinary arrangement, and the state where a manager has no site
      * switcher, existed nowhere in the fixtures.
      */
-    expect(staff).toHaveLength(18)
+    /*
+     * Nineteen from the Care Worker build: Hannah Price, a senior carer whose
+     * invitation expired, so that product's expired invitation is reachable.
+     */
+    expect(staff).toHaveLength(19)
 
     const held = new Set(staff.map((member) => member.role))
     const unheld = (Object.keys(STAFF_ROLE_NAMES) as StaffRole[]).filter(

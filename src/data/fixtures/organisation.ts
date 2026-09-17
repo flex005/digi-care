@@ -218,6 +218,20 @@ export const staffAdeyinka = makeStaff(
   'care_worker',
 )
 
+/**
+ * **A senior carer whose invitation ran out.** Added for the Care Worker
+ * product: an expired invitation for somebody who would accept it there, so
+ * that screen's expired state is reachable. Invited nine days ago, against
+ * invitations good for three. Never given access, so never an author on any
+ * record, and deliberately not in `carersAndSeniors`.
+ */
+export const staffPrice = makeStaff(
+  'h-price',
+  'H. Price',
+  'Hannah Price',
+  'senior_carer',
+)
+
 export const staff: StaffRef[] = [
   staffAluko,
   staffAdeyinka,
@@ -237,6 +251,7 @@ export const staff: StaffRef[] = [
   staffBennett,
   staffFitzgerald,
   staffDeactivated,
+  staffPrice,
 ]
 
 /** Staff who write care notes and administer medication. */
