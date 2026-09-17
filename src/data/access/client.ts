@@ -32,6 +32,8 @@ import type {
   CareNoteCategoryId,
   CareNoteId,
   CareNoteReview,
+  FlagReason,
+  ReviewOutcome,
   HandoverId,
   HandoverSignature,
   HandoverStatus,
@@ -296,6 +298,33 @@ export function getCareNote(id: CareNoteId): Promise<CareNote> {
 }
 
 /**
+ * The review state a new note starts in, from whether its author flagged it.
+ *
+ * A flag is raised by the note's author as they write it (CW PRD CN-02), so who
+ * flagged and when are the author and the moment of writing, never a field.
+ * A reason given as blank is refused rather than stored as a reason: "given"
+ * with nothing in it would render as a reason somebody wrote.
+ */
+function reviewFromFlag(
+  flag: { kind: 'not_flagged' } | { kind: 'flagged'; reason: FlagReason },
+  author: StaffRef,
+  at: IsoDateTime,
+): CareNoteReview {
+  if (flag.kind === 'not_flagged') return { kind: 'not_flagged' }
+  if (flag.reason.kind === 'given' && flag.reason.text.trim() === '')
+    throw new Error('A flag reason was given with no words in it.')
+  return {
+    kind: 'flagged_not_reviewed',
+    flaggedBy: author,
+    flaggedAt: at,
+    reason:
+      flag.reason.kind === 'given'
+        ? { kind: 'given', text: flag.reason.text.trim() }
+        : { kind: 'not_given' },
+  }
+}
+
+/**
  * Writes a care note. PRD §6.3, and the first genuine write in the product.
  *
  * In memory, for this session, and gone on reload — see `note-store.ts`.
@@ -312,7 +341,7 @@ export function submitCareNote(input: {
   shift: NoteShift
   author: StaffRef
   at: IsoDateTime
-  flagForReview: boolean
+  flag: { kind: 'not_flagged' } | { kind: 'flagged'; reason: FlagReason }
 }): Promise<CareNote> {
   if (input.body.trim() === '') return reject('A care note cannot be empty')
   if (!residentById(input.residentId)) {
@@ -332,9 +361,7 @@ export function submitCareNote(input: {
     recordedBy: input.author,
     recordedAt: input.at,
     shift: input.shift,
-    review: input.flagForReview
-      ? { kind: 'flagged_not_reviewed', flaggedBy: input.author, flaggedAt: input.at }
-      : { kind: 'not_flagged' },
+    review: reviewFromFlag(input.flag, input.author, input.at),
     supersededBy: 'none',
     corrects: 'none',
   }
@@ -374,8 +401,17 @@ export function submitCorrectionNote(input: {
   shift: NoteShift
   author: StaffRef
   at: IsoDateTime
-  flagForReview: boolean
+  flag: { kind: 'not_flagged' } | { kind: 'flagged'; reason: FlagReason }
 }): Promise<CareNote> {
+  /*
+   * **The same checks a first note gets.** A correction is a care note, and it
+   * skipped them: an empty correction could supersede a real note, and a changed
+   * shift could go unexplained on the one record meant to put something right.
+   */
+  if (input.body.trim() === '') return reject('A care note cannot be empty')
+  if (input.shift.kind === 'overridden' && input.shift.reason.trim() === '') {
+    return reject('Changing the shift needs a reason')
+  }
   const original = noteById(input.corrects)
   if (!original) return reject(`No care note with id ${input.corrects}`)
   if (original.residentId !== input.residentId) {
@@ -391,14 +427,12 @@ export function submitCorrectionNote(input: {
     id: nextNoteId(),
     residentId: input.residentId,
     category: input.category,
-    body: input.body,
+    body: input.body.trim(),
     mood: input.mood,
     recordedBy: input.author,
     recordedAt: input.at,
     shift: input.shift,
-    review: input.flagForReview
-      ? { kind: 'flagged_not_reviewed', flaggedBy: input.author, flaggedAt: input.at }
-      : { kind: 'not_flagged' },
+    review: reviewFromFlag(input.flag, input.author, input.at),
     supersededBy: 'none',
     corrects: input.corrects,
   }
@@ -433,9 +467,14 @@ export function recordNoteReview(input: {
   noteId: CareNoteId
   by: StaffRef
   at: IsoDateTime
+  outcome: ReviewOutcome
 }): Promise<CareNoteReview> {
   const note = noteById(input.noteId)
   if (!note) return reject(`No care note with id ${input.noteId}`)
+  if (input.outcome.kind === 'other' && input.outcome.text.trim() === '') {
+    // "Other" with nothing said is not an outcome anybody can read later.
+    return reject('Say what was done')
+  }
   if (note.review.kind === 'not_flagged') {
     return reject('That note was not flagged for review')
   }
@@ -450,8 +489,13 @@ export function recordNoteReview(input: {
     kind: 'reviewed',
     flaggedBy: note.review.flaggedBy,
     flaggedAt: note.review.flaggedAt,
+    reason: note.review.reason,
     reviewedBy: input.by,
     reviewedAt: input.at,
+    outcome:
+      input.outcome.kind === 'other'
+        ? { kind: 'other', text: input.outcome.text.trim() }
+        : input.outcome,
   }
   recordReview(input.noteId, review)
   return logged(review, {

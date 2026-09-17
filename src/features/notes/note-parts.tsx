@@ -1,6 +1,7 @@
 import { now as appNow } from '@/data/fixtures/clock'
-import type { CareNote, IsoDateTime } from '@/data/types'
+import type { CareNote, FlagReason, IsoDateTime, ReviewOutcome } from '@/data/types'
 import { CARE_NOTE_CATEGORIES } from '@/data/types'
+import { reviewOutcomeText } from './review-wording'
 import { assertNever } from '@/lib/assert-never'
 import { SHIFT_NAMES, elapsedMinutesBetween } from '@/lib/shift'
 import { MoodBadge, Settled, StatusPill, Unrecorded } from '@/components/status'
@@ -86,11 +87,16 @@ export function ReviewState({ note }: { note: CareNote }) {
         appNow().toISOString() as IsoDateTime,
       )
       return (
-        <Unrecorded
-          variant="chip"
-          label="Flagged, not reviewed"
-          detail={`waiting ${coarseWait(waiting)}`}
-        />
+        <div className={styles.reviewState}>
+          <Unrecorded
+            variant="chip"
+            label="Flagged, not reviewed"
+            detail={`waiting ${coarseWait(waiting)}`}
+          />
+          {/* A second fact beside the gap, never folded into it: the gap is
+              that nobody has looked, the reason is what the flagger asked. */}
+          <FlagReasonLine reason={note.review.reason} />
+        </div>
       )
     }
 
@@ -107,16 +113,64 @@ export function ReviewState({ note }: { note: CareNote }) {
       // scans. The same-person case keeps its own label, because it is a
       // different claim rather than a longer one.
       return (
-        <Settled
-          label={bySamePerson ? 'Flagged and reviewed by the same person' : 'Reviewed'}
-          detail={`waited ${coarseWait(elapsedMinutesBetween(flaggedAt, reviewedAt))}`}
-        />
+        <div className={styles.reviewState}>
+          <Settled
+            label={
+              bySamePerson ? 'Flagged and reviewed by the same person' : 'Reviewed'
+            }
+            detail={`waited ${coarseWait(elapsedMinutesBetween(flaggedAt, reviewedAt))}`}
+          />
+          <FlagReasonLine reason={note.review.reason} />
+          <ReviewOutcomeLine outcome={note.review.outcome} />
+        </div>
       )
     }
 
     default:
       return assertNever(note.review)
   }
+}
+
+/**
+ * Why the flagger asked, in their own words, or that they chose not to say.
+ *
+ * **"No reason given" is plain, never hatched.** The form asked "Why are you
+ * flagging this?" and the flagger left it blank, which is an answer they gave
+ * rather than a record somebody owes. Hatching it would claim a gap in a note
+ * that is complete, and put a second hatch beside the one that matters, which
+ * is that nobody has looked yet.
+ *
+ * The words are quoted and never recased: they are the flagger's, not ours.
+ */
+export function FlagReasonWords({ reason }: { reason: FlagReason }) {
+  switch (reason.kind) {
+    case 'given':
+      return <q>{reason.text}</q>
+    case 'not_given':
+      return <>No reason given</>
+    default:
+      return assertNever(reason)
+  }
+}
+
+/** The flag's reason, on a chip's column: its own line, never the chip's detail. */
+export function FlagReasonLine({ reason }: { reason: FlagReason }) {
+  return (
+    <p className={styles.reviewFact} data-flag-reason>
+      <span className={styles.reviewFactLabel}>Reason</span>
+      <FlagReasonWords reason={reason} />
+    </p>
+  )
+}
+
+/** The review's outcome, on its own line beside who and when rather than inside them. */
+export function ReviewOutcomeLine({ outcome }: { outcome: ReviewOutcome }) {
+  return (
+    <p className={styles.reviewFact} data-review-outcome>
+      <span className={styles.reviewFactLabel}>Action taken</span>
+      {reviewOutcomeText(outcome)}
+    </p>
+  )
 }
 
 /**

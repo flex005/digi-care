@@ -44,8 +44,10 @@ describe('the list is what is actually there', () => {
       kind: 'reviewed',
       flaggedBy: staffOkonkwo,
       flaggedAt: careNotes[1]!.recordedAt,
+      reason: { kind: 'not_given' },
       reviewedBy: staffOkonkwo,
       reviewedAt: careNotes[1]!.recordedAt,
+      outcome: { kind: 'no_further_action' },
     })
 
     const losses = sessionLosses()

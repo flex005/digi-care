@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type {
   CareNoteCategoryId,
+  FlagReason,
   MoodScore,
   NoteShift,
   Resident,
@@ -29,14 +30,24 @@ import styles from './notes.module.css'
  *     and the clock. A field for either would be a forgery surface.
  *  3. **Accept a changed shift without a reason.** PRD §6.3 says "editable
  *     with reason", and the submit stays disabled until there is one.
+ *
+ * A flag's reason is the opposite case, and deliberately so. CW PRD CN-02 asks
+ * "Why are you flagging this?" and lets it be skipped, because a care worker
+ * unsure what is wrong should still be able to ask. **Skipping is recorded**:
+ * a blank field submits as `not_given` and renders as "No reason given", never
+ * as an empty line. Unticking the flag discards whatever was typed, so a
+ * reason cannot travel with a note that is no longer flagged.
  */
+
+/** Whether the author flagged the note, and why, as the client takes it. */
+export type NoteFlag = { kind: 'not_flagged' } | { kind: 'flagged'; reason: FlagReason }
 
 export interface NoteDraft {
   category: CareNoteCategoryId
   body: string
   mood: MoodScore | 'not_recorded'
   shift: NoteShift
-  flagForReview: boolean
+  flag: NoteFlag
 }
 
 export function NoteForm({
@@ -75,6 +86,8 @@ export function NoteForm({
   const [shiftValue, setShiftValue] = useState<Shift>(clockShift)
   const [reason, setReason] = useState('')
   const [flag, setFlag] = useState(false)
+  const [flagReason, setFlagReason] = useState('')
+  const fieldId = useId()
 
   const overridden = shiftValue !== clockShift
   const ready =
@@ -95,7 +108,15 @@ export function NoteForm({
             reason: reason.trim(),
           }
         : { kind: 'auto', value: clockShift },
-      flagForReview: flag,
+      flag: flag
+        ? {
+            kind: 'flagged',
+            reason:
+              flagReason.trim() === ''
+                ? { kind: 'not_given' }
+                : { kind: 'given', text: flagReason.trim() },
+          }
+        : { kind: 'not_flagged' },
     })
 
   return (
@@ -206,10 +227,34 @@ export function NoteForm({
         <input
           type="checkbox"
           checked={flag}
-          onChange={(event) => setFlag(event.target.checked)}
+          onChange={(event) => {
+            setFlag(event.target.checked)
+            // Unticked, the reason goes with it. Ticking again starts blank
+            // rather than bringing back words written for a flag withdrawn.
+            if (!event.target.checked) setFlagReason('')
+          }}
         />
         <span>Flag for a senior to review</span>
       </label>
+
+      {flag ? (
+        <div className={styles.field}>
+          <label className={styles.fieldLabel} htmlFor={`${fieldId}-flag-reason`}>
+            Why are you flagging this?
+          </label>
+          <p className={styles.fieldHint} id={`${fieldId}-flag-reason-hint`}>
+            Optional. Left blank, the note records that no reason was given.
+          </p>
+          <textarea
+            id={`${fieldId}-flag-reason`}
+            aria-describedby={`${fieldId}-flag-reason-hint`}
+            className={styles.textarea}
+            rows={2}
+            value={flagReason}
+            onChange={(event) => setFlagReason(event.target.value)}
+          />
+        </div>
+      ) : null}
 
       {error === '' ? null : <p className={styles.formError}>{error}</p>}
 

@@ -122,6 +122,8 @@ export type {
   Shift,
   CareNoteId,
   CareNoteReview,
+  FlagReason,
+  ReviewOutcome,
   CommunicationPreference,
   ContactDetails,
   FuturePlans,
@@ -141,7 +143,7 @@ export type {
   SocialWorker,
   StockCount,
 } from './resident'
-export { GENDER_ANSWERS } from './resident'
+export { GENDER_ANSWERS, REVIEW_OUTCOMES } from './resident'
 
 export type {
   CareNoteCategoryId,

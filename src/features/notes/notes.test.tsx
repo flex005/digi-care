@@ -16,6 +16,7 @@ import * as client from '@/data/access/client'
 import { staffOkonkwo } from '@/data/fixtures/organisation'
 import { NotesTab } from './NotesTab'
 import { NoteDetail } from './NoteDetail'
+import { reviewOutcomeText } from './review-wording'
 
 /**
  * Care notes. PRD §6.3.
@@ -358,13 +359,15 @@ describe('closing the supervisory loop', () => {
     return container
   }
 
+  // Marking reviewed now asks what was done, with nothing chosen, so every
+  // confirmation here answers it first.
   const confirm = async (user: ReturnType<typeof userEvent.setup>) => {
     await user.click(screen.getByRole('button', { name: /mark reviewed/i }))
+    const dialog = await screen.findByRole('alertdialog')
     await user.click(
-      within(await screen.findByRole('alertdialog')).getByRole('button', {
-        name: /mark reviewed/i,
-      }),
+      within(dialog).getByRole('radio', { name: 'No further action needed' }),
     )
+    await user.click(within(dialog).getByRole('button', { name: /mark reviewed/i }))
   }
 
   it('records who reviewed it and when', async () => {
@@ -528,7 +531,7 @@ describe('the supervision record is both halves', () => {
       // The app's clock, not the wall clock: a note recorded hours ahead
       // of the instant the screen calls now is a record in the future.
       at: NOW.toISOString() as IsoDateTime,
-      flagForReview: true,
+      flag: { kind: 'flagged', reason: { kind: 'not_given' } },
     })
     await client.recordNoteReview({
       noteId: written.id,
@@ -536,6 +539,7 @@ describe('the supervision record is both halves', () => {
       // The app's clock, not the wall clock: a note recorded hours ahead
       // of the instant the screen calls now is a record in the future.
       at: NOW.toISOString() as IsoDateTime,
+      outcome: { kind: 'no_further_action' },
     })
 
     const { container } = renderNotes(`/residents/res-okafor/notes/${written.id}`)
@@ -550,6 +554,296 @@ describe('the supervision record is both halves', () => {
       /no second opinion was given/i,
     )
   }, 20000)
+})
+
+describe('a flag says why, and a review says what was done', () => {
+  /**
+   * CW PRD CN-01 and CN-02, in the shared type since 17/09/2026. The reason is
+   * optional to give and never optional in the record, and the outcome is
+   * chosen from four with nothing pre-chosen.
+   */
+  const okafor = () => careNotesFor('res-okafor' as ResidentId)
+
+  const flaggedWith = (kind: 'given' | 'not_given') =>
+    okafor().find(
+      (note) => note.review.kind !== 'not_flagged' && note.review.reason.kind === kind,
+    )
+
+  it("quotes the flagger's reason, on the timeline and on the note", async () => {
+    const flagged = okafor().find(
+      (note) => note.id === GAP_NOTE_IDS.flaggedNotReviewed,
+    )!
+    const review = flagged.review as Extract<
+      typeof flagged.review,
+      { kind: 'flagged_not_reviewed' }
+    >
+    // Held by reference to the fixture rather than a string typed here.
+    expect(review.reason.kind).toBe('given')
+    const words = review.reason.kind === 'given' ? review.reason.text : ''
+
+    const timelineView = renderNotes('/residents/res-okafor/notes')
+    await timeline(timelineView.container)
+    const card = timelineView.container.querySelector(
+      `[data-note="${flagged.id}"] [data-flag-reason]`,
+    )
+    expect(card?.textContent).toContain(words)
+    expect(card?.textContent).not.toMatch(/no reason given/i)
+    timelineView.unmount()
+
+    const { container } = renderNotes(`/residents/res-okafor/notes/${flagged.id}`)
+    await waitFor(() =>
+      expect(container.querySelector('[data-supervision="waiting"]')).toBeTruthy(),
+    )
+    const row = container.querySelector(
+      '[data-supervision="waiting"] [data-flag-reason]',
+    )
+    expect(row?.textContent).toContain(words)
+  }, 30000)
+
+  it('says no reason was given, plainly and not hatched, when none was', async () => {
+    const flagged = flaggedWith('not_given')
+    expect(flagged, 'no fixture flag without a reason on this resident').toBeTruthy()
+
+    const { container } = renderNotes(`/residents/res-okafor/notes/${flagged!.id}`)
+    await waitFor(() =>
+      expect(container.querySelector('[data-supervision]')).toBeTruthy(),
+    )
+
+    const row = container.querySelector('[data-supervision] [data-flag-reason]')
+    expect(row?.textContent).toMatch(/No reason given/)
+    // The flagger was asked and chose not to say: an answer, not a gap.
+    expect(row?.querySelector('[data-state="unrecorded"]')).toBeNull()
+    expect(row?.closest('[data-state="unrecorded"]')).toBeNull()
+  }, 20000)
+
+  it('shows what a fixture review said was done, in its own row', async () => {
+    const reviewed = okafor().find((note) => note.review.kind === 'reviewed')!
+    const { container } = renderNotes(`/residents/res-okafor/notes/${reviewed.id}`)
+    await waitFor(() =>
+      expect(container.querySelector('[data-supervision="reviewed"]')).toBeTruthy(),
+    )
+    const outcome = container.querySelector(
+      '[data-supervision="reviewed"] [data-review-outcome]',
+    )
+    const review = reviewed.review as Extract<
+      typeof reviewed.review,
+      { kind: 'reviewed' }
+    >
+    expect(outcome?.textContent).toContain(reviewOutcomeText(review.outcome))
+    // Never merged with who reviewed it: the name has a row of its own.
+    expect(outcome?.textContent).not.toContain(review.reviewedBy.displayName)
+  }, 20000)
+})
+
+describe('the form asks why a note is flagged', () => {
+  const openComposer = async (user: ReturnType<typeof userEvent.setup>) => {
+    renderNotes('/residents/res-okafor/notes')
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Write a care note' })).toBeVisible(),
+    )
+    await user.click(screen.getByRole('button', { name: 'Write a care note' }))
+    const dialog = await screen.findByRole('dialog')
+    // The name the wait for it to close uses, so that wait cannot pass by
+    // naming a dialog that never existed.
+    expect(dialog).toHaveAccessibleName('Write a care note about Emmanuel')
+    return dialog
+  }
+
+  const writeBody = async (
+    user: ReturnType<typeof userEvent.setup>,
+    dialog: HTMLElement,
+    body: string,
+  ) => {
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /what happened/i }),
+      body,
+    )
+    await user.click(within(dialog).getByRole('radio', { name: 'Settled' }))
+  }
+
+  it('records the reason in the words given, and shows it on the note', async () => {
+    const submit = vi.spyOn(client, 'submitCareNote')
+    const user = userEvent.setup()
+    const dialog = await openComposer(user)
+    const body = 'Would not come down for lunch and said the room was too loud.'
+    await writeBody(user, dialog, body)
+
+    // Asked only once the note is flagged.
+    expect(
+      within(dialog).queryByRole('textbox', { name: /why are you flagging this/i }),
+    ).toBeNull()
+    await user.click(
+      within(dialog).getByRole('checkbox', { name: 'Flag for a senior to review' }),
+    )
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /why are you flagging this/i }),
+      'Second day running. Is the dining room too much now?',
+    )
+    await user.click(
+      within(dialog).getByRole('button', { name: /Record this note for Emmanuel/ }),
+    )
+
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
+    expect(submit.mock.calls[0]![0].flag).toEqual({
+      kind: 'flagged',
+      reason: {
+        kind: 'given',
+        text: 'Second day running. Is the dining room too much now?',
+      },
+    })
+
+    // The composer's own textarea holds the same words until it closes.
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Write a care note about Emmanuel' }),
+      ).toBeNull(),
+    )
+    const written = (await screen.findByText(body)).closest('[data-note]')
+    expect(written?.querySelector('[data-flag-reason]')?.textContent).toContain(
+      'Second day running. Is the dining room too much now?',
+    )
+  }, 30000)
+
+  it('records no reason given when left blank, and drops a reason when unflagged', async () => {
+    const submit = vi.spyOn(client, 'submitCareNote')
+    const user = userEvent.setup()
+    const dialog = await openComposer(user)
+    const body = 'Asked twice where her husband was during the afternoon.'
+    await writeBody(user, dialog, body)
+
+    const flag = within(dialog).getByRole('checkbox', {
+      name: 'Flag for a senior to review',
+    })
+    await user.click(flag)
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /why are you flagging this/i }),
+      'Words for a flag about to be withdrawn.',
+    )
+    // Unticked, the words go; ticked again, the field starts blank.
+    await user.click(flag)
+    expect(
+      within(dialog).queryByRole('textbox', { name: /why are you flagging this/i }),
+    ).toBeNull()
+    await user.click(flag)
+    expect(
+      within(dialog).getByRole('textbox', { name: /why are you flagging this/i }),
+    ).toHaveValue('')
+
+    await user.click(
+      within(dialog).getByRole('button', { name: /Record this note for Emmanuel/ }),
+    )
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
+    expect(submit.mock.calls[0]![0].flag).toEqual({
+      kind: 'flagged',
+      reason: { kind: 'not_given' },
+    })
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Write a care note about Emmanuel' }),
+      ).toBeNull(),
+    )
+    const written = (await screen.findByText(body)).closest('[data-note]')
+    expect(written?.querySelector('[data-flag-reason]')?.textContent).toMatch(
+      /No reason given/,
+    )
+  }, 30000)
+})
+
+describe('marking reviewed asks what was done', () => {
+  const openConfirmation = async (user: ReturnType<typeof userEvent.setup>) => {
+    const { container } = renderNotes(
+      `/residents/res-okafor/notes/${GAP_NOTE_IDS.flaggedNotReviewed}`,
+    )
+    await waitFor(() => expect(container.querySelector('[data-note]')).toBeTruthy())
+    await user.click(screen.getByRole('button', { name: /^mark reviewed/i }))
+    const dialog = await screen.findByRole('alertdialog')
+    const confirmButton = () =>
+      within(dialog).getByRole('button', { name: /^mark reviewed$/i })
+    return { container, dialog, confirmButton }
+  }
+
+  it('opens on no outcome, and will not confirm without one', async () => {
+    const user = userEvent.setup()
+    const { dialog, confirmButton } = await openConfirmation(user)
+
+    expect(
+      within(dialog).getByRole('radiogroup', { name: 'Action taken?' }),
+    ).toBeVisible()
+    for (const radio of within(dialog).getAllByRole('radio')) {
+      expect(radio).not.toBeChecked()
+    }
+    expect(confirmButton()).toBeDisabled()
+  }, 20000)
+
+  it('needs words for Other, and records them', async () => {
+    const record = vi.spyOn(client, 'recordNoteReview')
+    const user = userEvent.setup()
+    const { container, dialog, confirmButton } = await openConfirmation(user)
+
+    await user.click(within(dialog).getByRole('radio', { name: 'Other' }))
+    expect(confirmButton()).toBeDisabled()
+    const words = within(dialog).getByRole('textbox', { name: /what was done/i })
+    await user.type(words, '   ')
+    expect(confirmButton()).toBeDisabled()
+    await user.type(words, 'Asked the GP to see him on Thursday.')
+    expect(confirmButton()).toBeEnabled()
+    await user.click(confirmButton())
+
+    await waitFor(() => expect(record).toHaveBeenCalledTimes(1))
+    expect(record.mock.calls[0]![0].outcome).toEqual({
+      kind: 'other',
+      text: 'Asked the GP to see him on Thursday.',
+    })
+    await waitFor(() =>
+      expect(container.querySelector('[data-supervision="reviewed"]')).toBeTruthy(),
+    )
+    expect(
+      container.querySelector('[data-supervision="reviewed"] [data-review-outcome]')
+        ?.textContent,
+    ).toContain('Other: Asked the GP to see him on Thursday.')
+  }, 30000)
+
+  it('records the outcome chosen and shows it on the note', async () => {
+    const record = vi.spyOn(client, 'recordNoteReview')
+    const user = userEvent.setup()
+    const { container, dialog, confirmButton } = await openConfirmation(user)
+
+    await user.click(within(dialog).getByRole('radio', { name: 'Care plan updated' }))
+    await user.click(confirmButton())
+
+    await waitFor(() => expect(record).toHaveBeenCalledTimes(1))
+    expect(record.mock.calls[0]![0].outcome).toEqual({ kind: 'care_plan_updated' })
+    await waitFor(() =>
+      expect(container.querySelector('[data-supervision="reviewed"]')).toBeTruthy(),
+    )
+    const outcome = container.querySelector(
+      '[data-supervision="reviewed"] [data-review-outcome]',
+    )
+    expect(outcome?.textContent).toContain('Care plan updated')
+    // The flag's reason is carried forward beside it, not replaced by it.
+    expect(
+      container.querySelector('[data-supervision="reviewed"] [data-flag-reason]')
+        ?.textContent,
+    ).toMatch(/Third refusal this week/)
+  }, 30000)
+
+  it('asks afresh after a cancelled confirmation', async () => {
+    const user = userEvent.setup()
+    const { dialog, confirmButton } = await openConfirmation(user)
+    await user.click(within(dialog).getByRole('radio', { name: 'Incident raised' }))
+    expect(confirmButton()).toBeEnabled()
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
+    await user.click(screen.getByRole('button', { name: /^mark reviewed/i }))
+    const again = await screen.findByRole('alertdialog')
+    for (const radio of within(again).getAllByRole('radio')) {
+      expect(radio).not.toBeChecked()
+    }
+    expect(
+      within(again).getByRole('button', { name: /^mark reviewed$/i }),
+    ).toBeDisabled()
+  }, 30000)
 })
 
 describe('the states around the timeline', () => {

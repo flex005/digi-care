@@ -72,6 +72,7 @@ describe('flagged and not yet reviewed', () => {
           kind: 'flagged_not_reviewed',
           flaggedBy: staffNwosu,
           flaggedAt: when,
+          reason: { kind: 'not_given' },
         },
       })
 
@@ -92,8 +93,10 @@ describe('flagged and not yet reviewed', () => {
             kind: 'reviewed',
             flaggedBy: staffNwosu,
             flaggedAt: at(12, 10),
+            reason: { kind: 'not_given' },
             reviewedBy: staffHalloran,
             reviewedAt: at(12, 11),
+            outcome: { kind: 'no_further_action' },
           },
         }),
       ],

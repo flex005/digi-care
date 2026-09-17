@@ -8,12 +8,15 @@ import { SessionProvider } from '@/app/session/SessionProvider'
 import { SignInAs } from '@/test/sign-in-as'
 import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
 import type { CareNote, IsoDateTime } from '@/data/types'
-import { residentsBySite } from '@/data/fixtures/residents'
+import { residents, residentsBySite } from '@/data/fixtures/residents'
 import { useSession } from '@/app/session/use-session'
 import * as client from '@/data/access/client'
 import { resetSessionNotes } from '@/data/access/note-store'
 import { NOW, atTime, daysAgo } from '@/data/fixtures/generate'
 import { CareNotesRoute } from './CareNotesRoute'
+import { NoteQueueRow } from './NoteQueueRow'
+import { careNotes } from '@/data/fixtures/care-notes'
+import { REVIEW_OUTCOMES } from '@/data/types'
 
 /**
  * `/care-notes`, the cross-resident view. PRD §6.3.
@@ -93,6 +96,19 @@ function renderCareNotes(extra?: React.ReactNode) {
       </TooltipProvider>
     </SessionProvider>,
   )
+}
+
+/**
+ * Answers "Action taken?" and confirms. The question opens with nothing
+ * chosen and the confirm held, so a review cannot be recorded without it.
+ */
+async function confirmWithOutcome(
+  user: ReturnType<typeof userEvent.setup>,
+  outcome: string,
+) {
+  const dialog = await screen.findByRole('alertdialog')
+  await user.click(within(dialog).getByRole('radio', { name: outcome }))
+  await user.click(within(dialog).getByRole('button', { name: /mark reviewed/i }))
 }
 
 const loaded = async () =>
@@ -506,11 +522,7 @@ describe('the queue can be worked down', () => {
     expect(reviewed).toBeTruthy()
 
     await user.click(within(row).getByRole('button', { name: /mark reviewed/i }))
-    await user.click(
-      within(await screen.findByRole('alertdialog')).getByRole('button', {
-        name: /mark reviewed/i,
-      }),
-    )
+    await confirmWithOutcome(user, 'No further action needed')
 
     await waitFor(() =>
       expect(container.querySelector(`[data-note="${reviewed}"]`)).toBeNull(),
@@ -526,15 +538,99 @@ describe('the queue can be worked down', () => {
     await loaded()
     const row = container.querySelector('[data-layout="row"]') as HTMLElement
     await user.click(within(row).getByRole('button', { name: /mark reviewed/i }))
-    await user.click(
-      within(await screen.findByRole('alertdialog')).getByRole('button', {
-        name: /mark reviewed/i,
-      }),
-    )
+    await confirmWithOutcome(user, 'No further action needed')
 
     const status = await screen.findByText(/off the queue now/i)
     expect(status).toBeVisible()
   }, 30000)
+})
+
+describe('the queue says why a note was flagged, and what a review did', () => {
+  it("gives every waiting row its flagger's reason, or says none was given", async () => {
+    const { container } = renderCareNotes()
+    await loaded()
+
+    const rows = [...container.querySelectorAll('[data-layout="row"]')]
+    expect(rows.length).toBeGreaterThan(0)
+    const seen = new Set<string>()
+    for (const row of rows) {
+      const note = careNotes.find((entry) => entry.id === row.getAttribute('data-note'))
+      expect(note, 'a queue row with no note behind it').toBeTruthy()
+      if (note!.review.kind === 'not_flagged') throw new Error('unflagged note queued')
+      const reason = row.querySelector('[data-flag-reason]')
+      seen.add(note!.review.reason.kind)
+      if (note!.review.reason.kind === 'given') {
+        expect(reason?.textContent).toContain(note!.review.reason.text)
+      } else {
+        expect(reason?.textContent).toMatch(/No reason given/)
+        // Asked and not answered is an answer. Only the flag itself is a gap.
+        expect(reason?.closest('[data-state="unrecorded"]')).toBeNull()
+        expect(reason?.querySelector('[data-state="unrecorded"]')).toBeNull()
+      }
+    }
+    // Both ways, or this has only checked one of them.
+    expect([...seen].sort()).toEqual(['given', 'not_given'])
+  }, 20000)
+
+  it('states each outcome on a reviewed row, beside the reason and apart from the names', async () => {
+    const reviewed = REVIEW_OUTCOMES.map(({ id }) =>
+      careNotes.find(
+        (note) => note.review.kind === 'reviewed' && note.review.outcome.kind === id,
+      ),
+    )
+    const rows = reviewed.map((note, index) => {
+      expect(note, `no fixture review with ${REVIEW_OUTCOMES[index]!.id}`).toBeTruthy()
+      return note!
+    })
+
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/care-notes',
+          element: (
+            <ul>
+              {rows.map((note) => (
+                <NoteQueueRow
+                  key={note.id}
+                  note={note}
+                  resident={residents.find(
+                    (resident) => resident.id === note.residentId,
+                  )!}
+                  onChanged={() => {}}
+                />
+              ))}
+            </ul>
+          ),
+        },
+      ],
+      { initialEntries: ['/care-notes'] },
+    )
+    const { container } = render(
+      <SessionProvider>
+        <TooltipProvider>
+          <RouterProvider router={router} />
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+
+    const expected: Record<(typeof REVIEW_OUTCOMES)[number]['id'], RegExp> = {
+      no_further_action: /^Action taken\s*No further action needed$/,
+      care_plan_updated: /^Action taken\s*Care plan updated$/,
+      incident_raised: /^Action taken\s*Incident raised$/,
+      other: /^Action taken\s*Other: \S/,
+    }
+    for (const note of rows) {
+      if (note.review.kind !== 'reviewed') throw new Error('expected a reviewed note')
+      const row = container.querySelector(`[data-note="${note.id}"]`)
+      const outcome = row?.querySelector('[data-review-outcome]')
+      expect(outcome?.textContent).toMatch(expected[note.review.outcome.kind])
+      if (note.review.outcome.kind === 'other') {
+        expect(outcome?.textContent).toContain(note.review.outcome.text)
+      }
+      expect(outcome?.textContent).not.toContain(note.review.reviewedBy.displayName)
+      expect(row?.querySelector('[data-flag-reason]')).toBeTruthy()
+    }
+  }, 20000)
 })
 
 describe('a review can be taken back', () => {

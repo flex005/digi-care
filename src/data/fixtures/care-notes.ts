@@ -16,8 +16,10 @@ import type {
   CareNote,
   CareNoteCategoryId,
   CareNoteId,
+  FlagReason,
   MoodRecord,
   ResidentId,
+  ReviewOutcome,
 } from '../types'
 import {
   NOW,
@@ -153,6 +155,45 @@ function makeMood(rng: ReturnType<typeof makeRandom>, at: Date): MoodRecord {
   }
 }
 
+/**
+ * Why a generated flag was raised, and what the review found.
+ *
+ * **Derived from what is already drawn, never from a new draw.** Another call
+ * to the RNG would lengthen its stream and move every fixture after it, in
+ * both builds. So the reason and the outcome follow the note's category and
+ * its day: deterministic, varied enough to show every state, and messy on
+ * purpose, with one flag in three carrying no reason at all.
+ */
+const FLAG_REASONS: Partial<Record<CareNoteCategoryId, string>> = {
+  behaviour: 'Not like them. Is something else going on?',
+  health_observation: 'Worth a second look before the GP round.',
+  medication: 'Refused again. Should the GP know?',
+  social_emotional: 'Low for a few days now.',
+}
+
+function flagReasonFor(category: CareNoteCategoryId, day: number): FlagReason {
+  const text = FLAG_REASONS[category]
+  if (text === undefined || day % 3 === 0) return { kind: 'not_given' }
+  return { kind: 'given', text }
+}
+
+function reviewOutcomeFor(category: CareNoteCategoryId, day: number): ReviewOutcome {
+  switch (day % 4) {
+    case 0:
+      return category === 'behaviour' || category === 'social_emotional'
+        ? { kind: 'care_plan_updated' }
+        : { kind: 'no_further_action' }
+    case 1:
+      return { kind: 'no_further_action' }
+    case 2:
+      return category === 'health_observation' || category === 'behaviour'
+        ? { kind: 'incident_raised' }
+        : { kind: 'no_further_action' }
+    default:
+      return { kind: 'other', text: 'Spoke to the family and agreed to watch it.' }
+  }
+}
+
 const notes: CareNote[] = []
 
 /**
@@ -283,7 +324,9 @@ for (const [residentIndex, resident] of residents.entries()) {
               // when — the gap between the two is the supervision.
               flaggedBy: author,
               flaggedAt: toIsoDateTime(at),
+              reason: flagReasonFor(category, day),
               reviewedBy: staffHalloran,
+              outcome: reviewOutcomeFor(category, day),
               // Nine the next morning, but never before the note it reviews
               // and never after now. Both bounds are real: a note written at
               // 14:00 today was previously "reviewed" at 09:00 today, and a
@@ -319,13 +362,16 @@ for (const [residentIndex, resident] of residents.entries()) {
                 kind: 'flagged_not_reviewed' as const,
                 flaggedBy: author,
                 flaggedAt: toIsoDateTime(at),
+                reason: flagReasonFor(category, day),
               }
             }
             return {
               kind: 'reviewed' as const,
               flaggedBy: author,
               flaggedAt: toIsoDateTime(at),
+              reason: flagReasonFor(category, day),
               reviewedBy: staffHalloran,
+              outcome: reviewOutcomeFor(category, day),
               reviewedAt: toIsoDateTime(
                 recordedBetween(at, atTime(daysAgo(Math.max(day - 1, 0)), 9, 0)),
               ),
@@ -416,6 +462,10 @@ notes.push({
     kind: 'flagged_not_reviewed',
     flaggedBy: staffNwosu,
     flaggedAt: toIsoDateTime(atTime(daysAgo(3), 8, 41)),
+    reason: {
+      kind: 'given',
+      text: 'Third refusal this week. Does the approach in the care plan still fit?',
+    },
   },
   supersededBy: 'none',
   corrects: 'none',

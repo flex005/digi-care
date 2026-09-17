@@ -57,7 +57,7 @@ export function CorrectionDialog({
         shift: draft.shift,
         author: currentUser,
         at,
-        flagForReview: draft.flagForReview,
+        flag: draft.flag,
       })
       setOpen(false)
       setError('')

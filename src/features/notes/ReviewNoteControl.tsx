@@ -1,14 +1,16 @@
 import { now as appNow } from '@/data/fixtures/clock'
-import { useState } from 'react'
-import type { CareNote, IsoDateTime, Resident } from '@/data/types'
+import { useId, useState } from 'react'
+import type { CareNote, IsoDateTime, Resident, ReviewOutcome } from '@/data/types'
+import { REVIEW_OUTCOMES } from '@/data/types'
 import {
   recordNoteReview,
   reviewRecordedThisSession,
   undoNoteReview,
 } from '@/data/access/client'
-import { AlertDialog, Button } from '@/components/primitives'
+import { AlertDialog, Button, RadioGroup } from '@/components/primitives'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { assertNever } from '@/lib/assert-never'
 import styles from './notes.module.css'
 
 /**
@@ -34,6 +36,17 @@ import styles from './notes.module.css'
  * so a toast owned here would be destroyed by the very action it was
  * confirming, and never seen. It would also put one toast per row into the
  * DOM. So this reports what happened and the screen says so.
+ *
+ * **It asks what was done, and pre-answers nothing.** CW PRD CN-01's "Action
+ * taken?" opens on no outcome chosen, and the confirm stays disabled until one
+ * is. A default of "No further action needed" would record a decision nobody
+ * made, on the one act that closes a care worker's request for help. "Other"
+ * needs words, because "Other" alone tells the next reader nothing.
+ *
+ * **The outcome is recorded, not performed.** Choosing "Incident raised" does
+ * not raise an incident and "Care plan updated" does not touch the plan; the
+ * dialog says so beside the choice, because a senior who believed otherwise
+ * might not go and do it.
  *
  * **It is undoable for the life of the session**, and that is not a softening
  * of the immutability rule. A submitted care note is never edited and never
@@ -62,6 +75,12 @@ export function ReviewNoteControl({
   const format = useSiteFormat()
   const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState('')
+  // Nothing chosen is a real state, and the one the question opens on.
+  const [outcomeKind, setOutcomeKind] = useState<ReviewOutcome['kind'] | undefined>(
+    undefined,
+  )
+  const [otherText, setOtherText] = useState('')
+  const fieldId = useId()
 
   /*
    * Marking a flagged note reviewed is the approve act in Care Notes: signing
@@ -74,14 +93,28 @@ export function ReviewNoteControl({
 
   const stamp = `${format.instantDate(note.recordedAt)} ${format.time(note.recordedAt)}`
 
+  const outcome = chosenOutcome(outcomeKind, otherText)
+
+  const setOpen = (open: boolean) => {
+    setConfirming(open)
+    // Each confirmation asks afresh. An answer left over from a dialog somebody
+    // cancelled is an answer to a question they walked away from.
+    if (!open) {
+      setOutcomeKind(undefined)
+      setOtherText('')
+    }
+  }
+
   const record = async () => {
+    if (outcome === 'none') return
     try {
       await recordNoteReview({
         noteId: note.id,
         by: currentUser,
         at: appNow().toISOString() as IsoDateTime,
+        outcome,
       })
-      setConfirming(false)
+      setOpen(false)
       onChanged('recorded')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'That review was not recorded.')
@@ -105,7 +138,7 @@ export function ReviewNoteControl({
         <Button
           variant="secondary"
           size={size === 'inline' ? 'small' : 'medium'}
-          onClick={() => setConfirming(true)}
+          onClick={() => setOpen(true)}
         >
           Mark reviewed
         </Button>
@@ -119,24 +152,97 @@ export function ReviewNoteControl({
 
       <AlertDialog
         open={confirming}
-        onOpenChange={setConfirming}
+        onOpenChange={setOpen}
         subject={{
           kind: 'resident',
           name: resident.fullLegalName,
           ...(resident.room.kind === 'recorded' ? { room: resident.room.value } : {}),
         }}
         action={`Mark the ${stamp} note as reviewed`}
-        description={`This records that ${currentUser.displayName} looked at it; the note, and ${
-          note.review.kind === 'flagged_not_reviewed'
-            ? note.review.flaggedBy.displayName
-            : 'whoever flagged it'
-        } as having flagged it, stay as they are.`}
+        description={
+          <span className={styles.reviewConfirm}>
+            <span>
+              {`This records that ${currentUser.displayName} looked at it; the note, and ${
+                note.review.kind === 'flagged_not_reviewed'
+                  ? note.review.flaggedBy.displayName
+                  : 'whoever flagged it'
+              } as having flagged it, stay as they are.`}
+            </span>
+            <span className={styles.reviewConfirmField}>
+              <span className={styles.fieldLabel} aria-hidden>
+                Action taken?
+              </span>
+              <RadioGroup
+                legend="Action taken?"
+                value={outcomeKind}
+                onValueChange={(value) => {
+                  const kind = REVIEW_OUTCOMES.find((option) => option.id === value)?.id
+                  if (kind === undefined) return
+                  setOutcomeKind(kind)
+                  if (kind !== 'other') setOtherText('')
+                }}
+                options={REVIEW_OUTCOMES.map((option) => ({
+                  value: option.id,
+                  label: option.label,
+                }))}
+              />
+              <span className={styles.fieldHint}>
+                This records what you did. It does not update the care plan or raise an
+                incident.
+              </span>
+            </span>
+            {outcomeKind === 'other' ? (
+              <span className={styles.reviewConfirmField}>
+                <label className={styles.fieldLabel} htmlFor={`${fieldId}-other`}>
+                  What was done?
+                </label>
+                <textarea
+                  id={`${fieldId}-other`}
+                  className={styles.textarea}
+                  rows={2}
+                  required
+                  value={otherText}
+                  onChange={(event) => setOtherText(event.target.value)}
+                />
+              </span>
+            ) : null}
+          </span>
+        }
         confirmLabel="Mark reviewed"
-        onConfirm={record}
+        confirmDisabled={outcome === 'none'}
+        onConfirm={() => {
+          void record()
+        }}
       />
     </>
   )
 }
+/**
+ * The outcome the dialog would record, or that it cannot record one yet.
+ *
+ * "Other" with no words is not an outcome: the client refuses it too, and this
+ * only saves the round trip by holding the confirm.
+ */
+function chosenOutcome(
+  kind: ReviewOutcome['kind'] | undefined,
+  otherText: string,
+): ReviewOutcome | 'none' {
+  switch (kind) {
+    case undefined:
+      return 'none'
+    case 'other':
+      return otherText.trim() === ''
+        ? 'none'
+        : { kind: 'other', text: otherText.trim() }
+    case 'no_further_action':
+    case 'care_plan_updated':
+    case 'incident_raised':
+      return { kind }
+    default:
+      return assertNever(kind)
+  }
+}
+
 /**
  * The undo affordance, and only where it is honest.
  *

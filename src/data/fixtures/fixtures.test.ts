@@ -1296,3 +1296,41 @@ describe("a MAR round belongs to the site's day, not the runner's", () => {
     }
   })
 })
+
+describe('a flag says why, and a review says what was done', () => {
+  /*
+   * Both were added for the Care Worker PRD (CN-01, CN-02) and are shared by
+   * both builds. Every state has to be reachable on a fresh load, or a screen
+   * is written against a branch nobody can see: a flag with a reason and one
+   * without, and each of the four outcomes.
+   */
+  const flags = careNotes.flatMap((note) =>
+    note.review.kind === 'not_flagged' ? [] : [note.review],
+  )
+
+  it('holds flags with a reason and flags with none', () => {
+    const kinds = new Set(flags.map((review) => review.reason.kind))
+    expect([...kinds].sort()).toEqual(['given', 'not_given'])
+    for (const review of flags)
+      if (review.reason.kind === 'given') expect(review.reason.text.trim()).not.toBe('')
+  })
+
+  it('holds every review outcome, and an other that says what', () => {
+    const outcomes = careNotes.flatMap((note) =>
+      note.review.kind === 'reviewed' ? [note.review.outcome] : [],
+    )
+    expect([...new Set(outcomes.map((outcome) => outcome.kind))].sort()).toEqual(
+      ['care_plan_updated', 'incident_raised', 'no_further_action', 'other'].sort(),
+    )
+    for (const outcome of outcomes)
+      if (outcome.kind === 'other') expect(outcome.text.trim()).not.toBe('')
+  })
+
+  it('keeps a flag reason waiting in the queue', () => {
+    expect(
+      flags.some(
+        (review) => review.reason.kind === 'given' && 'reviewedBy' in review === false,
+      ),
+    ).toBe(true)
+  })
+})

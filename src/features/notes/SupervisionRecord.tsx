@@ -2,6 +2,8 @@ import { now as appNow } from '@/data/fixtures/clock'
 import type { CareNote } from '@/data/types'
 import { elapsedMinutesBetween, formatDuration } from '@/lib/shift'
 import { useSiteFormat } from '@/app/session/use-session'
+import { FlagReasonWords } from './note-parts'
+import { reviewOutcomeText } from './review-wording'
 import styles from './notes.module.css'
 
 /**
@@ -16,6 +18,10 @@ import styles from './notes.module.css'
  * Rendered on the note detail rather than on the queue row, because the queue
  * is scanned and this is read. On the row the flag chip carries who and when,
  * which is what ranks one row against another.
+ *
+ * Each row is one fact: who flagged and when, why they said they flagged it,
+ * who reviewed and when, and what the reviewer said they did. The reason and
+ * the outcome never share a line with a name.
  *
  * Nothing here is hatched. A flag that was answered is a complete record, and
  * a slow answer is a finding about the answer rather than a hole in the
@@ -42,6 +48,12 @@ export function SupervisionRecord({ note }: { note: CareNote }) {
             <span data-numeric>{format.dateTime(note.review.flaggedAt)}</span>
           </dd>
         </div>
+        <div className={styles.supervisionRow} data-flag-reason>
+          <dt className={styles.supervisionTerm}>Reason</dt>
+          <dd className={styles.supervisionValue}>
+            <FlagReasonWords reason={note.review.reason} />
+          </dd>
+        </div>
         <div className={styles.supervisionRow}>
           <dt className={styles.supervisionTerm}>Waiting</dt>
           <dd className={styles.supervisionValue}>
@@ -53,7 +65,7 @@ export function SupervisionRecord({ note }: { note: CareNote }) {
     )
   }
 
-  const { flaggedBy, flaggedAt, reviewedBy, reviewedAt } = note.review
+  const { flaggedBy, flaggedAt, reason, reviewedBy, reviewedAt, outcome } = note.review
   const waited = elapsedMinutesBetween(flaggedAt, reviewedAt)
   const bySamePerson = flaggedBy.id === reviewedBy.id
 
@@ -66,12 +78,24 @@ export function SupervisionRecord({ note }: { note: CareNote }) {
           <span data-numeric>{format.dateTime(flaggedAt)}</span>
         </dd>
       </div>
+      <div className={styles.supervisionRow} data-flag-reason>
+        <dt className={styles.supervisionTerm}>Reason</dt>
+        <dd className={styles.supervisionValue}>
+          <FlagReasonWords reason={reason} />
+        </dd>
+      </div>
       <div className={styles.supervisionRow}>
         <dt className={styles.supervisionTerm}>Reviewed</dt>
         <dd className={styles.supervisionValue}>
           {reviewedBy.displayName},{' '}
           <span data-numeric>{format.dateTime(reviewedAt)}</span>
         </dd>
+      </div>
+      {/* What the reviewer said they did, on its own row beneath who and when,
+          never folded into the reviewer's name. */}
+      <div className={styles.supervisionRow} data-review-outcome>
+        <dt className={styles.supervisionTerm}>Action taken</dt>
+        <dd className={styles.supervisionValue}>{reviewOutcomeText(outcome)}</dd>
       </div>
       <div className={styles.supervisionRow}>
         <dt className={styles.supervisionTerm}>Waited</dt>

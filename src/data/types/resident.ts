@@ -218,15 +218,67 @@ export type NoteShift =
  */
 export type CareNoteReview =
   | { kind: 'not_flagged' }
-  | { kind: 'flagged_not_reviewed'; flaggedBy: StaffRef; flaggedAt: IsoDateTime }
+  | {
+      kind: 'flagged_not_reviewed'
+      flaggedBy: StaffRef
+      flaggedAt: IsoDateTime
+      reason: FlagReason
+    }
   | {
       kind: 'reviewed'
       /** Who asked for the second opinion, carried forward from the flag. */
       flaggedBy: StaffRef
       flaggedAt: IsoDateTime
+      /** Why they asked, carried forward with it. */
+      reason: FlagReason
       reviewedBy: StaffRef
       reviewedAt: IsoDateTime
+      outcome: ReviewOutcome
     }
+
+/**
+ * Why somebody flagged a note, in their own words, or that they gave none.
+ *
+ * **Optional to give, never optional in the record.** CW PRD CN-02 asks "Why
+ * are you flagging this?" and lets it be skipped. Skipping is a fact about the
+ * flag: `not_given` renders as "No reason given", never as an empty line that
+ * could be a reason nobody loaded.
+ */
+export type FlagReason = { kind: 'given'; text: string } | { kind: 'not_given' }
+
+/**
+ * What the senior who reviewed a flagged note did about it. CW PRD CN-01's
+ * "Action taken?", chosen from four.
+ *
+ * **Recorded, never inferred.** "Care plan updated" and "Incident raised" are
+ * what the reviewer said they did; this build does not check the care plan or
+ * the incident log to see whether they did, and nothing here raises an incident
+ * or edits a plan. `other` carries its words, and cannot be recorded without
+ * them.
+ */
+export type ReviewOutcome =
+  | { kind: 'no_further_action' }
+  | { kind: 'care_plan_updated' }
+  | { kind: 'incident_raised' }
+  | { kind: 'other'; text: string }
+
+/**
+ * The four, in the order the review control offers them.
+ *
+ * **Keyed by outcome first, so a fifth outcome without a label is a compile
+ * error.** A list checked only with `satisfies` confirms each entry is a real
+ * outcome and says nothing about an outcome with no entry.
+ */
+const REVIEW_OUTCOME_LABELS = {
+  no_further_action: 'No further action needed',
+  care_plan_updated: 'Care plan updated',
+  incident_raised: 'Incident raised',
+  other: 'Other',
+} as const satisfies Record<ReviewOutcome['kind'], string>
+
+export const REVIEW_OUTCOMES = (
+  Object.keys(REVIEW_OUTCOME_LABELS) as ReviewOutcome['kind'][]
+).map((id) => ({ id, label: REVIEW_OUTCOME_LABELS[id] }))
 
 export type MedicationId = `med-${string}`
 
