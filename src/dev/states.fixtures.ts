@@ -211,6 +211,14 @@ export const marStates: ByKind<MarCellState> = {
       recordedBy: staffOkonkwo,
     },
     {
+      // CW PRD MED-02's sixth reason. A complete record, like the rest.
+      kind: 'not_given',
+      reason: 'resident_vomiting',
+      note: 'Vomited twice before breakfast. Offered again at 10:00.',
+      recordedAt: '2026-08-19T08:22:00+01:00',
+      recordedBy: staffOkonkwo,
+    },
+    {
       kind: 'not_given',
       reason: 'other',
       note: 'Held pending GP review of dose.',
@@ -223,11 +231,27 @@ export const marStates: ByKind<MarCellState> = {
       kind: 'omitted',
       dueAt: '2026-08-19T08:00:00+01:00',
       escalation: { kind: 'not_escalated' },
+      closure: { kind: 'open' },
     },
     {
       kind: 'omitted',
       dueAt: '2026-08-19T08:00:00+01:00',
       escalation: { kind: 'escalated', at: '2026-08-19T09:04:00+01:00' },
+      closure: { kind: 'open' },
+    },
+    {
+      // Closed by a manager (CW PRD MED-01). Still hatched: the closure is a
+      // decision about the gap, rendered beside it, and the dose still has no
+      // record.
+      kind: 'omitted',
+      dueAt: '2026-08-19T08:00:00+01:00',
+      escalation: { kind: 'escalated', at: '2026-08-19T09:04:00+01:00' },
+      closure: {
+        kind: 'closed',
+        by: staffHalloran,
+        at: '2026-08-20T10:15:00+01:00',
+        reason: 'GP informed. The next dose was given on time and no harm came of it.',
+      },
     },
   ],
 }

@@ -96,7 +96,28 @@ export type MarCellState =
       recordedAt: IsoDateTime
       recordedBy: StaffRef
     }
-  | { kind: 'omitted'; dueAt: IsoDateTime; escalation: MarEscalation }
+  | {
+      kind: 'omitted'
+      dueAt: IsoDateTime
+      escalation: MarEscalation
+      closure: OmissionClosure
+    }
+
+/**
+ * Whether somebody has closed an omission, and who, when and why. CW PRD MED-01:
+ * a care worker can see an omission and cannot close or dismiss it; a senior
+ * carer or a manager can.
+ *
+ * **Closing records a decision about the gap; it does not fill it.** A closed
+ * omission is still a dose with no record: the MAR cell stays hatched, and the
+ * closure sits beside it saying who looked and what they concluded. A closure
+ * that turned the cell into something else would be a record of a dose written
+ * after the event by somebody who did not give it.
+ *
+ * `reason` is non-empty by contract: a closure nobody explained is a dismissal.
+ */
+export type OmissionClosure =
+  { kind: 'open' } | { kind: 'closed'; by: StaffRef; at: IsoDateTime; reason: string }
 
 /**
  * The running balance of a controlled drug, as the register holds it.
@@ -126,6 +147,7 @@ export type NotGivenReason =
   | 'resident_asleep'
   | 'medication_unavailable'
   | 'resident_in_hospital'
+  | 'resident_vomiting'
   | 'other'
 
 /**

@@ -54,7 +54,12 @@ export interface PrnAdministration {
    * one — not an empty string, and not an assumption that it worked.
    */
   outcome:
-    { kind: 'not_recorded' } | { kind: 'recorded'; text: string; at: IsoDateTime }
+    | { kind: 'not_recorded' }
+    /**
+     * With who recorded it. It had only a time, so the outcome of a PRN dose
+     * was the one clinical record in the build without an author.
+     */
+    | { kind: 'recorded'; text: string; at: IsoDateTime; by: StaffRef }
   /** Reserved for the linked care note a later phase writes. */
   note: CareNoteId | 'none'
 }
@@ -84,6 +89,37 @@ export function recordAdministration(
   administrations.set(key(medicationId, date, roundTime), state)
 }
 
+/*
+ * **Which overlay entries are not doses.** A closure and a countersignature are
+ * written through the same overlay as a dose, because they change the same
+ * cell, and the sign-out list called every one of them "doses you signed for".
+ * A closure is a decision about a dose nobody gave, and a countersignature is a
+ * second signature on somebody else's: telling a person they will lose doses
+ * they signed when they closed an omission misdescribes what is at stake.
+ */
+const closures = new Set<string>()
+const countersignatures = new Set<string>()
+
+export function recordClosure(
+  medicationId: MedicationId,
+  date: IsoDate,
+  roundTime: string,
+  state: MarCellState,
+): void {
+  recordAdministration(medicationId, date, roundTime, state)
+  closures.add(key(medicationId, date, roundTime))
+}
+
+export function recordCountersignature(
+  medicationId: MedicationId,
+  date: IsoDate,
+  roundTime: string,
+  state: MarCellState,
+): void {
+  recordAdministration(medicationId, date, roundTime, state)
+  countersignatures.add(key(medicationId, date, roundTime))
+}
+
 export function appendPrn(entry: Omit<PrnAdministration, 'id'>): PrnAdministration {
   prnSequence += 1
   const stored: PrnAdministration = { ...entry, id: `prn-session-${prnSequence}` }
@@ -95,10 +131,15 @@ export function prnFor(residentId: ResidentId): PrnAdministration[] {
   return prnGiven.filter((entry) => entry.residentId === residentId)
 }
 
-export function recordPrnOutcome(id: string, text: string, at: IsoDateTime): boolean {
+export function recordPrnOutcome(
+  id: string,
+  text: string,
+  at: IsoDateTime,
+  by: StaffRef,
+): boolean {
   const entry = prnGiven.find((item) => item.id === id)
   if (!entry) return false
-  entry.outcome = { kind: 'recorded', text, at }
+  entry.outcome = { kind: 'recorded', text, at, by }
   return true
 }
 
@@ -153,7 +194,14 @@ export function balanceWithSession(medicationId: MedicationId): StockBalance {
  */
 export function marHoldings(): SessionHolding[] {
   return [
-    ...held('doses you signed for', administrations.size),
+    ...held(
+      'doses you signed for',
+      [...administrations.keys()].filter(
+        (entry) => !closures.has(entry) && !countersignatures.has(entry),
+      ).length,
+    ),
+    ...held('omissions you closed', closures.size),
+    ...held('controlled drug doses you countersigned', countersignatures.size),
     ...held('as-required doses you recorded', prnGiven.length),
     ...held('controlled drug counts you made', sessionCounts.length),
   ]
@@ -162,6 +210,8 @@ export function marHoldings(): SessionHolding[] {
 /** Emptied on sign out, and by tests. */
 export function resetSessionAdministrations(): void {
   administrations.clear()
+  closures.clear()
+  countersignatures.clear()
   prnGiven.length = 0
   prnSequence = 0
   sessionCounts.length = 0

@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { closeOmission } from '@/data/access/client'
+import { resetSessionAdministrations } from '@/data/access/mar-store'
+import { staffOkonkwo } from '@/data/fixtures/organisation'
 import { render, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
@@ -814,4 +817,47 @@ describe('the late list narrows and pages without lying about the total', () => 
       /Showing 9 to/,
     )
   }, 30000)
+})
+
+/**
+ * A late dose somebody has closed. CW PRD MED-01.
+ *
+ * The fixtures close only omissions older than the late list's window, so the
+ * closure a reader can meet here is one made this session. It stays on the
+ * list, because the dose still has no record, and it carries the closure as
+ * its own field rather than in the chip's small print.
+ */
+describe('a late dose closed this session', () => {
+  it('stays late, and carries the closure apart from the chip', async () => {
+    const before = await loadToday(rosewood, NOW_ISO)
+    const dose = before.lateDoses.find((entry) => entry.closure.kind === 'open')
+    expect(dose, 'no open late dose to close').toBeTruthy()
+    try {
+      await closeOmission({
+        medicationId: dose!.record.medicationId,
+        date: dose!.record.date,
+        roundTime: dose!.record.roundTime,
+        reason: 'Resident was out with family over the round.',
+        by: staffOkonkwo,
+        at: NOW_ISO,
+      })
+      const after = await loadToday(rosewood, NOW_ISO)
+      const doses = after.late.filter((item) => item.kind === 'dose')
+      expect(doses.length).toBe(
+        before.late.filter((item) => item.kind === 'dose').length,
+      )
+      const closed = doses.filter(
+        (item) => item.closure !== 'not_an_omission' && item.closure.kind === 'closed',
+      )
+      expect(closed.length).toBe(1)
+      expect(closed[0]!.state).toBe('No record')
+      // Not in the chip: the chip is the gap, and the closure is a second fact.
+      expect(closed[0]!.detail).not.toMatch(/Closed by|out with family/)
+      for (const item of after.late.filter((entry) => entry.kind !== 'dose')) {
+        expect(item.closure).toBe('not_an_omission')
+      }
+    } finally {
+      resetSessionAdministrations()
+    }
+  })
 })

@@ -171,11 +171,17 @@ describe('a session can be changed before it starts, and only then', () => {
       name: 'Knitting group',
       description: 'In the craft room.',
       place: 'Craft room',
+      /*
+       * On a whole minute, as every session the form can write is. The clock
+       * carries seconds while a round is live, and a start with seconds came
+       * back from the edit form minute-rounded, so this failed only at those
+       * times of day: the test, not the screen.
+       */
       startsAt: new Date(
-        appNow().getTime() + 2 * 86_400_000,
+        Math.floor((appNow().getTime() + 2 * 86_400_000) / 60_000) * 60_000,
       ).toISOString() as IsoDateTime,
       endsAt: new Date(
-        appNow().getTime() + 2 * 86_400_000 + 3_600_000,
+        Math.floor((appNow().getTime() + 2 * 86_400_000) / 60_000) * 60_000 + 3_600_000,
       ).toISOString() as IsoDateTime,
       residentIds: [residentsBySite(ROSEWOOD)[0]!.id],
       by: staffOkonkwo,

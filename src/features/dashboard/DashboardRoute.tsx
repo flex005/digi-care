@@ -7,7 +7,7 @@ import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { PendingInvitations } from './PendingInvitations'
 import { Card, SelectedMark } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
-import { NeverWrittenUp, Unrecorded } from '@/components/status'
+import { NeverWrittenUp, OmissionClosureFact, Unrecorded } from '@/components/status'
 import { formatCount, formatDate, formatRelative, pluralise } from '@/lib/format'
 import { MEDICATION_LOOKAHEAD_HOURS } from '@/lib/shift'
 import {
@@ -506,6 +506,13 @@ function LateRow({ item }: { item: LateItem }) {
       <div>
         <p className={styles.rowTitle}>{item.what}</p>
         <p className={styles.rowMeta}>{item.who}</p>
+        {/* A closed omission is still late and still has no record, so the row
+            and its chip stay; who closed it and why is a second fact, here. */}
+        {item.closure === 'not_an_omission' || item.closure.kind === 'open' ? null : (
+          <p className={styles.rowMeta}>
+            <OmissionClosureFact closure={item.closure} />
+          </p>
+        )}
       </div>
 
       <span className={styles.lateChip} data-late-state>

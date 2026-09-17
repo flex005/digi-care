@@ -141,6 +141,14 @@ export function MarGridCell({
       data-mar={state.kind}
       data-escalated={state.kind === 'omitted' && state.escalation.kind === 'escalated'}
       data-witness={state.kind === 'given' ? state.witness.kind : undefined}
+      /*
+       * Whether somebody has closed the omission, for the guards. **Nothing
+       * visual follows from it, on purpose**: closing records a decision about
+       * the gap and fills nothing, so a closed omission is drawn exactly as an
+       * open one. Who closed it and why is in the accessible name and the cell
+       * detail (CW PRD MED-01).
+       */
+      data-closure={state.kind === 'omitted' ? state.closure.kind : undefined}
       onClick={onSelect}
     >
       <Glyph state={state} />

@@ -1,0 +1,15 @@
+/**
+ * A closure beside an omission: plain secondary text.
+ *
+ * No fill, no border, no tint and no status colour. It sits beside a hatched
+ * gap, and anything with chrome would compete with the hatch or read as the
+ * dose being recorded. ink-700 clears 4.5:1 on white; quiet is weight, never
+ * contrast.
+ */
+
+.fact {
+  display: block;
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+}

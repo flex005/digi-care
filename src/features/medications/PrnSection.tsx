@@ -6,6 +6,7 @@ import { recordPrn, recordPrnOutcomeFor } from '@/data/access/client'
 import { Button } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { staffLabel } from '@/data/access/team-store'
 import styles from './medications.module.css'
 
 /**
@@ -180,6 +181,7 @@ function PrnOutcome({
   onChanged: () => void
 }) {
   const format = useSiteFormat()
+  const { currentUser } = useSession()
   const [text, setText] = useState('')
   const [error, setError] = useState('')
 
@@ -187,7 +189,9 @@ function PrnOutcome({
     return (
       <p className={styles.prnOutcome}>
         Outcome: {entry.outcome.text},{' '}
-        <span data-numeric>{format.time(entry.outcome.at)}</span>
+        <span data-numeric>
+          {format.attribution(staffLabel(entry.outcome.by), entry.outcome.at)}
+        </span>
       </p>
     )
   }
@@ -198,6 +202,7 @@ function PrnOutcome({
         id: entry.id,
         text,
         at: appNow().toISOString() as IsoDateTime,
+        by: currentUser,
       })
       setError('')
       onChanged()

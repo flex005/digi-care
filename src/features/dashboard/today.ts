@@ -4,6 +4,7 @@ import type {
   IsoDate,
   IsoDateTime,
   Medication,
+  OmissionClosure,
   Resident,
   Site,
 } from '@/data/types'
@@ -77,6 +78,16 @@ export interface LateItem {
   /** The state, in the row's own words: "no record", "2 days late". */
   state: string
   detail: string
+  /**
+   * Whether somebody has closed a late dose's omission (CW PRD MED-01), and
+   * `'not_an_omission'` for a row that is not one. A review or a handover has no
+   * closure, and `{ kind: 'open' }` on one would say it could be closed.
+   *
+   * Its own field rather than part of `detail`, because the detail renders
+   * inside the state chip, and a closure in the gap's small print is the merged
+   * pill the compound-state rule forbids.
+   */
+  closure: OmissionClosure | 'not_an_omission'
   to: string
   actionLabel: string
 }
@@ -211,6 +222,7 @@ function lateItems(input: {
         omission.escalatedAt === 'not_escalated'
           ? 'the window closed and nobody escalated it'
           : `escalated ${omission.escalatedAt.slice(11, 16)}`,
+      closure: omission.closure,
       to: `/residents/${omission.resident.id}/medications`,
       actionLabel: 'Open MAR',
     })
@@ -228,6 +240,7 @@ function lateItems(input: {
       who: nameOf(review.resident),
       state: 'Past its date',
       detail: `due ${formatDate(review.standing.dueOn)}`,
+      closure: 'not_an_omission',
       to: review.to,
       actionLabel: review.actionLabel,
     })
@@ -242,6 +255,7 @@ function lateItems(input: {
       who: input.residents.length > 0 ? 'The whole shift' : 'Nobody on record',
       state: 'Half complete',
       detail: 'one shift signed and the other never did',
+      closure: 'not_an_omission',
       to: '/handover',
       actionLabel: 'Open handover',
     })

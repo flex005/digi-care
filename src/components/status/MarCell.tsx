@@ -5,9 +5,11 @@ import type {
   NotGivenReason,
 } from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
-import { formatTime } from '@/lib/format'
+import { formatAttributionOn, formatTime } from '@/lib/format'
 import type { TimeZone } from '@/lib/format'
 import { useSiteFormat } from '@/app/session/use-session'
+import { OmissionClosureFact } from './OmissionClosureFact'
+import { omissionClosureSentence } from './omission-closure-wording'
 import { StatusPill } from './StatusPill'
 import { Unrecorded } from './Unrecorded'
 import styles from './MarCell.module.css'
@@ -27,6 +29,8 @@ import styles from './MarCell.module.css'
  *               this must never look like a gap, because it is not one.
  *   omitted     The window closed with no record. This IS a gap, so it gets
  *               the hatch. PRD §4.5 is explicit: "An omission uses the hatch."
+ *               A closed omission keeps it: closing records who looked and
+ *               why, beside the gap, and fills nothing (CW PRD MED-01).
  *
  * The accessible name is a full sentence, exposed to screen readers via a
  * visually-hidden span while the visible cell stays compact. PRD §7.
@@ -37,6 +41,7 @@ const NOT_GIVEN_REASON: Record<NotGivenReason, string> = {
   resident_asleep: 'resident asleep',
   medication_unavailable: 'medication unavailable',
   resident_in_hospital: 'resident in hospital',
+  resident_vomiting: 'resident vomiting',
   other: 'other reason',
 }
 
@@ -88,6 +93,14 @@ export function marCellDescription(
         state.escalation.kind === 'escalated'
           ? ` Escalated at ${at(state.escalation.at)}.`
           : ' Not yet escalated.'
+      }${
+        // A separate sentence, after the gap has been stated in full: the
+        // closure is a decision about the missing dose, not a record of it.
+        state.closure.kind === 'closed'
+          ? ` ${omissionClosureSentence(state.closure, (name, when) =>
+              formatAttributionOn(name, when, timeZone),
+            )}`
+          : ''
       }`
     default:
       return assertNever(state)
@@ -158,16 +171,23 @@ function CellBody({ state }: { state: MarCellState }) {
       )
 
     case 'omitted':
+      // Two facts where somebody has closed it, and the hatch stays either
+      // way. The closure sits outside the hatched element, as plain text: in
+      // small print inside the hatch it would read as part of the gap, and in
+      // a pill of its own it would read as the dose being settled.
       return (
-        <Unrecorded
-          variant="cell"
-          label="Omitted"
-          detail={
-            state.escalation.kind === 'escalated'
-              ? `due ${format.time(state.dueAt)} · escalated ${format.time(state.escalation.at)}`
-              : `due ${format.time(state.dueAt)} · not yet escalated`
-          }
-        />
+        <>
+          <Unrecorded
+            variant="cell"
+            label="Omitted"
+            detail={
+              state.escalation.kind === 'escalated'
+                ? `due ${format.time(state.dueAt)} · escalated ${format.time(state.escalation.at)}`
+                : `due ${format.time(state.dueAt)} · not yet escalated`
+            }
+          />
+          <OmissionClosureFact closure={state.closure} />
+        </>
       )
 
     default:

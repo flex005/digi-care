@@ -5,15 +5,17 @@ import type { IsoDateTime } from '@/data/types'
 import type { Omission } from '@/data/access/client'
 import { getOmissions } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
-import { Button, Card, SelectedMark } from '@/components/primitives'
-import { Unrecorded, NotYourHome } from '@/components/status'
+import { Button, Card, SelectedMark, Toast } from '@/components/primitives'
+import { NotYourHome, OmissionClosureFact, Unrecorded } from '@/components/status'
 import { metricIcons } from '@/components/metric/metric-tiles.icons'
 import { MetricTile, MetricTiles, MetricValue } from '@/components/metric/MetricTile'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
+import { assertNever } from '@/lib/assert-never'
 import { formatCount } from '@/lib/format'
 import { elapsedMinutesBetween } from '@/lib/shift'
 import { coarseWait } from '@/features/notes/note-parts'
+import { CloseOmissionControl } from './CloseOmissionControl'
 import styles from './medications.module.css'
 
 /**
@@ -35,16 +37,30 @@ import styles from './medications.module.css'
  *
  * **Oldest first**, because the wait is the finding — the same ordering and
  * the same reason as the flagged care-note queue.
+ *
+ * **A closed omission stays on this list** (CW PRD MED-01). Closing records who
+ * looked and why; it does not record the dose, so the row keeps its hatched
+ * "no record" chip and carries the closure beside it as a second, plain fact.
+ * Taking closed rows off the list would make the week's count of doses with no
+ * record fall when nobody recorded a dose.
  */
 
 const RANGE_DAYS = 7
 
-type Filter = 'all' | 'escalated' | 'not_escalated'
+type Filter = 'all' | 'escalated' | 'not_escalated' | 'open' | 'closed'
 
+/*
+ * One set of pills, one filter at a time. Open and closed sit beside escalated
+ * and not escalated rather than in a second set, because two filters combined
+ * would need a caption naming both, and the claim above the list has to name
+ * whatever produced it.
+ */
 const FILTERS: { id: Filter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'escalated', label: 'Escalated' },
   { id: 'not_escalated', label: 'Not escalated' },
+  { id: 'open', label: 'Open' },
+  { id: 'closed', label: 'Closed' },
 ]
 
 /**
@@ -58,11 +74,38 @@ const CAPTIONS: Record<Filter, string> = {
   all: 'doses with no record',
   escalated: 'doses with no record, escalated',
   not_escalated: 'doses with no record and not yet escalated',
+  open: 'doses with no record, omission still open',
+  closed: 'doses with no record, omission closed',
+}
+
+/** Whether an omission falls under a filter. One owner, for the list and its count. */
+function matches(entry: Omission, filter: Filter): boolean {
+  switch (filter) {
+    case 'all':
+      return true
+    case 'escalated':
+      return entry.escalatedAt !== 'not_escalated'
+    case 'not_escalated':
+      return entry.escalatedAt === 'not_escalated'
+    case 'open':
+      return entry.closure.kind === 'open'
+    case 'closed':
+      return entry.closure.kind === 'closed'
+    default:
+      return assertNever(filter)
+  }
 }
 
 export function OmissionsRoute() {
   const { activeSite } = useSession()
   const [filter, setFilter] = useState<Filter>('all')
+  /*
+   * Closures written from this screen. Counted so the read runs again and the
+   * row shows the closure beside its gap; the toast only announces it. The
+   * same shape the care notes queue uses for a review.
+   */
+  const [written, setWritten] = useState(0)
+  const [announced, setAnnounced] = useState(false)
 
   /**
    * One instant for the life of the screen, so the range and every "how long
@@ -82,6 +125,7 @@ export function OmissionsRoute() {
   const resource = useResource<{ omissions: Omission[]; dueInRange: number }>(load, [
     activeSite.id,
     since,
+    written,
   ])
 
   return (
@@ -108,8 +152,27 @@ export function OmissionsRoute() {
             siteName={activeSite.name}
             filter={filter}
             onFilter={setFilter}
+            onClosed={() => {
+              setAnnounced(true)
+              setWritten((count) => count + 1)
+            }}
           />
         )}
+
+        {/*
+         * Info, never positive. A green toast over a closed omission would be
+         * the one place on this screen that said the gap was dealt with, and
+         * the dose still has no record.
+         */}
+        <Toast
+          open={announced}
+          onOpenChange={(open) => {
+            if (!open) setAnnounced(false)
+          }}
+          tone="info"
+          title="Omission closed"
+          description="The dose still has no record. Nobody has been notified."
+        />
       </div>
     </SiteTimeZone>
   )
@@ -121,12 +184,14 @@ function Found({
   siteName,
   filter,
   onFilter,
+  onClosed,
 }: {
   omissions: Omission[]
   dueInRange: number
   siteName: string
   filter: Filter
   onFilter: (filter: Filter) => void
+  onClosed: () => void
 }) {
   // Counted over the week rather than the filtered list: these are the tiles'
   // figures and each carries its own denominator.
@@ -134,13 +199,9 @@ function Found({
     (entry) => entry.escalatedAt !== 'not_escalated',
   ).length
 
-  const visible = omissions.filter((entry) =>
-    filter === 'all'
-      ? true
-      : filter === 'escalated'
-        ? entry.escalatedAt !== 'not_escalated'
-        : entry.escalatedAt === 'not_escalated',
-  )
+  const closedCount = omissions.filter((entry) => matches(entry, 'closed')).length
+
+  const visible = omissions.filter((entry) => matches(entry, filter))
 
   return (
     <>
@@ -198,6 +259,19 @@ function Found({
             }
             of={`of ${formatCount(omissions.length)} with no record`}
           />
+          {/*
+           * Out of the doses with no record, because that is what a closure is
+           * about. Not out of the doses due: a closed omission is not a smaller
+           * kind of dose, it is a gap somebody has looked at, and it is still
+           * counted in the first tile.
+           */}
+          <MetricTile
+            label="Closed"
+            icon={metricIcons.looked}
+            figure={<MetricValue>{formatCount(closedCount)}</MetricValue>}
+            of={`of ${formatCount(omissions.length)} with no record`}
+            note="still no record of the dose"
+          />
           <MetricTile
             label="Doses due this week"
             icon={metricIcons.doses}
@@ -254,7 +328,7 @@ function Found({
         ) : (
           <ul className={styles.omissionList}>
             {visible.map((entry) => (
-              <OmissionRow key={rowKey(entry)} entry={entry} />
+              <OmissionRow key={rowKey(entry)} entry={entry} onClosed={onClosed} />
             ))}
           </ul>
         )}
@@ -272,7 +346,7 @@ const shortDay = (at: IsoDateTime) => {
 const rowKey = (entry: Omission) =>
   `${entry.record.medicationId}|${entry.record.date}|${entry.record.roundTime}`
 
-function OmissionRow({ entry }: { entry: Omission }) {
+function OmissionRow({ entry, onClosed }: { entry: Omission; onClosed: () => void }) {
   const format = useSiteFormat()
   const { resident, medication, record } = entry
   const escalated = entry.escalatedAt !== 'not_escalated'
@@ -286,6 +360,7 @@ function OmissionRow({ entry }: { entry: Omission }) {
       className={styles.omissionRow}
       data-omission={rowKey(entry)}
       data-escalated={escalated}
+      data-closure={entry.closure.kind}
     >
       {/* The subject leads. A dose never renders without the person it belongs
           to — this is the first cross-resident medication screen (§2.4). */}
@@ -337,9 +412,13 @@ function OmissionRow({ entry }: { entry: Omission }) {
             <span>raised {format.time(entry.escalatedAt)}</span>
           )}
         </p>
+        {/* A second fact, outside the hatched chip: somebody closed it, and
+            why. The chip stays as it is, because closing fills nothing. */}
+        <OmissionClosureFact closure={entry.closure} />
       </div>
 
       <div className={styles.omissionAction}>
+        <CloseOmissionControl omission={entry} onClosed={onClosed} />
         <Link className={styles.noteLink} to={`/residents/${resident.id}/medications`}>
           Open MAR
         </Link>

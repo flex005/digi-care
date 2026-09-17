@@ -1,10 +1,14 @@
-import { describe, expect, it } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
-import { TooltipProvider } from '@/components/primitives'
+import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
+import { resetSessionAdministrations } from '@/data/access/mar-store'
+import { teamMembers } from '@/data/access/team-store'
+import type { StaffRole } from '@/data/types'
+import { SignInAs } from '@/test/sign-in-as'
 import { OmissionsRoute } from './OmissionsRoute'
 
 /**
@@ -16,7 +20,13 @@ import { OmissionsRoute } from './OmissionsRoute'
  * doses rather than of people.
  */
 
-function renderOmissions() {
+afterEach(() => {
+  // A closure is written into the MAR overlay, and a closure left over from one
+  // test would be a closed row the next test never closed.
+  resetSessionAdministrations()
+})
+
+function renderOmissions(as?: StaffRole) {
   const router = createMemoryRouter(
     [{ path: '/medications', element: <OmissionsRoute /> }],
     { initialEntries: ['/medications'] },
@@ -24,7 +34,11 @@ function renderOmissions() {
   return render(
     <SessionProvider>
       <TooltipProvider>
-        <RouterProvider router={router} />
+        <ToastProvider>
+          {as === undefined ? null : <SignInAs as={as} />}
+          <RouterProvider router={router} />
+          <ToastViewport />
+        </ToastProvider>
       </TooltipProvider>
     </SessionProvider>,
   )
@@ -238,4 +252,169 @@ describe('accessibility', () => {
     await ready(container)
     expect(await axe(container)).toHaveNoViolations()
   }, 60000)
+})
+
+/**
+ * Closing an omission. CW PRD MED-01.
+ *
+ * Closing records who looked and why, and fills nothing. What is under test is
+ * that a closed row keeps its hatched gap with the closure beside it as a
+ * separate fact, that the screen counts the closures against the omissions
+ * they close, and that the control will not record a closure nobody explained.
+ */
+describe('a closed omission', () => {
+  it('keeps the hatched gap and states the closure beside it, not inside it', async () => {
+    const { container } = renderOmissions()
+    await ready(container)
+
+    // The fixtures close some older omissions and leave the rest open, so both
+    // must be on the week's list. A list with no closed row would pass every
+    // assertion below by never running them.
+    const closed = container.querySelectorAll('[data-omission][data-closure="closed"]')
+    const open = container.querySelectorAll('[data-omission][data-closure="open"]')
+    expect(closed.length, 'no closed omission this week').toBeGreaterThan(0)
+    expect(open.length, 'no open omission this week').toBeGreaterThan(0)
+
+    for (const row of closed) {
+      const gap = row.querySelector('[data-state="unrecorded"]')
+      const closure = row.querySelector('[data-omission-closure="closed"]')
+      expect(gap, 'a closed omission lost its hatch').toBeTruthy()
+      expect(gap?.textContent).toMatch(/no record/i)
+      expect(closure).toBeTruthy()
+      expect(gap!.contains(closure)).toBe(false)
+      expect(closure?.textContent).toMatch(
+        /^Closed by .+, \d{2}\/\d{2}\/\d{4} \d{2}:\d{2}.*: \S/,
+      )
+      // Nothing about the row reads as a recorded dose.
+      expect(row.querySelector('[data-state="recorded"]')).toBeNull()
+    }
+    for (const row of open) {
+      expect(row.querySelector('[data-omission-closure]')).toBeNull()
+    }
+  })
+
+  it('counts the closures out of the omissions, and the gap count does not fall', async () => {
+    const { container } = renderOmissions()
+    await ready(container)
+
+    const rows = container.querySelectorAll('[data-omission]').length
+    const closed = container.querySelectorAll(
+      '[data-omission][data-closure="closed"]',
+    ).length
+    const tile = container.querySelector('[data-metric-tile="Closed"]')
+    expect(tile, 'no Closed tile').toBeTruthy()
+    // The figure, and what it is out of: the omissions, never the doses due.
+    expect(tile!.querySelector('[class*="tileValue"]')?.textContent).toBe(
+      String(closed),
+    )
+    expect(tile!.querySelector('[data-metric-of]')?.textContent).toBe(
+      `of ${rows} with no record`,
+    )
+    // Closed rows are still omissions: the hatched figure counts every row.
+    const chip = container.querySelector('[data-omissions-chip]')
+    expect(chip?.textContent).toContain(`${rows} with no record`)
+  })
+
+  it('filters to closed, and says the filter', async () => {
+    const user = userEvent.setup()
+    const { container } = renderOmissions()
+    await ready(container)
+    const all = container.querySelectorAll('[data-omission]').length
+
+    await user.click(screen.getByRole('button', { name: 'Closed' }))
+    await waitFor(() =>
+      expect(container.querySelectorAll('[data-omission]').length).toBeLessThan(all),
+    )
+    const rows = container.querySelectorAll('[data-omission]')
+    for (const row of rows) expect(row.getAttribute('data-closure')).toBe('closed')
+    const line = container.querySelector('[data-result-line]')
+    expect(line?.querySelector('[data-numeric]')?.textContent).toBe(String(rows.length))
+    expect(line?.textContent).toMatch(/omission closed/i)
+    expect(line?.textContent).toMatch(new RegExp(`of ${all}\\b`))
+  }, 30000)
+})
+
+describe('closing an omission', () => {
+  const manager = () =>
+    teamMembers().find(
+      (member) =>
+        member.role === 'registered_manager' && member.standing.kind === 'has_access',
+    )!
+
+  it('is offered on open rows only', async () => {
+    const { container } = renderOmissions('registered_manager')
+    await ready(container)
+    for (const row of container.querySelectorAll('[data-omission]')) {
+      const control = within(row as HTMLElement).queryByRole('button', {
+        name: 'Close omission',
+      })
+      if (row.getAttribute('data-closure') === 'open') expect(control).toBeTruthy()
+      else expect(control).toBeNull()
+    }
+  })
+
+  it('names the subject, refuses to confirm without a reason, and records the closure', async () => {
+    const user = userEvent.setup()
+    const { container } = renderOmissions('registered_manager')
+    await ready(container)
+
+    const row = container.querySelector(
+      '[data-omission][data-closure="open"]',
+    ) as HTMLElement
+    const key = row.getAttribute('data-omission')!
+    const name = row.querySelector('a[href^="/residents/"]')!.textContent!
+    await user.click(within(row).getByRole('button', { name: 'Close omission' }))
+
+    const dialog = await screen.findByRole('alertdialog')
+    const title = within(dialog).getByRole('heading')
+    // The question names the dose and the person, never "Are you sure?".
+    expect(title.textContent).toMatch(
+      /^Close the \d{2}:\d{2}, \d{2}\/\d{2}\/\d{4} omission of .+ for .+\?$/,
+    )
+    expect(dialog.querySelector('[data-confirm-subject]')?.textContent).toBeTruthy()
+    // One line at the point of the act: nothing is sent.
+    expect(dialog.querySelector('[data-not-performed]')?.textContent).toMatch(
+      /^Nobody is notified\./,
+    )
+
+    const confirm = within(dialog).getByRole('button', { name: 'Close omission' })
+    expect(confirm).toBeDisabled()
+    const reason = within(dialog).getByLabelText('Why is it closed?')
+    await user.type(reason, '   ')
+    expect(confirm).toBeDisabled()
+
+    await user.clear(reason)
+    await user.type(reason, 'Pharmacy delivery was late. GP informed.')
+    expect(confirm).toBeEnabled()
+    await user.click(confirm)
+
+    const after = await waitFor(() => {
+      const found = container.querySelector(`[data-omission="${key}"]`)
+      expect(found?.getAttribute('data-closure')).toBe('closed')
+      return found as HTMLElement
+    })
+    // Still hatched, still "no record", and the closure beside it names who
+    // was signed in, and why.
+    expect(after.querySelector('[data-state="unrecorded"]')?.textContent).toMatch(
+      /no record/i,
+    )
+    const closure = after.querySelector('[data-omission-closure="closed"]')
+    expect(closure?.textContent).toMatch(
+      new RegExp(
+        `^Closed by ${manager().ref.displayName.replace('.', '\\.')}, .+: Pharmacy delivery was late\\. GP informed\\.$`,
+      ),
+    )
+    expect(within(after).queryByRole('button', { name: 'Close omission' })).toBeNull()
+    // The same person's row, still: a closure never lands on somebody else.
+    expect(after.querySelector('a[href^="/residents/"]')?.textContent).toBe(name)
+  }, 30000)
+
+  it('is not offered to a role that reads Medications', async () => {
+    const { container } = renderOmissions('auditor')
+    await ready(container)
+    expect(
+      container.querySelectorAll('[data-omission][data-closure="open"]').length,
+    ).toBeGreaterThan(0)
+    expect(screen.queryByRole('button', { name: 'Close omission' })).toBeNull()
+  })
 })

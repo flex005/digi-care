@@ -37,6 +37,7 @@ export {
 export type {
   MarCellState,
   MarEscalation,
+  OmissionClosure,
   MarWitness,
   NotGivenReason,
   Recorded,

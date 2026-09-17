@@ -8,7 +8,12 @@ import { getMarRecords } from '@/data/access/client'
 import type { MarRecord } from '@/data/fixtures/medications'
 import { useResource } from '@/data/access/use-resource'
 import { Button, Card, Tooltip } from '@/components/primitives'
-import { AggregateFigure, Unrecorded, NotYourHome } from '@/components/status'
+import {
+  AggregateFigure,
+  NotYourHome,
+  OmissionClosureFact,
+  Unrecorded,
+} from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { marCellDescription } from '@/components/status/MarCell'
 import { useTimeZone } from '@/app/session/use-session'
@@ -350,6 +355,15 @@ export function MarChartRoute() {
                     label="Nobody recorded anything"
                     detail="This is not a record that the dose was withheld."
                   />
+                </p>
+              ) : null}
+              {/* A second fact, after the gap and outside it: somebody closed
+                  the omission. The hatch above stays, because closing fills
+                  nothing (CW PRD MED-01). Renders nothing while it is open. */}
+              {selectedCell.cell.state.kind === 'omitted' &&
+              selectedCell.cell.state.closure.kind === 'closed' ? (
+                <p className={styles.detailClosure}>
+                  <OmissionClosureFact closure={selectedCell.cell.state.closure} />
                 </p>
               ) : null}
               {selectedCell.cell.state.kind === 'given' &&

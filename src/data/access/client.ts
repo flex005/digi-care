@@ -40,6 +40,7 @@ import type {
   IsoDate,
   IsoDateTime,
   MarCellState,
+  OmissionClosure,
   Medication,
   MedicationId,
   MoodRecord,
@@ -123,6 +124,8 @@ import {
   patchedRecords,
   prnFor,
   recordAdministration,
+  recordClosure,
+  recordCountersignature,
   recordPrnOutcome,
   appendStockCount,
   balanceWithSession,
@@ -162,8 +165,6 @@ import {
 import {
   dueWithinLookahead,
   fellDueAt,
-  marRecordsAll,
-  marRecordsFor,
   medicationsFor,
   registerMovements,
   type MarRecord,
@@ -637,9 +638,60 @@ export function getMarRecords(
   residentId: ResidentId,
 ): Promise<{ medications: Medication[]; records: MarRecord[] }> {
   if (!residentById(residentId)) return reject(`No resident with id ${residentId}`)
+  // Patched: a dose recorded, closed or countersigned this session has to show
+  // on the chart as well as on the round and the omissions list, or two screens
+  // disagree about one cell.
   return resolve({
     medications: medicationsFor(residentId),
-    records: marRecordsFor(residentId),
+    records: patchedRecords().filter((record) => record.residentId === residentId),
+  })
+}
+
+/**
+ * Closes an omission: who, when and why. CW PRD MED-01.
+ *
+ * **It records a decision about the gap and leaves the gap.** The cell stays
+ * `omitted`, with the closure beside it; nothing here marks the dose given or
+ * not given, because nobody recorded that at the time and a record written now
+ * would be one.
+ *
+ * Refused for a cell that is not an omission, one already closed (whoever got
+ * there first keeps their name on it), and a closure with no reason.
+ */
+export function closeOmission(input: {
+  medicationId: MedicationId
+  date: IsoDate
+  roundTime: string
+  reason: string
+  by: StaffRef
+  at: IsoDateTime
+}): Promise<OmissionClosure> {
+  if (input.reason.trim() === '') return reject('Say why the omission is closed')
+  const record = patchedRecords().find(
+    (entry) =>
+      entry.medicationId === input.medicationId &&
+      entry.date === input.date &&
+      entry.roundTime === input.roundTime,
+  )
+  if (!record) return reject('No dose was due then')
+  if (record.state.kind !== 'omitted') return reject('That dose is not an omission')
+  if (record.state.closure.kind === 'closed')
+    return reject('That omission is already closed')
+  const closure: OmissionClosure = {
+    kind: 'closed',
+    by: input.by,
+    at: input.at,
+    reason: input.reason.trim(),
+  }
+  recordClosure(input.medicationId, input.date, input.roundTime, {
+    ...record.state,
+    closure,
+  })
+  return logged(closure, {
+    module: 'Medications',
+    what: `Closed an omission for ${nameOf(record.residentId)}`,
+    to: '/medications',
+    by: input.by,
   })
 }
 
@@ -650,6 +702,7 @@ export interface Omission {
   /** When the dose was due. The sort key, and what "how long ago" measures. */
   dueAt: IsoDateTime
   escalatedAt: IsoDateTime | 'not_escalated'
+  closure: OmissionClosure
 }
 
 /**
@@ -682,7 +735,8 @@ export function getOmissions(
   let dueInRange = 0
   const omissions: Omission[] = []
 
-  for (const record of marRecordsAll) {
+  // Patched, so an omission closed this session reads as closed.
+  for (const record of patchedRecords()) {
     const resident = byResident.get(record.residentId)
     if (!resident) continue
 
@@ -711,6 +765,7 @@ export function getOmissions(
         record.state.escalation.kind === 'escalated'
           ? record.state.escalation.at
           : 'not_escalated',
+      closure: record.state.closure,
     })
   }
 
@@ -1299,9 +1354,16 @@ export function getRound(
  * otherwise record a complete-looking round that is missing one, and the MAR
  * grid would show the missing one as an omission with nobody's name on it.
  *
- * Also refused if a not-given has no reason, or if a controlled drug is short
- * a witness. The UI disables the button before any of these; this refuses
- * anyway, because a disabled button is a courtesy and this is the rule.
+ * Also refused if a not-given has no reason. The UI disables the button before
+ * this; the loader refuses anyway, because a disabled button is a courtesy and
+ * this is the rule.
+ *
+ * **A controlled drug may be recorded with its second signature still to come**
+ * (`required_not_recorded`), changed 17/09/2026 for the Care Worker PRD (MED-03):
+ * Witness 1 records the dose and Witness 2 countersigns afterwards with their
+ * own PIN. Until they do, the dose is half a record and every screen draws the
+ * missing signature as its own gap beside "Given". The Admin build's round still
+ * takes both signatures in one act; it simply never sends a dose without one.
  */
 /**
  * What a drug is standing at, or that nobody has counted it.
@@ -1423,12 +1485,6 @@ export function recordRound(input: {
 
   for (const dose of input.doses) {
     if (
-      dose.state.kind === 'given' &&
-      dose.state.witness.kind === 'required_not_recorded'
-    ) {
-      return reject('A controlled drug cannot be recorded without its second signature')
-    }
-    if (
       dose.state.kind === 'not_given' &&
       dose.state.reason === 'other' &&
       dose.state.note.trim() === ''
@@ -1476,6 +1532,52 @@ export function recordRound(input: {
 }
 
 /**
+ * Countersigns a controlled drug dose as its second witness. CW PRD MED-03.
+ *
+ * **The second signature on a record somebody else made**, so it is refused for
+ * the person who gave the dose: one person cannot be both witnesses, and a
+ * countersignature from the giver is one person's word twice. Refused, too, for
+ * a dose that is not a controlled drug given with its second signature missing.
+ *
+ * The countersigner and the moment come from the session and the clock.
+ */
+export function countersignControlledDrug(input: {
+  medicationId: MedicationId
+  date: IsoDate
+  roundTime: string
+  by: StaffRef
+  at: IsoDateTime
+}): Promise<MarCellState> {
+  const record = patchedRecords().find(
+    (entry) =>
+      entry.medicationId === input.medicationId &&
+      entry.date === input.date &&
+      entry.roundTime === input.roundTime,
+  )
+  if (!record) return reject('No dose was due then')
+  const state = record.state
+  if (state.kind !== 'given' || state.witness.kind !== 'required_not_recorded') {
+    return reject('That dose is not waiting for a second signature')
+  }
+  if (state.givenBy.id === input.by.id) {
+    return reject(
+      'The second signature has to be somebody other than the person who gave it',
+    )
+  }
+  const signed: MarCellState = {
+    ...state,
+    witness: { kind: 'witnessed', by: input.by },
+  }
+  recordCountersignature(input.medicationId, input.date, input.roundTime, signed)
+  return logged(signed, {
+    module: 'Medications',
+    what: `Countersigned a controlled drug dose for ${nameOf(record.residentId)}`,
+    to: '/medications/register',
+    by: input.by,
+  })
+}
+
+/**
  * Records a PRN dose. PRD §6.4: "PRN requires reason, symptom, and outcome."
  *
  * The outcome is **not** captured here, and that is the point: it has not
@@ -1512,9 +1614,10 @@ export function recordPrnOutcomeFor(input: {
   id: string
   text: string
   at: IsoDateTime
+  by: StaffRef
 }): Promise<void> {
   if (input.text.trim() === '') return reject('An outcome cannot be empty')
-  if (!recordPrnOutcome(input.id, input.text.trim(), input.at)) {
+  if (!recordPrnOutcome(input.id, input.text.trim(), input.at, input.by)) {
     return reject(`No PRN dose with id ${input.id}`)
   }
   return resolve(undefined)

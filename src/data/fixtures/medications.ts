@@ -697,6 +697,13 @@ function zoneFor(residentId: ResidentId): TimeZone {
   return (site?.timeZone ?? 'Europe/London') as TimeZone
 }
 
+/** What a manager wrote when closing an older omission. Varied, and plain. */
+const CLOSURE_REASONS: readonly [string, string, string] = [
+  'GP informed. The next dose was given on time and no harm came of it.',
+  'Resident was at hospital outpatients over the round; the ward gave the dose.',
+  'Checked with the family and the pharmacy. Discussed with the member of staff.',
+]
+
 const marRecords: MarRecord[] = []
 
 for (const [index, medication] of medications.entries()) {
@@ -879,6 +886,24 @@ for (const [index, medication] of medications.entries()) {
                   at: toIsoDateTime(recordedAfter(dueAt, 60 + (day % 30))),
                 }
               : { kind: 'not_escalated' },
+          /*
+           * **Closed by a manager, for some of the older ones, derived rather
+           * than drawn** (CW PRD MED-01). Omissions more than three days old on
+           * every third day are closed a day after they fell due, so both states
+           * are on a fresh load and the ones still open are the recent ones a
+           * senior would be looking at. No RNG call, so no other fixture moves.
+           */
+          closure:
+            ageHours > 72 && day % 3 === 0
+              ? {
+                  kind: 'closed',
+                  by: staffHalloran,
+                  at: toIsoDateTime(
+                    recordedBetween(dueAt, new Date(dueAt.getTime() + 86_400_000)),
+                  ),
+                  reason: CLOSURE_REASONS[day % CLOSURE_REASONS.length],
+                }
+              : { kind: 'open' },
         }
       } else if (roll <= 92) {
         const givenAt = recordedAfter(dueAt, rng.int(1, 25))
@@ -895,15 +920,21 @@ for (const [index, medication] of medications.entries()) {
       } else {
         // A recorded refusal is a COMPLETE clinical record, not a gap. This
         // is the majority of the non-given cells and it must look settled.
+        const drawn = rng.pick([
+          'resident_refused',
+          'resident_asleep',
+          'medication_unavailable',
+          'resident_in_hospital',
+          'other',
+        ] as const)
         state = {
           kind: 'not_given',
-          reason: rng.pick([
-            'resident_refused',
-            'resident_asleep',
-            'medication_unavailable',
-            'resident_in_hospital',
-            'other',
-          ] as const),
+          /*
+           * "Resident vomiting" joined the reasons for CW PRD MED-02. The draw
+           * above keeps its five choices, so its stream is unchanged; some of
+           * the "other" answers on every fourth day become vomiting instead.
+           */
+          reason: drawn === 'other' && day % 4 === 0 ? 'resident_vomiting' : drawn,
           note: '',
           recordedAt: toIsoDateTime(recordedAfter(dueAt, rng.int(2, 30))),
           recordedBy: rng.pick(carersAndSeniors),
@@ -984,6 +1015,8 @@ for (const omission of omissionRounds) {
       kind: 'omitted',
       dueAt: toIsoDateTime(omission.dueAt),
       escalation: omission.escalation,
+      // The pinned three stay open: they are the ones a senior has not dealt with.
+      closure: { kind: 'open' },
     },
   }
   if (existing >= 0) marRecords[existing] = record

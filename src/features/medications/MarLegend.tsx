@@ -95,15 +95,24 @@ const SAMPLES: {
         kind: 'omitted',
         dueAt: '2026-08-22T08:00:00+01:00',
         escalation: { kind: 'not_escalated' },
+        closure: { kind: 'open' },
       },
       {
         kind: 'omitted',
         dueAt: '2026-08-22T08:00:00+01:00',
         escalation: { kind: 'escalated', at: '2026-08-22T09:04:00+01:00' },
+        closure: { kind: 'open' },
       },
     ],
+    /*
+     * **A closed omission has no swatch of its own, and the note says why.**
+     * Closing records a decision about the gap and fills nothing, so the cell
+     * looks exactly as it did; who closed it and why is in the cell detail.
+     * A third swatch would teach a reader that a closed omission looks
+     * different, which is the one thing it must not do.
+     */
     title: 'No record',
-    note: 'window closed, nobody wrote. A mark means escalated.',
+    note: 'window closed, nobody wrote. A mark means escalated. Still hatched once closed.',
   },
 ]
 

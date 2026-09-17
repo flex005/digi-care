@@ -10,6 +10,10 @@ import { MarChartRoute } from './MarChartRoute'
 import { daysIn } from './mar-grid'
 import type { IsoDate } from '@/data/types'
 import { NOW, atTime, daysAgo } from '@/data/fixtures/generate'
+import { marRecordsAll } from '@/data/fixtures/medications'
+import { now as appNow } from '@/data/fixtures/clock'
+import { residentsBySite } from '@/data/fixtures/residents'
+import { zonedDate } from '@/lib/format'
 
 /**
  * The clock is pinned, and the chart is why.
@@ -322,6 +326,78 @@ describe('the detail area', () => {
     await waitFor(() =>
       expect(detail?.textContent).toMatch(/not a record that the dose was withheld/i),
     )
+  }, 20000)
+})
+
+/**
+ * A closed omission on the chart. CW PRD MED-01.
+ *
+ * Closing records a decision about the gap and fills nothing, so the cell has
+ * to look exactly as an open omission does, and the closure is stated in the
+ * cell detail as its own fact beside the hatch.
+ */
+describe('a closed omission stays hatched on the chart', () => {
+  /**
+   * A resident with a closed omission in the previous week, found from the
+   * fixtures rather than assumed.
+   *
+   * **The previous week, and read from the fixture clock rather than `PINNED`.**
+   * The chart anchors on `now()` from the fixture clock, which is the instant
+   * the fixtures were generated and does not move with fake timers. The
+   * fixtures close only omissions more than three days old, so the current
+   * week can hold none early in a week; the one before it holds them whatever
+   * day the suite runs. Failing loudly when there is none keeps the test from
+   * passing by never running.
+   */
+  function closedOmissionLastWeek() {
+    const today = zonedDate(appNow().toISOString() as never, 'Europe/London')
+    const lastWeek = new Date(`${today}T00:00:00Z`)
+    lastWeek.setUTCDate(lastWeek.getUTCDate() - 7)
+    const week = new Set(
+      daysIn(lastWeek.toISOString().slice(0, 10) as IsoDate, 'week').map(
+        (day) => day.date,
+      ),
+    )
+    const here = new Set(residentsBySite('site-rosewood-court').map((r) => r.id))
+    return marRecordsAll.find(
+      (record) =>
+        here.has(record.residentId) &&
+        week.has(record.date) &&
+        record.state.kind === 'omitted' &&
+        record.state.closure.kind === 'closed',
+    )
+  }
+
+  it('draws the cell as a gap and states the closure beside it in the detail', async () => {
+    const found = closedOmissionLastWeek()
+    expect(found, 'no closed omission last week at Rosewood Court').toBeTruthy()
+    const user = userEvent.setup()
+    const { container } = renderMar(found!.residentId)
+    await ready(container)
+    await user.click(screen.getByRole('button', { name: 'Previous week' }))
+
+    const grid = screen.getByRole('table')
+    const cell = grid.querySelector(
+      '[data-mar="omitted"][data-closure="closed"]',
+    ) as HTMLElement | null
+    expect(cell, 'the closed omission is not on the chart').toBeTruthy()
+    // The same hatch as an open omission: closing fills nothing.
+    expect(cell!.className).toMatch(/unrecorded/)
+    expect(cell!.getAttribute('aria-label')).toMatch(
+      /window closed with no record.*Closed by /,
+    )
+
+    await user.click(cell!)
+    const detail = container.querySelector('[aria-live="polite"]') as HTMLElement
+    const closure = await waitFor(() => {
+      const node = detail.querySelector('[data-omission-closure="closed"]')
+      expect(node).toBeTruthy()
+      return node!
+    })
+    const gap = detail.querySelector('[data-state="unrecorded"]')
+    expect(gap?.textContent).toMatch(/Nobody recorded anything/)
+    expect(gap!.contains(closure)).toBe(false)
+    expect(closure.textContent).toMatch(/^Closed by .+: \S/)
   }, 20000)
 })
 

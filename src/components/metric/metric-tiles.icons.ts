@@ -26,5 +26,10 @@ export const metricIcons = {
   /** Reviewed and nothing outstanding. Not a success mark: a state. */
   settled: 'check-validation/checkmark-badge-01',
   waiting: 'date-and-time/clock-01',
+  /**
+   * Somebody looked at a gap and said why. Not a tick: a closed omission is
+   * still a dose with no record, and a success mark would say otherwise.
+   */
+  looked: 'users/user-search-01',
   doses: 'medical/medicine-01',
 } satisfies Record<string, IconName>

@@ -294,10 +294,11 @@ export function outstanding(
 }
 
 /**
- * The five reasons a dose can be not given, as the union already names them.
+ * The six reasons a dose can be not given, as the union already names them.
+ * "Resident vomiting" joined them for CW PRD MED-02, whose wording it keeps.
  *
  * Mapped rather than stored as prose: `NotGivenReason` is closed so a screen
- * cannot invent a sixth, and "Other" is the one that carries free text — which
+ * cannot invent a seventh, and "Other" is the one that carries free text — which
  * is why it is the only one where the note is required.
  */
 export const NOT_GIVEN_REASONS: { value: NotGivenReason; label: string }[] = [
@@ -305,6 +306,7 @@ export const NOT_GIVEN_REASONS: { value: NotGivenReason; label: string }[] = [
   { value: 'resident_asleep', label: 'Resident asleep' },
   { value: 'medication_unavailable', label: 'Medication unavailable' },
   { value: 'resident_in_hospital', label: 'Resident in hospital' },
+  { value: 'resident_vomiting', label: 'Resident vomiting' },
   { value: 'other', label: 'Other: say why' },
 ]
 

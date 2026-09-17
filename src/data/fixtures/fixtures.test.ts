@@ -1334,3 +1334,41 @@ describe('a flag says why, and a review says what was done', () => {
     ).toBe(true)
   })
 })
+
+describe('an omission can be closed, and a dose not given for vomiting', () => {
+  /*
+   * Both added for the Care Worker PRD (MED-01, MED-02), in both builds, and
+   * both reachable on a fresh load or a screen is written against nothing.
+   */
+  const omissions = marRecordsAll.flatMap((record) =>
+    record.state.kind === 'omitted' ? [record.state] : [],
+  )
+
+  it('holds omissions open and omissions closed, each closure with who, when and why', () => {
+    const kinds = new Set(omissions.map((state) => state.closure.kind))
+    expect([...kinds].sort()).toEqual(['closed', 'open'])
+    for (const state of omissions) {
+      if (state.closure.kind !== 'closed') continue
+      expect(state.closure.reason.trim()).not.toBe('')
+      expect(new Date(state.closure.at).getTime()).toBeGreaterThanOrEqual(
+        new Date(state.dueAt).getTime(),
+      )
+      expect(new Date(state.closure.at).getTime()).toBeLessThanOrEqual(NOW.getTime())
+    }
+  })
+
+  it('keeps the three pinned omissions open', () => {
+    for (const record of SPECIFIED_OMISSIONS)
+      expect(record.state.kind === 'omitted' && record.state.closure.kind).toBe('open')
+  })
+
+  it('holds a dose not given because the resident was vomiting', () => {
+    expect(
+      marRecordsAll.some(
+        (record) =>
+          record.state.kind === 'not_given' &&
+          record.state.reason === 'resident_vomiting',
+      ),
+    ).toBe(true)
+  })
+})

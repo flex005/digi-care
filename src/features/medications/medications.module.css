@@ -490,6 +490,13 @@
   margin-top: var(--space-8);
 }
 
+/* The closure beside a closed omission: plain text, below the hatch and
+   outside it. The treatment is the component's; this is only the slot. */
+.detailClosure {
+  max-width: 88ch;
+  margin-top: var(--space-8);
+}
+
 /* ---- states around the chart ---- */
 
 .loading {
@@ -663,7 +670,65 @@
 
 .omissionAction {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: var(--space-8);
+  align-items: flex-end;
+}
+
+/* ---- closing an omission ---- */
+
+.closeConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.closeField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.closeLabel {
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--weight-semibold);
+}
+
+.closeTextarea {
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  resize: vertical;
+}
+
+.closeTextarea:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* What does not happen, in one line at the point of the act. Plain ink: it is
+   an instruction, not a finding, so it takes no status colour. */
+.closeNotice {
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-medium);
+}
+
+.closeError {
+  max-width: 24ch;
+  color: var(--status-critical-ink);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  text-align: right;
 }
 
 .noteLink {
