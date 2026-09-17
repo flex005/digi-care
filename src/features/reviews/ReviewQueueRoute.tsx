@@ -481,20 +481,42 @@ function CoverageLead({
         </p>
       </div>
 
+      {/*
+        **One row per coloured state, each naming itself beside its own bar.**
+        This was one stacked bar with a key underneath, and nothing but hue said
+        which segment was late. The caution fill is below 3:1 by decision, on
+        the condition that it never marks a state alone, and here it did.
+
+        "Not reviewed" has no bar: a row with an empty track reads as a zero.
+      */}
       <div>
-        <div className={styles.coverageBar}>
-          <i
-            className={styles.coverageDone}
-            style={{ width: `${percent(coverage.onTime)}%` }}
-          />
-          <i
-            className={styles.coverageLate}
-            style={{ width: `${percent(coverage.late)}%` }}
-          />
-        </div>
+        <ul className={styles.coverageRows}>
+          <li className={styles.coverageRow} data-coverage-row="on_time">
+            <span className={styles.coverageRowName}>On time</span>
+            <span className={styles.coverageTrack}>
+              <i
+                className={styles.coverageDone}
+                style={{ width: `${percent(coverage.onTime)}%` }}
+              />
+            </span>
+            <span className={styles.coverageRowValue} data-numeric>
+              {formatCount(coverage.onTime)}
+            </span>
+          </li>
+          <li className={styles.coverageRow} data-coverage-row="late">
+            <span className={styles.coverageRowName}>Late</span>
+            <span className={styles.coverageTrack}>
+              <i
+                className={styles.coverageLate}
+                style={{ width: `${percent(coverage.late)}%` }}
+              />
+            </span>
+            <span className={styles.coverageRowValue} data-numeric>
+              {formatCount(coverage.late)}
+            </span>
+          </li>
+        </ul>
         <p className={styles.coverageKey}>
-          <span data-numeric>{formatCount(coverage.onTime)}</span> on time ·{' '}
-          <span data-numeric>{formatCount(coverage.late)}</span> late ·{' '}
           <span data-numeric>{formatCount(coverage.outstanding)}</span> not reviewed
         </p>
       </div>

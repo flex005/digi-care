@@ -304,6 +304,35 @@ describe('the completed filter', () => {
     expect(coverage?.textContent).toMatch(/completed after their date/)
   })
 
+  /*
+   * The caution fill is below 3:1 by decision, on the condition that it never
+   * marks a state alone. This coverage bar was one stacked bar whose late
+   * segment was identified by hue and nothing else, so every coloured bar now
+   * sits in a row that names its state. Asserted by structure: a bar outside a
+   * named row is the defect, whatever colour it is.
+   */
+  it('names the state beside every coloured coverage bar', async () => {
+    const { container } = renderAt('/reviews')
+    await settled(container)
+    await click(container, 'completed')
+    await waitFor(() => expect(container.querySelector('[data-coverage]')).toBeTruthy())
+
+    const coverage = container.querySelector('[data-coverage]')!
+    const bars = [...coverage.querySelectorAll('i')]
+    expect(bars).toHaveLength(2)
+    for (const bar of bars) {
+      expect(
+        bar.closest('[data-coverage-row]'),
+        'a coverage bar outside a named row',
+      ).not.toBeNull()
+    }
+    const name = (row: string) =>
+      coverage.querySelector(`[data-coverage-row="${row}"]`)?.firstElementChild
+        ?.textContent
+    expect(name('on_time')).toBe('On time')
+    expect(name('late')).toBe('Late')
+  })
+
   it('renders a completed review as a settled record, author and both dates visible', async () => {
     const { container } = renderAt('/reviews')
     await settled(container)

@@ -14598,3 +14598,47 @@ Follows "Open: two status fills fail WCAG 1.4.11" above.
 - **`--status-caution` stays `#f07d13`, below 3:1, by decision.** The reasoning, as decided: an orange dot or bar carries no meaning on its own, and that is acceptable because every caution state names itself in words beside the colour. The rule was three carriers, and the colour was never doing the work alone.
 - **In the Care Worker build that reasoning is held by construction**: only its status pill and toast may draw the caution fill, both render their required words inside the colour and refuse empty words, and a guard (`check-caution-carriers.mjs`) fails the build anywhere else. The guard cannot check that the words name the state.
 - **In this build the reasoning is not established.** The fill is drawn in 26 declarations across 17 feature files besides `StatusPill` and `Toast`: `activities/activities.module.css`, `auth/auth.module.css`, `compliance/compliance.module.css`, `dashboard/charts.module.css`, `dashboard/dashboard.module.css`, `documents/documents.module.css`, `family/family.module.css`, `group/group.module.css`, `incidents/incidents.module.css`, `me/me.module.css`, `medications/cycle.module.css`, `medications/interim.module.css`, `medications/medications.module.css`, `notes/notes.module.css`, `residents/profile.module.css`, `reviews/reviews.module.css`, `team/team.module.css`. Some sit beside words and some may not: a compliance dot, a dashboard legend swatch, a chart arc stroke and a background fill are among them. None has been checked. Until each is, "the colour is never alone" is a sentence here rather than a fact, and the decision rests on it. Bringing the Care Worker guard across would fail on every one of those files, which is the list to work through.
+
+## The caution fill's 26 places, checked (17/09/2026)
+
+The caution departure was approved on the claim that every caution state names itself in words beside the colour. That claim had not been checked in this build. Each of the 26 declarations drawing `--status-caution` outside `StatusPill` and `Toast` was traced from its selector to the component that applies it, and what renders with it was read.
+
+| # | Where | What draws it | Carries |
+| --- | --- | --- | --- |
+| 1 | `activities` `.sessionPartly` | session card | words: "9 of 14 recorded" inside |
+| 2 | `auth` `.expired` | invitation expiry | words: "This invitation expired on…" |
+| 3 | `auth` `.expiryBar` | session expiry bar | words: "This session ends in…" |
+| 4 | `auth` `.expiryStay` | button inside that bar | words: "Stay signed in", inside the bar that names the state |
+| 5 | `compliance` `.dot[data-dot='amber']` | rating dot | words: the rating word beside it |
+| 6 | `compliance` `.notifyState` | notification state | words: "Required, not notified" |
+| 7 | `dashboard/charts` `.arcDueSoon` | donut arc | **colour alone** |
+| 8 | `dashboard` `.swatchDueSoon` | donut legend swatch | words: "Due soon · within 2 hours" |
+| 9 | `documents` `.finding[data-finding='expiring']` | documents tab finding | words: "expire within 30 days" |
+| 10 | `documents` `.expiry[data-expiry='expiring']` | expiry chip | words: "Expires DD/MM/YYYY, in…" |
+| 11 | `family` `.findingLead` | queue lead finding | words: the finding sentence |
+| 12 | `group` `.changedBanner` | changed figures banner | words: "…not at the documented default" |
+| 13 | `group` `.metric[data-tone='caution']` | group metric | words: the metric's label |
+| 14 | `incidents` `.severityModerateHarm.severitySelected` | harm choice tile | words: "Moderate harm", plus a tick when chosen |
+| 15 | `me` `.statusTileWarn` | nothing | **never drawn**: no component applies the class |
+| 16 | `medications/cycle` `.kindChanged` | pharmacy cycle row | words: "Dose changed" |
+| 17 | `medications/interim` `.refusal` | controlled drug refusal | words: the refusal sentence |
+| 18 | `medications/interim` `.verbal` | verbal order obligation | words: "A verbal order carries a follow-up" |
+| 19 | `medications` `.cellNotGiven` | MAR cell | **a glyph**: the not-given bar icon, and a sentence for assistive technology |
+| 20 | `medications` `.answerNotGiven[aria-pressed='true']` | dose answer button | words: "Not given" |
+| 21 | `notes` `.countCaution` | nothing | **never drawn**: no component applies the class |
+| 22 | `residents/profile` `.flagCaution` | profile risk flag | words: the field and the answer |
+| 23 | `reviews` `.coverageLate` | coverage bar segment | **colour alone** |
+| 24 | `reviews` `.stateDue` | review state chip | words: "Due soon" |
+| 25 | `team` `.standingCaution` | staff standing | words: "Suspended" |
+| 26 | `team` `.tallyCaution` | team tally | words: the tally's label |
+
+**21 carry words, 1 carries a glyph, 2 are colour alone, 2 are never drawn.**
+
+The two colour-alone places:
+
+- **23, the reviews coverage bar — fixed.** It was one stacked bar with a key underneath ("83 on time · 16 late · 21 not reviewed"), and nothing but hue said which segment was late. It is now one row per coloured state, each naming itself beside its own bar and count; "not reviewed" stays as words, because a row with an empty track reads as a zero. `reviews.test.tsx` asserts every coloured bar sits inside a row that names its state; mutated by removing the late row's name (confirmed landed), it failed, and passed when restored. Looked at by screenshot in colour and greyscale. `npm run verify` passes, the layout crawl included.
+- **7, the donut's due-soon arc — not fixed, awaiting a decision.** The legend beside the chart names every state and states every count, and the chart's accessible name is a full sentence, but on screen the arc is identified by hue and nothing else. It is not one place with a missing word: every arc on that donut is identified the same way, so any fix redraws the chart or removes a segment, which is a design decision rather than a repair.
+
+The token was not darkened: that would change every caution state in both products to fix two places.
+
+The two never-drawn classes, 15 and 21, are dead CSS. They were left alone, because removing them is unrelated to the question.
