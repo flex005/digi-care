@@ -14678,3 +14678,11 @@ The two findings the 72-hour change made wrong, as one piece of work.
 §8 has the entry this earned.
 
 The third finding, the invitation screen's access sentence disagreeing with the Care Worker PRD's role table, is not touched: which document is authoritative is being decided first.
+
+## Care worker and senior carer access: which document is authoritative (17/09/2026)
+
+The invitation screen told a senior carer she could read Compliance and Reports, and a care worker that he could record Risk Assessments and Consent. The Care Worker PRD's role table refuses all four.
+
+**Decided: that table is the authority for those two roles, in both builds.** This table's cells for them come from a role default present since the first commit (28/08/2026), before either v2.0 PRD, with no source named; this build's documents disclaim authority over the Care Worker product; the Care Worker PRD claims every action for both roles. Recorded in `docs/AM_PRD_STATUS.md` and at the top of the exceptions in `permissions.ts`, where somebody changing a cell will read it. **No value is changed**: four levels per module cannot hold what those roles do, so correcting the cells would not be the fix.
+
+The Care Worker PRD is a draft with no approvers, and both records say so.

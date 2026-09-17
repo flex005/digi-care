@@ -81,6 +81,23 @@ const BASE: Record<StaffRole, PermissionLevel> = {
 }
 
 /**
+ * **Care worker and senior carer access is not decided here.** The authority for
+ * what those two roles can do is the Care Worker PRD's role table (CW_PRD,
+ * Table 3), decided 17/09/2026. Their cells in this file predate both v2.0
+ * PRDs, cite no source, and disagree with that table in several places:
+ * a care worker records Risk Assessments, Consent and Family Portal here and
+ * may not there; a senior carer reads Compliance and Reports here and has no
+ * access there; and four levels cannot say "assigned residents only", "both
+ * shifts must sign" or "acknowledge, a manager closes" at all. The values are
+ * unchanged, pending a decision about how this product should describe those
+ * roles. docs/AM_PRD_STATUS.md, "Care worker and senior carer access".
+ *
+ * **That table is itself a draft**, for design and engineering review, with no
+ * approvers named. It is the better of the two documents and it is not signed
+ * off.
+ */
+
+/**
  * Where a role differs from its own baseline, and only there.
  *
  * **Every key here has to be a module the sidebar has.** Five entries named

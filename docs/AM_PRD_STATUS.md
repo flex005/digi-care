@@ -82,6 +82,25 @@ Each was decided and recorded, not missed.
 - **`--status-caution` stays below 3:1** (PRD §7 asks 3:1 of a status boundary; the fill measures 2.75:1 on the surface). Decided 17/09/2026 in the Care Worker build, where a darker value was measured and declined, on the condition that no caution state is carried by colour alone. Checked here the same day, all 26 places the fill is drawn besides the status pill and the toast: 21 carry words, 1 a glyph, 2 are never drawn, and 2 were colour alone. The reviews coverage bar is fixed. **The dashboard donut's due-soon arc is still colour alone and awaits a decision**, so until it is resolved the condition does not hold everywhere. Details in PROGRESS.md.
 - **No personal dashboard.** The PRD has none, and the one that existed was built for care workers.
 
+## Care worker and senior carer access
+
+**The Care Worker PRD's role table (CW_PRD v2.0, Table 3) is the authority for what a care worker and a senior carer can do, in both builds.** Decided 17/09/2026, on this evidence: this build's permission table sets those roles' cells from a role default with exceptions, present since the first commit of 28/08/2026, before either v2.0 PRD, citing no source; this build's own documents disclaim authority over them (`FRONTEND_PRD.md`: the Care Worker PRD is a separate product and "nothing in them is in scope here except where this platform manages them"); and the Care Worker PRD claims every action for both roles ("Anything not listed is not accessible to either role").
+
+**Where this build disagrees with it, unchanged for now:**
+
+| Module | Care worker, here / CW PRD | Senior carer, here / CW PRD |
+| --- | --- | --- |
+| Risk Assessments | Record / reads only | agree |
+| Consent | Record / reads only | agree |
+| Goals | Record, which includes setting a goal / progress notes only | same |
+| Family Portal | Record / not listed, so no access | same |
+| Compliance, Reports | agree | Read / no access |
+| Incidents | agree | this build's levels cannot say "acknowledge; a manager closes" |
+
+**Correcting the cells is not the whole fix.** Four levels per module cannot express "assigned residents only", "both shifts must sign", "acknowledge, but a manager closes", or recording a dose as distinct from adding an interim one. The invitation screen's access sentence, which is derived from those levels and shown to somebody who will use the Care Worker product, is the place this is visible today.
+
+**The Care Worker PRD is marked "Draft — For Design and Engineering Review", with no approvers named.** It is the better of the two documents, and it is not signed off: anything built on a disputed row should be easy to move.
+
 ## Asked for by the PRD and not built
 
 - The invitation and verification emails, the forgot-password flow and the lockout alert (no email).
