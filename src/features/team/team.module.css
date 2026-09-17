@@ -196,6 +196,32 @@
   color: var(--status-caution-ink);
 }
 
+.standingNever {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  align-items: flex-start;
+}
+
+/* An open invitation is unremarkable: plain words under the gap. */
+.invitationOpen {
+  color: var(--ink-500);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+}
+
+/* An expired one is a finding. Tint and ink with the words, never the fill:
+   the caution fill is below 3:1 and must never mark a state alone. */
+.invitationExpired {
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-pill);
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+  font-size: var(--text-micro-size);
+  line-height: var(--text-micro-line);
+  font-weight: var(--weight-semibold);
+}
+
 .standingLabel {
   font-size: var(--text-caption-size);
   line-height: var(--text-caption-line);

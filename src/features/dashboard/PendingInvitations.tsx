@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom'
 import { useViewer } from '@/app/session/use-viewer'
 import { useSession } from '@/app/session/use-session'
 import { memberById } from '@/data/access/team-store'
-import { invitations } from '@/data/fixtures/invitations'
+import { invitationStandingOn, invitations } from '@/data/fixtures/invitations'
+import { invitationSentence } from '@/features/team/invitation-wording'
 import { now as appNow } from '@/data/fixtures/clock'
 import type { IsoDate, IsoDateTime } from '@/data/types'
 import { formatDate, pluralise, zonedDate } from '@/lib/format'
@@ -48,19 +49,51 @@ export function PendingInvitations() {
 
   if (stale.length === 0) return null
 
+  const withState = stale.map((invitation) => ({
+    invitation,
+    standing: invitationStandingOn(invitation.invitedOn, today),
+  }))
+  const expired = withState.filter((entry) => entry.standing.kind === 'expired').length
+
   return (
     <div className={styles.pendingInvites} data-pending-invitations={stale.length}>
-      <p className={styles.pendingTitle}>
-        {pluralise(stale.length, 'invitation')} nobody has accepted
+      {/*
+       * **The title says how many have expired**, because that is what an admin
+       * acts on: an expired invitation cannot be accepted, and somebody has to
+       * send another. At a 72-hour lifetime most of this list has expired, and
+       * "nobody has accepted" alone read as people still able to.
+       */}
+      <p className={styles.pendingTitle} data-pending-expired={expired}>
+        {pluralise(stale.length, 'invitation')} nobody has accepted:{' '}
+        {expired === 0
+          ? 'none has expired'
+          : expired === stale.length
+            ? stale.length === 1
+              ? 'it has expired'
+              : `all ${stale.length} have expired`
+            : `${expired} of ${stale.length} have expired`}
       </p>
       <ul className={styles.pendingList}>
-        {stale.map((invitation) => {
+        {withState.map(({ invitation, standing }) => {
           const member = memberById(invitation.staffId)
           return (
-            <li key={invitation.staffId} data-pending={invitation.staffId}>
+            <li
+              key={invitation.staffId}
+              data-pending={invitation.staffId}
+              data-invitation={standing.kind}
+            >
               {member?.ref.fullName ?? invitation.staffId} · sent{' '}
               <span data-numeric>{formatDate(invitation.invitedOn)}</span> by{' '}
-              {invitation.invitedBy.fullName}
+              {invitation.invitedBy.fullName} ·{' '}
+              <span
+                className={
+                  standing.kind === 'expired'
+                    ? styles.pendingExpired
+                    : styles.pendingOpen
+                }
+              >
+                {invitationSentence(standing)}
+              </span>
             </li>
           )
         })}

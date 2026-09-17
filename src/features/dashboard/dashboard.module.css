@@ -593,6 +593,19 @@
   font-weight: var(--weight-semibold);
 }
 
+.pendingOpen {
+  color: var(--ink-500);
+}
+
+/* Tint and ink with the words, never the caution fill. */
+.pendingExpired {
+  padding: 0 var(--space-8);
+  border-radius: var(--radius-pill);
+  background: var(--status-caution-tint);
+  color: var(--status-caution-ink);
+  font-weight: var(--weight-semibold);
+}
+
 .pendingList {
   list-style: none;
   padding: 0;

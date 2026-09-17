@@ -49,7 +49,7 @@ export function invitations(): Invitation[] {
         staffId: member.id,
         invitedBy: standing.addedBy,
         invitedOn: standing.addedOn,
-        expiresOn: expiryOf(standing.addedOn),
+        expiresOn: invitationExpiresOn(standing.addedOn),
       },
     ]
   })
@@ -66,7 +66,7 @@ export function invitationFor(staffId: string): Invitation | undefined {
  * and anything that checks whether one has lapsed read the same rule rather
  * than each restating the arithmetic.
  */
-function expiryOf(invitedOn: IsoDate): IsoDate {
+export function invitationExpiresOn(invitedOn: IsoDate): IsoDate {
   const sent = new Date(`${invitedOn}T00:00:00.000Z`)
   sent.setUTCDate(sent.getUTCDate() + INVITATION_DAYS)
   return sent.toISOString().slice(0, 10) as IsoDate
@@ -80,3 +80,24 @@ function expiryOf(invitedOn: IsoDate): IsoDate {
  */
 export const invitationHasExpired = (invitation: Invitation, today: IsoDate): boolean =>
   invitation.expiresOn < today
+
+/**
+ * Whether an invitation can still be accepted, on a given day.
+ *
+ * **One owner of the question**, because the Team screen, the dashboard and the
+ * invitation screens all ask it, and at a 72-hour lifetime the answer is
+ * usually "no". A screen that restated the arithmetic would drift the next time
+ * the lifetime moves.
+ */
+export type InvitationStanding =
+  { kind: 'open'; expiresOn: IsoDate } | { kind: 'expired'; expiredOn: IsoDate }
+
+export function invitationStandingOn(
+  invitedOn: IsoDate,
+  today: IsoDate,
+): InvitationStanding {
+  const expiresOn = invitationExpiresOn(invitedOn)
+  return expiresOn < today
+    ? { kind: 'expired', expiredOn: expiresOn }
+    : { kind: 'open', expiresOn }
+}

@@ -14663,3 +14663,18 @@ Screenshots of a fresh build, confirmed by the bundle on disk and the bundle the
 - **The invitation screen's access sentence disagrees with the Care Worker role table.** For Hannah Price, a senior carer, it says "Read: … Compliance, Reports"; the Care Worker PRD gives senior carers no access to either. For Funke Adeyinka, a care worker, it says "Record: … Risk Assessments, … Consent"; the Care Worker PRD refuses both to care workers. The sentence is derived from this build's permission matrix, which describes access in this product, but it is shown to somebody who will use the other.
 
 None of the three findings is fixed here.
+
+## An expired invitation told from an open one, on the Team screens and the banner (17/09/2026)
+
+The two findings the 72-hour change made wrong, as one piece of work.
+
+- **`invitationStandingOn(invitedOn, today)`** in `data/fixtures/invitations.ts` is the one owner of whether an invitation can still be accepted, with `invitationExpiresOn` exported beside it. The Team screen does not restate the arithmetic. The same file is copied to the Care Worker build, so the shared data layer stays identical.
+- **Team list, staff profile, and anywhere `Standing` renders a never-given-access member:** the hatched "Never given access" gap stays as it was, and a second fact sits beneath it. "Invitation open until the end of 18/09/2026" is quiet; "Invitation expired 11/09/2026: it cannot be accepted" takes the caution tint and ink with the words, never the fill. Two facts, not one merged state. The words have one owner, `invitation-wording.ts`.
+- **The dashboard banner** says how many have expired in its title ("3 invitations nobody has accepted: all 3 have expired", or "3 of 4 have expired", or "none has expired") and marks each row with the same sentence.
+- **Tests, held by name:** Hannah Price's row and profile read expired, and Funke Adeyinka's reads open, with Price's date derived through `invitationExpiresOn` rather than typed in (a literal would fail on another day, because the fixture is dated relative to when it was generated). The banner is asserted on the fixtures (all expired) and with one invitation added that is open until the end of today (some expired). Mutations, each confirmed landed: every invitation drawn as open (Team tests fail); the title's expiry clause removed (both banner tests fail); `<=` for `<` in the expiry rule, so an invitation lapses on its last day (the some-expired test fails). The first attempt at the last one did not land, because the line had been reformatted, and passed; it was re-run inside the function.
+- **Looked at**: screenshots of the Team rows, the profile's access cell and the banner, from a bundle confirmed fresh (built 13:06:04, containing "it cannot be accepted", and the one the preview served).
+- **Two lint warnings the first version added** (`react-refresh/only-export-components`, from exporting the wording beside the component) were removed by moving the wording and the home-day hook to their own file. Back to the 20 there were before.
+
+§8 has the entry this earned.
+
+The third finding, the invitation screen's access sentence disagreeing with the Care Worker PRD's role table, is not touched: which document is authoritative is being decided first.

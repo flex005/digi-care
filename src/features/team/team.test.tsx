@@ -13,7 +13,8 @@ import {
   staffLabel,
   teamMembers,
 } from '@/data/access/team-store'
-import { formatAttribution } from '@/lib/format'
+import { formatAttribution, formatDate } from '@/lib/format'
+import { invitationExpiresOn } from '@/data/fixtures/invitations'
 import { TeamListRoute } from './TeamListRoute'
 import { StaffDetailRoute } from './StaffDetailRoute'
 import { PermissionMatrixRoute } from './PermissionMatrixRoute'
@@ -108,6 +109,54 @@ describe('standing is a record, not a flag', () => {
         `${kind} took the hatch`,
       ).toBeNull()
     }
+  })
+})
+
+/*
+ * At a 72-hour invitation lifetime most unaccepted invitations have expired,
+ * and "never given access" alone described an open invitation and a dead one
+ * identically. Held by name, because a count of two expired rows is satisfied
+ * by the wrong two.
+ */
+describe('an expired invitation is told from an open one', () => {
+  it('marks Hannah Price expired and Funke Adeyinka open, beside the same gap', async () => {
+    const { container } = renderAt('/team')
+    await settled(container)
+
+    const price = container.querySelector('[data-member="staff-h-price"]')!
+    const adeyinka = container.querySelector('[data-member="staff-f-adeyinka"]')!
+    for (const row of [price, adeyinka]) {
+      expect(
+        row.querySelector(
+          '[data-standing="never_given_access"] [data-state="unrecorded"]',
+        ),
+      ).not.toBeNull()
+    }
+    expect(
+      price.querySelector('[data-invitation]')?.getAttribute('data-invitation'),
+    ).toBe('expired')
+    // The date through the rule's owner, not typed in: the fixture is dated
+    // relative to when it was generated, so a literal would fail on another day.
+    const priceStanding = memberById('staff-h-price')!.standing
+    if (priceStanding.kind !== 'never_given_access')
+      throw new Error('expected no access')
+    expect(price.querySelector('[data-invitation]')?.textContent).toBe(
+      `Invitation expired ${formatDate(invitationExpiresOn(priceStanding.addedOn))}: it cannot be accepted`,
+    )
+    expect(
+      adeyinka.querySelector('[data-invitation]')?.getAttribute('data-invitation'),
+    ).toBe('open')
+    expect(adeyinka.querySelector('[data-invitation]')?.textContent).toMatch(
+      /^Invitation open until the end of \d\d\/\d\d\/\d{4}$/,
+    )
+  })
+
+  it('carries the same fact on the staff profile', async () => {
+    const { container } = renderAt('/team/staff-h-price')
+    await settled(container)
+    expect(
+      container.querySelector('[data-invitation]')?.getAttribute('data-invitation'),
+    ).toBe('expired')
   })
 })
 

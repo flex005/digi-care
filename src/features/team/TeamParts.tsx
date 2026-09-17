@@ -1,6 +1,7 @@
 import type { StaffStanding } from '@/data/types'
 import { Unrecorded } from '@/components/status'
 import { formatDate } from '@/lib/format'
+import { InvitationState } from './InvitationState'
 import styles from './team.module.css'
 
 /**
@@ -43,12 +44,15 @@ export function Standing({ standing }: { standing: StaffStanding }) {
       )
     case 'never_given_access':
       return (
-        <span data-standing="never_given_access">
+        <span className={styles.standingNever} data-standing="never_given_access">
           <Unrecorded
             variant="chip"
             label="Never given access"
             detail={`on the team since ${formatDate(standing.addedOn)}, added by ${standing.addedBy.displayName}, and never set up`}
           />
+          {/* Two facts: the gap, and whether the invitation that would close it
+              can still be accepted. See invitation-wording.ts. */}
+          <InvitationState invitedOn={standing.addedOn} />
         </span>
       )
   }
