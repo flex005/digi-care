@@ -14686,3 +14686,11 @@ The invitation screen told a senior carer she could read Compliance and Reports,
 **Decided: that table is the authority for those two roles, in both builds.** This table's cells for them come from a role default present since the first commit (28/08/2026), before either v2.0 PRD, with no source named; this build's documents disclaim authority over the Care Worker product; the Care Worker PRD claims every action for both roles. Recorded in `docs/AM_PRD_STATUS.md` and at the top of the exceptions in `permissions.ts`, where somebody changing a cell will read it. **No value is changed**: four levels per module cannot hold what those roles do, so correcting the cells would not be the fix.
 
 The Care Worker PRD is a draft with no approvers, and both records say so.
+
+## Known defect: the residents search does not narrow the list (17/09/2026)
+
+**Found in the Care Worker build, which copied the hook, and confirmed here; not fixed.** `useResidentFilters` (`src/features/residents/use-resident-filters.ts`) memoises the visible rows on `[atSite, risk, review, records, sortKey, descending]`, without `query`. The list it filters keeps its identity between renders, so typing a name or a room changes the state and not the rows: a probe test typed "Pemberton" and the table still held all 28 residents. The search applies only when something else in the dependency list changes, such as a filter or a sort, which makes it look intermittent rather than absent.
+
+ESLint has reported it all along (`react-hooks/exhaustive-deps`, line 200), among the build's standing warnings. No test types into the search.
+
+**Why nobody noticed**: a list that shows everybody looks like a search that matched everybody. The Care Worker build rebuilt the list on every render, which recomputed the memo, so its copy worked by accident until the list was memoised; that build now carries the dependency and a test that fails without it. The fix here is the same line and a test that types into the search with the list loaded once.
