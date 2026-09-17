@@ -158,7 +158,14 @@
   --status-positive-ink: #1f7a33;
   --status-positive-tint: #eef9ee; /* ✅ */
 
-  /* Amber. Recorded and needs attention. Due soon. Moderate risk. */
+  /* Amber. Recorded and needs attention. Due soon. Moderate risk.
+
+     **Below the 3:1 WCAG 1.4.11 asks of a non-text indicator, by decision, not
+     by oversight** (2.75:1 on the surface). Decided in the Care Worker build: a
+     darker value was measured and declined, on the reasoning that a caution
+     state is never carried by colour alone. That reasoning holds only where the
+     colour really is never alone, and in this build it has not been checked:
+     see PROGRESS.md, "Caution stays below 3:1". */
   --status-caution: #f07d13; /* ✅ */
   --status-caution-ink: #a65200;
   --status-caution-tint: #ffefe1; /* ✅ */

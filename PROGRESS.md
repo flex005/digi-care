@@ -14561,3 +14561,40 @@ Settings → Organisation the exit reads "Back to the organisation"; Go to the
 dashboard lands on `/`; as Halloran there is no offer and the dashboard opens.
 The first screenshot had the two buttons against the sentence above them;
 they now have their own space, matching the verify card they follow.
+
+## Tolu Akinyemi works at both homes (17/09/2026)
+
+A fixture change made from the Care Worker build, which needed somebody who signs into that product and works at two homes: its site selector (CW AUTH-07) is shown to nobody else, and a branch no fixture reaches is not built. Both products describe one organisation, so the change is made here too. `src/data/access/team-store.ts` now matches the Care Worker copy line for line.
+
+A senior carer rather than a care worker, because a care worker's assignment can say "every resident at the site", which names no site once there are two.
+
+What moves here: Akinyemi appears at Ashgrove Lodge as well as Rosewood Court wherever a screen lists who works at a home. The suite was run after the change: 77 files, 1,365 tests, all passing; `npm run lint` passes. No test names Akinyemi's homes, so the pass says the change broke nothing that is asserted, not that the Team screens were looked at.
+
+## Open: two status fills fail WCAG 1.4.11 (17/09/2026)
+
+**Found in the Care Worker build and not fixed here.** That build's token sheet measures contrast from the painted colours instead of typing ratios in, and it showed two fills below the 3:1 WCAG 1.4.11 asks of a non-text indicator: a status dot, a bar segment, a pill border, a toast's edge. These tokens are identical in both builds, and this build has shipped them. Nothing is changed here yet; the corrected values are being settled in the Care Worker build and carried across once agreed, so the two builds are not fixed separately from two conversations.
+
+Fill against each ground it sits on in the builds:
+
+| Token | Value | surface | sunken | page | purple-50 | own tint |
+| --- | --- | --- | --- | --- | --- | --- |
+| `--status-positive` | `#46bc4a` | 2.46 | 2.35 | 2.27 | 2.13 | 2.27 |
+| `--status-caution` | `#f07d13` | 2.75 | 2.63 | 2.54 | 2.38 | 2.44 |
+| `--status-critical` | `#dd4347` | 4.23 | 4.04 | 3.90 | 3.66 | 3.79 |
+| `--status-info` | `#1563ff` | 4.93 | 4.72 | 4.55 | 4.27 | 4.39 |
+| `--status-unrecorded` | `#8e86a8` | 3.43 | 3.28 | 3.17 | **2.97** | 3.05 |
+
+Proposed, pending review against the design: `--status-positive` `#1b9c28` (worst 3.12:1, on purple-50) and `--status-caution` `#d26b05` (worst 3.11:1). Ink and tint unchanged. Hue held in OKLCH; positive's lightness drops by 0.100 and caution's by 0.070.
+
+In this build the two fills are used in 43 declarations across 20 files, among them the compliance dots (`compliance.module.css`), the MAR given and not-given cell borders (`medications.module.css`), the risk flag edges on the profile (`profile.module.css`) and the dashboard's due-soon swatch. **Whether a label sits beside each of those was not checked.** Where one does, the state still reads; where the colour is the only mark, it does not, for anybody who cannot resolve the hue.
+
+`--status-unrecorded` also measures 2.97:1 on `--purple-50`, just under. It matters only where the hatch's dashed border sits on a selected row.
+
+## Caution stays below 3:1; positive settled (17/09/2026)
+
+Follows "Open: two status fills fail WCAG 1.4.11" above.
+
+- **`--status-positive` is settled at `#1b9c28`** in the Care Worker build (3.60:1 on the surface, 3.12:1 on `--purple-50`, the worst ground). Not applied here; it is carried across by hand once both builds are ready for it.
+- **`--status-caution` stays `#f07d13`, below 3:1, by decision.** The reasoning, as decided: an orange dot or bar carries no meaning on its own, and that is acceptable because every caution state names itself in words beside the colour. The rule was three carriers, and the colour was never doing the work alone.
+- **In the Care Worker build that reasoning is held by construction**: only its status pill and toast may draw the caution fill, both render their required words inside the colour and refuse empty words, and a guard (`check-caution-carriers.mjs`) fails the build anywhere else. The guard cannot check that the words name the state.
+- **In this build the reasoning is not established.** The fill is drawn in 26 declarations across 17 feature files besides `StatusPill` and `Toast`: `activities/activities.module.css`, `auth/auth.module.css`, `compliance/compliance.module.css`, `dashboard/charts.module.css`, `dashboard/dashboard.module.css`, `documents/documents.module.css`, `family/family.module.css`, `group/group.module.css`, `incidents/incidents.module.css`, `me/me.module.css`, `medications/cycle.module.css`, `medications/interim.module.css`, `medications/medications.module.css`, `notes/notes.module.css`, `residents/profile.module.css`, `reviews/reviews.module.css`, `team/team.module.css`. Some sit beside words and some may not: a compliance dot, a dashboard legend swatch, a chart arc stroke and a background fill are among them. None has been checked. Until each is, "the colour is never alone" is a sentence here rather than a fact, and the decision rests on it. Bringing the Care Worker guard across would fail on every one of those files, which is the list to work through.

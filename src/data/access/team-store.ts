@@ -25,6 +25,7 @@ import {
   staffMarsden,
   staffOgundipe,
   staffPatel,
+  staffAkinyemi,
 } from '../fixtures/organisation'
 import { daysAgo, toIsoDate } from '../fixtures/generate'
 
@@ -68,6 +69,15 @@ const SITES: Partial<Record<StaffId, SiteId[]>> = {
   [staffClarke.id]: ['site-ashgrove-lodge'],
   [staffOgundipe.id]: ['site-ashgrove-lodge'],
   [staffHalloran.id]: ['site-rosewood-court', 'site-ashgrove-lodge'],
+  /*
+   * **A senior carer at both homes, added for the Care Worker product**, whose
+   * site selector is shown only to somebody working at more than one home.
+   * Both products describe one organisation, so who works where cannot differ
+   * between them. A senior carer rather than a care worker, because a care
+   * worker's assignment can say "every resident at the site", which names no
+   * site once there are two.
+   */
+  [staffAkinyemi.id]: ['site-rosewood-court', 'site-ashgrove-lodge'],
 }
 
 /**
