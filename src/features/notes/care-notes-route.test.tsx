@@ -15,7 +15,7 @@ import { resetSessionNotes } from '@/data/access/note-store'
 import { NOW, atTime, daysAgo } from '@/data/fixtures/generate'
 import { CareNotesRoute } from './CareNotesRoute'
 import { NoteQueueRow } from './NoteQueueRow'
-import { careNotes } from '@/data/fixtures/care-notes'
+import { GAP_NOTE_IDS, careNotes } from '@/data/fixtures/care-notes'
 import { REVIEW_OUTCOMES } from '@/data/types'
 
 /**
@@ -568,8 +568,18 @@ describe('the queue says why a note was flagged, and what a review did', () => {
         expect(reason?.querySelector('[data-state="unrecorded"]')).toBeNull()
       }
     }
-    // Both ways, or this has only checked one of them.
+    /*
+     * Both ways, or this has only checked one of them — and the no-reason case
+     * is held by name rather than by whatever the queue happens to hold. It
+     * was left to the generated flags, which carry a reason unless their day
+     * divides by three, so on 19/09/2026 every waiting flag had one and this
+     * assertion failed on a screen that was working.
+     */
     expect([...seen].sort()).toEqual(['given', 'not_given'])
+    expect(
+      rows.map((row) => row.getAttribute('data-note')),
+      'the pinned flag with no reason given is not on the queue',
+    ).toContain(GAP_NOTE_IDS.flaggedNoReasonGiven)
   }, 20000)
 
   it('states each outcome on a reviewed row, beside the reason and apart from the names', async () => {

@@ -400,6 +400,7 @@ const okaforOriginalId = 'note-res-okafor-correction-original' as CareNoteId
 const okaforCorrectionId = 'note-res-okafor-correction' as CareNoteId
 const okaforFlaggedId = 'note-res-okafor-flagged' as CareNoteId
 const okaforId = 'res-okafor' as ResidentId
+const adeyemiFlaggedNoReasonId = 'note-res-adeyemi-flagged-no-reason' as CareNoteId
 
 notes.push({
   id: okaforOriginalId,
@@ -473,6 +474,43 @@ notes.push({
 
 /** PRD §5.3 gap 10 — a record authored by a now-deactivated staff member.
  *  Records outlive access: the note stays, and stays attributed. */
+/*
+ * **A flag waiting with no reason given, pinned rather than left to the roll.**
+ *
+ * The queue renders two kinds of waiting flag — one carrying the flagger's
+ * reason, one saying none was given — and only the first was guaranteed. The
+ * generated flags that are still waiting come from the last day or two, and
+ * `flagReasonFor` gives those a reason unless the day divides by three, so
+ * whether the no-reason state exists at all depended on which notes the roll
+ * flagged that morning. On 19/09/2026 it flagged five, every one with a reason,
+ * and the state went unreachable: the standing check about a fixture reaching
+ * every state a component renders, arriving through a date rather than through
+ * a missing branch.
+ *
+ * Grace Adeyemi rather than Emmanuel Okafor, who already carries the flag that
+ * has one, so the two states sit on different records and a test cannot pass by
+ * finding the same note twice.
+ */
+notes.push({
+  id: adeyemiFlaggedNoReasonId,
+  residentId: 'res-adeyemi' as ResidentId,
+  category: 'health_observation',
+  body: 'Ate about half her lunch and left the pudding, which is not like her. Told the senior at handover.',
+  mood: { kind: 'not_recorded' },
+  recordedBy: staffNwosu,
+  recordedAt: toIsoDateTime(atTime(daysAgo(2), 13, 20)),
+  shift: { kind: 'auto', value: 'early' },
+  review: {
+    kind: 'flagged_not_reviewed',
+    flaggedBy: staffNwosu,
+    flaggedAt: toIsoDateTime(atTime(daysAgo(2), 13, 25)),
+    // Asked and not answered is an answer: the flag is the gap, not this.
+    reason: { kind: 'not_given' },
+  },
+  supersededBy: 'none',
+  corrects: 'none',
+})
+
 notes.push({
   id: 'note-res-pemberton-deactivated' as CareNoteId,
   residentId: 'res-pemberton' as ResidentId,
@@ -508,6 +546,7 @@ export function latestNoteFor(residentId: ResidentId): CareNote | undefined {
 
 export const GAP_NOTE_IDS = {
   flaggedNotReviewed: okaforFlaggedId,
+  flaggedNoReasonGiven: adeyemiFlaggedNoReasonId,
   correctionNote: okaforCorrectionId,
   supersededOriginal: okaforOriginalId,
   deactivatedAuthor: 'note-res-pemberton-deactivated' as CareNoteId,

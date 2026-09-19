@@ -60,10 +60,32 @@
  * showing a week at 1280 — the rail gives 176 of that and this gives the rest.
  * This drops the padding around the content, which is all it ever did; the
  * `--layout-max-width` ceiling it used to leave standing is now `none`.
+ *
+ * **And it takes the gutter only while the width is needed.** The 48px is
+ * borrowed to fit the week at the narrowest supported viewport; above that it
+ * was still being taken, so the whole Medications tab — its heading, its tabs
+ * and its cards, not only the grid — sat flush against both window edges while
+ * every other tab on the profile kept its gutter. A screen that reclaims
+ * chrome to fit its content and keeps reclaiming it once it fits is taking
+ * space from the reader for nothing.
+ *
+ * The threshold is measured rather than rounded. Every week in the fixtures is
+ * one of two widths — 1194px for a resident on three rounds a day, 1454px for
+ * the five on four — and the chrome either side is 86px. So 1194 + 86 + 48 is
+ * 1328: below it the gutter stays out and the 23 narrow weeks fit exactly as
+ * they did, at and above it the gutter returns and they still fit. The five
+ * wide weeks scroll either way until 1588, where they used to reach 1540.
  */
 .mainWide {
   padding-right: 0;
   padding-left: 0;
+}
+
+@media (width >= 1328px) {
+  .mainWide {
+    padding-right: var(--layout-gutter);
+    padding-left: var(--layout-gutter);
+  }
 }
 
 /* Below --layout-min-width the app says so rather than degrading into a

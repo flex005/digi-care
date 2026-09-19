@@ -14744,3 +14744,61 @@ All four arrived in the shared `src/data` layer for the Care Worker PRD and are 
 - `mar.test.tsx`'s clock pin does not move the chart: the chart anchors on the fixture clock's `now()`, which is the generation instant and ignores fake timers. The new test reads that clock instead.
 - `plan-edit.test.tsx` "changes the name and place, and keeps who planned it" fails whenever the fixture clock is the real time (inside a live round), because the session's start is built from `appNow()` with seconds and the edit form keeps minutes; at a nearest-round instant it has whole minutes and passes.
 - `npm run format:check` fails on `src/data/fixtures/fixtures.test.ts` (one line over the width, from the shared change), which stops `verify` before the tests; the later stages were run separately.
+
+## The Medications tab gave back the gutter it had borrowed
+
+Reported from the screen: on a resident's Medications tab the whole section
+runs flush to both window edges, where every other tab is inset.
+
+It was the wide-screen mode doing what it was built to do and not stopping.
+`useWideScreen` collapses the rail and `.mainWide` drops the 24px page gutter
+so the MAR week fits at 1280, the narrowest width the app supports. The gutter
+was dropped at every width above that too, so at 1440 the heading, the tab
+strip and the cards — not only the grid — sat against the window edges, with
+176px of unused width on the screen.
+
+Measured rather than reasoned about, in a browser at 1280: every week in the
+fixtures is one of two widths, 1194px for a resident on three rounds a day and
+1454px for the five on four, with 86px of chrome beside it. So the gutter can
+return at 1194 + 86 + 48 = 1328 without costing any of the 23 narrow weeks a
+pixel: below 1328 it stays out and they fit exactly as before, at and above it
+they still fit with the gutter. The five wide weeks scroll either way; what
+they lose is 48px of threshold, reaching a whole week at 1588 where they used
+to reach it at 1540. Stated because it is a real cost, on the five residents
+whose week does not fit at any ordinary window width.
+
+**The guard learned the screen.** jsdom applies no CSS, so no test in the suite
+can tell a 24px gutter from none: this is the third variant of the class §8
+records. `check-layout.mjs` now measures the tab at 1440 and at 1280 and prints
+both, failing if the tab is flush where it should be inset, and failing the
+other way if the gutter appears at 1280 — because buying the padding back by
+clipping the week would be the same defect facing the other direction.
+
+Two mutations, each confirmed landed and restored: removing the media query
+(the defect as reported) failed with "at 1440px the tab has no page gutter …
+so it sits flush where every other tab on the profile is inset"; applying the
+gutter at every width failed twice over, "8 of 28 weeks fit without scrolling,
+below the 23 that did" and the 1280 half of the gutter check.
+
+The second mutation also caught the new guard's success line claiming
+something it had not measured — it read "flush at 1280px" whatever the padding
+was, while the finding beside it said otherwise. It now prints both measured
+numbers.
+
+### And a failure beside it: a waiting flag with no reason was left to the roll
+
+`npm run verify` failed on `gives every waiting row its flagger's reason, or
+says none was given`, on a screen that was working and in a file this change
+does not touch. The queue renders two kinds of waiting flag, one carrying the
+flagger's reason and one saying none was given, and the test asserted both
+appear. Only the first was guaranteed: the generated flags still waiting come
+from the last day or two, `flagReasonFor` gives those a reason unless their day
+divides by three, and today the roll flagged five notes, every one with a
+reason. The state the branch exists for was unreachable, by date.
+
+Fixed where it was wrong, in the fixtures: a flag waiting with no reason given
+is now pinned on Grace Adeyemi, beside the one on Emmanuel Okafor that has a
+reason, so the two states sit on different records. The test holds the new case
+by name through `GAP_NOTE_IDS.flaggedNoReasonGiven` rather than trusting the
+population. Mutation: the pinned note removed, confirmed landed with grep
+(count 0), fails the test; restored.

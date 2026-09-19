@@ -336,6 +336,69 @@ try {
   }
 
   /*
+   * The gutter the wide screen borrows, and gives back.
+   *
+   * The Medications tab collapses the rail and drops the page gutter so the
+   * week fits at 1280. It kept dropping it at every width above that, so the
+   * whole tab — heading, tab strip and cards, not only the grid — sat flush
+   * against both window edges while every other tab on the profile had 24px.
+   * jsdom applies no CSS and cannot see a padding, so this is the only place
+   * the two states can be told apart.
+   *
+   * Both halves are checked, because each is how the other goes wrong: no
+   * gutter at 1440 is the defect a reader reported, and a gutter at 1280 would
+   * buy it back by clipping the week this whole mode exists to fit.
+   */
+  const GUTTER_AT = 1440
+  const gutterCheck = async (width) => {
+    await page.setViewportSize({ width, height: 900 })
+    await go(page, `/residents/${residents[0]}/medications`)
+    await page.waitForSelector('table', { timeout: 15000 })
+    await page.waitForTimeout(400)
+    return page.evaluate(() => {
+      const main = document.querySelector('main')
+      const card = main.querySelector('[class*="card"]')
+      const box = card.getBoundingClientRect()
+      const scroller = main.querySelector('table').closest('div')
+      return {
+        pad: Math.round(parseFloat(getComputedStyle(main).paddingLeft)),
+        left: Math.round(box.left),
+        right: Math.round(window.innerWidth - box.right),
+        weekFits: scroller.scrollWidth <= scroller.clientWidth + 1,
+      }
+    })
+  }
+
+  const wide = await gutterCheck(GUTTER_AT)
+  if (wide.pad === 0 || wide.left === 0 || wide.right === 0) {
+    findings.push({
+      route: `/residents/${residents[0]}/medications`,
+      why: `at ${GUTTER_AT}px the tab has no page gutter (padding ${wide.pad}px, ${wide.left}px to the rail side and ${wide.right}px to the window edge), so it sits flush where every other tab on the profile is inset`,
+      label: 'the medications tab',
+      text: '',
+    })
+  }
+  const narrow = await gutterCheck(MIN_WIDTH)
+  if (narrow.pad !== 0 || !narrow.weekFits) {
+    findings.push({
+      route: `/residents/${residents[0]}/medications`,
+      why: `at ${MIN_WIDTH}px the gutter is ${narrow.pad}px and the week ${narrow.weekFits ? 'fits' : 'does not fit'} — the gutter has to stay out at the narrowest supported width, or it is bought with the week`,
+      label: 'the medications tab',
+      text: '',
+    })
+  }
+  /*
+   * Both numbers measured, neither asserted in words. The first draft of this
+   * line read "flush at 1280px" whatever the padding was, so a mutation that
+   * put the gutter back at 1280 printed a sentence saying it had not — the
+   * finding fired and the success line lied beside it.
+   */
+  console.log(
+    `  the medications tab is inset ${wide.pad}px at ${GUTTER_AT}px and ${narrow.pad}px at ${MIN_WIDTH}px, where the week ${narrow.weekFits ? 'fits' : 'does not fit'}`,
+  )
+  await page.setViewportSize({ width: MIN_WIDTH, height: 900 })
+
+  /*
    * The chart hatch, asserted where it can be seen.
    *
    * The bars are HTML with a CSS gradient, because an SVG `<pattern>` does not
