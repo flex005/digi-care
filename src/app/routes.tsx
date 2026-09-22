@@ -43,6 +43,7 @@ import { DocumentsTab } from '@/features/documents/DocumentsTab'
 import { ExpiryQueueRoute } from '@/features/documents/ExpiryQueueRoute'
 import { OrganisationLibraryRoute } from '@/features/documents/OrganisationLibraryRoute'
 import { DocumentViewerRoute } from '@/features/documents/DocumentViewerRoute'
+import { CategoryLibraryRoute } from '@/features/documents/CategoryLibraryRoute'
 import { ComplianceOverviewRoute } from '@/features/compliance/ComplianceOverviewRoute'
 import { KeyQuestionRoute } from '@/features/compliance/KeyQuestionRoute'
 import { InspectionPackRoute } from '@/features/compliance/InspectionPackRoute'
@@ -172,6 +173,13 @@ export const router = createBrowserRouter([
       // it cannot, which is a different message for a different thing.
       { path: 'documents/:documentId', element: <DocumentViewerRoute /> },
       { path: 'documents/expiry', element: <ExpiryQueueRoute /> },
+      // A category's own library: the row on the module says how many it
+      // holds, and this is them. Static segments outrank the dynamic
+      // `:documentId` above, so the order here is not what decides it.
+      {
+        path: 'documents/category/:categoryId',
+        element: <CategoryLibraryRoute />,
+      },
       // Phase 12. The overview is the module; a Key Question is reached from a
       // row on it, and the pack and the notifications queue from its head.
       { path: 'compliance', element: <ComplianceOverviewRoute /> },

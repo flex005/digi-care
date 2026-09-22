@@ -14802,3 +14802,21 @@ reason, so the two states sit on different records. The test holds the new case
 by name through `GAP_NOTE_IDS.flaggedNoReasonGiven` rather than trusting the
 population. Mutation: the pinned note removed, confirmed landed with grep
 (count 0), fails the test; restored.
+
+---
+
+## Into a category, and into a file (22/09/2026)
+
+The organisation library counted and stopped. "Health and clinical: 109 on file" was a fact with nowhere to go — to read one of the 109 you had to know whose record it was on and open that resident instead, which is the errand a library exists to remove. The category name is a link now, at `/documents/category/:categoryId`, and each document on the screen behind it opens the viewer.
+
+**The name carries the link, not the row.** The row holds four counts and a hatched chip, and a link wrapped round all of it would read every one of them out as part of its own accessible name.
+
+**The screen repeats the row's four counts**, over the same documents, so the count somebody followed is the count they find. Computed twice and differently they would disagree one day, and the reader who followed the number is the person who would find out. The test asserts the screen's figures against a count taken independently — which caught its own mistake first: the original counted every home's residents and expected 119 against a screen showing Rosewood's 109. A test measuring a different set from the thing under test.
+
+**Ordered by urgency**, like the expiry queue: expired, then expiring, then what nobody has decided, then the rest.
+
+**One layout bug, caught by looking at the screen rather than the diff.** `.queueRow` is a three-column grid and the way-in is a fourth child, so it fell into an implicit second row and stretched the link across the width of the title above it — which reads as a control belonging to the whole row rather than to the document on it. `.categoryRow` composes it with a fourth column.
+
+**Built alongside the same screen in the Care Worker build**, which had the same gap. The two products describe one home and the library is one idea about it; a category that drills in on one side and dead-ends on the other would be two.
+
+**A probe that kept signing itself out**, worth writing down for the next one: driving this build in a browser means signing in, and `Page.navigate` to a path afterwards bounces to `/sign-in` every time, because the session is in memory and a page load is a sign-out. Navigate in-app by clicking the rail, which is what a reader does anyway.

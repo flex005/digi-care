@@ -309,6 +309,24 @@
   border-top: 0;
 }
 
+/* The way into a category, carried by its name. */
+.categoryLink {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  min-width: 0;
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.categoryLink:hover {
+  color: var(--purple-600);
+  text-decoration: underline;
+}
+
 .orgCount {
   display: flex;
   flex-direction: column;
@@ -381,6 +399,18 @@
 
 .rows li:first-child .queueRow {
   border-top: 0;
+}
+
+/*
+ * A category's row carries a fourth column the expiry queue's does not: the
+ * way into the document. Without its own template the fourth child fell into
+ * an implicit second row and the link stretched the width of the title above
+ * it, which reads as a control belonging to the whole row rather than to the
+ * document on it.
+ */
+.categoryRow {
+  composes: queueRow;
+  grid-template-columns: minmax(0, 1fr) 13rem 12rem 7rem;
 }
 
 .queueSubject {

@@ -93,7 +93,25 @@ export function OrganisationLibraryRoute() {
           {rows.map((row) => (
             <li key={row.id}>
               <div className={styles.organisationRow} data-org-row={row.id}>
-                <p className={styles.rowTitle}>{row.label}</p>
+                {/*
+                 * **The count is not the end of the road.** The row says a
+                 * category holds 109 documents; the name opens the 109. The
+                 * name carries the link rather than the whole row, which holds
+                 * four counts and a hatched chip a link would read out as part
+                 * of its own name.
+                 */}
+                <Link
+                  to={`/documents/category/${row.id}`}
+                  className={styles.categoryLink}
+                  data-open-category={row.id}
+                >
+                  {row.label}
+                  <Icon
+                    name="arrows-sharp/arrow-right-01-sharp"
+                    size={16}
+                    aria-hidden
+                  />
+                </Link>
 
                 <p className={styles.orgCount} data-org-count="total">
                   <span data-numeric>{formatCount(row.total)}</span>
