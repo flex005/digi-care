@@ -15063,3 +15063,31 @@ One thing the browser caught that the tests did not: the tab read the resident
 record but not the draft store, so a domain somebody had just drafted into
 rendered as never written. It now reads both, in the order the client reads
 them.
+
+## Two decisions taken after Phase 31, both to wait
+
+**Version history for a domain outside the ten: deferred, not missing.** Every
+signature already goes through `finaliseDomain`, so a custom domain signed
+twice holds both versions on the record exactly as one of the ten does — what
+there is no screen for is *reading* them. The ten have one at
+`/care-plan/:domainId/history` with the diff between versions. Building the
+same for a list where nothing has been signed twice yet would be a screen
+designed against no case: revisit when a custom domain has actually been
+signed more than once.
+
+Worth saying what this is not: the record is not losing anything in the
+meantime. A deferred screen over a complete record is a different thing from a
+field with no writer, which this file has an entry about.
+
+**Support level and summary on a custom domain: left unset.** Both fields are
+on `CarePlanDomainBody`, so a custom domain carries them, and nothing sets
+them outside the ten. Checked rather than assumed: the Needs tab builds its
+groups from `CARE_PLAN_DOMAINS` and reads `resident.carePlan`, so it never
+sees a custom domain, and no other screen reads either field for one.
+
+**The rule this follows is the field-and-writer rule, run the other way.** A
+field arrives with its writer or it does not arrive; a control arrives when
+something reads what it writes. A support-level control on the custom dialog
+today would write a value no screen displays — work somebody did that the
+product never shows back to them, which is its own kind of dishonesty. When a
+screen starts reading it, the control goes in the same change.
