@@ -51,10 +51,9 @@ export function AdmissionCarePlan({
     <div className={styles.risks} data-admission-care-plan>
       <p className={styles.sectionNote} data-plan-claim>
         <span data-numeric>{started}</span> of{' '}
-        <span data-numeric>{CARE_PLAN_DOMAINS.length}</span> started. Anything written
-        here is a draft: it is on the record as part-written, and somebody signs it from{' '}
-        {name}&rsquo;s own care plan once they have worked with them. A domain left
-        alone stays never written, which is not &ldquo;no needs here&rdquo;.
+        <span data-numeric>{CARE_PLAN_DOMAINS.length}</span> started. What you write
+        here is a draft, signed later from {name}&rsquo;s care plan. A domain left alone
+        stays never written, which is not &ldquo;no needs here&rdquo;.
       </p>
 
       <ul className={styles.riskList}>

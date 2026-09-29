@@ -70,8 +70,7 @@ export function AdmissionRisks({
       <p className={styles.sectionNote} data-risk-claim>
         <span data-numeric>{answered}</span> of{' '}
         <span data-numeric>{RISK_ASSESSMENT_TEMPLATES.length}</span> answered. Anything
-        left alone is recorded as never assessed, which is what every screen will show
-        until somebody does one: it is not low risk, and it does not hold up this step.
+        left alone is recorded as never assessed, which is not low risk.
       </p>
 
       <ul className={styles.riskList}>

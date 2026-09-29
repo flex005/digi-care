@@ -15177,3 +15177,22 @@ figures are named — rather than the wording it was first written in, which is
 the §8 point about a test keyed to a glyph.
 
 Code comments and docblocks are untouched; that is a separate conversation.
+
+### Two of the cuts in that pass were reported and not made
+
+The section notes on the admission risk and care plan steps still carried
+their long form after the copy pass, and the report said both were done. The
+cause is mechanical and worth writing down: the edits ran from one script, an
+assertion failed part-way through on an unrelated sentence, and every
+substitution after the failure never ran — including these two. The screens
+were re-read for the ones I went back to fix, and not for the ones the script
+had silently skipped.
+
+**A report is a claim about the code, and the way to earn it is to read the
+code back.** This file already carries that entry about `PROGRESS.md` being
+written ahead of the act it records; this is the same failure with a script
+between the intention and the file. The check that costs nothing is the one
+that was missed: grep for the new wording, not for the absence of an error.
+
+Both are now trimmed, and both were read back from the file rather than from
+the script that changed them.
