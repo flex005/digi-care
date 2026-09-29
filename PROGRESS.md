@@ -14985,3 +14985,30 @@ the middle of filling one in: the description and the actions are typed after
 the level, so the form shut in the reader's face. Open is now something
 somebody did rather than something the contents imply — a new row opens
 itself, stays open until Done, and reopens on Edit.
+
+## The risk row lines up, and the reason was two rules apart
+
+The Select and the date fields in `.riskRow` still sat out of line. Two causes,
+both real, neither visible in either stylesheet alone:
+
+- `Select.module.css`'s wrapper has no top margin and `risk-draft.module.css`'s
+  `.field` has `margin-top: var(--space-12)`, so in a shared row every plain
+  field started twelve pixels below the Select.
+- Their labels are on different type steps: the primitive's is caption, 12/16,
+  and the field set's was micro, 11/14. Two pixels of label height is two
+  pixels of everything under it, so fixing the margin alone would have left
+  them close rather than level.
+
+The field set now labels at the primitive's step, because a feature stylesheet
+cannot reach inside a primitive and the primitive is what both sides of the row
+have to agree with. The row zeroes the stacked-field margin, and the inputs
+take the trigger's box height outright: an input's height falls out of its
+font, padding and border, and the three added to 42 against the trigger's 40.
+
+The name field went into the shared set as `RiskNameField` while I was there,
+because admission and the dialog each had their own copy with its own label
+class — the same drift one level down.
+
+Measured in a browser rather than read off the CSS, on both screens that render
+the set: all four labels at top 506, height 16; all four boxes at top 526,
+height 40.

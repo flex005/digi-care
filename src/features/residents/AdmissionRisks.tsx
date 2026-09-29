@@ -8,6 +8,7 @@ import { Icon } from '@/components/icon/Icon'
 import { isScored, LEVEL_LABEL } from '@/features/risk/instrument'
 import {
   RiskFields,
+  RiskNameField,
   emptyDraft,
   isAnswered,
   type DraftCustomRisk,
@@ -228,24 +229,17 @@ export function AdmissionRisks({
               {isOpen ? (
                 <>
                   <div className={styles.customRiskFields}>
-                    <label className={styles.field}>
-                      <span className={styles.fieldLabel}>What the risk is</span>
-                      <input
-                        type="text"
-                        value={custom.name}
-                        placeholder="Leaving the home unaccompanied"
-                        data-field={`custom-risk-name-${String(index)}`}
-                        onChange={(event) =>
-                          onCustoms(
-                            customs.map((entry, position) =>
-                              position === index
-                                ? { ...entry, name: event.target.value }
-                                : entry,
-                            ),
-                          )
-                        }
-                      />
-                    </label>
+                    <RiskNameField
+                      value={custom.name}
+                      idSuffix={`-${String(index)}`}
+                      onChange={(value) =>
+                        onCustoms(
+                          customs.map((entry, position) =>
+                            position === index ? { ...entry, name: value } : entry,
+                          ),
+                        )
+                      }
+                    />
 
                     <RiskFields
                       idPrefix={`custom-${String(index)}`}

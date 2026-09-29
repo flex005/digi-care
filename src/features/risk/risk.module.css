@@ -145,40 +145,6 @@
   justify-content: space-between;
 }
 
-/* The one field a risk cannot change later, so it is asked once and said so. */
-.nameField {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  margin-bottom: var(--space-8);
-}
-
-.nameLabel {
-  color: var(--ink-500);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-  font-weight: var(--weight-semibold);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.nameField input {
-  padding: var(--space-8) var(--space-12);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  background: var(--bg-surface);
-  color: var(--ink-900);
-  font: inherit;
-  font-size: var(--text-body-sm-size);
-}
-
-.nameHint {
-  max-width: 60ch;
-  color: var(--ink-500);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-caption-line);
-}
-
 .customHead {
   padding: var(--space-20) var(--space-20) var(--space-12);
 }

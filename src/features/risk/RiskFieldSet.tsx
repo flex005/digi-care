@@ -137,6 +137,38 @@ export function draftFrom(finding: RiskFinding): DraftRisk {
  * different set of fields would be a second kind of thing to reconcile on the
  * way to the resident's tab.
  */
+/**
+ * What the risk is called, which is the one field it cannot change later.
+ *
+ * Shared for the same reason the rest of the set is: admission and the
+ * resident's own tab ask for one name, on one record, in one shape.
+ */
+export function RiskNameField({
+  value,
+  onChange,
+  idSuffix,
+  hint,
+}: {
+  value: string
+  onChange: (value: string) => void
+  idSuffix: string
+  hint?: string
+}) {
+  return (
+    <label className={styles.nameField}>
+      <span className={styles.fieldLabel}>What the risk is</span>
+      <input
+        type="text"
+        value={value}
+        placeholder="Leaving the home unaccompanied"
+        data-field={`custom-risk-name${idSuffix}`}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      {hint === undefined ? null : <span className={styles.nameHint}>{hint}</span>}
+    </label>
+  )
+}
+
 export function RiskFields({
   idPrefix,
   draft,

@@ -4,8 +4,14 @@ import { recordCustomRisk } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
 import { now as appNow } from '@/data/fixtures/clock'
 import { Button, Dialog } from '@/components/primitives'
-import styles from './risk.module.css'
-import { RiskFields, asEntry, draftFrom, emptyDraft, isAnswered } from './RiskFieldSet'
+import {
+  RiskFields,
+  RiskNameField,
+  asEntry,
+  draftFrom,
+  emptyDraft,
+  isAnswered,
+} from './RiskFieldSet'
 
 /**
  * Recording a risk outside the nine, and re-scoring one. Phase 30.
@@ -97,21 +103,13 @@ export function CustomRiskDialog({
       }
     >
       {creating ? (
-        <label className={styles.nameField}>
-          <span className={styles.nameLabel}>What the risk is</span>
-          <input
-            type="text"
-            value={name}
-            placeholder="Leaving the home unaccompanied"
-            data-field="custom-risk-name"
-            onChange={(event) => setName(event.target.value)}
-          />
-          {/* Said before it is enforced, and before anybody types the rest. */}
-          <span className={styles.nameHint}>
-            This cannot be changed later: a re-score never renames a risk, because
-            everything written about it was written about this name.
-          </span>
-        </label>
+        <RiskNameField
+          value={name}
+          idSuffix=""
+          onChange={setName}
+          // Said before it is enforced, and before anybody types the rest.
+          hint="This cannot be changed later: a re-score never renames a risk, because everything written about it was written about this name."
+        />
       ) : null}
 
       <RiskFields
