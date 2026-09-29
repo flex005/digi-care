@@ -220,9 +220,9 @@ export function StaffDetailRoute() {
 
           {member.standing.kind === 'no_longer_has_access' ? (
             <p className={styles.unchanged} data-removal-unchanged>
-              <b>Removing access changed nothing on the record.</b> Every care note,
-              medication entry and signature {member.ref.fullName.split(' ')[0]} made is
-              still there with their name on it.
+              <b>Removing access changed nothing on the record.</b> Everything{' '}
+              {member.ref.fullName.split(' ')[0]} wrote is still there, with their name
+              on it.
             </p>
           ) : null}
         </section>

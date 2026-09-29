@@ -162,11 +162,11 @@ export function ReviewNoteControl({
         description={
           <span className={styles.reviewConfirm}>
             <span>
-              {`This records that ${currentUser.displayName} looked at it; the note, and ${
+              {`This records that ${currentUser.displayName} looked at it. The note stays as it is, flagged by ${
                 note.review.kind === 'flagged_not_reviewed'
                   ? note.review.flaggedBy.displayName
                   : 'whoever flagged it'
-              } as having flagged it, stay as they are.`}
+              }.`}
             </span>
             <span className={styles.reviewConfirmField}>
               <span className={styles.fieldLabel} aria-hidden>

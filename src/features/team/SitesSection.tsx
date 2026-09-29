@@ -54,7 +54,7 @@ export function SitesSection({
       <h2 className={styles.sectionTitle}>Homes</h2>
       <p className={styles.sectionNote}>
         {mayChange
-          ? 'Adding a home gives access to every resident in it. One role across all of them: somebody cannot be a manager at one home and something else at another.'
+          ? 'Adding a home gives access to every resident in it, under one role: somebody cannot be a manager at one home and something else at another.'
           : `Which homes ${member.ref.fullName.split(' ')[0]} works at. Your role is ${viewer.roleName}, which reads this and does not change it.`}
       </p>
 

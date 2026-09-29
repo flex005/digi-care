@@ -173,8 +173,7 @@ export function NoteForm({
         <span className={styles.fieldLabel}>Shift</span>
         <p className={styles.fieldHint}>
           Taken from the clock: <strong>{SHIFT_NAMES[clockShift]}</strong>. Change it
-          only if this is being written up on a different shift from the one it happened
-          on, and say why.
+          only if this happened on a different shift, and say why.
         </p>
         <Select
           label="Shift this is recorded on"

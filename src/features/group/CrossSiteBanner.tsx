@@ -42,8 +42,7 @@ export function CrossSiteBanner({ recordSite }: { recordSite: Site }) {
         <p className={styles.crossSiteBody}>
           You have {activeSite.name} selected. Every time on this page is in{' '}
           {recordSite.name}&rsquo;s zone,{' '}
-          <b>the record&rsquo;s own home decides that</b>, not the one you have
-          selected.
+          <b>which the record&rsquo;s own home decides</b>.
         </p>
       </div>
       {canSwitch ? (

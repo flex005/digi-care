@@ -15133,3 +15133,47 @@ may have used ten minutes earlier.
 The distinction is not pedantry: a home-level domain changes what every
 resident there is expected to hold, and with it every "of 10" figure in the
 product. That is the feature Settings is refusing, and it is still refused.
+
+## The screens say what they mean, and stop explaining themselves
+
+A pass over on-screen copy, module by module. Two kinds of sentence live in
+these screens and only one of them went.
+
+**Cut: backstory and justification.** "The nine risk assessments used to be
+refused here, so that nobody was asked to guess on the day they know least" —
+true, and a note to a reader of the git history rather than to somebody
+admitting a resident. With it went the tours ("on the profile header, on every
+medication screen and on the round: hatched, from the first minute"), the
+self-approval ("and that is correct", "All of that is true"), and the
+restatements of product behaviour ("which is what every screen will show until
+somebody does one").
+
+**Kept, shorter: what a blank means.** Every sentence that separates a gap from
+a recorded negative survives with its meaning intact — "which is not low
+risk", "never written down is not 'no needs here'", "not the same as none",
+"an ordinary state rather than a gap" — as does every refusal. Those carry the
+Evidence Invariant; they were allowed to lose words, not force.
+
+Examples of the trade, before and after:
+
+- "The nine risk assessments used to be refused here… everything else stays
+  never assessed, which is not low risk." → "None of these is required.
+  Anything left alone stays never assessed, which is not low risk."
+- "0 of 10 started. Anything written here is a draft: it is on the record as
+  part-written, and somebody signs it from Ada's own care plan once they have
+  worked with them. A domain left alone…" → "0 of 10 started. What you write
+  here is a draft, signed later from Ada's care plan. A domain left alone…"
+- "Admitting Ada creates a record that is almost entirely gaps… They will
+  appear on the residents list with critical records missing, on the compliance
+  figures as one more resident nobody has assessed, and on the group view as a
+  home whose coverage just fell. All of that is true." → "Admitting Ada creates
+  a record that is mostly gaps. Every screen will show them: the residents
+  list, the compliance figures and the group view."
+
+One test pinned a cut phrase: `does not soften what admitting does to every
+figure in the product` asserted "almost entirely gaps" and "coverage just
+fell". It now asserts the claim — the record is mostly gaps, and the compliance
+figures are named — rather than the wording it was first written in, which is
+the §8 point about a test keyed to a glyph.
+
+Code comments and docblocks are untouched; that is a separate conversation.

@@ -94,9 +94,8 @@ export function RolePermissions({
             Four acts belong to the registered person
           </h3>
           <p className={styles.permActsNote}>
-            The provider and the registered manager are the two people a service is
-            registered to. These four are theirs, whatever level anybody else holds in
-            the module they sit in.
+            These four belong to the person the service is registered to, whatever level
+            anybody else holds in the module they sit in.
           </p>
           <ul className={styles.permActList}>
             {ADMIN_ACTS.map((act) => {

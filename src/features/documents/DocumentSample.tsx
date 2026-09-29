@@ -63,7 +63,7 @@ export function DocumentSample({
         </p>
         <p className={styles.blockBody}>
           {BLOCK[document.category]?.body ??
-            'The body of a form of this type would appear here, in the wording the issuing organisation uses.'}
+            'The body of a form of this type would appear here.'}
         </p>
       </div>
 
@@ -119,11 +119,11 @@ const BLOCK: Partial<
 > = {
   legal_authority: {
     title: 'Decision',
-    body: 'The decision this form records would be stated here, in the issuing organisation’s own wording, with the reason and who it was discussed with.',
+    body: 'The decision this form records would be stated here, with the reason and who it was discussed with.',
   },
   health_clinical: {
     title: 'Clinical summary',
-    body: 'The clinical detail would appear here as the issuing service wrote it, including any changes to medication and what follow-up was arranged.',
+    body: 'The clinical detail would appear here, including medication changes and follow-up.',
   },
   consent_records: {
     title: 'What was agreed',

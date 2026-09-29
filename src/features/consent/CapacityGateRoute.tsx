@@ -143,8 +143,8 @@ export function CapacityGateRoute() {
             {type.name.toLowerCase()}, today?
           </p>
           <p className={styles.questionHint}>
-            Assume they do unless there is reason to think otherwise. A decision
-            somebody else would call unwise is still theirs to make.
+            Assume they do unless there is reason to think otherwise. An unwise decision
+            is still theirs to make.
           </p>
           <p className={styles.questionHint}>
             This consent covers: {CONSENT_MEANS[type.id as ConsentTypeId]}

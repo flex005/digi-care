@@ -211,8 +211,8 @@ export function NotesTab() {
         <Card padded>
           <p className={styles.emptyTitle}>No notes match these filters</p>
           <p className={styles.emptyBody}>
-            {resident.preferredName} has {notes.length} care notes on the record. None
-            of them matches what you have set, and they are still there.
+            {resident.preferredName} has {notes.length} care notes on the record, none
+            matching what you have set.
           </p>
           <Button variant="secondary" onClick={clear}>
             Show the whole record

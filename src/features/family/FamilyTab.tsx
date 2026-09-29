@@ -114,7 +114,7 @@ function FamilyAccess({
                 ? 'Nobody has been asked about Family Portal access'
                 : `Family Portal access is ${consent.kind.replace(/_/g, ' ')}`
             }
-            detail={`Naming somebody who may see ${resident.preferredName}'s record needs Family Portal consent on file first, recorded on the Consent tab.`}
+            detail={`Naming somebody who may see ${resident.preferredName}'s record needs Family Portal consent, recorded on the Consent tab.`}
           />
           <Link
             to={`/residents/${resident.id}/consent`}
@@ -148,7 +148,7 @@ function FamilyAccess({
          */
         <p className={styles.noMembers} data-no-family>
           {stands
-            ? `Nobody has been named. The consent stands, and no family member has been given access to ${resident.preferredName}'s updates under it.`
+            ? `Nobody has been named. The consent stands, and nobody has access to ${resident.preferredName}'s updates.`
             : 'Nobody is named, and no consent is on file.'}
         </p>
       ) : (
