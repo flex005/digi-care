@@ -81,13 +81,20 @@
   margin-top: var(--space-12);
 }
 
+/*
+ * **Sentence case, because the label is the resident speaking.** These labels
+ * are written in the first person — "My name", "What I like to be called" —
+ * and uppercase with letter-spacing renders that as MY NAME, which is a system
+ * shouting rather than a person talking. The declarations are the care plan's
+ * field label exactly (`care-plan-fields.module.css`), because that is where
+ * this voice already exists and a second, slightly different sentence-case
+ * label is the drift §8 warns about.
+ */
 .fieldLabel {
-  color: var(--ink-500);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
   font-weight: var(--weight-semibold);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .field input,

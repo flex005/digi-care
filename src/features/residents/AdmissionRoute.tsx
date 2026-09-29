@@ -301,7 +301,7 @@ export function AdmissionRoute() {
               <h2 className={styles.sectionTitle}>Who they are</h2>
               <div className={styles.two}>
                 <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Full legal name</span>
+                  <span className={styles.fieldLabel}>My name</span>
                   <input
                     type="text"
                     value={fullLegalName}
@@ -310,7 +310,7 @@ export function AdmissionRoute() {
                   />
                 </label>
                 <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Preferred name</span>
+                  <span className={styles.fieldLabel}>What I like to be called</span>
                   <input
                     type="text"
                     value={preferredName}
@@ -326,7 +326,7 @@ export function AdmissionRoute() {
 
               <div className={styles.two}>
                 <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Date of birth</span>
+                  <span className={styles.fieldLabel}>My date of birth</span>
                   <input
                     type="date"
                     value={dateOfBirth}
@@ -368,7 +368,7 @@ export function AdmissionRoute() {
                   </span>
                 </label>
                 <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Room</span>
+                  <span className={styles.fieldLabel}>My room</span>
                   <input
                     type="text"
                     value={room}
@@ -409,7 +409,9 @@ export function AdmissionRoute() {
                     <div className={styles.nested}>
                       <div className={styles.two}>
                         <label className={styles.field}>
-                          <span className={styles.fieldLabel}>Allergic to</span>
+                          <span className={styles.fieldLabel}>
+                            What I&rsquo;m allergic to
+                          </span>
                           <input
                             type="text"
                             value={substance}
@@ -418,7 +420,7 @@ export function AdmissionRoute() {
                           />
                         </label>
                         <label className={styles.field}>
-                          <span className={styles.fieldLabel}>What happens</span>
+                          <span className={styles.fieldLabel}>What happens to me</span>
                           <input
                             type="text"
                             value={reaction}
@@ -524,7 +526,7 @@ export function AdmissionRoute() {
 
               <div className={styles.two}>
                 <div className={styles.field}>
-                  <span className={styles.fieldLabel}>Gender</span>
+                  <span className={styles.fieldLabel}>My gender</span>
                   {/*
                    * **"Prefers not to say" sits with the other three, not with the
                    * blank.** Somebody who declined was asked and chose; somebody
@@ -559,7 +561,7 @@ export function AdmissionRoute() {
                 </div>
 
                 <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Pronouns</span>
+                  <span className={styles.fieldLabel}>My pronouns</span>
                   <input
                     type="text"
                     value={pronouns}
@@ -569,7 +571,7 @@ export function AdmissionRoute() {
                 </label>
 
                 <label className={styles.field}>
-                  <span className={styles.fieldLabel}>NHS number</span>
+                  <span className={styles.fieldLabel}>My NHS number</span>
                   <input
                     type="text"
                     value={nhsNumber}
@@ -579,7 +581,7 @@ export function AdmissionRoute() {
                 </label>
 
                 <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Main language</span>
+                  <span className={styles.fieldLabel}>My main language</span>
                   <input
                     type="text"
                     value={primaryLanguage}
@@ -597,7 +599,7 @@ export function AdmissionRoute() {
             <h2 className={styles.sectionTitle}>Who to ring, and their GP</h2>
             <div className={styles.two}>
               <label className={styles.field}>
-                <span className={styles.fieldLabel}>Next of kin</span>
+                <span className={styles.fieldLabel}>My next of kin</span>
                 <input
                   type="text"
                   value={kinName}
@@ -624,7 +626,7 @@ export function AdmissionRoute() {
                 />
               </label>
               <label className={styles.field}>
-                <span className={styles.fieldLabel}>GP</span>
+                <span className={styles.fieldLabel}>My GP</span>
                 <input
                   type="text"
                   value={gpName}
