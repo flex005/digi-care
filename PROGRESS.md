@@ -14880,3 +14880,57 @@ the resident the profile tab reads`; removing the custom list from the tab
 failed both custom-risk tests.
 
 The whole suite is 79 files and 1,420 tests.
+
+## Queue reach, a re-score for a custom risk, and a prefill that stops data loss
+
+Three follow-ups to the risk phase.
+
+**The queue reads both lists and counts one.** A risk recorded for one
+resident is now a row on the risk queue like any other, opening that
+resident's tab rather than an instrument screen it has no business in. What it
+never joins is the denominator: the two findings stay "of residents × 9",
+because that figure is a claim about what every home is expected to hold, and
+a tenth risk on one resident would make it mean something different per
+person. Where a custom risk is also past its date, the overdue finding names
+it in its own clause and says it is counted apart. The template filter gains
+"Recorded for one resident" rather than a tenth template. The badge strip is
+untouched: it is still the fixed five.
+
+**Re-score, on a custom risk, in the list it already renders in.** It opens
+the shared field set in a dialog and writes through `recordCustomRisk`, which
+now takes an optional `riskId` and replaces that entry instead of appending —
+one writer for both acts, rather than an update path beside a create path that
+would drift the first time either was touched. There is no instrument behind a
+custom risk, so its score stays `unscored`: `not_scored_yet` would claim a
+chart somebody has yet to fill in.
+
+**Re-scoring prefills what is on the record.** The description and every
+action come back as they were, on both paths, with an empty row to add to. A
+re-score saves what is on screen, so a blank form deleted the plan the last
+assessor wrote the moment the next one recorded a level without retyping it.
+That is the same class as the interventions the save was discarding, one step
+later in the life of the record.
+
+The field set itself moved to `src/features/risk/RiskFieldSet.tsx` with its
+own stylesheet, so admission and the dialog cannot drift into two shapes of
+one record.
+
+Two things the screenshot caught that the tests could not:
+
+- The next-review date prefilled from the record put an already-overdue date
+  into a form recording today's assessment, so re-scoring an overdue risk
+  produced one that was nine days late on arrival. A date still ahead is kept;
+  anything else is the interval from today.
+- The responsible person rendered blank whenever the action named somebody not
+  in the staff list — "Maintenance", a district nurse, somebody who has left.
+  A Select cannot show a value it has no option for, and blank reads as an
+  action nobody owns. Whoever is on the record is now always an option.
+
+Four mutations, each confirmed landed and restored. Three failed the right
+test first time. **The fourth passed, and that is the one worth recording**:
+with custom risks removed from the queue entirely, `lists it when its review
+has fallen due` still passed, because it read the pinned risk's review state
+and returned early when it was not due — a test that decided whether to assert
+by reading the data it was asserting about. The fixture now carries an overdue
+custom risk by construction and the test states the requirement instead. The
+same mutation then failed it.

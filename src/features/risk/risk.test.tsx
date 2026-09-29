@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { render, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
@@ -939,5 +939,153 @@ describe('the record keeps what the assessment found, and what is being done', (
       { description: 'ABC chart for a fortnight.', responsible: 'Senior carer' },
     ])
     expect(after.assessedBy).toEqual(staffOkonkwo)
+  }, 30000)
+})
+
+describe('a risk outside the nine reaches the queue, and stays out of its figures', () => {
+  const WITH_CUSTOM = 'res-kavanagh'
+
+  function renderQueue() {
+    const router = createMemoryRouter(
+      [
+        { path: '/risk-assessments', element: <RiskQueueRoute /> },
+        { path: '/residents/:residentId/risk-assessments', element: <p>the tab</p> },
+      ],
+      { initialEntries: ['/risk-assessments'] },
+    )
+    return render(
+      <SessionProvider>
+        <TooltipProvider>
+          <RouterProvider router={router} />
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+  }
+
+  it('lists it when its review has fallen due, like any other', async () => {
+    const user = userEvent.setup()
+    const resident = residents.find((entry) => entry.id === WITH_CUSTOM)!
+    const risk = resident.customRisks[0]!
+    /*
+     * **Asserted, not skipped.** The first version of this let the fixture
+     * decide: if the pinned risk was not yet due it returned early, so it
+     * passed with the queue ignoring custom risks altogether — the mutation
+     * said so. The fixture now carries an overdue one by construction, and
+     * this states the requirement rather than reading it off the data.
+     */
+    expect(risk.reviewState.kind).toBe('overdue')
+
+    const { container } = renderQueue()
+    await waitFor(() => expect(container.querySelector('[data-row]')).toBeTruthy())
+    // The queue opens on never assessed, which no recorded risk can be.
+    await user.click(container.querySelector('[data-filter="overdue"]')!)
+    await waitFor(() =>
+      expect(
+        container
+          .querySelector('[data-filter="overdue"]')!
+          .getAttribute('aria-pressed'),
+      ).toBe('true'),
+    )
+
+    const row = container.querySelector(`[data-row="${resident.id}-${risk.id}"]`)
+    expect(row, 'the custom risk is not on the queue').toBeTruthy()
+    expect(row!.getAttribute('data-expected')).toBe('no')
+    expect(row!.textContent).toContain(risk.name)
+    // It opens the resident's tab: there is no instrument screen behind it.
+    expect(row!.getAttribute('href')).toBe(`/residents/${resident.id}/risk-assessments`)
+  }, 30000)
+
+  it('never enters the denominator the two findings are counted against', async () => {
+    const { container } = renderQueue()
+    await waitFor(() => expect(container.querySelector('[data-row]')).toBeTruthy())
+
+    /*
+     * The expected set is residents × nine templates. A custom risk in that
+     * total would make "of N expected assessments" mean something different
+     * for every resident, in a figure a reader is invited to check.
+     */
+    // The queue is one home's, so the denominator is too.
+    const here = residents.filter(
+      (resident) => resident.siteId === 'site-rosewood-court',
+    )
+    const expected = here.length * RISK_ASSESSMENT_TEMPLATES.length
+    const detail = container.querySelector('[data-finding="overdue"]')!.textContent!
+    expect(detail).toContain(String(expected))
+
+    const customRisks = here.reduce(
+      (total, resident) => total + resident.customRisks.length,
+      0,
+    )
+    expect(customRisks).toBeGreaterThan(0)
+    expect(detail).not.toContain(String(expected + customRisks))
+  }, 30000)
+})
+
+describe('re-scoring keeps what the last assessor wrote', () => {
+  it('prefills the description and the actions on a templated re-score', async () => {
+    const assessed = residents.find((resident) => {
+      const status = resident.risks.falls
+      return (
+        status.kind === 'assessed' &&
+        status.description !== '' &&
+        status.actions.length > 0
+      )
+    })!
+    const status = assessed.risks.falls
+    if (status.kind !== 'assessed') throw new Error('expected an assessment')
+
+    const { container } = renderAt(`/residents/${assessed.id}/risk-assessments/falls`)
+    await waitFor(() =>
+      expect(container.querySelector('[data-assessment-description]')).toBeTruthy(),
+    )
+
+    /*
+     * **The defect this prevents is silent.** A re-score saves what is on
+     * screen, so a blank form deletes the plan the last assessor wrote the
+     * moment the next one records a level without retyping it.
+     */
+    expect(
+      container.querySelector<HTMLTextAreaElement>('[data-assessment-description]')!
+        .value,
+    ).toBe(status.description)
+    const first = container.querySelector<HTMLInputElement>(
+      '[data-intervention="1"] input',
+    )!
+    expect(first.value).toBe(status.actions[0]!.description)
+  }, 30000)
+
+  it('offers a re-score on a custom risk, prefilled, through the same writer', async () => {
+    const user = userEvent.setup()
+    const resident = residents.find((entry) => entry.id === 'res-kavanagh')!
+    const risk = resident.customRisks[0]!
+
+    const { container } = renderAt(`/residents/${resident.id}/risk-assessments`)
+    await listed(container)
+
+    await user.click(container.querySelector(`[data-rescore-custom="${risk.id}"]`)!)
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog.textContent).toContain(risk.name.toLowerCase())
+
+    const description = dialog.querySelector<HTMLTextAreaElement>(
+      `[data-field="rescore-${risk.id}-description"]`,
+    )!
+    expect(description.value).toBe(risk.description)
+
+    await user.clear(description)
+    await user.type(description, 'Settled since the door code changed.')
+    await user.click(dialog.querySelector('[data-record-custom-rescore]')!)
+
+    const after = await waitFor(() => {
+      const found = withResidentEdits(residentById(resident.id)!).customRisks[0]!
+      expect(found.description).not.toBe(risk.description)
+      return found
+    })
+    expect(after.description).toBe('Settled since the door code changed.')
+    // The same risk, re-scored: not a second entry beside the first.
+    expect(withResidentEdits(residentById(resident.id)!).customRisks).toHaveLength(1)
+    expect(after.id).toBe(risk.id)
+    // And the actions it came in with are still on the record.
+    expect(after.actions).toEqual(risk.actions)
+    expect(after.assessedBy.displayName).toBeTruthy()
   }, 30000)
 })

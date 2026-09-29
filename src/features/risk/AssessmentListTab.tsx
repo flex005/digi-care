@@ -14,7 +14,10 @@ import {
   countsTowardsExpected,
 } from '@/data/access/site-config-store'
 import type { ResidentProfile } from '@/data/access/client'
-import { Card } from '@/components/primitives'
+import { useState } from 'react'
+import { Button, Card } from '@/components/primitives'
+import { withResidentEdits } from '@/data/access/resident-store'
+import { CustomRiskDialog } from './CustomRiskDialog'
 import { StatusPill, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
@@ -203,7 +206,10 @@ function Findings({ status }: { status: RiskStatus | CustomRisk }) {
  * counted apart, and the heading says which is which.
  */
 function CustomRisks({ resident }: { resident: Resident }) {
-  const risks = resident.customRisks
+  const [rescoring, setRescoring] = useState<CustomRisk | 'none'>('none')
+  const [version, setVersion] = useState(0)
+  const risks = withResidentEdits(resident).customRisks
+  void version
 
   return (
     <Card>
@@ -238,11 +244,34 @@ function CustomRisks({ resident }: { resident: Resident }) {
                     for a resident has not retired it. */}
                 <StateChip status={{ kind: 'assessed', ...risk }} state="in_use" />
                 <LevelPill status={{ kind: 'assessed', ...risk }} state="in_use" />
+
+                {/* The same act as re-scoring one of the nine, in the list the
+                    risk already renders in. */}
+                <Button
+                  variant="secondary"
+                  size="small"
+                  data-rescore-custom={risk.id}
+                  onClick={() => setRescoring(risk)}
+                >
+                  Re-score
+                </Button>
               </div>
               <Findings status={risk} />
             </li>
           ))}
         </ul>
+      )}
+
+      {rescoring === 'none' ? null : (
+        <CustomRiskDialog
+          resident={resident}
+          risk={rescoring}
+          onClose={() => setRescoring('none')}
+          onRecorded={() => {
+            setRescoring('none')
+            setVersion((count) => count + 1)
+          }}
+        />
       )}
     </Card>
   )

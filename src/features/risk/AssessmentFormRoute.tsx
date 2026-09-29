@@ -89,12 +89,33 @@ export function AssessmentFormRoute() {
 
   const template = RISK_ASSESSMENT_TEMPLATES.find((entry) => entry.id === templateId)
 
+  /*
+   * **A re-score starts from what is on the record, never from blank.**
+   * Saving what is on screen is how a form works, so a description and a plan
+   * that the last assessor wrote would be deleted by the next one simply not
+   * retyping them: data loss dressed as a fresh assessment. The instrument's
+   * own answers are not prefilled, because those are this assessment's.
+   */
+  const onRecord = templateId
+    ? resident.risks[templateId as RiskTemplateId]
+    : ({ kind: 'not_assessed' } as const)
+  const recorded = onRecord.kind === 'assessed' ? onRecord : undefined
+
   const [answers, setAnswers] = useState<Record<string, number>>({})
-  const [interventions, setInterventions] = useState<Intervention[]>([
-    { id: 1, description: '', responsible: '', dueOn: '' },
-  ])
-  const [description, setDescription] = useState('')
-  const [nextId, setNextId] = useState(2)
+  const [interventions, setInterventions] = useState<Intervention[]>(() =>
+    recorded === undefined || recorded.actions.length === 0
+      ? [{ id: 1, description: '', responsible: '', dueOn: '' }]
+      : recorded.actions.map((action, index) => ({
+          id: index + 1,
+          description: action.description,
+          responsible: action.responsible,
+          dueOn: '',
+        })),
+  )
+  const [description, setDescription] = useState(() => recorded?.description ?? '')
+  const [nextId, setNextId] = useState(
+    () => (recorded === undefined ? 1 : recorded.actions.length) + 1,
+  )
   const [firstRecorded, setFirstRecorded] = useState(false)
   const { currentUser } = useSession()
 

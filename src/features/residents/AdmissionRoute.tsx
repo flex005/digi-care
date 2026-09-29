@@ -16,13 +16,13 @@ import { ADMISSION_GAPS, ALLERGY_SOURCES } from '@/data/access/resident-store'
 import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
 import type { RiskTemplateId } from '@/data/types'
 import { isScored } from '@/features/risk/instrument'
+import { AdmissionRisks } from './AdmissionRisks'
 import {
-  AdmissionRisks,
   asEntry,
   isAnswered,
   type DraftCustomRisk,
   type DraftRisk,
-} from './AdmissionRisks'
+} from '@/features/risk/RiskFieldSet'
 import { useSession } from '@/app/session/use-session'
 import { Button, Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'

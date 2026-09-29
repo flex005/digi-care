@@ -1237,6 +1237,15 @@ export function recordAssessment(input: {
 export function recordCustomRisk(input: {
   residentId: ResidentId
   name: string
+  /**
+   * The risk being re-scored, where this is not a first assessment.
+   *
+   * **The same act as re-scoring one of the nine**, and the same writer: a
+   * separate "update" path would be a second way to change one record, and
+   * the two would drift the first time either was touched. Absent means a
+   * risk nobody has recorded before.
+   */
+  riskId?: CustomRiskId
   level: RiskLevel
   score: RiskScore
   description: string
@@ -1251,8 +1260,18 @@ export function recordCustomRisk(input: {
     return reject('A risk outside the nine templates needs a name')
   }
 
+  const existing =
+    input.riskId === undefined
+      ? undefined
+      : resident.customRisks.find((entry) => entry.id === input.riskId)
+  if (input.riskId !== undefined && existing === undefined) {
+    return reject(`No risk with id ${input.riskId} on ${resident.fullLegalName}`)
+  }
+
   const risk: CustomRisk = {
-    id: `risk-${input.residentId}-${String(resident.customRisks.length + 1)}` as CustomRiskId,
+    id:
+      existing?.id ??
+      (`risk-${input.residentId}-${String(resident.customRisks.length + 1)}` as CustomRiskId),
     name: input.name.trim(),
     level: input.level,
     score: input.score,
@@ -1268,13 +1287,18 @@ export function recordCustomRisk(input: {
     },
   }
 
-  editResidentField(input.residentId, { customRisks: [...resident.customRisks, risk] })
+  editResidentField(input.residentId, {
+    customRisks:
+      existing === undefined
+        ? [...resident.customRisks, risk]
+        : resident.customRisks.map((entry) => (entry.id === risk.id ? risk : entry)),
+  })
 
   const updated = residentById(input.residentId)
   if (!updated) return reject(`No resident with id ${input.residentId}`)
   return logged(updated, {
     module: 'Risk Assessments',
-    what: `Recorded ${risk.name} for ${updated.fullLegalName}: ${input.level}`,
+    what: `${existing === undefined ? 'Recorded' : 'Re-scored'} ${risk.name} for ${updated.fullLegalName}: ${input.level}`,
     to: `/residents/${updated.id}/risk-assessments`,
     by: input.by,
   })

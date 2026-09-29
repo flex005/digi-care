@@ -46,17 +46,31 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'all', label: 'All' },
 ]
 
+/**
+ * A row on the queue, from either list.
+ *
+ * **`expected` is what the denominators count.** The nine are what every home
+ * is expected to hold, which is what makes "N of residents × 9" a figure a
+ * reader can check. A risk recorded for one resident is real work with a real
+ * review date, and it belongs in the list the moment that date passes — but
+ * counting it in the same total would make the denominator mean something
+ * different for every resident in the building.
+ */
 interface Row {
   resident: Resident
-  templateId: RiskTemplateId
-  templateName: string
+  /** The template's id, or the custom risk's, for the row key and the link. */
+  id: string
+  name: string
   status: RiskStatus
+  expected: boolean
+  /** Absent on a custom risk: there is no instrument screen to open. */
+  templateId?: RiskTemplateId
 }
 
 export function RiskQueueRoute() {
   const { activeSite } = useSession()
   const [filter, setFilter] = useState<Filter>('never_assessed')
-  const [template, setTemplate] = useState<RiskTemplateId | 'all'>('all')
+  const [template, setTemplate] = useState<RiskTemplateId | 'all' | 'custom'>('all')
 
   const load = useCallback(() => getResidentsBySite(activeSite.id), [activeSite.id])
   const resource = useResource<Resident[]>(load, [activeSite.id])
@@ -108,9 +122,9 @@ function Found({
   residents: Resident[]
   siteName: string
   filter: Filter
-  template: RiskTemplateId | 'all'
+  template: RiskTemplateId | 'all' | 'custom'
   onFilter: (value: Filter) => void
-  onTemplate: (value: RiskTemplateId | 'all') => void
+  onTemplate: (value: RiskTemplateId | 'all' | 'custom') => void
 }) {
   const format = useSiteFormat()
 
@@ -125,9 +139,27 @@ function Found({
   const all: Row[] = residents.flatMap((resident) =>
     RISK_ASSESSMENT_TEMPLATES.map((entry) => ({
       resident,
-      templateId: entry.id,
-      templateName: entry.name,
+      id: entry.id,
+      name: entry.name,
       status: resident.risks[entry.id],
+      expected: true,
+      templateId: entry.id,
+    })),
+  )
+
+  /*
+   * **Risks recorded for one resident, in the same list and out of the same
+   * figures.** A review that falls due is a review that falls due, whichever
+   * list the risk is on: leaving these out would hide work the home has to do
+   * behind the fact that nobody else has to do it.
+   */
+  const custom: Row[] = residents.flatMap((resident) =>
+    resident.customRisks.map((risk) => ({
+      resident,
+      id: risk.id,
+      name: risk.name,
+      status: { kind: 'assessed' as const, ...risk },
+      expected: false,
     })),
   )
 
@@ -136,9 +168,19 @@ function Found({
     (row) =>
       row.status.kind === 'assessed' && row.status.reviewState.kind === 'overdue',
   )
+  const customOverdue = custom.filter(
+    (row) =>
+      row.status.kind === 'assessed' && row.status.reviewState.kind === 'overdue',
+  )
 
-  const visible = all
-    .filter((row) => (template === 'all' ? true : row.templateId === template))
+  const visible = [...all, ...custom]
+    .filter((row) =>
+      template === 'all'
+        ? true
+        : template === 'custom'
+          ? !row.expected
+          : row.templateId === template,
+    )
     .filter((row) => {
       switch (filter) {
         case 'all':
@@ -192,6 +234,16 @@ function Found({
               Assessed once and not since. Of{' '}
               <span data-numeric>{formatCount(all.length)}</span> expected assessments
               at {siteName}.
+              {customOverdue.length === 0 ? null : (
+                <span data-custom-overdue>
+                  {' '}
+                  <span data-numeric>{formatCount(customOverdue.length)}</span>{' '}
+                  {customOverdue.length === 1 ? 'risk' : 'risks'} recorded for
+                  individual residents {customOverdue.length === 1 ? 'is' : 'are'} also
+                  past a review date, below and counted apart: they are not part of the
+                  nine any home is expected to hold.
+                </span>
+              )}
             </span>
           </span>
         </div>
@@ -225,13 +277,17 @@ function Found({
               label="Template"
               placeholder="Any template"
               value={template === 'all' ? undefined : template}
-              onValueChange={(value) => onTemplate(value as RiskTemplateId | 'all')}
+              onValueChange={(value) =>
+                onTemplate(value as RiskTemplateId | 'all' | 'custom')
+              }
               options={[
                 { value: 'all', label: 'Any template' },
                 ...RISK_ASSESSMENT_TEMPLATES.map((entry) => ({
                   value: entry.id,
                   label: entry.name,
                 })),
+                // Named as what it is, never as a tenth template.
+                { value: 'custom', label: 'Recorded for one resident' },
               ]}
             />
           </div>
@@ -258,12 +314,17 @@ function Found({
           <>
             <ul className={styles.queueList}>
               {paged.shown.map((row) => (
-                <li key={`${row.resident.id}-${row.templateId}`}>
+                <li key={`${row.resident.id}-${row.id}`}>
                   <Link
-                    to={`/residents/${row.resident.id}/risk-assessments/${row.templateId}`}
+                    to={
+                      row.templateId === undefined
+                        ? `/residents/${row.resident.id}/risk-assessments`
+                        : `/residents/${row.resident.id}/risk-assessments/${row.templateId}`
+                    }
                     className={styles.queueRow}
-                    data-row={`${row.resident.id}-${row.templateId}`}
+                    data-row={`${row.resident.id}-${row.id}`}
                     data-state={row.status.kind}
+                    data-expected={row.expected ? 'yes' : 'no'}
                   >
                     {/* Every row names its resident. An assessment with nobody
                       attached is the wrong-subject failure with a risk on it. */}
@@ -280,7 +341,12 @@ function Found({
                     </span>
 
                     <span className={styles.rowWhat}>
-                      <span className={styles.rowName}>{row.templateName}</span>
+                      <span className={styles.rowName}>{row.name}</span>
+                      {row.expected ? null : (
+                        <span className={styles.rowMeta}>
+                          Recorded for this resident, outside the nine
+                        </span>
+                      )}
                     </span>
 
                     <QueueState status={row.status} format={format} />

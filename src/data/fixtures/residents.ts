@@ -1760,9 +1760,20 @@ patch('kavanagh', (resident) => ({
           responsible: 'D. Aluko',
         },
       ],
-      assessedAt: toIsoDateTime(daysAgo(12)),
+      assessedAt: toIsoDateTime(daysAgo(40)),
       assessedBy: staffHalloran,
-      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(18)) },
+      /*
+       * **Past its review date, deliberately.** A risk outside the nine earns
+       * a place on the queue the same way a templated one does, and a fixture
+       * where the only custom risk is comfortably scheduled leaves that branch
+       * unreachable: the first test written against it passed with the queue
+       * ignoring custom risks entirely.
+       */
+      reviewState: {
+        kind: 'overdue',
+        dueOn: toIsoDate(daysAgo(9)),
+        daysOverdue: 9,
+      },
     },
   ],
 }))
