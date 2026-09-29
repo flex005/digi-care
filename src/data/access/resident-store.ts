@@ -8,6 +8,10 @@ import type {
   GenderAnswer,
   IsoDate,
   Recorded,
+  CarePlanDomainId,
+  CarePlanText,
+  CustomCarePlanDomain,
+  CustomDomainId,
   CustomRisk,
   CustomRiskId,
   Resident,
@@ -160,6 +164,17 @@ export interface AdmissionInput {
   risks?: Partial<Record<RiskTemplateId, AdmissionRiskEntry>>
   /** Step 3. Risks this home identified for this resident, outside the nine. */
   customRisks?: (AdmissionRiskEntry & { name: string })[]
+  /**
+   * Step 4. Care plan domains somebody can write on the day, by domain id.
+   *
+   * **Drafts, and only drafts.** A domain not named here stays never started,
+   * and one named here reads as part-written until somebody finalises it from
+   * the resident's own tab. Signing a plan on the day somebody arrives would
+   * claim staff are following something nobody has worked from yet.
+   */
+  carePlan?: Partial<Record<CarePlanDomainId, CarePlanText>>
+  /** Step 4. Domains this home wrote for this resident, outside the ten. */
+  customCarePlan?: (CarePlanText & { name: string })[]
 }
 
 /**
@@ -277,6 +292,54 @@ function blankConsents(): ConsentRecord {
   return consents as ConsentRecord
 }
 
+/** A draft as the record holds it: part-written, with whoever wrote it. */
+function asDraft(text: CarePlanText, by: StaffRef) {
+  return {
+    kind: 'draft' as const,
+    currentNeeds: text.currentNeeds.trim(),
+    preferences: text.preferences.trim(),
+    agreedActions: text.agreedActions.trim(),
+    updatedBy: by,
+    updatedAt: now(),
+  }
+}
+
+const written = (text: CarePlanText): boolean =>
+  text.currentNeeds.trim() !== '' ||
+  text.preferences.trim() !== '' ||
+  text.agreedActions.trim() !== ''
+
+function admittedCarePlan(
+  answered: Partial<Record<CarePlanDomainId, CarePlanText>>,
+  by: StaffRef,
+): CarePlanDomainRecord[] {
+  return blankCarePlan().map((domain) => {
+    const text = answered[domain.domainId]
+    if (text === undefined || !written(text)) return domain
+    return {
+      ...domain,
+      status: { kind: 'in_progress', updatedBy: by, updatedAt: now() },
+      draft: asDraft(text, by),
+    }
+  })
+}
+
+function asCustomDomain(
+  entry: CarePlanText & { name: string },
+  index: number,
+  by: StaffRef,
+): CustomCarePlanDomain {
+  return {
+    id: `domain-admitted-${String(sequence)}-${String(index + 1)}` as CustomDomainId,
+    name: entry.name.trim(),
+    status: { kind: 'in_progress', updatedBy: by, updatedAt: now() },
+    supportLevel: { kind: 'not_assessed' },
+    summary: '',
+    versions: { kind: 'never_finalised' },
+    draft: asDraft(entry, by),
+  }
+}
+
 function blankCarePlan(): CarePlanDomainRecord[] {
   return CARE_PLAN_DOMAINS.map((domain) => ({
     domainId: domain.id,
@@ -355,7 +418,17 @@ export function admitResident(input: AdmissionInput): Resident {
       religiousPreferences: UNRECORDED,
       contactOnDeath: UNRECORDED,
     },
-    carePlan: blankCarePlan(),
+    carePlan: admittedCarePlan(input.carePlan ?? {}, input.admittedBy),
+    /*
+     * **Drafts, never signed versions.** Finalising is what makes a version
+     * what staff follow, and nobody can say that on the day somebody arrives:
+     * it is signed later from the resident's own tab, by whoever has worked
+     * with them. What admission writes reads as part-written everywhere,
+     * which is what it is.
+     */
+    customCarePlan: (input.customCarePlan ?? []).map((entry, index) =>
+      asCustomDomain(entry, index, input.admittedBy),
+    ),
     consents: blankConsents(),
     // Nobody has scheduled a review for somebody admitted today, and a date
     // invented here would be a deadline nobody set.

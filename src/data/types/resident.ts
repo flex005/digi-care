@@ -29,6 +29,7 @@ import type {
 import type {
   AllergyStatus,
   CarePlanDomainRecord,
+  CustomCarePlanDomain,
   CarePlanReviewState,
   EolcStatus,
   IsolationStatus,
@@ -541,6 +542,14 @@ export interface Resident {
   importantPeople: ImportantPeople
   futurePlans: FuturePlans
   carePlan: CarePlanDomainRecord[]
+  /**
+   * Domains this home wrote for this resident, outside the ten.
+   *
+   * Empty for almost everybody, and empty is ordinary rather than a gap: the
+   * ten are what a home is expected to hold, and these are what one resident
+   * needed on top of them.
+   */
+  customCarePlan: CustomCarePlanDomain[]
   /**
    * The eight consents, each knowing its own type.
    *

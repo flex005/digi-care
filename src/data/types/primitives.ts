@@ -24,6 +24,9 @@ export type ResidentId = `res-${string}`
 
 /** A risk a home recorded outside the nine templates, for one resident. */
 export type CustomRiskId = `risk-${string}`
+
+/** A care plan domain a home wrote outside the ten, for one resident. */
+export type CustomDomainId = `domain-${string}`
 export type StaffId = `staff-${string}`
 export type DocumentId = `doc-${string}`
 export type IncidentId = `inc-${string}`

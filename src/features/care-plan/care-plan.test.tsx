@@ -6,6 +6,8 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
 import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
 import type {
+  IsoDate,
+  ResidentId,
   CarePlanDomainId,
   CarePlanDomainRecord,
   IsoDateTime,
@@ -26,6 +28,12 @@ import { ResidentProfileRoute, TABS } from '@/features/residents/ResidentProfile
 import { CarePlanTab } from './CarePlanTab'
 import { DomainEditorRoute } from './DomainEditorRoute'
 import { VersionHistoryRoute } from './VersionHistoryRoute'
+import { WholePlanReviewRoute } from '@/features/reviews/WholePlanReviewRoute'
+import { residentById } from '@/data/fixtures/residents'
+import { staffOkonkwo } from '@/data/fixtures/organisation'
+import { withResidentEdits } from '@/data/access/resident-store'
+import { withSessionCarePlan } from '@/data/access/care-plan-draft-store'
+import { finaliseCarePlanDomain, saveCarePlanDraft } from '@/data/access/client'
 import { compareVersions, currentVersion, PLAN_FIELDS } from './plan-fields'
 import { DUE_SOON_DAYS, wholeDaysBetween } from '@/lib/review-interval'
 
@@ -897,4 +905,101 @@ describe('the subjects these tests are built on', () => {
       expect(declared.has(entry.record.domainId)).toBe(true)
     expect(declared.has(owesReview.domainId)).toBe(true)
   })
+})
+
+describe('a domain outside the ten is written, signed and counted apart', () => {
+  const WITH_CUSTOM = 'res-adeyemi'
+
+  it('renders it on the tab, beside the ten and in its own sentence', async () => {
+    const { container } = renderAt(`/residents/${WITH_CUSTOM}/care-plan`)
+    await waitFor(() => expect(container.querySelector('[data-domain]')).toBeTruthy())
+
+    const custom = container.querySelector('[data-custom-domain]')
+    expect(custom, 'the pinned custom domain is not on the tab').toBeTruthy()
+    expect(custom!.textContent).toContain('The allotment')
+
+    /*
+     * Counted apart, which is the whole reason it has its own list: "of 10" is
+     * a claim about what every home is expected to hold, and twenty-two files
+     * count against it.
+     */
+    const lead = container.querySelector('[data-never-written]')!
+    expect(lead.textContent).toMatch(
+      new RegExp(`of ${String(CARE_PLAN_DOMAINS.length)} parts`),
+    )
+    expect(container.querySelector('[data-custom-domain-claim]')!.textContent).toMatch(
+      /10.*domains above, plus.*1.*written for this resident/s,
+    )
+  }, 30000)
+
+  it('says on a whole plan review that it is not part of one', async () => {
+    // Its own router: the review is a route beside the editor, not under it.
+    const router = createMemoryRouter(
+      [
+        {
+          path: 'residents/:residentId',
+          element: <ResidentProfileRoute />,
+          children: [{ path: 'care-plan/review', element: <WholePlanReviewRoute /> }],
+        },
+      ],
+      { initialEntries: [`/residents/${WITH_CUSTOM}/care-plan/review`] },
+    )
+    const { container } = render(
+      <SessionProvider>
+        <TooltipProvider>
+          <ToastProvider>
+            <RouterProvider router={router} />
+            <ToastViewport />
+          </ToastProvider>
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+    await waitFor(() =>
+      expect(container.querySelector('[data-outside-the-ten]')).toBeTruthy(),
+    )
+    expect(container.querySelector('[data-outside-the-ten]')!.textContent).toMatch(
+      /not part of this review/,
+    )
+  }, 30000)
+
+  it('writes a draft through the same store the ten use, and signs through the same one', async () => {
+    const resident = residentById(WITH_CUSTOM as ResidentId)!
+    const domain = resident.customCarePlan[0]!
+
+    await saveCarePlanDraft({
+      residentId: resident.id,
+      domainId: domain.id,
+      text: {
+        currentNeeds: 'I want to keep going down there.',
+        preferences: 'Mornings.',
+        agreedActions: 'Walk down with her.',
+      },
+      by: staffOkonkwo,
+      at: NOW_ISO,
+    })
+
+    const drafted = withSessionCarePlan(withResidentEdits(resident)).customCarePlan[0]!
+    expect(drafted.draft.kind).toBe('draft')
+    if (drafted.draft.kind !== 'draft') throw new Error('no draft')
+    expect(drafted.draft.currentNeeds).toContain('keep going down there')
+
+    await finaliseCarePlanDomain({
+      residentId: resident.id,
+      domainId: domain.id,
+      text: {
+        currentNeeds: 'I want to keep going down there.',
+        preferences: 'Mornings.',
+        agreedActions: 'Walk down with her.',
+      },
+      by: staffOkonkwo,
+      on: NOW_ISO.slice(0, 10) as IsoDate,
+      nextReviewOn: '2027-03-29' as IsoDate,
+    })
+
+    const signed = withSessionCarePlan(withResidentEdits(resident)).customCarePlan[0]!
+    expect(signed.status.kind).toBe('complete')
+    // Signing consumes the draft here exactly as it does for one of the ten.
+    expect(signed.draft.kind).toBe('none')
+    expect(signed.versions.kind).toBe('finalised')
+  }, 30000)
 })

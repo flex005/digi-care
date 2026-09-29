@@ -648,3 +648,102 @@ describe('risk assessments can be entered on the day, and are the same record', 
     ).toBeTruthy()
   }, 30000)
 })
+
+describe('care plan domains can be written on the day, as drafts', () => {
+  it('writes a domain as a draft, never as a signed version', () => {
+    /*
+     * **The decision this phase is built on.** Finalising is what makes a
+     * version the instruction staff follow, and nobody can say that on the day
+     * somebody arrives. So admission writes a draft: the domain reads as
+     * part-written everywhere, and the care plan queue still leads on it as
+     * never signed, which is true.
+     */
+    const resident = admit({
+      carePlan: {
+        mobility: {
+          currentNeeds: 'I can walk to the dining room if somebody is with me.',
+          preferences: 'I would rather use my own stick than a frame.',
+          agreedActions: 'Walk with her to meals, her stick on her left.',
+        },
+      },
+    })
+
+    const mobility = resident.carePlan.find((domain) => domain.domainId === 'mobility')!
+    expect(mobility.status.kind).toBe('in_progress')
+    expect(mobility.versions.kind).toBe('never_finalised')
+    expect(mobility.draft.kind).toBe('draft')
+    if (mobility.draft.kind !== 'draft') throw new Error('no draft was written')
+    expect(mobility.draft.currentNeeds).toContain('dining room')
+    expect(mobility.draft.updatedBy).toEqual(staffOkonkwo)
+  })
+
+  it('leaves every domain nobody wrote in as never started', () => {
+    const resident = admit({
+      carePlan: {
+        nutrition: {
+          currentNeeds: 'I have never been a big eater.',
+          preferences: '',
+          agreedActions: '',
+        },
+      },
+    })
+
+    for (const domain of CARE_PLAN_DOMAINS) {
+      const record = resident.carePlan.find((entry) => entry.domainId === domain.id)!
+      if (domain.id === 'nutrition') continue
+      expect(record.status.kind, domain.id).toBe('not_started')
+      expect(record.draft.kind, domain.id).toBe('none')
+    }
+    // One field is enough to have started: a partial draft is still a draft.
+    const nutrition = resident.carePlan.find((entry) => entry.domainId === 'nutrition')!
+    expect(nutrition.status.kind).toBe('in_progress')
+  })
+
+  it('keeps a domain outside the ten on its own list', () => {
+    const resident = admit({
+      customCarePlan: [
+        {
+          name: 'The allotment',
+          currentNeeds: 'I have had the same plot for thirty years.',
+          preferences: 'Tuesday and Friday mornings.',
+          agreedActions: 'Walk down with her and stay.',
+        },
+      ],
+    })
+
+    expect(resident.customCarePlan).toHaveLength(1)
+    expect(resident.customCarePlan[0]!.name).toBe('The allotment')
+    expect(resident.customCarePlan[0]!.status.kind).toBe('in_progress')
+    expect(resident.customCarePlan[0]!.versions.kind).toBe('never_finalised')
+    // And the ten are untouched, which is what keeps "of 10" comparable.
+    expect(CARE_PLAN_DOMAINS.length).toBe(10)
+    for (const domain of resident.carePlan) {
+      expect(domain.status.kind, domain.domainId).toBe('not_started')
+    }
+  })
+
+  it('offers all ten on the step, with nothing required to move on', async () => {
+    const user = userEvent.setup()
+    const { container } = renderForm()
+    await settled(container)
+
+    const page = container.querySelector('[data-admission]') as HTMLElement
+    await answerStepOne(user, page, 'Ada Nwosu')
+    await goToStep(user, page, 'plan')
+
+    const step = await waitFor(() => {
+      const found = container.querySelector('[data-admission-care-plan]')
+      expect(found).toBeTruthy()
+      return found!
+    })
+    expect(step.querySelectorAll('[data-domain]')).toHaveLength(
+      CARE_PLAN_DOMAINS.length,
+    )
+    expect(step.querySelector('[data-plan-claim]')!.textContent).toMatch(/0.*of.*10/)
+    // Nothing on this step can hold the form up: step 1 is the only gate.
+    const admitButton = [...container.querySelectorAll('button')].find((button) =>
+      /^Admit /.test(button.textContent ?? ''),
+    )!
+    expect(admitButton.disabled).toBe(false)
+  }, 30000)
+})

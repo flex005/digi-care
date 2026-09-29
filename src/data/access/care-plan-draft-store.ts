@@ -1,7 +1,8 @@
 import { held, type SessionHolding } from './session-holding'
 import type {
+  CarePlanDomainBody,
   CarePlanDomainId,
-  CarePlanDomainRecord,
+  CustomDomainId,
   CarePlanText,
   CarePlanVersion,
   IsoDate,
@@ -33,7 +34,14 @@ import type {
  * saying it has a draft over a version that draft already became.
  */
 
-const key = (residentId: ResidentId, domainId: CarePlanDomainId) =>
+/**
+ * One key space for both lists.
+ *
+ * A domain outside the ten drafts and signs exactly as one of the ten does, so
+ * it goes through this store rather than beside it: two stores would be two
+ * ways for a domain to hold a draft over the version that draft became.
+ */
+const key = (residentId: ResidentId, domainId: CarePlanDomainId | CustomDomainId) =>
   `${residentId}|${domainId}`
 
 interface SessionDraft {
@@ -59,7 +67,7 @@ const signatures = new Map<string, SessionSignatures>()
  */
 export function saveDraft(input: {
   residentId: ResidentId
-  domainId: CarePlanDomainId
+  domainId: CarePlanDomainId | CustomDomainId
   text: CarePlanText
   by: StaffRef
   at: IsoDateTime
@@ -78,7 +86,10 @@ export function saveDraft(input: {
  * gap** — nobody followed it. The signed version underneath is untouched, so a
  * domain that had one goes back to reading exactly as it did.
  */
-export function discardDraft(residentId: ResidentId, domainId: CarePlanDomainId): void {
+export function discardDraft(
+  residentId: ResidentId,
+  domainId: CarePlanDomainId | CustomDomainId,
+): void {
   drafts.delete(key(residentId, domainId))
 }
 
@@ -98,7 +109,7 @@ export interface FinaliseToken {
  */
 export function finaliseDomain(input: {
   residentId: ResidentId
-  domainId: CarePlanDomainId
+  domainId: CarePlanDomainId | CustomDomainId
   text: CarePlanText
   by: StaffRef
   on: IsoDate
@@ -145,24 +156,41 @@ export function undoFinalise(token: FinaliseToken): void {
  * written, so every read in the app can go through this without paying for it.
  */
 export function withSessionCarePlan(resident: Resident): Resident {
-  const touched = resident.carePlan.some((domain) => {
-    const id = key(resident.id, domain.domainId)
-    return drafts.has(id) || signatures.has(id)
-  })
+  const touched =
+    resident.carePlan.some((domain) => {
+      const id = key(resident.id, domain.domainId)
+      return drafts.has(id) || signatures.has(id)
+    }) ||
+    resident.customCarePlan.some((domain) => {
+      const id = key(resident.id, domain.id)
+      return drafts.has(id) || signatures.has(id)
+    })
   if (!touched) return resident
 
   return {
     ...resident,
-    carePlan: resident.carePlan.map((domain) => patch(resident.id, domain)),
+    carePlan: resident.carePlan.map((domain) =>
+      patch(resident.id, domain, domain.domainId),
+    ),
+    customCarePlan: resident.customCarePlan.map((domain) =>
+      patch(resident.id, domain, domain.id),
+    ),
   }
 }
 
-function patch(
+/**
+ * One patch for both lists, because a domain is a domain.
+ *
+ * Generic over the record so a custom domain keeps its name and its id: what
+ * this changes is the body they share.
+ */
+function patch<T extends CarePlanDomainBody>(
   residentId: ResidentId,
-  domain: CarePlanDomainRecord,
-): CarePlanDomainRecord {
-  const id = key(residentId, domain.domainId)
-  let patched = domain
+  domain: T,
+  domainId: CarePlanDomainId | CustomDomainId,
+): T {
+  const id = key(residentId, domainId)
+  let patched: T = domain
 
   const signed = signatures.get(id)
   if (signed) {

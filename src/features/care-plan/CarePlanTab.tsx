@@ -1,10 +1,18 @@
 import { now as appNow } from '@/data/fixtures/clock'
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import type { CarePlanDomainRecord, IsoDateTime } from '@/data/types'
+import type {
+  CarePlanDomainBody,
+  CustomCarePlanDomain,
+  IsoDateTime,
+  Resident,
+} from '@/data/types'
 import { CARE_PLAN_DOMAINS } from '@/data/types'
 import type { ResidentProfile } from '@/data/access/client'
-import { Card } from '@/components/primitives'
+import { Button, Card } from '@/components/primitives'
+import { withResidentEdits } from '@/data/access/resident-store'
+import { withSessionCarePlan } from '@/data/access/care-plan-draft-store'
+import { CustomDomainDialog } from './CustomDomainDialog'
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
@@ -155,7 +163,117 @@ export function CarePlanTab() {
           ))}
         </ul>
       </Card>
+
+      <CustomDomains resident={resident} now={now} />
     </div>
+  )
+}
+
+/**
+ * Domains this home wrote for this resident, outside the ten.
+ *
+ * **A second list with its own sentence, never an eleventh row.** "4 of 10
+ * written" is a claim about what every home is expected to hold, and
+ * twenty-two files count against it; folding one in would make that
+ * denominator mean something different for every resident. The two are
+ * rendered together, counted apart, and the heading says which is which.
+ */
+function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime }) {
+  const [writing, setWriting] = useState<CustomCarePlanDomain | 'new' | 'none'>('none')
+  const [version, setVersion] = useState(0)
+  void version
+  /*
+   * Both halves of this session, in the order the client reads them: the list
+   * itself lives on the resident record and what is written in one lives in
+   * the care plan store. Reading only the first showed a domain somebody had
+   * just drafted into as never written.
+   */
+  const domains = withSessionCarePlan(withResidentEdits(resident)).customCarePlan
+
+  return (
+    <Card>
+      <div className={styles.customHead}>
+        <div className={styles.customHeadRow}>
+          <h3 className={styles.customTitle}>Written for {resident.preferredName}</h3>
+          <Button
+            variant="secondary"
+            size="small"
+            data-add-custom-domain
+            onClick={() => setWriting('new')}
+          >
+            <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
+            Add custom domain
+          </Button>
+        </div>
+        <p className={styles.customNote} data-custom-domain-claim>
+          <span data-numeric>{formatCount(CARE_PLAN_DOMAINS.length)}</span> domains
+          above, plus <span data-numeric>{formatCount(domains.length)}</span> written
+          for this resident. These are not part of the ten and are not counted in the
+          figure at the top, or in a whole plan review.
+        </p>
+      </div>
+
+      {domains.length === 0 ? (
+        <p className={styles.customEmpty} data-no-custom-domains>
+          Nothing outside the ten has been written for {resident.preferredName}. That is
+          an ordinary state rather than a gap: the ten are what the home is expected to
+          hold.
+        </p>
+      ) : (
+        <ul className={styles.domainList}>
+          {domains.map((domain) => (
+            <li key={domain.id}>
+              <div
+                className={styles.domainRow}
+                data-custom-domain={domain.id}
+                data-state={domain.status.kind}
+              >
+                <div className={styles.rowAbout}>
+                  <p className={styles.rowName}>{domain.name}</p>
+                  <ResidentVoice record={domain} />
+                </div>
+
+                <div className={styles.rowState} data-state-cell>
+                  <DomainState timing={reviewTiming(domain.status, now)} />
+                  <DraftFact record={domain} />
+                </div>
+
+                <p className={styles.rowVersion}>
+                  {versionCount(domain) > 0 ? (
+                    <>
+                      Version <b data-numeric>{versionCount(domain)}</b>
+                    </>
+                  ) : null}
+                </p>
+
+                <Button
+                  variant="secondary"
+                  size="small"
+                  data-write-custom-domain={domain.id}
+                  onClick={() => setWriting(domain)}
+                >
+                  {domain.status.kind === 'not_started'
+                    ? 'Write this domain'
+                    : 'Open domain'}
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {writing === 'none' ? null : (
+        <CustomDomainDialog
+          resident={resident}
+          domain={writing}
+          onClose={() => setWriting('none')}
+          onWritten={() => {
+            setWriting('none')
+            setVersion((count) => count + 1)
+          }}
+        />
+      )}
+    </Card>
   )
 }
 
@@ -169,7 +287,7 @@ export function CarePlanTab() {
  * says nobody has written this, and a second grey line repeating it is volume
  * drowning the distinction.
  */
-function ResidentVoice({ record }: { record: CarePlanDomainRecord | undefined }) {
+function ResidentVoice({ record }: { record: CarePlanDomainBody | undefined }) {
   if (record === undefined) return null
   const version = currentVersion(record)
   if (version === 'none' || version.currentNeeds.trim() === '') return null
@@ -274,7 +392,7 @@ function DomainState({ timing }: { timing: ReviewTiming }) {
  * Nothing renders where the draft is the only thing there — `in_progress`
  * already says it, and saying it twice in one cell is the same volume problem.
  */
-function DraftFact({ record }: { record: CarePlanDomainRecord }) {
+function DraftFact({ record }: { record: CarePlanDomainBody }) {
   const format = useSiteFormat()
   if (record.draft.kind !== 'draft') return null
   if (record.status.kind === 'in_progress') return null

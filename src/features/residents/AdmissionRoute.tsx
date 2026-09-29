@@ -13,10 +13,12 @@ import type {
 import { GENDER_ANSWERS } from '@/data/types'
 import { admit, fileDocument } from '@/data/access/client'
 import { ADMISSION_GAPS, ALLERGY_SOURCES } from '@/data/access/resident-store'
-import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
-import type { RiskTemplateId } from '@/data/types'
+import { CARE_PLAN_DOMAINS, RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
+import type { CarePlanDomainId, CarePlanText, RiskTemplateId } from '@/data/types'
 import { isScored } from '@/features/risk/instrument'
 import { AdmissionRisks } from './AdmissionRisks'
+import { AdmissionCarePlan } from './AdmissionCarePlan'
+import { isWritten } from '@/features/care-plan/CarePlanTextFields'
 import {
   asEntry,
   isAnswered,
@@ -109,6 +111,14 @@ export function AdmissionRoute() {
    * typed: nothing exists to write to until the resident does, and a half-typed
    * level is not an assessment.
    */
+  /* Step 4's care plan drafts, by domain, plus anything outside the ten. */
+  const [planDrafts, setPlanDrafts] = useState<
+    Partial<Record<CarePlanDomainId, CarePlanText>>
+  >({})
+  const [customDomains, setCustomDomains] = useState<
+    (CarePlanText & { name: string })[]
+  >([])
+
   const [riskDrafts, setRiskDrafts] = useState<
     Partial<Record<RiskTemplateId, DraftRisk>>
   >({})
@@ -200,6 +210,21 @@ export function AdmissionRoute() {
       customRisks: customRisks
         .filter((custom) => custom.name.trim() !== '' && isAnswered(custom))
         .map((custom) => ({ ...asEntry(custom, false), name: custom.name })),
+
+      /*
+       * **Only the domains somebody wrote in, and every one a draft.** A
+       * domain with nothing typed is left out entirely, so the record says
+       * never written rather than holding an empty plan.
+       */
+      carePlan: Object.fromEntries(
+        CARE_PLAN_DOMAINS.filter((domain) => {
+          const text = planDrafts[domain.id]
+          return text !== undefined && isWritten(text)
+        }).map((domain) => [domain.id, planDrafts[domain.id]!]),
+      ),
+      customCarePlan: customDomains.filter(
+        (domain) => domain.name.trim() !== '' && isWritten(domain),
+      ),
     }).then(async (resident) => {
       /*
        * **Filed, and the decision still not recorded.** The document goes on
@@ -769,9 +794,28 @@ export function AdmissionRoute() {
              * clamp-on-the-wrong-kind-of-instant defect, and storing it anywhere
              * else means a deadline nothing enforces.
              */}
+            <AdmissionCarePlan
+              name={name}
+              drafts={planDrafts}
+              onDraft={(id, text) =>
+                setPlanDrafts((current) => ({ ...current, [id]: text }))
+              }
+              customs={customDomains}
+              onCustoms={setCustomDomains}
+            />
+
+            {/*
+             * **Still no dates, and the reason is unchanged.** A review date on
+             * a domain nobody has signed would put a deadline on a plan that
+             * does not exist yet, and the Reviews queue already leads on never
+             * written for that reason. What changed in Phase 31 is that the
+             * writing can start here; when it is signed, the finalise sets the
+             * date, on the tab where somebody can mean it.
+             */}
             <p className={styles.sectionNote} data-no-dates>
-              <b>Nothing here is given a date.</b> All ten care plan domains start
-              unwritten and all nine assessments start never assessed.
+              <b>Nothing here is given a date.</b> The nine risk assessments not
+              answered on the step before start never assessed, and a domain written
+              here gets its review date when somebody signs it.
             </p>
           </section>
         ) : null}

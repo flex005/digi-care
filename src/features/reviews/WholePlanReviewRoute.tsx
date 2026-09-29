@@ -87,6 +87,24 @@ export function WholePlanReviewRoute() {
 
       <Card>
         <p className={styles.sectionTitle}>The plan as it stands</p>
+        {/*
+         * **The ten, and only the ten.** A whole plan review is a meeting about
+         * the set every home is expected to hold, and what it records as
+         * outstanding is a list of those. A domain this home wrote for this
+         * resident is reviewed on its own, from the care plan tab, so that
+         * "all ten domains" keeps meaning what every other screen means by it.
+         */}
+        {resident.customCarePlan.length > 0 ? (
+          <p className={styles.outsideNote} data-outside-the-ten>
+            <span data-numeric>{resident.customCarePlan.length}</span>{' '}
+            {resident.customCarePlan.length === 1 ? 'domain' : 'domains'} written for{' '}
+            {resident.preferredName} outside the ten{' '}
+            {resident.customCarePlan.length === 1 ? 'is' : 'are'} not part of this
+            review and {resident.customCarePlan.length === 1 ? 'is' : 'are'} not counted
+            in what it records as outstanding. Each is reviewed on its own, from the
+            care plan.
+          </p>
+        ) : null}
         {rows.map(({ domain, record }) => (
           <div className={styles.domainRow} key={domain.id} data-domain={domain.id}>
             <p className={styles.domainName}>{domain.name}</p>

@@ -592,3 +592,12 @@
 .backLink:hover {
   text-decoration: underline;
 }
+
+/* What a whole plan review does not cover, said where it is being signed. */
+.outsideNote {
+  max-width: 82ch;
+  margin-bottom: var(--space-12);
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}

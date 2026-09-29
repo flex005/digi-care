@@ -1,4 +1,4 @@
-import type { CarePlanDomainRecord, CarePlanText, CarePlanVersion } from '@/data/types'
+import type { CarePlanDomainBody, CarePlanText, CarePlanVersion } from '@/data/types'
 
 /**
  * The three fields a care plan domain is made of, and whose voice each is
@@ -79,12 +79,12 @@ export const EMPTY_PLAN: CarePlanText = {
  * it exists, so there is no "finalised with no versions" to guard against at
  * every call site.
  */
-export function currentVersion(record: CarePlanDomainRecord): CarePlanVersion | 'none' {
+export function currentVersion(record: CarePlanDomainBody): CarePlanVersion | 'none' {
   return record.versions.kind === 'finalised' ? record.versions.history.at(-1)! : 'none'
 }
 
 /** How many versions have been signed. Zero where none has. */
-export function versionCount(record: CarePlanDomainRecord): number {
+export function versionCount(record: CarePlanDomainBody): number {
   return record.versions.kind === 'finalised' ? record.versions.history.length : 0
 }
 
@@ -101,7 +101,7 @@ export function versionCount(record: CarePlanDomainRecord): number {
  * **And never an assessment.** A Waterlow score cannot be turned into "I need
  * help to walk" without putting words in somebody's mouth.
  */
-export function editorStartsFrom(record: CarePlanDomainRecord): CarePlanText {
+export function editorStartsFrom(record: CarePlanDomainBody): CarePlanText {
   if (record.draft.kind !== 'draft') return EMPTY_PLAN
   return {
     currentNeeds: record.draft.currentNeeds,

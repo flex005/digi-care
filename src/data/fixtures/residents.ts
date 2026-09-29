@@ -14,6 +14,7 @@
 import type {
   Allergy,
   AllergyStatus,
+  CustomDomainId,
   CustomRiskId,
   RiskAction,
   RiskLevel,
@@ -1584,6 +1585,8 @@ function makeResident(person: Person, siteId: SiteId, index: number): Resident {
     // Empty for almost everybody: the nine are what a home is expected to
     // hold, and a custom risk is what one resident needed on top of them.
     customRisks: [],
+    // Empty for almost everybody, like the custom risks above.
+    customCarePlan: [],
     resuscitation,
     eolc: makeEolc(rng),
     isolation: makeIsolation(rng),
@@ -1738,6 +1741,53 @@ function patch(id: string, change: (resident: Resident) => Resident): void {
  * sentence rather than folded into "of 9". Without a fixture the tab's second
  * list, its claim and its empty state are branches nobody can reach (§8).
  */
+/*
+ * A care plan domain outside the ten, written for one resident.
+ *
+ * **Pinned for the same reason the custom risk is.** Nothing generated makes
+ * one, so the tab's second list, its claim, its empty state and the review
+ * screen's sentence about what a whole-plan review counts are all branches no
+ * fixture reaches otherwise.
+ *
+ * Signed rather than drafted, because the state that needs proving is a custom
+ * domain that *is* what staff follow: a draft would leave "what staff follow"
+ * untested outside the ten.
+ */
+patch('adeyemi', (resident) => ({
+  ...resident,
+  customCarePlan: [
+    {
+      id: 'domain-adeyemi-allotment' as CustomDomainId,
+      name: 'The allotment',
+      status: {
+        kind: 'complete',
+        finalisedBy: staffHalloran,
+        finalisedOn: toIsoDate(daysAgo(52)),
+        nextReviewOn: toIsoDate(daysAhead(128)),
+      },
+      supportLevel: { kind: 'prompting_only' },
+      summary:
+        'Two mornings a week at the allotment, which is how she measures a good week.',
+      versions: {
+        kind: 'finalised',
+        history: [
+          {
+            currentNeeds:
+              'I have had the same plot for thirty years and I am not giving it up. I need somebody to walk down with me and stay, because of my chest.',
+            preferences:
+              'Tuesday and Friday mornings, before it gets hot. I like to take my own flask.',
+            agreedActions:
+              'Walk down with her Tuesday and Friday before 10am, stay on the site, and bring her back if she is short of breath. Tell the family if she stops wanting to go, because that is the first sign she is unwell.',
+            finalisedBy: staffHalloran,
+            finalisedOn: toIsoDate(daysAgo(52)),
+          },
+        ],
+      },
+      draft: { kind: 'none' },
+    },
+  ],
+}))
+
 patch('kavanagh', (resident) => ({
   ...resident,
   customRisks: [

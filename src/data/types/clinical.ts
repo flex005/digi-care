@@ -8,7 +8,7 @@
  */
 
 import type { CarePlanDomainId } from './reference'
-import type { IsoDate, IsoDateTime, StaffRef } from './primitives'
+import type { CustomDomainId, IsoDate, IsoDateTime, StaffRef } from './primitives'
 import type { CompletedAgainst, ReviewState } from './state'
 
 /**
@@ -242,8 +242,15 @@ export type CarePlanText = Pick<
   'currentNeeds' | 'preferences' | 'agreedActions'
 >
 
-export interface CarePlanDomainRecord {
-  domainId: CarePlanDomainId
+/**
+ * Everything a care plan domain holds except which domain it is.
+ *
+ * Declared once, because a domain outside the ten is the same record under a
+ * name the home chose: same three fields, same draft, same version history,
+ * same support level. A second shape for it would be a second thing to
+ * reconcile on the way to the tab, the queue and the review.
+ */
+export interface CarePlanDomainBody {
   status: CarePlanDomainStatus
   supportLevel: SupportLevel
   /** Plain-language summary shown read-only on the Needs tab. */
@@ -275,6 +282,23 @@ export interface CarePlanDomainRecord {
         updatedBy: StaffRef
         updatedAt: IsoDateTime
       }
+}
+
+/**
+ * A care plan domain this home wrote for this resident, outside the ten.
+ *
+ * **Its own list, and never one of the ten.** The ten are what every home is
+ * expected to hold, which is what makes "4 of 10 written" a figure a reader can
+ * check and what twenty-two files count against. A domain a home adds for one
+ * person is real and is counted in its own sentence.
+ */
+export interface CustomCarePlanDomain extends CarePlanDomainBody {
+  id: CustomDomainId
+  name: string
+}
+
+export interface CarePlanDomainRecord extends CarePlanDomainBody {
+  domainId: CarePlanDomainId
 }
 
 /**

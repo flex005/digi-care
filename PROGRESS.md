@@ -15012,3 +15012,54 @@ class — the same drift one level down.
 Measured in a browser rather than read off the CSS, on both screens that render
 the set: all four labels at top 506, height 16; all four boxes at top 526,
 height 40.
+
+## Phase 2 — Care Plan and Assessment
+
+Built to the two decisions: admission writes drafts only, and a whole plan
+review counts the ten.
+
+**The record needed no extension, which is the difference from risks.**
+`CarePlanDomainRecord` already held the three fields, a draft, a version
+history, a support level and a summary. What it lacked was a shape for a
+domain outside the ten, so the fields common to both are now
+`CarePlanDomainBody` and `CustomCarePlanDomain` is that body with an id and a
+name. `Resident.customCarePlan` holds them.
+
+**One store for both lists, not two.** `care-plan-draft-store` keys drafts and
+signatures by resident and domain, and its key type widened to take a custom
+id: a domain outside the ten drafts and signs through the same `saveDraft`,
+the same `finaliseDomain` and the same undo. Two stores would have been two
+ways for a domain to hold a draft over the version that draft became. Its
+`patch` is generic over the body, so a custom domain keeps its id and name
+while the body is patched exactly as one of the ten is.
+
+**Admission, step 4.** All ten listed with their state outside the disclosure,
+each opening to the three fields in the voices they belong to — two the
+resident's own words, one what staff will do. The claim reads "0 of 10
+started" and says what a draft is: on the record as part-written, signed later
+from the resident's own care plan. "Add custom domain" takes the same fields
+plus a name. Nothing is required and the step cannot hold the form up.
+
+**The tab.** A second card, "Written for <name>", with the same rows as the
+ten, its own claim, and an empty state that says the absence is ordinary
+rather than a gap. Add, write and sign all happen in one dialog: Save draft
+and Finalise and sign are two buttons, because a draft is what somebody wrote
+down and a signed version is what staff follow. Finalising needs all three
+fields, as the editor for the ten has since Phase 12.
+
+**The reviews queue** carries custom domains when their review falls due, as
+the risk queue carries custom risks, and the whole plan review screen says in
+so many words that domains outside the ten are not part of it and not counted
+in what it records as outstanding.
+
+Three mutations, each confirmed landed and restored: admission finalising
+instead of drafting failed `writes a domain as a draft, never as a signed
+version`; custom domains removed from the projection failed `counts every
+record that could carry a review date`; the session's drafts no longer
+reaching custom domains failed `writes a draft through the same store the ten
+use`.
+
+One thing the browser caught that the tests did not: the tab read the resident
+record but not the draft store, so a domain somebody had just drafted into
+rendered as never written. It now reads both, in the order the client reads
+them.

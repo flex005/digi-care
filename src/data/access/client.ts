@@ -19,6 +19,8 @@ import type {
   RiskAction,
   RiskLevel,
   RiskScore,
+  CustomCarePlanDomain,
+  CustomDomainId,
   CustomRisk,
   CustomRiskId,
   RiskTemplateId,
@@ -896,7 +898,8 @@ export function undoReviewFlagsCleared(token: ClearingToken): Promise<void> {
  */
 export function saveCarePlanDraft(input: {
   residentId: ResidentId
-  domainId: CarePlanDomainId
+  /** One of the ten, or a domain this home wrote for this resident. */
+  domainId: CarePlanDomainId | CustomDomainId
   text: CarePlanText
   by: StaffRef
   at: IsoDateTime
@@ -908,10 +911,58 @@ export function saveCarePlanDraft(input: {
   return resolve(undefined)
 }
 
+/**
+ * Adds a care plan domain outside the ten, for one resident.
+ *
+ * **The slot only.** What goes in it is written by the same `saveCarePlanDraft`
+ * and signed by the same `finaliseCarePlanDomain` the ten use, because a domain
+ * a home added is a domain: one draft path, one signature path, one version
+ * history. This exists because the ten come with the resident and a custom one
+ * has to be brought into existence before anybody can write in it.
+ *
+ * Never one of the ten: "4 of 10 written" is a claim about what every home is
+ * expected to hold, and twenty-two files count against it.
+ */
+export function recordCustomCarePlanDomain(input: {
+  residentId: ResidentId
+  name: string
+  by: StaffRef
+}): Promise<CustomCarePlanDomain> {
+  const resident = residentById(input.residentId)
+  if (!resident) return reject(`No resident with id ${input.residentId}`)
+  if (input.name.trim() === '') {
+    return reject('A care plan domain outside the ten needs a name')
+  }
+
+  const domain: CustomCarePlanDomain = {
+    id: `domain-${input.residentId}-${String(resident.customCarePlan.length + 1)}` as CustomDomainId,
+    name: input.name.trim(),
+    // Created empty and never started: adding a domain is not writing one.
+    status: { kind: 'not_started' },
+    supportLevel: { kind: 'not_assessed' },
+    summary: '',
+    versions: { kind: 'never_finalised' },
+    draft: { kind: 'none' },
+  }
+
+  editResidentField(input.residentId, {
+    customCarePlan: [...resident.customCarePlan, domain],
+  })
+
+  const updated = residentById(input.residentId)
+  if (!updated) return reject(`No resident with id ${input.residentId}`)
+  return logged(domain, {
+    module: 'Care Plans',
+    what: `Added a care plan domain for ${updated.fullLegalName}: ${domain.name}`,
+    to: `/residents/${updated.id}/care-plan`,
+    by: input.by,
+  })
+}
+
 /** Throws a draft away. An abandoned draft leaves no trace; nobody followed it. */
 export function discardCarePlanDraft(
   residentId: ResidentId,
-  domainId: CarePlanDomainId,
+  domainId: CarePlanDomainId | CustomDomainId,
 ): Promise<void> {
   discardDraft(residentId, domainId)
   return resolve(undefined)
@@ -926,7 +977,7 @@ export function discardCarePlanDraft(
  */
 export function finaliseCarePlanDomain(input: {
   residentId: ResidentId
-  domainId: CarePlanDomainId
+  domainId: CarePlanDomainId | CustomDomainId
   text: CarePlanText
   by: StaffRef
   on: IsoDate

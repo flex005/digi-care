@@ -102,9 +102,23 @@ describe('three populations behind one projection', () => {
           domain.status.kind === 'complete' || domain.status.kind === 'review_due',
       ),
     ).length
+    /*
+     * Domains outside the ten review the same way and are counted here for the
+     * same reason: this asks what could be reviewed, not what the code built.
+     * What they never join is "of 10", which is the queue's own denominator.
+     */
+    const customWritten = residents.flatMap((resident) =>
+      resident.customCarePlan.filter(
+        (domain) =>
+          domain.status.kind === 'complete' || domain.status.kind === 'review_due',
+      ),
+    ).length
     const wholePlans = residents.length
 
-    expect(projection.items.length).toBe(assessed + written + wholePlans)
+    expect(customWritten).toBeGreaterThan(0)
+    expect(projection.items.length).toBe(
+      assessed + written + customWritten + wholePlans,
+    )
     expect(new Set(projection.items.map((item) => item.id)).size).toBe(
       projection.items.length,
     )
@@ -141,8 +155,8 @@ describe('three populations behind one projection', () => {
     // And neither appears as a row. A queue about reviews does not carry a row
     // saying a review cannot exist — that is another screen's finding wearing
     // this screen's shape.
-    const written = new Set(
-      residents.flatMap((resident) =>
+    const written = new Set([
+      ...residents.flatMap((resident) =>
         resident.carePlan
           .filter(
             (domain) =>
@@ -150,7 +164,15 @@ describe('three populations behind one projection', () => {
           )
           .map((domain) => `${resident.id}|domain|${domain.domainId}`),
       ),
-    )
+      ...residents.flatMap((resident) =>
+        resident.customCarePlan
+          .filter(
+            (domain) =>
+              domain.status.kind === 'complete' || domain.status.kind === 'review_due',
+          )
+          .map((domain) => `${resident.id}|custom-domain|${domain.id}`),
+      ),
+    ])
     for (const item of projection.items) {
       if (item.kind !== 'care_plan_domain') continue
       expect(written.has(item.id), item.id).toBe(true)

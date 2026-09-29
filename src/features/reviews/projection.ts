@@ -1,4 +1,5 @@
 import type {
+  CarePlanDomainBody,
   CarePlanReviewState,
   CompletedAgainst,
   IsoDate,
@@ -149,6 +150,27 @@ export function projectReviews(residents: Resident[], now: IsoDateTime): Project
       })
     }
 
+    /*
+     * **Domains outside the ten, on the queue and out of the figures.**
+     * A review that falls due is a review that falls due, whichever list the
+     * domain is on. What it never joins is "of 10": that is a claim about what
+     * every home is expected to hold, and a domain one home wrote for one
+     * resident would make it mean something different per person.
+     */
+    for (const custom of resident.customCarePlan) {
+      const standing = domainStanding(custom, today)
+      if (standing === 'not_reviewable') continue
+      items.push({
+        id: `${resident.id}|custom-domain|${custom.id}`,
+        resident,
+        kind: 'care_plan_domain',
+        label: `${custom.name} (outside the ten)`,
+        standing,
+        to: `/residents/${resident.id}/care-plan`,
+        actionLabel: 'Open domain',
+      })
+    }
+
     items.push({
       id: `${resident.id}|plan`,
       resident,
@@ -230,7 +252,8 @@ function fromReviewState(
  * exist, which is a different screen's finding wearing this screen's shape.
  */
 function domainStanding(
-  record: Resident['carePlan'][number] | undefined,
+  /** Either list: a domain outside the ten reviews exactly as one of them does. */
+  record: CarePlanDomainBody | undefined,
   today: IsoDate,
 ): ReviewStanding | 'not_reviewable' {
   if (!record) return 'not_reviewable'

@@ -477,6 +477,17 @@
   padding: var(--space-4) var(--space-16) var(--space-16);
 }
 
+/* A domain with something in it and nothing signed: a fact, not a finding. */
+.planStarted {
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-sunken);
+  color: var(--ink-700);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line);
+  font-weight: var(--weight-semibold);
+}
+
 .customRiskFoot {
   padding: 0 var(--space-16) var(--space-16);
 }
