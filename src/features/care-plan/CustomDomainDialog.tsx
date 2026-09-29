@@ -8,10 +8,11 @@ import {
 import { useSession } from '@/app/session/use-session'
 import { now as appNow } from '@/data/fixtures/clock'
 import { Button, Dialog } from '@/components/primitives'
+import { SigningIdentity, canSign } from '@/components/signing/SigningIdentity'
 import { nextReviewFrom } from '@/lib/review-interval'
 import { reviewIntervalMonths } from '@/data/access/settings-store'
 import { CarePlanTextFields, emptyText, isWritten } from './CarePlanTextFields'
-import { editorStartsFrom, outstandingFields } from './plan-fields'
+import { editorStartsFrom, outstandingFields, versionCount } from './plan-fields'
 import styles from './care-plan.module.css'
 
 /**
@@ -50,7 +51,20 @@ export function CustomDomainDialog({
     domain === 'new' ? emptyText() : editorStartsFrom(domain),
   )
   const [failure, setFailure] = useState('')
+  /*
+   * **Signing is a step, not a second button.** Finalising makes a version the
+   * instruction staff follow, so it asks for the code every other clinical
+   * signature in this build asks for. A step rather than a nested
+   * confirmation, because this is already a dialog and a modal inside a modal
+   * is a worse answer than a screen that changes what it is asking for.
+   *
+   * Saving a draft never asks: a draft is not a signature, and a code typed to
+   * save one is a code typed out of habit.
+   */
+  const [signing, setSigning] = useState(false)
+  const [code, setCode] = useState('')
 
+  const signedVersions = domain === 'new' ? 0 : versionCount(domain)
   const at = appNow().toISOString() as IsoDateTime
   const on = at.slice(0, 10) as IsoDate
   const ready = name.trim() !== '' && isWritten(text)
@@ -118,24 +132,40 @@ export function CustomDomainDialog({
       description={`${resident.fullLegalName}. Your name and the time go on whatever you write.`}
       actions={
         <>
-          <Button variant="ghost" onClick={onClose}>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setCode('')
+              onClose()
+            }}
+          >
             Cancel
           </Button>
-          <Button
-            variant="secondary"
-            disabled={!ready}
-            data-save-custom-draft
-            onClick={saveDraft}
-          >
-            Save draft
-          </Button>
+          {signing ? null : (
+            <Button
+              variant="secondary"
+              disabled={!ready}
+              data-save-custom-draft
+              onClick={saveDraft}
+            >
+              Save draft
+            </Button>
+          )}
           {/* Signing is what makes it what staff follow, so it says so. */}
           <Button
-            disabled={!ready || waiting.length > 0}
+            disabled={
+              !ready || waiting.length > 0 || (signing && !canSign(currentUser, code))
+            }
             data-finalise-custom-domain
-            onClick={finalise}
+            onClick={() => {
+              if (!signing) {
+                setSigning(true)
+                return
+              }
+              finalise()
+            }}
           >
-            Finalise and sign
+            {signing ? 'Confirm and sign' : 'Finalise and sign'}
           </Button>
         </>
       }
@@ -158,6 +188,15 @@ export function CustomDomainDialog({
       ) : null}
 
       <CarePlanTextFields idPrefix="custom-domain" text={text} onChange={setText} />
+
+      {signing ? (
+        <SigningIdentity
+          who={currentUser}
+          code={code}
+          onCode={setCode}
+          what={`Signing version ${String(signedVersions + 1)} of ${name.trim()} for ${resident.fullLegalName}.`}
+        />
+      ) : null}
 
       <p className={styles.nameHint} data-finalise-waiting>
         {waiting.length === 0

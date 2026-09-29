@@ -15091,3 +15091,45 @@ something reads what it writes. A support-level control on the custom dialog
 today would write a value no screen displays — work somebody did that the
 product never shows back to them, which is its own kind of dishonesty. When a
 screen starts reading it, the control goes in the same change.
+
+## Finalising a care plan is a signature, and now asks like one
+
+Phase 32. Finalising was the only clinical signature in the build a click
+alone could complete: it makes a version the instruction staff follow, and it
+took no code, while a medication round and a handover have asked for one since
+Phase 8. Both paths now use the same `SigningIdentity` and the same `canSign`
+check.
+
+**The ten**: the signing block sits inside the finalise confirmation that
+already names the subject, what it closes and the next review date, and
+Confirm stays disabled until the code matches. The code clears when the dialog
+closes, so it is not left in the field for whoever picks the device up.
+
+**A domain outside the ten**: the dialog turns into its signing step rather
+than opening a second modal inside itself. Pressing "Finalise and sign" shows
+the block and the button becomes "Confirm and sign"; Save draft is not offered
+mid-signature, because one act at a time is the point of a signing step.
+Saving a draft never asks for a code: a draft is not a signature, and a code
+typed to save one is a code typed out of habit.
+
+**What the code signs is named**, on both: the version number, the domain and
+the resident. "Signing version 2 of The allotment for Grace Adeyemi."
+
+Two mutations, each confirmed landed and restored: the editor's
+`confirmDisabled` removed failed `will not sign a domain without the code`;
+the dialog's signing step skipped failed `asks for it on a domain outside the
+ten too`.
+
+### And two stale lines, which were stale in different ways
+
+`docs/AM_PRD_STATUS.md` listed the signing code as not built — it is now, so
+the line is gone. It also listed "adding custom care plan domains (approved,
+not built)", which had become half true rather than wrong: **a domain for one
+resident** shipped in Phase 31, and **a domain configured for a whole home**
+did not. The entry now says which is which, and the Settings screen says the
+same thing rather than a flat "not built" that contradicts a screen the reader
+may have used ten minutes earlier.
+
+The distinction is not pedantry: a home-level domain changes what every
+resident there is expected to hold, and with it every "of 10" figure in the
+product. That is the feature Settings is refusing, and it is still refused.

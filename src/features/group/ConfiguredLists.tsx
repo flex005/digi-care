@@ -58,7 +58,14 @@ export function ConfiguredLists({
       id: 'domains',
       title: 'Care plan domains this home writes',
       items: CARE_PLAN_DOMAINS.map((d) => ({ id: d.id, name: d.name })),
-      note: 'These ten and no others; adding a home’s own domain is not built.',
+      /*
+       * **Two different things, and only one of them is missing.** A domain
+       * written for one resident is built and lives on that resident's care
+       * plan. What this screen refuses is a domain configured here for the
+       * whole home, which would change what every resident at it is expected
+       * to hold — and with it every "of 10" figure in the product.
+       */
+      note: 'These ten for every resident here. A domain for one resident is written on their own care plan; adding one for the whole home is not built.',
     },
     {
       id: 'consents',

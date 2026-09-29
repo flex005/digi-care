@@ -27,7 +27,7 @@ browser.
 | **Authentication** | Sign-in offering the three roles above. An invitation-acceptance screen with password rules and a four-digit signing code. A six-digit verification step. A session that ends after a settable period of inactivity, with a warning first. An account page listing this one session. The organisation setup wizard, offered to the registered manager straight after verifying, and reachable again from Settings → Organisation. **None of it authenticates anybody.** |
 | **Dashboard** | The site dashboard, with an Admin-only banner naming invitations nobody has accepted. A site switcher, and an Admin-only view of every home side by side. |
 | **Team** | Staff list with search and filters, read-only for a Manager. Invite drawer (care worker, senior carer, deputy manager), including which residents a care worker covers. Staff profile with homes, resident assignment and recorded activity. Assigning a Manager to several homes. Deactivation with a reason and a typed confirmation. |
-| **Residents** | Admission in five steps shown one at a time, of which only the first is required, with risk assessments, care plan drafts and a DNAR form that can be filed as part of it (see the departures). Writing and finalising care plan domains, with version history, including domains a home adds outside the ten. |
+| **Residents** | Admission in five steps shown one at a time, of which only the first is required, with risk assessments, care plan drafts and a DNAR form that can be filed as part of it (see the departures). Writing and finalising care plan domains, with version history, including domains a home adds outside the ten. Finalising asks for the signing code, as the medication round and the handover signature do. |
 | **Incidents** | Acknowledging, the manager's own review kept separate from what the reporter wrote, and closing only once there is a root cause and a decision about telling the CQC. |
 | **Compliance** | The five Key Questions and statutory notifications. Filing a notification and opening the inspection pack are Admin-only. |
 | **Family Portal management** | Its own module: a resident tab listing everybody named for that person — name, relationship, email, access level, who recorded it and when — each with Edit and Remove, and an Add button opening a dialog rather than a form standing open on the page. A cross-resident screen leads on residents who agreed and have nobody named. Naming somebody is allowed only once that resident's Family Portal consent is on file. Sharing a care note, and writing a plain-language message about an incident, both kept as an append-only history. **Nothing reaches a family**, and every control says so as an instruction: *if this family needs to know today, telephone them.* |
@@ -108,12 +108,11 @@ Each was decided and recorded, not missed.
 
 - The invitation and verification emails, the forgot-password flow and the lockout alert (no email).
 - On the staff profile: changing a role, ending another person's sessions, and a "last active" column.
-- Signing code confirmation when finalising a care plan domain.
 - A root cause dropdown on incidents; the field is free text.
 - The inspection pack's generation and download, report export, and the cross-site consolidated report.
 - Changing who is invited to a session once it is planned.
 - Changing a role on the staff profile (listed above).
-- Adding custom care plan domains (approved, not built); Settings now says so.
+- **Custom care plan domains, at the home level.** The two readings of this are worth separating, because one of them shipped. A domain written **for one resident** is built: it is added on that resident's own care plan tab or at admission, drafts and signs through the same writers as the ten, and is counted in its own sentence. A domain **configured for a whole home**, so that every resident there carries it and the home's denominator says eleven rather than ten, is not built and is what the Settings screen refuses.
 - Settings that change what existing records mean are shown on the risk assessment list only. The care plan and consent screens do not yet show when a domain or consent type has been turned off.
 - Billing.
 

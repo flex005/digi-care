@@ -1,5 +1,6 @@
 import { now as appNow } from '@/data/fixtures/clock'
 import { useCallback, useState } from 'react'
+import { SigningIdentity, canSign } from '@/components/signing/SigningIdentity'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
 import type {
   CarePlanDomainId,
@@ -123,6 +124,14 @@ function Editor({
    */
   const [text, setText] = useState<CarePlanText>(() => editorStartsFrom(record))
   const [confirming, setConfirming] = useState(false)
+  /*
+   * **The signing code, as the round and the handover ask for it.** Finalising
+   * is a clinical signature: it makes a version the instruction staff follow,
+   * and until this phase it was the only one in the build taken on a click.
+   * Never left in the field for whoever picks the device up next, so it clears
+   * with the dialog.
+   */
+  const [code, setCode] = useState('')
   const [discarding, setDiscarding] = useState(false)
   /*
    * The signature and the flag clearing it discharged, held together.
@@ -358,7 +367,10 @@ function Editor({
 
       <AlertDialog
         open={confirming}
-        onOpenChange={setConfirming}
+        onOpenChange={(next) => {
+          setConfirming(next)
+          if (!next) setCode('')
+        }}
         subject={{
           kind: 'resident',
           name: profileName,
@@ -394,8 +406,18 @@ function Editor({
               </span>
               .
             </span>
+            {/* Who signed, not that somebody clicked. The code names the
+                version, the domain and the resident, so it signs something
+                named rather than "this form". */}
+            <SigningIdentity
+              who={currentUser}
+              code={code}
+              onCode={setCode}
+              what={`Signing version ${String(versionCount(record) + 1)} of the ${domainName.toLowerCase()} care plan for ${resident.fullLegalName}.`}
+            />
           </span>
         }
+        confirmDisabled={!canSign(currentUser, code)}
         onConfirm={() => {
           void finalise()
         }}

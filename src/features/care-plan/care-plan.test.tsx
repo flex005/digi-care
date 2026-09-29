@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, afterAll, describe, expect, it, vi } from 'vitest'
-import { render, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
@@ -31,6 +31,7 @@ import { VersionHistoryRoute } from './VersionHistoryRoute'
 import { WholePlanReviewRoute } from '@/features/reviews/WholePlanReviewRoute'
 import { residentById } from '@/data/fixtures/residents'
 import { staffOkonkwo } from '@/data/fixtures/organisation'
+import { signingCodeFor } from '@/data/access/team-store'
 import { withResidentEdits } from '@/data/access/resident-store'
 import { withSessionCarePlan } from '@/data/access/care-plan-draft-store'
 import { finaliseCarePlanDomain, saveCarePlanDraft } from '@/data/access/client'
@@ -178,6 +179,29 @@ const owesReview = (() => {
 })()
 
 /* -------------------------------------------------------------- the list */
+
+/**
+ * Type the signing code into a confirmation and press its button.
+ *
+ * **Finalising asks for a code from Phase 32**, as the medication round and
+ * the handover signature do: it is the write that makes a version the
+ * instruction staff follow, and it was the only clinical signature in the
+ * build taken on a click alone.
+ */
+async function signAndConfirm(
+  user: ReturnType<typeof userEvent.setup>,
+  dialog: HTMLElement,
+  confirmName: RegExp,
+) {
+  await user.type(
+    within(dialog).getByLabelText(/signing code/i),
+    signingCodeFor(staffOkonkwo.id),
+  )
+  await waitFor(() =>
+    expect(within(dialog).getByRole('button', { name: confirmName })).toBeEnabled(),
+  )
+  await user.click(within(dialog).getByRole('button', { name: confirmName }))
+}
 
 describe('the domain list', () => {
   it('renders all ten domains, from the constant and not from the record', async () => {
@@ -499,7 +523,7 @@ describe('the domain editor', () => {
     })
     // The subject is named in the sentence, never "Are you sure?" (§2.4).
     expect(dialog.textContent).toContain(resident.fullLegalName)
-    await user.click(within(dialog).getByRole('button', { name: /Sign and close/i }))
+    await signAndConfirm(user, dialog, /Sign and close/i)
 
     await waitFor(() => {
       const patched = patchedIncidents().find((entry) => entry.id === incident.id)!
@@ -672,7 +696,7 @@ describe('the domain editor', () => {
       expect(found).toBeTruthy()
       return found as HTMLElement
     })
-    await user.click(within(dialog).getByRole('button', { name: /Sign and close/i }))
+    await signAndConfirm(user, dialog, /Sign and close/i)
 
     await waitFor(() => {
       // The draft became the version, so it is not still sitting on top of it.
@@ -1002,4 +1026,103 @@ describe('a domain outside the ten is written, signed and counted apart', () => 
     expect(signed.draft.kind).toBe('none')
     expect(signed.versions.kind).toBe('finalised')
   }, 30000)
+})
+
+describe('finalising is a signature, and asks for the code like every other one', () => {
+  it('will not sign a domain without the code, or with the wrong one', async () => {
+    const user = userEvent.setup()
+    const { resident, record } = partWritten
+    const domainId = record.domainId
+    const { container } = renderAt(`/residents/${resident.id}/care-plan/${domainId}`)
+    await settled(container)
+
+    for (const field of PLAN_FIELDS) {
+      await user.type(
+        container.querySelector<HTMLTextAreaElement>(`#field-${field.id}`)!,
+        'Something this person said.',
+      )
+    }
+    await user.click(container.querySelector<HTMLButtonElement>('[data-finalise]')!)
+    const dialog = await waitFor(() => {
+      const found = document.querySelector('[role="alertdialog"]')
+      expect(found).toBeTruthy()
+      return found as HTMLElement
+    })
+
+    /*
+     * **The gate is the code, not the click.** This was the only clinical
+     * signature in the build that a mis-aimed click could complete: a version
+     * staff follow, signed by whoever the device happened to be logged in as.
+     */
+    const confirm = within(dialog).getByRole('button', { name: /Finalise and sign/i })
+    expect(confirm).toBeDisabled()
+
+    await user.type(within(dialog).getByLabelText(/signing code/i), '0000')
+    const wrong = signingCodeFor(staffOkonkwo.id) === '0000'
+    if (!wrong) expect(confirm).toBeDisabled()
+
+    await user.clear(within(dialog).getByLabelText(/signing code/i))
+    await user.type(
+      within(dialog).getByLabelText(/signing code/i),
+      signingCodeFor(staffOkonkwo.id),
+    )
+    await waitFor(() => expect(confirm).toBeEnabled())
+
+    // And it names what it signs: the version, the domain, the resident.
+    expect(dialog.textContent).toMatch(/Signing version \d+ of the/)
+    expect(dialog.textContent).toContain(resident.fullLegalName)
+
+    await user.click(confirm)
+    await waitFor(() =>
+      expect(container.querySelector('[data-history-link]')).toBeTruthy(),
+    )
+  }, 40000)
+
+  it('asks for it on a domain outside the ten too, and never to save a draft', async () => {
+    const user = userEvent.setup()
+    const resident = residents.find((entry) => entry.id === 'res-adeyemi')!
+    const { container } = renderAt(`/residents/${resident.id}/care-plan`)
+    await waitFor(() =>
+      expect(container.querySelector('[data-custom-domain]')).toBeTruthy(),
+    )
+
+    await user.click(container.querySelector('[data-write-custom-domain]')!)
+    const dialog = await screen.findByRole('dialog')
+
+    /*
+     * Saving a draft asks for nothing: a draft is not a signature, and a code
+     * typed to save one is a code typed out of habit.
+     */
+    expect(dialog.querySelector('[data-save-custom-draft]')).toBeTruthy()
+    expect(dialog.querySelector('[data-signing-identity]')).toBeNull()
+
+    /*
+     * Written out first. The dialog opens from the draft or from nothing,
+     * never from the signed version — carrying last year's words into this
+     * year's boxes turns a review into a formality — so a signed domain opens
+     * empty and nothing can be signed until somebody writes it again.
+     */
+    const boxes = dialog.querySelectorAll('textarea')
+    for (const box of boxes) await user.type(box, 'Written again this time.')
+
+    // Pressing finalise turns the dialog into its signing step.
+    await user.click(dialog.querySelector('[data-finalise-custom-domain]')!)
+    await waitFor(() =>
+      expect(dialog.querySelector('[data-signing-identity]')).toBeTruthy(),
+    )
+    const confirm = dialog.querySelector<HTMLButtonElement>(
+      '[data-finalise-custom-domain]',
+    )!
+    expect(confirm.textContent).toMatch(/Confirm and sign/)
+    expect(confirm.disabled).toBe(true)
+    // Saving a draft is not offered mid-signature: one act at a time.
+    expect(dialog.querySelector('[data-save-custom-draft]')).toBeNull()
+
+    await user.type(
+      within(dialog).getByLabelText(/signing code/i),
+      signingCodeFor(staffOkonkwo.id),
+    )
+    await waitFor(() => expect(confirm.disabled).toBe(false))
+    expect(dialog.textContent).toMatch(/Signing version \d+ of/)
+  }, 40000)
 })
