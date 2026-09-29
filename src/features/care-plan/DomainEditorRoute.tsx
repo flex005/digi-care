@@ -212,10 +212,9 @@ function Editor({
       {/* Said, not implied. A screen that expects the resident's voice and
           does not ask for it gets a clinical summary in all three boxes. */}
       <div className={styles.voiceNote} data-voice-note>
-        <b>Written in {resident.preferredName}&rsquo;s own words.</b> What they need and
-        how they like it done are recorded as they say them: &ldquo;I like to…&rdquo;,
-        not &ldquo;resident prefers…&rdquo;. What staff will do is written to whoever
-        reads it on shift.
+        <b>Written in {resident.preferredName}&rsquo;s own words:</b> &ldquo;I like
+        to…&rdquo;, not &ldquo;resident prefers…&rdquo;. What staff will do is written
+        to whoever reads it on shift.
       </div>
 
       <Card>

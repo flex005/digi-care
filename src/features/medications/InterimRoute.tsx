@@ -228,7 +228,7 @@ export function InterimRoute() {
               />
               <p className={styles.hint}>
                 If it is not filed yet, file it first: the medication and the document
-                go on the record together or not at all.
+                go on the record together.
               </p>
             </div>
           </div>
@@ -282,8 +282,8 @@ export function InterimRoute() {
               autoComplete="off"
             />
             <p className={styles.hint}>
-              Copied from the source document rather than paraphrased: the MAR chart
-              shows this wording to whoever gives the dose.
+              Copied from the source document, not paraphrased: the MAR chart shows this
+              wording to whoever gives the dose.
             </p>
           </label>
         </section>

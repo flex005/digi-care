@@ -208,16 +208,15 @@ function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime
         <p className={styles.customNote} data-custom-domain-claim>
           <span data-numeric>{formatCount(CARE_PLAN_DOMAINS.length)}</span> domains
           above, plus <span data-numeric>{formatCount(domains.length)}</span> written
-          for this resident. These are not part of the ten and are not counted in the
-          figure at the top, or in a whole plan review.
+          for this resident, counted apart from the ten and not part of a whole plan
+          review.
         </p>
       </div>
 
       {domains.length === 0 ? (
         <p className={styles.customEmpty} data-no-custom-domains>
-          Nothing outside the ten has been written for {resident.preferredName}. That is
-          an ordinary state rather than a gap: the ten are what the home is expected to
-          hold.
+          Nothing outside the ten has been written for {resident.preferredName}, which
+          is an ordinary state rather than a gap.
         </p>
       ) : (
         <ul className={styles.domainList}>

@@ -41,10 +41,7 @@ export function PrnSection({
     <section className={styles.prn} aria-label="Available if needed">
       <div className={styles.prnHead}>
         <h3 className={styles.prnTitle}>Available if needed</h3>
-        <p className={styles.prnNote}>
-          Not due, and not part of this round. Nothing here has to be answered before
-          the round can be recorded.
-        </p>
+        <p className={styles.prnNote}>Not due, and not part of this round.</p>
       </div>
 
       <ul className={styles.prnList}>

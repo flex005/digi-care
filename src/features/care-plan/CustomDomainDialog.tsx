@@ -180,10 +180,7 @@ export function CustomDomainDialog({
             data-field="custom-domain-name"
             onChange={(event) => setName(event.target.value)}
           />
-          <span className={styles.nameHint}>
-            This cannot be changed later, for the reason a risk&rsquo;s name cannot:
-            everything written about it was written about this name.
-          </span>
+          <span className={styles.nameHint}>This cannot be changed later.</span>
         </label>
       ) : null}
 

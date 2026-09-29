@@ -401,7 +401,7 @@ export function AdmissionRoute() {
                     <b>Yes: record them</b>
                     <span className={styles.choiceHint}>
                       What they are allergic to, and what happens. Both appear on every
-                      medication screen from now on.
+                      medication screen.
                     </span>
                   </label>
 
@@ -506,9 +506,8 @@ export function AdmissionRoute() {
                       data-not-known-note
                       data-state="unrecorded"
                     >
-                      Choosing this renders <b>allergies not recorded</b> on {name}
-                      &rsquo;s profile header, on every medication screen and on the
-                      round: hatched, from the first minute.
+                      {name} will show <b>allergies not recorded</b> on every medication
+                      screen.
                     </div>
                   ) : null}
                 </div>
@@ -770,10 +769,8 @@ export function AdmissionRoute() {
              * then had to retype on another screen or lose.
              */}
             <p className={styles.sectionNote} data-flags-note>
-              The nine risk assessments used to be refused here, so that nobody was
-              asked to guess on the day they know least. They are asked now and none of
-              them is required: an answer somebody already has goes on the record, and
-              everything else stays never assessed, which is not low risk.
+              None of these is required. Anything left alone stays never assessed, which
+              is not low risk.
             </p>
           </section>
         ) : null}
@@ -813,9 +810,8 @@ export function AdmissionRoute() {
              * date, on the tab where somebody can mean it.
              */}
             <p className={styles.sectionNote} data-no-dates>
-              <b>Nothing here is given a date.</b> The nine risk assessments not
-              answered on the step before start never assessed, and a domain written
-              here gets its review date when somebody signs it.
+              <b>Nothing here is given a date.</b> A domain gets its review date when
+              somebody signs it.
             </p>
           </section>
         ) : null}
@@ -843,7 +839,7 @@ export function AdmissionRoute() {
         <section className={styles.section} data-section="gaps">
           <div className={styles.gapsLead} data-gaps-lead data-state="unrecorded">
             <p className={styles.gapsTitle}>
-              Everything else about {name} starts unrecorded, and that is correct
+              Everything else about {name} starts unrecorded
             </p>
             <p className={styles.gapsBody}>
               This is where each is recorded when somebody knows.
@@ -868,13 +864,9 @@ export function AdmissionRoute() {
               </>
             ) : (
               <>
-                <b>
-                  Admitting {name} creates a record that is almost entirely gaps, and
-                  every screen will say so.
-                </b>{' '}
-                They will appear on the residents list with critical records missing, on
-                the compliance figures as one more resident nobody has assessed, and on
-                the group view as a home whose coverage just fell. All of that is true.
+                <b>Admitting {name} creates a record that is mostly gaps.</b> Every
+                screen will show them: the residents list, the compliance figures and
+                the group view.
               </>
             )}
           </p>

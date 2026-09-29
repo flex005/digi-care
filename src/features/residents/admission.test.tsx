@@ -230,8 +230,10 @@ describe('the form asks six things and one question', () => {
 
     await waitFor(() => {
       const state = container.querySelector('[data-admission-state]')!
-      expect(state.textContent).toContain('almost entirely gaps')
-      expect(state.textContent).toContain('coverage just fell')
+      // The claim, not the wording it was first written in: the screen says
+      // the record is mostly gaps and names where they will show.
+      expect(state.textContent).toContain('mostly gaps')
+      expect(state.textContent).toMatch(/compliance figures/)
     })
   })
 
