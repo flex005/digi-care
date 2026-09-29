@@ -671,7 +671,7 @@ export function AdmissionRoute() {
             </p>
             <div className={styles.two}>
               <label className={styles.field}>
-                <span className={styles.fieldLabel}>Primary diagnosis</span>
+                <span className={styles.fieldLabel}>My primary diagnosis</span>
                 <input
                   type="text"
                   value={primaryDiagnosis}
@@ -680,7 +680,7 @@ export function AdmissionRoute() {
                 />
               </label>
               <label className={styles.field}>
-                <span className={styles.fieldLabel}>Dietary requirements</span>
+                <span className={styles.fieldLabel}>My dietary requirements</span>
                 <input
                   type="text"
                   value={dietaryRequirements}

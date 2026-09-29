@@ -15196,3 +15196,58 @@ that was missed: grep for the new wording, not for the absence of an error.
 
 Both are now trimmed, and both were read back from the file rather than from
 the script that changed them.
+
+## The admission form's identity fields, in the resident's own voice
+
+Fourteen labels across steps 1 to 3 move to the first person — "My name",
+"What I like to be called", "What I'm allergic to", "My primary diagnosis" —
+extending the principle `plan-fields.ts` already holds for the care plan,
+where two of the three fields are the resident speaking and the third is not.
+
+**What stayed, and the test that decided it.** A label converts if it is
+genuinely this person's own identity or experience. It does not if it is
+operational (the admission date, which home, either telephone number) or
+about somebody else (the next of kin's relationship, who said there are no
+known allergies). Two more stayed for a reason worth naming: "How bad it
+gets" is a clinical grading from mild to anaphylaxis, which is a judgement
+somebody makes rather than a thing the resident says, and every label in the
+risk field set — risk level, score, assessed on, next review due — is staff
+clinical work about a person rather than a person's account of themselves.
+The same distinction the care plan draws between its first two fields and
+"What staff will do".
+
+### The uppercase had to go with it, and it was only visible in a picture
+
+`.fieldLabel` on this form was `text-transform: uppercase` at micro size, so
+the first person rendered as MY NAME and WHAT I'M ALLERGIC TO — a system
+shouting rather than a person talking. The declarations are now the care
+plan's field label exactly, rather than a third sentence-case label, because
+a second slightly-different implementation of one treatment is the drift §8
+describes. Uppercase stays on the section headings, which is a better outcome
+than it was before: a heading and a label used to share one treatment and now
+do not.
+
+**None of this was legible in the DOM.** The label text was correct in the
+markup at every point, and what was wrong was a `text-transform` — the class
+of defect §8 names three times over, where the assertion is right and the
+medium is wrong. It was read off a screenshot.
+
+**And the first screenshot was of the previous build.** `vite preview` serves
+`dist/`, the CSS edit had not been built, and the picture that came back
+still said MY NAME. Believed, that reads as a rule that would not apply and
+sends the next hour into specificity and cascade. What settled it was reading
+the compiled rule out of `dist/assets/*.css` and finding the new declarations
+present under a fresh hash — the artefact, not the source. Same shape as the
+entry about a mutation whose build fails silently: the check ran honestly
+against a stale input and had no way to say so.
+
+### Step 4 still shouts, and un-shouting it is not this change
+
+The risk field set keeps its uppercase, and the reason is a constraint
+recorded in `risk-draft.module.css` itself: its caption step is deliberately
+the one `Select` labels with, because a row there holds a select beside plain
+inputs and mismatched label steps started the controls two pixels apart. So
+the treatment cannot be changed in the feature stylesheet alone — it is the
+shared primitive, whose visible label also appears on medication interim,
+goals, activities attendance and incident reporting. That is five modules and
+a §9 decision, not a copy pass, so it is left for Frank rather than taken.
