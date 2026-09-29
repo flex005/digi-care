@@ -138,7 +138,7 @@ export function AdmissionRisks({
       </ul>
 
       <div className={styles.customRisks} data-custom-risks={customs.length}>
-        <div className={styles.riskHead}>
+        <div className={`${styles.riskHead} ${styles.customRisksHead}`}>
           <div className={styles.riskAbout}>
             <p className={styles.riskName}>Risks outside the nine</p>
             {/*
@@ -155,65 +155,129 @@ export function AdmissionRisks({
             variant="secondary"
             size="small"
             data-add-custom-risk
-            onClick={() =>
+            onClick={() => {
               onCustoms([...customs, { ...emptyDraft(admittedOn), name: '' }])
-            }
+              // A row nobody can see is a row nobody fills in.
+              setOpen(`custom-${String(customs.length)}`)
+            }}
           >
             <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
             Add custom risk
           </Button>
         </div>
 
-        {customs.map((custom, index) => (
-          <div
-            key={`custom-${String(index)}`}
-            className={styles.customRisk}
-            data-custom-risk={index}
-          >
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>What the risk is</span>
-              <input
-                type="text"
-                value={custom.name}
-                placeholder="Leaving the home unaccompanied"
-                data-field={`custom-risk-name-${String(index)}`}
-                onChange={(event) =>
-                  onCustoms(
-                    customs.map((entry, position) =>
-                      position === index
-                        ? { ...entry, name: event.target.value }
-                        : entry,
-                    ),
-                  )
-                }
-              />
-            </label>
+        {customs.map((custom, index) => {
+          const key = `custom-${String(index)}`
+          const named = custom.name.trim() !== ''
+          /*
+           * **Open because somebody opened it, never because of what is in it.**
+           * The first version closed a row as soon as it had a name and a
+           * level, which is the middle of filling one in: the description and
+           * the actions are typed after the level, and the form shut in the
+           * reader's face. A new row opens itself, stays open until Done, and
+           * reopens on Edit — the same disclosure as the nine above it.
+           */
+          const isOpen = open === key
+          return (
+            <div key={key} className={styles.customRisk} data-custom-risk={index}>
+              <div className={styles.riskHead}>
+                <div className={styles.riskAbout}>
+                  <p className={styles.riskName}>
+                    {named ? custom.name : 'A risk outside the nine'}
+                  </p>
+                  <p className={styles.riskInstrument}>
+                    {named
+                      ? 'Recorded for this resident, outside the nine'
+                      : 'Name it, and record what is known about it'}
+                  </p>
+                </div>
 
-            <RiskFields
-              idPrefix={`custom-${String(index)}`}
-              draft={custom}
-              scored={false}
-              onChange={(next) =>
-                onCustoms(
-                  customs.map((entry, position) =>
-                    position === index ? { ...next, name: entry.name } : entry,
-                  ),
-                )
-              }
-            />
+                {isAnswered(custom) ? (
+                  <StatusPill
+                    tone={LEVEL_TONE[custom.level as RiskLevel]}
+                    label={LEVEL_LABEL[custom.level as RiskLevel]}
+                  />
+                ) : (
+                  <Unrecorded
+                    variant="chip"
+                    label="Not assessed"
+                    detail="nobody has recorded a level for this risk"
+                  />
+                )}
 
-            <Button
-              variant="ghost"
-              size="small"
-              data-remove-custom-risk={index}
-              onClick={() =>
-                onCustoms(customs.filter((_, position) => position !== index))
-              }
-            >
-              Remove this risk
-            </Button>
-          </div>
-        ))}
+                <Button
+                  variant="secondary"
+                  size="small"
+                  data-open-custom-risk={index}
+                  aria-expanded={isOpen}
+                  onClick={() => setOpen(isOpen ? '' : key)}
+                >
+                  {isOpen ? 'Done' : 'Edit'}
+                  <Icon
+                    name={
+                      isOpen
+                        ? 'arrows-sharp/arrow-up-01-sharp'
+                        : 'arrows-sharp/arrow-down-01-sharp'
+                    }
+                    size={16}
+                    aria-hidden
+                  />
+                </Button>
+              </div>
+
+              {isOpen ? (
+                <>
+                  <div className={styles.customRiskFields}>
+                    <label className={styles.field}>
+                      <span className={styles.fieldLabel}>What the risk is</span>
+                      <input
+                        type="text"
+                        value={custom.name}
+                        placeholder="Leaving the home unaccompanied"
+                        data-field={`custom-risk-name-${String(index)}`}
+                        onChange={(event) =>
+                          onCustoms(
+                            customs.map((entry, position) =>
+                              position === index
+                                ? { ...entry, name: event.target.value }
+                                : entry,
+                            ),
+                          )
+                        }
+                      />
+                    </label>
+
+                    <RiskFields
+                      idPrefix={`custom-${String(index)}`}
+                      draft={custom}
+                      scored={false}
+                      onChange={(next) =>
+                        onCustoms(
+                          customs.map((entry, position) =>
+                            position === index ? { ...next, name: entry.name } : entry,
+                          ),
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className={styles.customRiskFoot}>
+                    <Button
+                      variant="ghost"
+                      size="small"
+                      data-remove-custom-risk={index}
+                      onClick={() =>
+                        onCustoms(customs.filter((_, position) => position !== index))
+                      }
+                    >
+                      Remove this risk
+                    </Button>
+                  </div>
+                </>
+              ) : null}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

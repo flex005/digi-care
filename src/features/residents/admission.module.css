@@ -452,12 +452,31 @@
 }
 
 .customRisks {
-  margin-top: var(--space-16);
+  margin-top: var(--space-24);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
 }
 
-.customRisk {
-  padding: 0 var(--space-16) var(--space-16);
+/*
+ * The heading and its button are a header over a list, so they sit on their
+ * own band: without it the first field of the first entry began immediately
+ * under the divider and the whole section read as one risk called "Risks
+ * outside the nine" rather than as a section holding several.
+ */
+.customRisksHead {
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface-sunken);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.customRisk + .customRisk {
   border-top: 1px solid var(--border-subtle);
+}
+
+.customRiskFields {
+  padding: var(--space-4) var(--space-16) var(--space-16);
+}
+
+.customRiskFoot {
+  padding: 0 var(--space-16) var(--space-16);
 }

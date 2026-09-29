@@ -14955,3 +14955,33 @@ touches the one already on file, and a nameless one is refused.
 Checked in a browser: the dialog opens blank with the name field first, the
 row appears on the tab after recording, and the claim moves to "plus 2
 recorded for this resident".
+
+## Three fixes on the admission form's custom-risk section
+
+Reported from the screen.
+
+**The actions group was a browser default.** `RiskFields` uses a `<fieldset>`
+for the grouping a screen reader needs, and nothing turned off the box a
+browser draws around one — so it rendered bordered, with its legend sitting
+astride the border line, in the middle of a designed form. Reset where it is
+styled, in the shared stylesheet: no border, no padding, no legend inset, and
+`min-inline-size: 0` so a flex fieldset can shrink. **Checked everywhere the
+component renders rather than only where it was reported**: the admission step
+and the re-score dialog on the resident's tab both compute to `border 0px
+none, padding 0px, legend padding 0px`. The assessment screen has no fieldset.
+
+**The section read as one risk rather than a list of them.** `.customRisk` had
+no top padding, so the first field of an entry began immediately under the
+divider and the heading ran straight into it. The heading and its button are
+now a band of their own, entries are separated from each other rather than
+from the header, and the fields inside one are inset from both.
+
+**An entry could not be collapsed.** Each one now has the disclosure the nine
+above it have: a summary row with the name, the level as a pill or the hatched
+"Not assessed", and an Edit or Done toggle with a chevron.
+
+The first version closed a row as soon as it had a name and a level, which is
+the middle of filling one in: the description and the actions are typed after
+the level, so the form shut in the reader's face. Open is now something
+somebody did rather than something the contents imply — a new row opens
+itself, stays open until Done, and reopens on Edit.

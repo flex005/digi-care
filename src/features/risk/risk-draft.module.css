@@ -58,12 +58,32 @@
   line-height: var(--text-caption-line);
 }
 
+/*
+ * A `<fieldset>` for the grouping a screen reader needs, and none of the box
+ * a browser draws around one by default.
+ *
+ * **The element brought its own appearance and nothing turned it off**, so the
+ * actions group rendered as a bordered box with its legend sitting astride the
+ * border line: the 1996 default, in the middle of a designed form. The
+ * grouping is the reason to use the element; the border is not.
+ */
 .actions {
   margin-top: var(--space-12);
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
   align-items: flex-start;
+
+  /* A fieldset will not shrink below its content without this. */
+  min-inline-size: 0;
+  margin-inline: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* The legend reads as the label it is, in line with every other field label. */
+.actions > legend {
+  padding: 0;
 }
 
 .actionRow {
@@ -83,15 +103,4 @@
   color: var(--ink-900);
   font: inherit;
   font-size: var(--text-body-sm-size);
-}
-
-.customRisks {
-  margin-top: var(--space-16);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-}
-
-.customRisk {
-  padding: 0 var(--space-16) var(--space-16);
-  border-top: 1px solid var(--border-subtle);
 }
