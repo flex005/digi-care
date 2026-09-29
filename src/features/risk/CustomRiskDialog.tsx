@@ -4,20 +4,29 @@ import { recordCustomRisk } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
 import { now as appNow } from '@/data/fixtures/clock'
 import { Button, Dialog } from '@/components/primitives'
-import { RiskFields, asEntry, draftFrom, isAnswered } from './RiskFieldSet'
+import styles from './risk.module.css'
+import { RiskFields, asEntry, draftFrom, emptyDraft, isAnswered } from './RiskFieldSet'
 
 /**
- * Re-scoring a risk recorded outside the nine. Phase 30.
+ * Recording a risk outside the nine, and re-scoring one. Phase 30.
  *
- * **The same act as re-scoring a template, so it takes the same fields and the
- * same writer.** What it cannot borrow is the assessment screen: that screen
- * is an instrument, and a risk a home wrote down for one resident has no
- * instrument behind it. The fields are the shared set, which is what keeps the
- * two from becoming two shapes of one record.
+ * **One dialog for both, because they are one act with one writer.** The
+ * difference is the name: a new risk needs one, and an existing one keeps the
+ * one it has — `recordCustomRisk` takes a `riskId` for the second and nothing
+ * for the first. A separate create dialog would be a second copy of the same
+ * form, and the two would drift the first time either was touched.
  *
- * **Prefilled from what is on the record.** A re-score that opened blank and
- * saved what was on screen would delete the description and the actions the
- * last assessor wrote, because the next one did not retype them.
+ * **The name is fixed once recorded.** Re-scoring never renames a risk, not
+ * even to fix a typo: every disclosure, queue row and note that mentions it
+ * was written about that name. A correction is a new risk.
+ *
+ * What neither mode can borrow is the assessment screen: that screen is an
+ * instrument, and a risk a home wrote down for one resident has no instrument
+ * behind it.
+ *
+ * **A re-score is prefilled from what is on the record.** One that opened
+ * blank and saved what was on screen would delete the description and the
+ * actions the last assessor wrote, because the next one did not retype them.
  */
 export function CustomRiskDialog({
   resident,
@@ -26,20 +35,28 @@ export function CustomRiskDialog({
   onRecorded,
 }: {
   resident: Resident
-  risk: CustomRisk
+  /** An existing risk to re-score, or `new` for one nobody has recorded. */
+  risk: CustomRisk | 'new'
   onClose: () => void
   onRecorded: () => void
 }) {
   const { currentUser } = useSession()
-  const [draft, setDraft] = useState(() => draftFrom(risk))
+  const creating = risk === 'new'
+  const today = appNow().toISOString().slice(0, 10)
+  const [draft, setDraft] = useState(() =>
+    risk === 'new' ? emptyDraft(today) : draftFrom(risk),
+  )
+  const [name, setName] = useState(risk === 'new' ? '' : risk.name)
   const [failure, setFailure] = useState('')
+
+  const ready = isAnswered(draft) && name.trim() !== ''
 
   const save = () => {
     const entry = asEntry(draft, false)
     void recordCustomRisk({
       residentId: resident.id,
-      riskId: risk.id,
-      name: risk.name,
+      ...(risk === 'new' ? {} : { riskId: risk.id }),
+      name,
       level: entry.level,
       score: entry.score,
       description: entry.description,
@@ -58,7 +75,11 @@ export function CustomRiskDialog({
     <Dialog
       open
       onOpenChange={(next) => (next ? undefined : onClose())}
-      title={`Re-score ${risk.name.toLowerCase()} for ${resident.preferredName}`}
+      title={
+        creating
+          ? `Add a risk for ${resident.preferredName}, outside the nine`
+          : `Re-score ${name.toLowerCase()} for ${resident.preferredName}`
+      }
       description={`${resident.fullLegalName}. Your name and the time go on the record.`}
       actions={
         <>
@@ -66,17 +87,35 @@ export function CustomRiskDialog({
             Cancel
           </Button>
           <Button
-            disabled={!isAnswered(draft)}
-            data-record-custom-rescore
+            disabled={!ready}
+            data-record-custom-risk={creating ? 'new' : 'rescore'}
             onClick={save}
           >
-            Record this assessment
+            {creating ? 'Record this risk' : 'Record this assessment'}
           </Button>
         </>
       }
     >
+      {creating ? (
+        <label className={styles.nameField}>
+          <span className={styles.nameLabel}>What the risk is</span>
+          <input
+            type="text"
+            value={name}
+            placeholder="Leaving the home unaccompanied"
+            data-field="custom-risk-name"
+            onChange={(event) => setName(event.target.value)}
+          />
+          {/* Said before it is enforced, and before anybody types the rest. */}
+          <span className={styles.nameHint}>
+            This cannot be changed later: a re-score never renames a risk, because
+            everything written about it was written about this name.
+          </span>
+        </label>
+      ) : null}
+
       <RiskFields
-        idPrefix={`rescore-${risk.id}`}
+        idPrefix={creating ? 'new-custom-risk' : `rescore-${risk.id}`}
         draft={draft}
         /*
          * Never scored: a risk outside the nine has no instrument, so there is

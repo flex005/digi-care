@@ -206,7 +206,7 @@ function Findings({ status }: { status: RiskStatus | CustomRisk }) {
  * counted apart, and the heading says which is which.
  */
 function CustomRisks({ resident }: { resident: Resident }) {
-  const [rescoring, setRescoring] = useState<CustomRisk | 'none'>('none')
+  const [recording, setRecording] = useState<CustomRisk | 'new' | 'none'>('none')
   const [version, setVersion] = useState(0)
   const risks = withResidentEdits(resident).customRisks
   void version
@@ -214,7 +214,24 @@ function CustomRisks({ resident }: { resident: Resident }) {
   return (
     <Card>
       <div className={styles.customHead}>
-        <h3 className={styles.customTitle}>Recorded for {resident.preferredName}</h3>
+        <div className={styles.customHeadRow}>
+          <h3 className={styles.customTitle}>Recorded for {resident.preferredName}</h3>
+          {/*
+           * **Here rather than only at admission.** A risk a home identifies in
+           * month three is the same record as one it identified on the day, and
+           * a form that only takes the second sends the first somewhere else:
+           * a care note, a handover, somebody's memory.
+           */}
+          <Button
+            variant="secondary"
+            size="small"
+            data-add-custom-risk
+            onClick={() => setRecording('new')}
+          >
+            <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
+            Add custom risk
+          </Button>
+        </div>
         <p className={styles.customNote} data-custom-claim>
           <span data-numeric>{formatCount(RISK_ASSESSMENT_TEMPLATES.length)}</span>{' '}
           templates above, plus <span data-numeric>{formatCount(risks.length)}</span>{' '}
@@ -251,7 +268,7 @@ function CustomRisks({ resident }: { resident: Resident }) {
                   variant="secondary"
                   size="small"
                   data-rescore-custom={risk.id}
-                  onClick={() => setRescoring(risk)}
+                  onClick={() => setRecording(risk)}
                 >
                   Re-score
                 </Button>
@@ -262,13 +279,13 @@ function CustomRisks({ resident }: { resident: Resident }) {
         </ul>
       )}
 
-      {rescoring === 'none' ? null : (
+      {recording === 'none' ? null : (
         <CustomRiskDialog
           resident={resident}
-          risk={rescoring}
-          onClose={() => setRescoring('none')}
+          risk={recording}
+          onClose={() => setRecording('none')}
           onRecorded={() => {
-            setRescoring('none')
+            setRecording('none')
             setVersion((count) => count + 1)
           }}
         />

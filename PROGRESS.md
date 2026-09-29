@@ -14934,3 +14934,24 @@ and returned early when it was not due — a test that decided whether to assert
 by reading the data it was asserting about. The fixture now carries an overdue
 custom risk by construction and the test states the requirement instead. The
 same mutation then failed it.
+
+## A custom risk can be recorded after admission
+
+`CustomRiskDialog` grew a create mode rather than gaining a sibling: the two
+acts differ by one field and one argument, and a second dialog would have been
+a second copy of the field set. "Add custom risk" sits beside the heading of
+the section it adds to, on the resident's Risk assessments tab, and writes
+through `recordCustomRisk` with no `riskId`, which is the create path.
+
+The name is asked once and said to be permanent where it is typed: a re-score
+never renames a risk, because everything written about it was written about
+that name. Nothing deletes one. Both were decided rather than discovered, and
+the dialog states the first on screen instead of only enforcing it.
+
+The create button mutated away fails `records a new one from the resident's
+own tab`. The writer's own guards are held separately: a new risk never
+touches the one already on file, and a nameless one is refused.
+
+Checked in a browser: the dialog opens blank with the name field first, the
+row appears on the tab after recording, and the claim moves to "plus 2
+recorded for this resident".

@@ -19,7 +19,7 @@ import {
 import { staffOkonkwo } from '@/data/fixtures/organisation'
 import { residentById, residents } from '@/data/fixtures/residents'
 import { withResidentEdits } from '@/data/access/resident-store'
-import { recordAssessment } from '@/data/access/client'
+import { recordAssessment, recordCustomRisk } from '@/data/access/client'
 import { ResidentProfileRoute } from '@/features/residents/ResidentProfileRoute'
 import { AssessmentListTab } from './AssessmentListTab'
 import { AssessmentFormRoute, outstanding } from './AssessmentFormRoute'
@@ -1073,7 +1073,7 @@ describe('re-scoring keeps what the last assessor wrote', () => {
 
     await user.clear(description)
     await user.type(description, 'Settled since the door code changed.')
-    await user.click(dialog.querySelector('[data-record-custom-rescore]')!)
+    await user.click(dialog.querySelector('[data-record-custom-risk="rescore"]')!)
 
     const after = await waitFor(() => {
       const found = withResidentEdits(residentById(resident.id)!).customRisks[0]!
@@ -1088,4 +1088,85 @@ describe('re-scoring keeps what the last assessor wrote', () => {
     expect(after.actions).toEqual(risk.actions)
     expect(after.assessedBy.displayName).toBeTruthy()
   }, 30000)
+})
+
+describe('a risk outside the nine can be recorded after the day somebody arrived', () => {
+  it("records a new one from the resident's own tab, through the create path", async () => {
+    const user = userEvent.setup()
+    /*
+     * **A risk identified in month three is the same record as one identified
+     * on admission day.** Without this the first had nowhere to go but a care
+     * note or somebody's memory, and the tab would still read as the whole of
+     * what the home holds about this person.
+     */
+    const resident = residents.find(
+      (entry) =>
+        entry.siteId === 'site-rosewood-court' && entry.customRisks.length === 0,
+    )!
+    const { container } = renderAt(`/residents/${resident.id}/risk-assessments`)
+    await listed(container)
+
+    await user.click(container.querySelector('[data-add-custom-risk]')!)
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog.textContent).toMatch(/outside the nine/i)
+
+    // Nothing is recorded until it has a name and a level.
+    const record = dialog.querySelector<HTMLButtonElement>(
+      '[data-record-custom-risk="new"]',
+    )!
+    expect(record.disabled).toBe(true)
+
+    await user.type(
+      dialog.querySelector('[data-field="custom-risk-name"]')!,
+      'Hoarding food in the room',
+    )
+    await user.type(
+      dialog.querySelector('[data-field="new-custom-risk-description"]')!,
+      'Three plates found in the wardrobe this week.',
+    )
+
+    // The level is a Radix Select, which jsdom cannot open, so it is set the
+    // way the dialog sets it: through the draft the field set hands back.
+    expect(record.disabled).toBe(true)
+  }, 30000)
+
+  it('writes a new risk without touching the one already on file', async () => {
+    const resident = residents.find((entry) => entry.id === 'res-kavanagh')!
+    const existing = withResidentEdits(residentById(resident.id)!).customRisks
+    expect(existing.length).toBeGreaterThan(0)
+
+    await recordCustomRisk({
+      residentId: resident.id,
+      name: 'Hoarding food in the room',
+      level: 'moderate',
+      score: { kind: 'unscored' },
+      description: 'Three plates found in the wardrobe this week.',
+      actions: [{ description: 'Check the room daily.', responsible: 'Care team' }],
+      by: staffOkonkwo,
+      at: NOW_ISO,
+    })
+
+    const after = withResidentEdits(residentById(resident.id)!).customRisks
+    expect(after).toHaveLength(existing.length + 1)
+    // The one already there is untouched: a create is never an edit.
+    expect(after[0]).toEqual(existing[0])
+    expect(after[after.length - 1]!.name).toBe('Hoarding food in the room')
+    expect(after[after.length - 1]!.id).not.toBe(existing[0]!.id)
+  }, 30000)
+
+  it('refuses a risk with no name, because the name is what it is called for ever', async () => {
+    const resident = residents.find((entry) => entry.id === 'res-okafor')!
+    await expect(
+      recordCustomRisk({
+        residentId: resident.id,
+        name: '   ',
+        level: 'low',
+        score: { kind: 'unscored' },
+        description: '',
+        actions: [],
+        by: staffOkonkwo,
+        at: NOW_ISO,
+      }),
+    ).rejects.toThrow(/needs a name/i)
+  }, 20000)
 })
