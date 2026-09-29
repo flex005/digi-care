@@ -14820,3 +14820,63 @@ The organisation library counted and stopped. "Health and clinical: 109 on file"
 **Built alongside the same screen in the Care Worker build**, which had the same gap. The two products describe one home and the library is one idea about it; a category that drills in on one side and dead-ends on the other would be two.
 
 **A probe that kept signing itself out**, worth writing down for the next one: driving this build in a browser means signing in, and `Page.navigate` to a path afterwards bounces to `/sign-in` every time, because the session is in memory and a page load is a sign-out. Navigate in-app by clicking the rail, which is what a reader does anyway.
+
+## Risk assessments at admission, and a record big enough to hold one
+
+Phase 30. The step was a DNAR upload and nothing else; it takes all nine
+assessments now, and a risk outside the nine, above the upload.
+
+**The record could not hold three of the four fields.** An assessment was a
+level, a score, an assessor, a date and a review state. The assessment screen
+has collected findings and interventions since Phase 5 and threw both away at
+save, so a plan naming a responsible person survived as long as the page it was
+typed on. `RiskFinding` now carries `description` and `actions` — each action
+its own responsible person, because the screen has always refused one without
+— and `RiskStatus` is `{ kind: 'not_assessed' } | ({ kind: 'assessed' } &
+RiskFinding)`. The next review stays in `reviewState`, which already held it;
+a second date field would have been two owners for one fact.
+
+**`RiskScore` has a third member, `not_scored_yet`.** Five of the nine are
+scored instruments, and a resident admitted this morning can have a level
+before anybody has worked the Waterlow through. Recording that as `unscored`
+would have made that member mean either "this instrument produces no number" or
+"it produces one and it is missing" — the blank that means two things. One
+scored assessment in eleven is left that way in the fixtures, off a value
+already drawn, so the treatment is reachable without lengthening the stream.
+
+**Custom risks are their own list.** `Resident.customRisks` holds them with the
+same fields plus a name, they render in the same list on the Risk assessments
+tab, and they are counted in their own sentence — "9 templates above, plus 1
+recorded for this resident" — rather than folded into the nine. Nineteen files
+count against the template list; a tenth risk on one resident would make "of 9"
+mean something different per person. Doris Kavanagh carries a pinned one, so
+the second list, its claim and its empty state are branches a fixture reaches.
+
+**One save path.** `recordAssessment` takes the description and actions and
+writes them; the assessment screen passes what it collects, including a new
+"What this assessment found" field, and its intervention due dates are folded
+into the action text rather than dropped. Admission writes through
+`admitResident`, which builds the same `RiskFinding`, so a risk entered on the
+day is on the Risk assessments tab the moment the resident exists. The
+assessor is whoever is admitting: they are the one recording it.
+
+**The step.** All nine listed with their instrument and their state, each
+opening to take a level, a score where the instrument has one, assessed-on,
+next-review-due, a description and any number of actions. Nothing is required
+and nothing is defaulted: a template nobody touches stays never assessed, and
+the step's claim says "0 of 9 answered" rather than implying a blank is fine.
+The state sits outside the disclosure, so a closed row still says whether it
+has an answer. "+ Add custom risk" takes the same fields plus a name. The DNAR
+upload and its note are untouched, below.
+
+The sentence that said the flags are not asked here is rewritten to say the
+decision was reversed and what survives of it, and the departures doc carries
+the same in full.
+
+Three mutations, each confirmed landed and restored: dropping the actions at
+save failed `writes an owned action through the one function both screens
+use`; admitting with `blankRisks()` failed `writes an answered template into
+the resident the profile tab reads`; removing the custom list from the tab
+failed both custom-risk tests.
+
+The whole suite is 79 files and 1,420 tests.

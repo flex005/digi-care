@@ -21,6 +21,9 @@ export type IsoDateTime = `${IsoDate}T${number}:${number}:${number}${string}`
 export type OrganisationId = `org-${string}`
 export type SiteId = `site-${string}`
 export type ResidentId = `res-${string}`
+
+/** A risk a home recorded outside the nine templates, for one resident. */
+export type CustomRiskId = `risk-${string}`
 export type StaffId = `staff-${string}`
 export type DocumentId = `doc-${string}`
 export type IncidentId = `inc-${string}`

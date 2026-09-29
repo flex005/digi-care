@@ -14,6 +14,9 @@
 import type {
   Allergy,
   AllergyStatus,
+  CustomRiskId,
+  RiskAction,
+  RiskLevel,
   CarePlanDomainId,
   CarePlanDomainRecord,
   DocumentId,
@@ -431,6 +434,182 @@ function makeCarePlanReview(
   }
 }
 
+/**
+ * What an assessment said, and what the home is doing about it.
+ *
+ * **Derived from the draw, never from a new one.** Another call to the RNG
+ * would lengthen its stream and move every fixture after it — the discipline
+ * the score draw above is already written to keep. So the words follow the
+ * template and the level, which are both already decided.
+ *
+ * Messy on purpose in one direction only: roughly one assessment in six has no
+ * description and no actions, because a level recorded in a hurry with nothing
+ * written under it is the ordinary state of a record somebody meant to come
+ * back to.
+ */
+const RISK_NARRATIVE: Record<RiskTemplateId, Record<RiskLevel, string>> = {
+  falls: {
+    low: 'Steady on their feet indoors and uses the handrail on the stairs without prompting.',
+    moderate:
+      'Two near-falls in the last month, both in the evening on the way to the bathroom.',
+    high: 'Fell twice since admission. Unsteady standing from low chairs and reaches for furniture.',
+  },
+  pressure_ulcer: {
+    low: 'Skin intact, repositions themselves in bed and spends most of the day out of the chair.',
+    moderate:
+      'Redness over the sacrum that blanches. Sits for long stretches after lunch.',
+    high: 'Broken skin on the left heel, dressed daily. Immobile without two-person support.',
+  },
+  nutrition: {
+    low: 'Eating and drinking well, weight steady over the last three months.',
+    moderate: 'Leaving about half of most meals and has lost weight since the spring.',
+    high: 'Refusing meals most days, with a marked drop in weight and poor fluid intake.',
+  },
+  moving_handling: {
+    low: 'Walks independently with a stick and transfers without help.',
+    moderate:
+      'Needs one carer and a frame for transfers, and tires quickly over distance.',
+    high: 'Hoist transfers with two carers. Cannot weight-bear.',
+  },
+  skin_integrity: {
+    low: 'Skin in good condition, no areas of concern at the last check.',
+    moderate: 'Dry, fragile skin on both forearms that marks easily.',
+    high: 'Skin tear to the right forearm and bruising that is slow to settle.',
+  },
+  choking: {
+    low: 'Eats a normal diet without difficulty and takes their time.',
+    moderate: 'Coughs on thin fluids. Speech and language therapy have seen them.',
+    high: 'Coughs and holds food in their mouth. On a modified diet and thickened fluids.',
+  },
+  behaviour: {
+    low: 'Settled and sociable, no behaviour of concern recorded.',
+    moderate: 'Becomes agitated at handover time and paces the corridor.',
+    high: 'Verbal and physical distress during personal care, most often in the morning.',
+  },
+  environmental: {
+    low: 'Room is clear and they manage the door and the window without help.',
+    moderate: 'Trailing cables and a rug in the room that they will not part with.',
+    high: 'Leaves the window open and the room door wedged, on a first floor corridor.',
+  },
+  coshh: {
+    low: 'No interest in the cleaning trolley and does not enter the sluice.',
+    moderate: 'Has followed the housekeeper into the sluice twice this month.',
+    high: 'Has picked up and opened cleaning products left on the trolley.',
+  },
+}
+
+const RISK_ACTIONS: Record<RiskTemplateId, RiskAction[]> = {
+  falls: [
+    {
+      description: 'Sensor mat at the bedside overnight, checked at each round.',
+      responsible: 'Night senior',
+    },
+    {
+      description: 'Footwear checked weekly and referred to the falls clinic.',
+      responsible: 'M. Halloran',
+    },
+  ],
+  pressure_ulcer: [
+    {
+      description: 'Repositioned two-hourly and the chart signed at each turn.',
+      responsible: 'Care team',
+    },
+    {
+      description:
+        'Pressure-relieving cushion in the chair and the mattress setting checked daily.',
+      responsible: 'D. Aluko',
+    },
+  ],
+  nutrition: [
+    {
+      description: 'Food and fluid chart kept for a fortnight, totalled daily.',
+      responsible: 'Care team',
+    },
+    {
+      description: 'Weighed weekly and the dietitian asked to review.',
+      responsible: 'M. Halloran',
+    },
+  ],
+  moving_handling: [
+    {
+      description: 'Two carers and the standing hoist for all transfers.',
+      responsible: 'Care team',
+    },
+    {
+      description: 'Sling size checked at each use and recorded on the chart.',
+      responsible: 'Senior carer',
+    },
+  ],
+  skin_integrity: [
+    {
+      description: 'Skin checked at every personal care and marks body-mapped.',
+      responsible: 'Care team',
+    },
+    {
+      description:
+        'Emollient twice daily and the district nurse informed of any break.',
+      responsible: 'D. Aluko',
+    },
+  ],
+  choking: [
+    {
+      description: 'Sit upright for meals and stay with them until they have finished.',
+      responsible: 'Care team',
+    },
+    {
+      description:
+        'Diet and fluid consistency as SALT set it, reviewed after any cough.',
+      responsible: 'M. Halloran',
+    },
+  ],
+  behaviour: [
+    {
+      description: 'ABC chart kept for two weeks and read at the next handover.',
+      responsible: 'Senior carer',
+    },
+    {
+      description: 'Personal care offered later in the morning and left if refused.',
+      responsible: 'Care team',
+    },
+  ],
+  environmental: [
+    {
+      description: 'Cables secured and the rug removed with their family told why.',
+      responsible: 'Maintenance',
+    },
+    {
+      description: 'Window restrictor fitted and checked monthly.',
+      responsible: 'Maintenance',
+    },
+  ],
+  coshh: [
+    {
+      description: 'Trolley never left unattended on this corridor.',
+      responsible: 'Housekeeping',
+    },
+    {
+      description: 'Sluice door kept locked and the code changed.',
+      responsible: 'D. Aluko',
+    },
+  ],
+}
+
+function riskNarrative(
+  templateId: RiskTemplateId,
+  level: RiskLevel,
+  day: number,
+): { description: string; actions: RiskAction[] } {
+  // One in six left bare, off a value already drawn. A level with nothing
+  // under it is a real record, and the tab has to render it as one.
+  if (day % 6 === 0) return { description: '', actions: [] }
+  const actions = RISK_ACTIONS[templateId]
+  return {
+    description: RISK_NARRATIVE[templateId][level],
+    // High risk gets both; anything milder gets the first.
+    actions: level === 'high' ? actions : actions.slice(0, 1),
+  }
+}
+
 function makeRiskStatus(
   rng: Rng,
   assessedChance: number,
@@ -457,14 +636,26 @@ function makeRiskStatus(
         ? rng.int(25, 49)
         : rng.int(50, 90)
 
+  const day = Math.round((Date.now() - assessedAt.getTime()) / 86_400_000)
+
   return {
     kind: 'assessed',
     level,
-    // An unscored instrument still reaches a level — somebody looked and
-    // formed a judgement. What it does not produce is a number.
-    score: SCORED_TEMPLATES.has(templateId)
-      ? { kind: 'scored', value }
-      : { kind: 'unscored' },
+    /*
+     * An unscored instrument still reaches a level — somebody looked and
+     * formed a judgement. What it does not produce is a number.
+     *
+     * **And a scored one can reach a level before anybody works the number
+     * out**, which is its own state rather than a missing value: one scored
+     * assessment in eleven is left that way, off the value already drawn, so
+     * the treatment for it is reachable without a new draw.
+     */
+    score: !SCORED_TEMPLATES.has(templateId)
+      ? { kind: 'unscored' }
+      : value % 11 === 0
+        ? { kind: 'not_scored_yet' }
+        : { kind: 'scored', value },
+    ...riskNarrative(templateId, level, day),
     assessedAt: toIsoDateTime(assessedAt),
     assessedBy: rng.pick(managers),
     reviewState: makeReviewState(rng, true),
@@ -1390,6 +1581,9 @@ function makeResident(person: Person, siteId: SiteId, index: number): Resident {
       : UNRECORDED,
 
     risks: makeRisks(rng, assessedChance),
+    // Empty for almost everybody: the nine are what a home is expected to
+    // hold, and a custom risk is what one resident needed on top of them.
+    customRisks: [],
     resuscitation,
     eolc: makeEolc(rng),
     isolation: makeIsolation(rng),
@@ -1535,6 +1729,44 @@ function patch(id: string, change: (resident: Resident) => Resident): void {
 /** Gap 1 — no falls risk assessment ever completed. The header must not read
  *  as safe. Beryl also has pressure ulcer risk unassessed, so the profile
  *  shows more than one hole. */
+/*
+ * A risk outside the nine, recorded for one resident.
+ *
+ * **Pinned, because nothing generated produces one.** The nine templates are
+ * what every home is expected to hold; this is the other kind — a risk this
+ * home identified for this person, on its own list and counted in its own
+ * sentence rather than folded into "of 9". Without a fixture the tab's second
+ * list, its claim and its empty state are branches nobody can reach (§8).
+ */
+patch('kavanagh', (resident) => ({
+  ...resident,
+  customRisks: [
+    {
+      id: 'risk-kavanagh-stairs' as CustomRiskId,
+      name: 'Leaving the home unaccompanied',
+      level: 'high',
+      // Not an instrument, so there is no number to work out and none missing.
+      score: { kind: 'unscored' },
+      description:
+        'Has walked to the front door and waited for somebody to open it, twice in the last fortnight. Says she is going to meet her sister, who died in 2019.',
+      actions: [
+        {
+          description:
+            'Door code changed and staff prompted to walk with her in the garden instead.',
+          responsible: 'M. Halloran',
+        },
+        {
+          description: 'Family told, and a photograph kept at reception.',
+          responsible: 'D. Aluko',
+        },
+      ],
+      assessedAt: toIsoDateTime(daysAgo(12)),
+      assessedBy: staffHalloran,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(18)) },
+    },
+  ],
+}))
+
 patch('hutchinson', (resident) => ({
   ...resident,
   risks: {
@@ -1929,6 +2161,8 @@ patch('broadbent', (resident) => ({
       kind: 'assessed',
       level: 'low',
       score: { kind: 'scored', value: 10 },
+      description: RISK_NARRATIVE.falls.low,
+      actions: RISK_ACTIONS.falls.slice(0, 1),
       assessedAt: toIsoDateTime(daysAgo(40)),
       assessedBy: staffOkonkwo,
       reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(140)) },
@@ -1938,6 +2172,8 @@ patch('broadbent', (resident) => ({
       level: 'low',
       // Choking is an unscored instrument: findings recorded, level reached.
       score: { kind: 'unscored' },
+      description: RISK_NARRATIVE.choking.low,
+      actions: RISK_ACTIONS.choking.slice(0, 1),
       assessedAt: toIsoDateTime(daysAgo(40)),
       assessedBy: staffOkonkwo,
       reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(140)) },

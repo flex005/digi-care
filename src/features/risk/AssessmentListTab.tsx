@@ -1,5 +1,12 @@
 import { Link, useOutletContext } from 'react-router-dom'
-import type { IsoDate, IsoDateTime, RiskStatus } from '@/data/types'
+import type {
+  CustomRisk,
+  IsoDate,
+  IsoDateTime,
+  Resident,
+  RiskFinding,
+  RiskStatus,
+} from '@/data/types'
 import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
 import {
   type ConfiguredState,
@@ -133,11 +140,111 @@ export function AssessmentListTab() {
                   />
                 </Link>
               </div>
+              <Findings status={status} />
             </li>
           ))}
         </ul>
       </Card>
+
+      <CustomRisks resident={resident} />
     </div>
+  )
+}
+
+/**
+ * What the assessment found, and what the home is doing about it.
+ *
+ * **Under the row rather than behind the link**, because a level with nothing
+ * beneath it is the state this build spent a phase removing: the number said
+ * high and the reason lived on the page it was typed on. Empty is rendered as
+ * empty rather than skipped — an assessment with no description is a real
+ * record, and a reader has to be able to tell it from one they have not
+ * scrolled to.
+ */
+function Findings({ status }: { status: RiskStatus | CustomRisk }) {
+  if ('kind' in status && status.kind === 'not_assessed') return null
+  const finding = status as RiskFinding
+
+  return (
+    <div className={styles.rowFindings} data-findings>
+      <p className={styles.findingsBody} data-finding-description>
+        {finding.description === '' ? (
+          <span className={styles.findingsNone}>No description recorded.</span>
+        ) : (
+          finding.description
+        )}
+      </p>
+      {finding.actions.length === 0 ? (
+        <p className={styles.findingsNone} data-no-actions>
+          No actions recorded.
+        </p>
+      ) : (
+        <ul className={styles.actionList} data-actions={finding.actions.length}>
+          {finding.actions.map((action) => (
+            <li key={`${action.description}-${action.responsible}`}>
+              <span className={styles.actionWhat}>{action.description}</span>
+              {/* Never the action alone: a plan nobody owns is not a plan. */}
+              <span className={styles.actionWho}>{action.responsible}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Risks this home recorded for this resident, outside the nine.
+ *
+ * **A second list with its own sentence, never a tenth row.** "3 of 9 assessed"
+ * is a claim about what every home is expected to hold, and nineteen screens
+ * count against it; folding a custom risk in would make that denominator mean
+ * something different for every resident. So the two are rendered together,
+ * counted apart, and the heading says which is which.
+ */
+function CustomRisks({ resident }: { resident: Resident }) {
+  const risks = resident.customRisks
+
+  return (
+    <Card>
+      <div className={styles.customHead}>
+        <h3 className={styles.customTitle}>Recorded for {resident.preferredName}</h3>
+        <p className={styles.customNote} data-custom-claim>
+          <span data-numeric>{formatCount(RISK_ASSESSMENT_TEMPLATES.length)}</span>{' '}
+          templates above, plus <span data-numeric>{formatCount(risks.length)}</span>{' '}
+          recorded for this resident. These are not part of the nine and are not counted
+          in the figure at the top.
+        </p>
+      </div>
+
+      {risks.length === 0 ? (
+        <p className={styles.customEmpty} data-no-custom-risks>
+          Nothing outside the nine has been recorded for {resident.preferredName}. That
+          is an ordinary state rather than a gap: the nine are what the home is expected
+          to hold.
+        </p>
+      ) : (
+        <ul className={styles.assessmentList}>
+          {risks.map((risk) => (
+            <li key={risk.id}>
+              <div className={styles.assessmentRow} data-custom-risk={risk.id}>
+                <div className={styles.rowAbout}>
+                  <p className={styles.rowName}>{risk.name}</p>
+                  <p className={styles.rowInstrument}>
+                    Recorded for this resident, outside the nine
+                  </p>
+                </div>
+                {/* A custom risk is always in use: a home that recorded one
+                    for a resident has not retired it. */}
+                <StateChip status={{ kind: 'assessed', ...risk }} state="in_use" />
+                <LevelPill status={{ kind: 'assessed', ...risk }} state="in_use" />
+              </div>
+              <Findings status={risk} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   )
 }
 

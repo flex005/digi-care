@@ -497,3 +497,154 @@ async function goToStep(
     ).toBe('yes'),
   )
 }
+
+describe('risk assessments can be entered on the day, and are the same record', () => {
+  it('writes an answered template into the resident the profile tab reads', () => {
+    /*
+     * **The whole point of the step.** A risk entered at admission has to be
+     * the record the assessment screen writes, not a second one beside it —
+     * so this reads it back through the resident, which is what the Risk
+     * assessments tab, the queue, the badge strip and every "of 9" figure
+     * read.
+     */
+    const resident = admit({
+      risks: {
+        falls: {
+          level: 'high',
+          score: { kind: 'scored', value: 55 },
+          description: 'Two falls in the week before she came to us.',
+          actions: [
+            { description: 'Sensor mat overnight.', responsible: 'Night senior' },
+          ],
+          assessedOn: '2026-08-25' as IsoDate,
+          reviewDueOn: '2026-11-25' as IsoDate,
+        },
+      },
+    })
+
+    const falls = resident.risks.falls
+    expect(falls.kind).toBe('assessed')
+    if (falls.kind !== 'assessed') throw new Error('falls was not recorded')
+    expect(falls.level).toBe('high')
+    expect(falls.score).toEqual({ kind: 'scored', value: 55 })
+    expect(falls.description).toContain('Two falls')
+    expect(falls.actions).toEqual([
+      { description: 'Sensor mat overnight.', responsible: 'Night senior' },
+    ])
+    // The admitting manager is the assessor: they are the one recording it.
+    expect(falls.assessedBy).toEqual(staffOkonkwo)
+    expect(falls.reviewState).toEqual({ kind: 'scheduled', dueOn: '2026-11-25' })
+  })
+
+  it('leaves every template nobody answered as never assessed', () => {
+    const resident = admit({
+      risks: {
+        choking: {
+          level: 'moderate',
+          score: { kind: 'unscored' },
+          description: '',
+          actions: [],
+          assessedOn: '2026-08-25' as IsoDate,
+          reviewDueOn: '2026-11-25' as IsoDate,
+        },
+      },
+    })
+
+    const untouched = RISK_ASSESSMENT_TEMPLATES.filter(
+      (template) => template.id !== 'choking',
+    )
+    for (const template of untouched) {
+      expect(resident.risks[template.id].kind, template.id).toBe('not_assessed')
+    }
+    // A level with nothing written under it is a record, not a half-record.
+    const choking = resident.risks.choking
+    if (choking.kind !== 'assessed') throw new Error('choking was not recorded')
+    expect(choking.description).toBe('')
+    expect(choking.actions).toEqual([])
+  })
+
+  it('keeps a scored instrument with no number as its own state', () => {
+    /*
+     * Somebody looked at her on the day and formed a judgement; nobody has
+     * worked the Waterlow through. That is neither a score nor an instrument
+     * that produces none, and the third member is what stops the two being
+     * told apart by guesswork.
+     */
+    const resident = admit({
+      risks: {
+        pressure_ulcer: {
+          level: 'moderate',
+          score: { kind: 'not_scored_yet' },
+          description: 'Redness over the sacrum on arrival.',
+          actions: [],
+          assessedOn: '2026-08-25' as IsoDate,
+          reviewDueOn: '2026-11-25' as IsoDate,
+        },
+      },
+    })
+
+    const pressure = resident.risks.pressure_ulcer
+    if (pressure.kind !== 'assessed') throw new Error('pressure ulcer not recorded')
+    expect(pressure.score).toEqual({ kind: 'not_scored_yet' })
+    expect(pressure.level).toBe('moderate')
+  })
+
+  it('keeps a custom risk on its own list, out of the nine', () => {
+    const resident = admit({
+      customRisks: [
+        {
+          name: 'Leaving the home unaccompanied',
+          level: 'high',
+          score: { kind: 'unscored' },
+          description: 'Walked to the front door twice on the first evening.',
+          actions: [{ description: 'Door code changed.', responsible: 'M. Halloran' }],
+          assessedOn: '2026-08-25' as IsoDate,
+          reviewDueOn: '2026-09-25' as IsoDate,
+        },
+      ],
+    })
+
+    expect(resident.customRisks).toHaveLength(1)
+    expect(resident.customRisks[0]!.name).toBe('Leaving the home unaccompanied')
+    expect(resident.customRisks[0]!.level).toBe('high')
+    /*
+     * And the nine are untouched, which is what keeps "of 9" meaning the same
+     * thing for every resident in the building.
+     */
+    expect(RISK_ASSESSMENT_TEMPLATES.length).toBe(9)
+    for (const template of RISK_ASSESSMENT_TEMPLATES) {
+      expect(resident.risks[template.id].kind, template.id).toBe('not_assessed')
+    }
+  })
+
+  it('offers all nine on the step, with the DNAR upload left alone below', async () => {
+    const user = userEvent.setup()
+    const { container } = renderForm()
+    await settled(container)
+
+    const page = container.querySelector('[data-admission]') as HTMLElement
+    await answerStepOne(user, page, 'Ada Nwosu')
+    await goToStep(user, page, 'flags')
+
+    const step = await waitFor(() => {
+      const found = container.querySelector('[data-admission-risks]')
+      expect(found).toBeTruthy()
+      return found!
+    })
+    expect(step.querySelectorAll('[data-risk]')).toHaveLength(
+      RISK_ASSESSMENT_TEMPLATES.length,
+    )
+    // Nothing is answered until somebody answers it, and the step says so.
+    expect(step.querySelector('[data-risk-claim]')!.textContent).toMatch(/0.*of.*9/)
+
+    /*
+     * The DNAR upload is a different kind of record and stays exactly where it
+     * was, under the risks rather than folded into them.
+     */
+    const dnar = container.querySelector('[data-dnar-note]')!
+    expect(dnar.textContent).toMatch(/does not record the decision/i)
+    expect(
+      step.compareDocumentPosition(dnar) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  }, 30000)
+})

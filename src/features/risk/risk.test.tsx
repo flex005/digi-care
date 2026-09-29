@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
-import { TooltipProvider } from '@/components/primitives'
+import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
 import type { IsoDateTime, PostIncidentReviewFlag, ResidentId } from '@/data/types'
 import { RISK_ASSESSMENT_TEMPLATES, subjectResidentId } from '@/data/types'
 import { incidents } from '@/data/fixtures/incidents'
@@ -17,7 +17,9 @@ import {
   undoClearing,
 } from '@/data/access/review-flag-store'
 import { staffOkonkwo } from '@/data/fixtures/organisation'
-import { residents } from '@/data/fixtures/residents'
+import { residentById, residents } from '@/data/fixtures/residents'
+import { withResidentEdits } from '@/data/access/resident-store'
+import { recordAssessment } from '@/data/access/client'
 import { ResidentProfileRoute } from '@/features/residents/ResidentProfileRoute'
 import { AssessmentListTab } from './AssessmentListTab'
 import { AssessmentFormRoute, outstanding } from './AssessmentFormRoute'
@@ -760,4 +762,182 @@ describe('the fifth queue', () => {
     await queued(container)
     expect((await axe(container)).violations).toEqual([])
   }, 60000)
+})
+
+describe('the record keeps what the assessment found, and what is being done', () => {
+  const WITH_CUSTOM = 'res-kavanagh'
+
+  it('renders the description and every action under the row it belongs to', async () => {
+    /*
+     * **Until Phase 30 this was thrown away at save.** The form collected
+     * findings and interventions, the record held a level and a number, and a
+     * plan naming a responsible person survived as long as the page it was
+     * typed on. The row has to carry both now, or the level arrives on every
+     * screen with nothing underneath it.
+     */
+    const assessed = residents.find((resident) =>
+      RISK_ASSESSMENT_TEMPLATES.some((template) => {
+        const status = resident.risks[template.id]
+        return status.kind === 'assessed' && status.actions.length > 0
+      }),
+    )
+    expect(assessed, 'no assessment in the fixtures carries an action').toBeTruthy()
+
+    const template = RISK_ASSESSMENT_TEMPLATES.find((entry) => {
+      const status = assessed!.risks[entry.id]
+      return status.kind === 'assessed' && status.actions.length > 0
+    })!
+    const status = assessed!.risks[template.id]
+    if (status.kind !== 'assessed') throw new Error('expected an assessment')
+
+    const { container } = renderAt(`/residents/${assessed!.id}/risk-assessments`)
+    await listed(container)
+
+    const row = container.querySelector(
+      `[data-template="${template.id}"]`,
+    )!.parentElement!
+    const findings = row.querySelector('[data-findings]')!
+    expect(findings.textContent).toContain(status.description)
+    for (const action of status.actions) {
+      expect(findings.textContent).toContain(action.description)
+      // Never the action alone: a plan nobody owns is not a plan.
+      expect(findings.textContent).toContain(action.responsible)
+    }
+  }, 30000)
+
+  it('says so where an assessment carries no description or actions', async () => {
+    const bare = residents.find((resident) =>
+      RISK_ASSESSMENT_TEMPLATES.some((template) => {
+        const status = resident.risks[template.id]
+        return status.kind === 'assessed' && status.description === ''
+      }),
+    )
+    expect(bare, 'no assessment in the fixtures is left bare').toBeTruthy()
+
+    const { container } = renderAt(`/residents/${bare!.id}/risk-assessments`)
+    await listed(container)
+
+    // A level recorded in a hurry is a record. It is not a blank line.
+    expect(container.textContent).toContain('No description recorded.')
+  }, 30000)
+
+  it('lists a custom risk beside the nine and counts it apart from them', async () => {
+    const { container } = renderAt(`/residents/${WITH_CUSTOM}/risk-assessments`)
+    await listed(container)
+
+    const custom = container.querySelector('[data-custom-risk]')
+    expect(custom, 'the pinned custom risk is not on the tab').toBeTruthy()
+    expect(custom!.textContent).toContain('Leaving the home unaccompanied')
+
+    /*
+     * **Counted apart, which is the whole reason it has its own list.** "N of
+     * 9" is a claim about what every home is expected to hold; a tenth risk on
+     * one resident would make that denominator mean something different per
+     * person, in nineteen files that read it.
+     */
+    const lead = container.querySelector('[data-never-assessed]')!
+    expect(lead.textContent).toMatch(
+      new RegExp(`of ${String(RISK_ASSESSMENT_TEMPLATES.length)} risks`),
+    )
+    expect(container.querySelector('[data-custom-claim]')!.textContent).toMatch(
+      /9.*templates above, plus.*1.*recorded for this resident/s,
+    )
+  }, 30000)
+
+  it('says the nine are the expected set where a resident has no custom risk', async () => {
+    const { container } = renderAt(
+      `/residents/${NEVER_ASSESSED_FALLS}/risk-assessments`,
+    )
+    await listed(container)
+
+    expect(container.querySelector('[data-custom-risk]')).toBeNull()
+    // Empty is an ordinary state here, not a gap, and the wording says which.
+    expect(container.querySelector('[data-no-custom-risks]')!.textContent).toMatch(
+      /ordinary state rather than a gap/,
+    )
+  }, 30000)
+
+  it('carries the findings typed on the form through to the record', async () => {
+    const user = userEvent.setup()
+    // Its own render: recording raises a toast, which needs the provider.
+    const router = createMemoryRouter(
+      [
+        {
+          path: 'residents/:residentId',
+          element: <ResidentProfileRoute />,
+          children: [
+            { path: 'risk-assessments/:templateId', element: <AssessmentFormRoute /> },
+          ],
+        },
+      ],
+      { initialEntries: [`/residents/${NEVER_ASSESSED_FALLS}/risk-assessments/falls`] },
+    )
+    const { container } = render(
+      <SessionProvider>
+        <TooltipProvider>
+          <ToastProvider>
+            <RouterProvider router={router} />
+            <ToastViewport />
+          </ToastProvider>
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+    await waitFor(() =>
+      expect(container.querySelector('[data-assessment-description]')).toBeTruthy(),
+    )
+
+    await user.type(
+      container.querySelector('[data-assessment-description]')!,
+      'Unsteady from low chairs.',
+    )
+    for (const item of container.querySelectorAll('[data-item]')) {
+      await user.click(item.querySelector('[data-choice]')!)
+    }
+    await user.click(container.querySelector('[data-record-assessment]')!)
+
+    /*
+     * The interventions row is left empty on purpose: an empty row is not an
+     * intervention, so the form saves without one. That an owned intervention
+     * reaches the record is asserted against the writer below, because the
+     * responsible person is chosen through a Radix Select in a portal, which
+     * jsdom cannot open.
+     */
+    const after = await waitFor(() => {
+      const found = withResidentEdits(residentById(NEVER_ASSESSED_FALLS as ResidentId)!)
+        .risks.falls
+      expect(found.kind).toBe('assessed')
+      return found
+    })
+    if (after.kind !== 'assessed') throw new Error('falls was not recorded')
+    expect(after.description).toBe('Unsteady from low chairs.')
+    expect(after.actions).toEqual([])
+  }, 30000)
+
+  it('writes an owned action through the one function both screens use', async () => {
+    const resident = residents.find(
+      (entry) => entry.risks.behaviour.kind === 'not_assessed',
+    )!
+    await recordAssessment({
+      residentId: resident.id,
+      templateId: 'behaviour',
+      level: 'moderate',
+      score: { kind: 'unscored' },
+      description: 'Agitated at handover time.',
+      actions: [
+        { description: 'ABC chart for a fortnight.', responsible: 'Senior carer' },
+        // Blank rows are not interventions and never reach the record.
+        { description: '', responsible: '' },
+      ],
+      by: staffOkonkwo,
+      at: NOW_ISO,
+    })
+
+    const after = withResidentEdits(residentById(resident.id)!).risks.behaviour
+    if (after.kind !== 'assessed') throw new Error('behaviour was not recorded')
+    expect(after.description).toBe('Agitated at handover time.')
+    expect(after.actions).toEqual([
+      { description: 'ABC chart for a fortnight.', responsible: 'Senior carer' },
+    ])
+    expect(after.assessedBy).toEqual(staffOkonkwo)
+  }, 30000)
 })

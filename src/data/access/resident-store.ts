@@ -8,8 +8,14 @@ import type {
   GenderAnswer,
   IsoDate,
   Recorded,
+  CustomRisk,
+  CustomRiskId,
   Resident,
   ResidentId,
+  RiskAction,
+  RiskFinding,
+  RiskLevel,
+  RiskScore,
   RiskStatus,
   RiskTemplateId,
   SiteId,
@@ -142,6 +148,36 @@ export interface AdmissionInput {
   dietaryRequirements?: string
   nextOfKin?: { name: string; relationship: string; phone: string }
   gp?: { name: string; practice: string; phone: string }
+  /**
+   * Step 3. Risk assessments answered on the day, by template id.
+   *
+   * **A partial record, and the gap is the point.** Every template not named
+   * here stays `not_assessed`, which is what the resident's own tab, the risk
+   * queue and the badge strip already render as the gap it is. Somebody
+   * arriving at nine in the evening from hospital comes with two answers and
+   * seven unknowns, and the form has to be able to hold exactly that.
+   */
+  risks?: Partial<Record<RiskTemplateId, AdmissionRiskEntry>>
+  /** Step 3. Risks this home identified for this resident, outside the nine. */
+  customRisks?: (AdmissionRiskEntry & { name: string })[]
+}
+
+/**
+ * One risk answered at admission, whichever list it belongs to.
+ *
+ * The same fields a templated assessment carries, because it becomes one: the
+ * admission form is a second way into the record the assessment screen writes,
+ * never a second record.
+ */
+export interface AdmissionRiskEntry {
+  level: RiskLevel
+  score: RiskScore
+  description: string
+  actions: RiskAction[]
+  /** When somebody looked, which is not always the day they typed it in. */
+  assessedOn: IsoDate
+  /** When the next one falls due. Defaulted from the review interval. */
+  reviewDueOn: IsoDate
 }
 
 /**
@@ -169,6 +205,52 @@ const now = () => appNow().toISOString() as IsoDateTime
 function said<T extends string>(value: T | undefined, by: StaffRef): Recorded<T> {
   if (value === undefined || value.trim() === '') return UNRECORDED
   return { kind: 'recorded', value, recordedBy: by, recordedAt: now() }
+}
+
+/**
+ * What an entry on the form becomes on the record.
+ *
+ * **Stamped with whoever is admitting, on both lists.** They are the person
+ * assessing and the person typing, so there is no second "assessed by" to
+ * capture — the same rule `recordAssessment` has always followed.
+ */
+function asFinding(entry: AdmissionRiskEntry, by: StaffRef): RiskFinding {
+  return {
+    level: entry.level,
+    score: entry.score,
+    description: entry.description.trim(),
+    actions: entry.actions.filter(
+      (action) => action.description.trim() !== '' || action.responsible.trim() !== '',
+    ),
+    assessedAt: `${entry.assessedOn}T09:00:00+01:00` as IsoDateTime,
+    assessedBy: by,
+    reviewState: { kind: 'scheduled', dueOn: entry.reviewDueOn },
+  }
+}
+
+function asCustomRisk(
+  entry: AdmissionRiskEntry & { name: string },
+  index: number,
+  by: StaffRef,
+): CustomRisk {
+  return {
+    id: `risk-admitted-${String(sequence)}-${String(index + 1)}` as CustomRiskId,
+    name: entry.name.trim(),
+    ...asFinding(entry, by),
+  }
+}
+
+function admittedRisks(
+  answered: Partial<Record<RiskTemplateId, AdmissionRiskEntry>>,
+  by: StaffRef,
+): Record<RiskTemplateId, RiskStatus> {
+  const risks = blankRisks()
+  for (const template of RISK_ASSESSMENT_TEMPLATES) {
+    const entry = answered[template.id]
+    if (entry !== undefined)
+      risks[template.id] = { kind: 'assessed', ...asFinding(entry, by) }
+  }
+  return risks
 }
 
 function blankRisks(): Record<RiskTemplateId, RiskStatus> {
@@ -239,7 +321,10 @@ export function admitResident(input: AdmissionInput): Resident {
     primaryDiagnosis: UNRECORDED,
     secondaryDiagnoses: NO_LIST,
     medicalHistory: UNRECORDED,
-    risks: blankRisks(),
+    risks: admittedRisks(input.risks ?? {}, input.admittedBy),
+    customRisks: (input.customRisks ?? []).map((entry, index) =>
+      asCustomRisk(entry, index, input.admittedBy),
+    ),
     resuscitation: { kind: 'no_decision_recorded' },
     eolc: NO_LIST,
     isolation: NO_LIST,

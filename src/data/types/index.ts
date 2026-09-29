@@ -2,6 +2,7 @@ export type {
   ConsentMethod,
   ActivityId,
   CapacityAssessmentId,
+  CustomRiskId,
   DocumentId,
   GoalId,
   GoalProgressNoteId,
@@ -47,6 +48,9 @@ export type {
   RiskLevel,
   RiskScore,
   RiskStatus,
+  RiskAction,
+  RiskFinding,
+  CustomRisk,
   StockBalance,
 } from './state'
 

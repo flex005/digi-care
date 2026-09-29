@@ -13,7 +13,13 @@
  * `required_not_recorded`, `never_scheduled`. CLAUDE.md §1.
  */
 
-import type { DocumentId, IsoDate, IsoDateTime, StaffRef } from './primitives'
+import type {
+  CustomRiskId,
+  DocumentId,
+  IsoDate,
+  IsoDateTime,
+  StaffRef,
+} from './primitives'
 
 /** The general shape. Every clinical status follows it. */
 export type Recorded<T> =
@@ -39,23 +45,78 @@ export type RiskLevel = 'low' | 'moderate' | 'high'
  * "nobody recorded it" — and on a scored instrument the second is a real and
  * different state.
  */
-export type RiskScore = { kind: 'scored'; value: number } | { kind: 'unscored' }
+export type RiskScore =
+  | { kind: 'scored'; value: number }
+  | { kind: 'unscored' }
+  /**
+   * A scored instrument whose number nobody has worked out yet.
+   *
+   * **Third member, because the other two already mean something else.** A
+   * resident admitted this morning can have a level — somebody looked at them
+   * and formed a judgement — before anybody has sat down with the Waterlow
+   * chart. Recording that as `unscored` would make that member mean either
+   * "this instrument produces no number" or "it produces one and it is
+   * missing", which is the blank that means two things this product exists to
+   * refuse. Every screen that reads a score renders this as the gap it is.
+   */
+  | { kind: 'not_scored_yet' }
 
-export type RiskStatus =
-  | { kind: 'not_assessed' }
-  | {
-      kind: 'assessed'
-      /**
-       * Reached either way. **An unscored assessment still produces a level** —
-       * somebody looked and formed a judgement, and a level is what the badge
-       * strip and the profile header read.
-       */
-      level: RiskLevel
-      score: RiskScore
-      assessedAt: IsoDateTime
-      assessedBy: StaffRef
-      reviewState: ReviewState
-    }
+/**
+ * One thing somebody will do about a risk, and who is responsible for it.
+ *
+ * **The responsible person is part of the action, not beside it.** The
+ * assessment screen has refused an intervention with nobody's name against it
+ * since Phase 5 — a plan nobody owns is not a plan — and that rule only holds
+ * if the record cannot hold one either.
+ */
+export interface RiskAction {
+  description: string
+  responsible: string
+}
+
+/**
+ * What an assessment found, whichever screen recorded it.
+ *
+ * Shared by the nine templates and by a risk a home records for one resident,
+ * so the two are the same record with a different name on the front rather
+ * than two kinds of thing that have to be reconciled on the way to a screen.
+ *
+ * `description` and `actions` can be empty, and empty means nobody wrote one:
+ * unlike a level, a narrative has no second reading to be confused with. The
+ * screens say "No description recorded" rather than leaving a blank line.
+ */
+export interface RiskFinding {
+  level: RiskLevel
+  score: RiskScore
+  description: string
+  actions: RiskAction[]
+  assessedAt: IsoDateTime
+  assessedBy: StaffRef
+  /** Carries when the next review falls due; there is no second date field. */
+  reviewState: ReviewState
+}
+
+/**
+ * A risk this home recorded for this resident, outside the nine templates.
+ *
+ * **Its own list, and never folded into the nine.** The nine are what every
+ * home is expected to hold, which is what makes "3 of 9 assessed" a claim a
+ * reader can check and what nineteen screens count against. A tenth risk on
+ * one resident would make that denominator mean something different per
+ * person. So it is recorded here, rendered in the same list on the resident's
+ * tab, and counted in its own sentence.
+ */
+export interface CustomRisk extends RiskFinding {
+  id: CustomRiskId
+  name: string
+}
+
+/**
+ * **A level is reached either way.** An unscored assessment still produces one
+ * — somebody looked and formed a judgement — and a level is what the badge
+ * strip and the profile header read.
+ */
+export type RiskStatus = { kind: 'not_assessed' } | ({ kind: 'assessed' } & RiskFinding)
 
 /**
  * Resuscitation — three states, and "no decision recorded" is one of them.

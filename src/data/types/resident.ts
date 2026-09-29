@@ -19,6 +19,7 @@ import type {
   ResidentId,
   ReviewState,
   RiskStatus,
+  CustomRisk,
   ResuscitationStatus,
   ConsentRecord,
   DocumentId,
@@ -512,6 +513,14 @@ export interface Resident {
 
   // Badge strip — every one a closed union, every one always rendered.
   risks: Record<RiskTemplateId, RiskStatus>
+  /**
+   * Risks this home recorded for this resident, outside the nine.
+   *
+   * Empty for almost everybody, and empty is the ordinary state rather than a
+   * gap: the nine are what a home is expected to hold, and these are what one
+   * resident needed on top of them.
+   */
+  customRisks: CustomRisk[]
   resuscitation: ResuscitationStatus
   eolc: EolcStatus
   isolation: IsolationStatus

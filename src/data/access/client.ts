@@ -16,8 +16,11 @@ import type {
   ConsentTypeId,
   DecisionAuthority,
   DownstreamEffect,
+  RiskAction,
   RiskLevel,
   RiskScore,
+  CustomRisk,
+  CustomRiskId,
   RiskTemplateId,
   CarePlanDomainId,
   DocumentCategoryId,
@@ -1169,8 +1172,22 @@ export function recordAssessment(input: {
   templateId: RiskTemplateId
   level: RiskLevel
   score: RiskScore
+  /**
+   * What the assessment found, and what the home will do about it.
+   *
+   * **On the record rather than in the form.** The assessment screen has
+   * collected findings and interventions since Phase 5 and threw both away at
+   * save: the record kept a level and a number, so a plan naming a responsible
+   * person survived exactly as long as the page it was typed on. They are
+   * fields now, and this is the one function that writes them, from the
+   * assessment screen and from admission alike.
+   */
+  description: string
+  actions: RiskAction[]
   by: StaffRef
   at: IsoDateTime
+  /** Defaulted from the review interval where a screen does not set one. */
+  reviewDueOn?: IsoDate
 }): Promise<Resident> {
   const resident = residentById(input.residentId)
   if (!resident) return reject(`No resident with id ${input.residentId}`)
@@ -1182,9 +1199,17 @@ export function recordAssessment(input: {
         kind: 'assessed',
         level: input.level,
         score: input.score,
+        description: input.description.trim(),
+        actions: input.actions.filter(
+          (action) =>
+            action.description.trim() !== '' || action.responsible.trim() !== '',
+        ),
         assessedAt: input.at,
         assessedBy: input.by,
-        reviewState: { kind: 'scheduled', dueOn: nextReviewFrom(input.at) },
+        reviewState: {
+          kind: 'scheduled',
+          dueOn: input.reviewDueOn ?? nextReviewFrom(input.at),
+        },
       },
     },
   })
@@ -1194,6 +1219,62 @@ export function recordAssessment(input: {
   return logged(updated, {
     module: 'Risk Assessments',
     what: `Assessed ${input.templateId.replace(/_/g, ' ')} for ${updated.fullLegalName}: ${input.level}`,
+    to: `/residents/${updated.id}/risk-assessments`,
+    by: input.by,
+  })
+}
+
+/**
+ * Records a risk outside the nine templates, for one resident.
+ *
+ * **Its own list, and the same shape.** A custom risk carries the level,
+ * description, actions and dates a templated one does, so the resident's tab
+ * renders the two together and nothing has to be reconciled on the way to a
+ * screen. What it never does is join the nine: "3 of 9 assessed" is a claim
+ * about what every home is expected to hold, and a tenth risk on one resident
+ * would make that denominator mean something different per person.
+ */
+export function recordCustomRisk(input: {
+  residentId: ResidentId
+  name: string
+  level: RiskLevel
+  score: RiskScore
+  description: string
+  actions: RiskAction[]
+  by: StaffRef
+  at: IsoDateTime
+  reviewDueOn?: IsoDate
+}): Promise<Resident> {
+  const resident = residentById(input.residentId)
+  if (!resident) return reject(`No resident with id ${input.residentId}`)
+  if (input.name.trim() === '') {
+    return reject('A risk outside the nine templates needs a name')
+  }
+
+  const risk: CustomRisk = {
+    id: `risk-${input.residentId}-${String(resident.customRisks.length + 1)}` as CustomRiskId,
+    name: input.name.trim(),
+    level: input.level,
+    score: input.score,
+    description: input.description.trim(),
+    actions: input.actions.filter(
+      (action) => action.description.trim() !== '' || action.responsible.trim() !== '',
+    ),
+    assessedAt: input.at,
+    assessedBy: input.by,
+    reviewState: {
+      kind: 'scheduled',
+      dueOn: input.reviewDueOn ?? nextReviewFrom(input.at),
+    },
+  }
+
+  editResidentField(input.residentId, { customRisks: [...resident.customRisks, risk] })
+
+  const updated = residentById(input.residentId)
+  if (!updated) return reject(`No resident with id ${input.residentId}`)
+  return logged(updated, {
+    module: 'Risk Assessments',
+    what: `Recorded ${risk.name} for ${updated.fullLegalName}: ${input.level}`,
     to: `/residents/${updated.id}/risk-assessments`,
     by: input.by,
   })

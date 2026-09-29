@@ -77,6 +77,10 @@ export const riskStates: ByKind<RiskStatus> = {
       kind: 'assessed',
       level: 'low',
       score: { kind: 'scored', value: 15 },
+      description: 'Steady indoors, uses the handrail without prompting.',
+      actions: [
+        { description: 'Footwear checked weekly.', responsible: 'M. Halloran' },
+      ],
       assessedAt: '2026-07-02T10:15:00+01:00',
       assessedBy: staffNwosu,
       reviewState: { kind: 'scheduled', dueOn: '2026-10-02' },
@@ -85,6 +89,13 @@ export const riskStates: ByKind<RiskStatus> = {
       kind: 'assessed',
       level: 'moderate',
       score: { kind: 'scored', value: 45 },
+      description: 'Two near-falls this month, both in the evening.',
+      actions: [
+        {
+          description: 'Sensor mat at the bedside overnight.',
+          responsible: 'Night senior',
+        },
+      ],
       assessedAt: '2026-06-18T14:40:00+01:00',
       assessedBy: staffHalloran,
       reviewState: { kind: 'due', dueOn: '2026-08-18' },
@@ -93,6 +104,10 @@ export const riskStates: ByKind<RiskStatus> = {
       kind: 'assessed',
       level: 'high',
       score: { kind: 'scored', value: 70 },
+      // A level with nothing written under it: recorded in a hurry, and the
+      // tab has to render that rather than leave a blank where prose goes.
+      description: '',
+      actions: [],
       assessedAt: '2026-05-30T08:05:00+01:00',
       assessedBy: staffOkonkwo,
       reviewState: { kind: 'overdue', dueOn: '2026-07-30', daysOverdue: 20 },
@@ -105,9 +120,35 @@ export const riskStates: ByKind<RiskStatus> = {
       kind: 'assessed',
       level: 'high',
       score: { kind: 'unscored' },
+      description: 'Coughs on thin fluids. SALT have seen them.',
+      actions: [
+        { description: 'Thickened fluids at every drink.', responsible: 'Care team' },
+      ],
       assessedAt: '2026-05-20T09:30:00+01:00',
       assessedBy: staffHalloran,
       reviewState: { kind: 'scheduled', dueOn: '2026-11-20' },
+    },
+    {
+      /*
+       * A scored instrument with a level and no number yet. Somebody looked at
+       * a resident on the day they arrived and formed a judgement; nobody has
+       * sat down with the Waterlow chart. Distinct from an instrument that
+       * produces no number at all, and rendered as the gap it is.
+       */
+      kind: 'assessed',
+      level: 'moderate',
+      score: { kind: 'not_scored_yet' },
+      description:
+        'Redness over the sacrum on admission. Chart not yet worked through.',
+      actions: [
+        {
+          description: 'Repositioned two-hourly until scored.',
+          responsible: 'Care team',
+        },
+      ],
+      assessedAt: '2026-09-28T09:10:00+01:00',
+      assessedBy: staffNwosu,
+      reviewState: { kind: 'scheduled', dueOn: '2026-12-28' },
     },
   ],
 }

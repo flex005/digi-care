@@ -2,6 +2,7 @@ import { now as appNow } from '@/data/fixtures/clock'
 import { useState } from 'react'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
 import type {
+  RiskAction,
   IsoDate,
   IsoDateTime,
   Resident,
@@ -25,7 +26,7 @@ import {
 } from '@/data/access/client'
 import type { ClearingToken } from '@/data/access/review-flag-store'
 import { flagsClosedBy, riskTemplateName } from '@/data/access/review-flags'
-import { pluralise } from '@/lib/format'
+import { formatDate, pluralise } from '@/lib/format'
 import { nextReviewFrom } from '@/lib/review-interval'
 import { reviewIntervalMonths } from '@/data/access/settings-store'
 import { PlaceholderBanner } from './PlaceholderBanner'
@@ -63,6 +64,25 @@ interface Intervention {
   dueOn: string
 }
 
+/**
+ * An intervention as the record holds it.
+ *
+ * The form's own row carries a `dueOn` the record has no field for, and the
+ * date is not dropped silently: it is written into the action so a plan that
+ * says "by Friday" still says it on the resident's tab.
+ */
+function asActions(interventions: Intervention[]): RiskAction[] {
+  return interventions
+    .filter((entry) => entry.description.trim() !== '')
+    .map((entry) => ({
+      description:
+        entry.dueOn === ''
+          ? entry.description.trim()
+          : `${entry.description.trim()} (by ${formatDate(entry.dueOn as IsoDate)})`,
+      responsible: entry.responsible,
+    }))
+}
+
 export function AssessmentFormRoute() {
   const { resident } = useOutletContext<ResidentProfile>()
   const { templateId } = useParams<{ templateId: string }>()
@@ -73,6 +93,7 @@ export function AssessmentFormRoute() {
   const [interventions, setInterventions] = useState<Intervention[]>([
     { id: 1, description: '', responsible: '', dueOn: '' },
   ])
+  const [description, setDescription] = useState('')
   const [nextId, setNextId] = useState(2)
   const [firstRecorded, setFirstRecorded] = useState(false)
   const { currentUser } = useSession()
@@ -215,6 +236,26 @@ export function AssessmentFormRoute() {
 
       <Card>
         <section className={styles.section}>
+          {/*
+           * **The findings, which the record keeps.** The instrument produces
+           * a number and the number produces a level; what neither carries is
+           * what the assessor actually saw. It went unrecorded until Phase 30,
+           * because there was nowhere on the record to put it — so the level
+           * arrived on every screen with nothing underneath it.
+           */}
+          <h3 className={styles.sectionTitle}>What this assessment found</h3>
+          <textarea
+            className={styles.input}
+            rows={3}
+            value={description}
+            placeholder="What you saw, in enough detail for the next person"
+            aria-label="What this assessment found"
+            data-assessment-description
+            onChange={(event) => setDescription(event.target.value)}
+          />
+        </section>
+
+        <section className={styles.section}>
           <h3 className={styles.sectionTitle}>Interventions</h3>
 
           <ul className={styles.interventionList}>
@@ -319,6 +360,8 @@ export function AssessmentFormRoute() {
           nextLevel={band}
           resident={resident}
           templateId={template.id as RiskTemplateId}
+          description={description}
+          interventions={interventions}
         />
       ) : null}
 
@@ -351,6 +394,8 @@ export function AssessmentFormRoute() {
               templateId: template.id as RiskTemplateId,
               level: band,
               score: scored ? { kind: 'scored', value: total } : { kind: 'unscored' },
+              description,
+              actions: asActions(interventions),
               by: currentUser,
               at: appNow().toISOString() as IsoDateTime,
             }).then(() => setFirstRecorded(true))
@@ -422,12 +467,17 @@ function CompareBlock({
   nextLevel,
   resident,
   templateId,
+  description,
+  interventions,
 }: {
   previous: Extract<RiskStatus, { kind: 'assessed' }>
   nextScore: number
   nextLevel: RiskLevel
   resident: Resident
   templateId: RiskTemplateId
+  /** Both typed above, and both written by the same save as a first one. */
+  description: string
+  interventions: Intervention[]
 }) {
   /** Only four of the nine produce a number; the rest reach a level. */
   const scoredTemplate = isScored(templateId)
@@ -662,6 +712,8 @@ function CompareBlock({
         score: scoredTemplate
           ? { kind: 'scored', value: nextScore }
           : { kind: 'unscored' },
+        description,
+        actions: asActions(interventions),
         by: currentUser,
         at: now,
       })

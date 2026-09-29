@@ -13,6 +13,16 @@ import type {
 import { GENDER_ANSWERS } from '@/data/types'
 import { admit, fileDocument } from '@/data/access/client'
 import { ADMISSION_GAPS, ALLERGY_SOURCES } from '@/data/access/resident-store'
+import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
+import type { RiskTemplateId } from '@/data/types'
+import { isScored } from '@/features/risk/instrument'
+import {
+  AdmissionRisks,
+  asEntry,
+  isAnswered,
+  type DraftCustomRisk,
+  type DraftRisk,
+} from './AdmissionRisks'
 import { useSession } from '@/app/session/use-session'
 import { Button, Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
@@ -92,6 +102,18 @@ export function AdmissionRoute() {
    * A DNAR form to file once the resident exists, by format. No file is kept in
    * this build, and the step says so beside the control.
    */
+  /*
+   * Step 3's risk answers, by template, plus anything outside the nine.
+   *
+   * Held as drafts and converted on submit rather than written as they are
+   * typed: nothing exists to write to until the resident does, and a half-typed
+   * level is not an assessment.
+   */
+  const [riskDrafts, setRiskDrafts] = useState<
+    Partial<Record<RiskTemplateId, DraftRisk>>
+  >({})
+  const [customRisks, setCustomRisks] = useState<DraftCustomRisk[]>([])
+
   const [dnar, setDnar] = useState<
     { kind: 'none' } | { kind: 'chosen'; format: string }
   >({
@@ -159,6 +181,25 @@ export function AdmissionRoute() {
         gpName.trim() === ''
           ? undefined
           : { name: gpName, practice: gpPractice, phone: gpPhone },
+
+      /*
+       * **Only the rows somebody answered.** A template with no level is left
+       * out entirely, so the record says never assessed rather than holding an
+       * assessment with nothing in it — the distinction the whole badge strip
+       * is built on.
+       */
+      risks: Object.fromEntries(
+        RISK_ASSESSMENT_TEMPLATES.filter((template) => {
+          const draft = riskDrafts[template.id]
+          return draft !== undefined && isAnswered(draft)
+        }).map((template) => [
+          template.id,
+          asEntry(riskDrafts[template.id]!, isScored(template.id)),
+        ]),
+      ),
+      customRisks: customRisks
+        .filter((custom) => custom.name.trim() !== '' && isAnswered(custom))
+        .map((custom) => ({ ...asEntry(custom, false), name: custom.name })),
     }).then(async (resident) => {
       /*
        * **Filed, and the decision still not recorded.** The document goes on
@@ -629,6 +670,17 @@ export function AdmissionRoute() {
           <section className={styles.section} data-section="flags">
             <h2 className={styles.sectionTitle}>Risk flags and documents</h2>
 
+            <AdmissionRisks
+              name={name}
+              admittedOn={admittedOn}
+              drafts={riskDrafts}
+              onDraft={(id, draft) =>
+                setRiskDrafts((current) => ({ ...current, [id]: draft }))
+              }
+              customs={customRisks}
+              onCustoms={setCustomRisks}
+            />
+
             {/*
              * **Filing a DNAR is not recording the decision, and this is where
              * that has to be said.** AM v2.0's step 4 asks for the document and
@@ -684,9 +736,19 @@ export function AdmissionRoute() {
               The file itself is not kept; only that a form was filed is recorded.
             </p>
 
+            {/*
+             * **This reverses Phase 25's decision, and says so.** The step used
+             * to refuse risk entry outright, on the argument that answering an
+             * assessment is not ticking a box on an admission form. What that
+             * argument was really against was *requiring* one — and it also
+             * turned away the answers somebody arrives holding, which the home
+             * then had to retype on another screen or lose.
+             */}
             <p className={styles.sectionNote} data-flags-note>
-              The risk flags are not asked here: every assessment starts never assessed,
-              which is not low risk.
+              The nine risk assessments used to be refused here, so that nobody was
+              asked to guess on the day they know least. They are asked now and none of
+              them is required: an answer somebody already has goes on the record, and
+              everything else stays never assessed, which is not low risk.
             </p>
           </section>
         ) : null}
