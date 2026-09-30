@@ -113,6 +113,50 @@
   line-height: var(--text-body-sm-line);
 }
 
+/* ---------------------------------------------------------------------------
+ * The header of the block for domains outside the ten.
+ *
+ * **These four were applied and never defined.** `CustomDomains` has set
+ * `customHead`, `customHeadRow`, `customTitle` and `customNote` since the
+ * block landed, and this stylesheet had no rule for any of them — so the key
+ * resolved to `undefined`, React dropped the attribute, and the heading, the
+ * button and the note rendered as unstyled browser defaults with the button
+ * on its own line. Nothing errored and nothing could: a class that is absent
+ * and a class that is present are the same DOM, which is why §8 says only a
+ * screenshot reads this medium.
+ *
+ * Same properties as `risk.module.css`, whose block is the one this is meant
+ * to match, because the two sit in the same position on two tabs of one
+ * profile and a reader learns the shape rather than the screen.
+ * ------------------------------------------------------------------------ */
+
+.customHead {
+  padding: var(--space-20) var(--space-20) var(--space-12);
+}
+
+.customHeadRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.customTitle {
+  color: var(--ink-900);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--weight-bold);
+}
+
+.customNote {
+  margin-top: var(--space-4);
+  max-width: 90ch;
+  color: var(--ink-500);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}
+
 /* ---- The ten rows ---- */
 
 .domainList {

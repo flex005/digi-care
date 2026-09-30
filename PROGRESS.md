@@ -15311,3 +15311,59 @@ and removing "not counted in the figure at the top" from the risk tab fails
 `says the nine are the expected set where a resident has no custom risk`.
 Each mutation was confirmed landed with a grep returning zero before the
 verdict was read.
+
+## Four classes the care plan tab applied and its stylesheet never defined
+
+`CustomDomains` has set `customHead`, `customHeadRow`, `customTitle` and
+`customNote` since the block landed, and `care-plan.module.css` had a rule
+for none of them — the word "custom" did not appear in that file at all. CSS
+Modules resolve a missing key to `undefined`, React drops the attribute, and
+nothing errors. The block rendered as unstyled browser defaults: no flex row,
+so "Add custom domain" fell onto its own line instead of sitting beside the
+heading, and the heading and note came out in default text rather than the
+card's type scale. It is the second finding of this exact kind in this file
+in two days, after the `customEmpty` paragraph that referenced a rule which
+also does not exist.
+
+The four rules are `risk.module.css`'s, because the two blocks sit in the
+same position on two tabs of one profile and a reader learns the shape rather
+than the screen. Confirmed on a screenshot at 1280 against the risk tab
+beside it: heading 17px and button on the same row on both, note 13px on
+both, identical offsets from the top of the header block.
+
+**Only a picture could have confirmed it, and that is the whole entry.** A
+class that is absent and a class that is present produce the same DOM, so an
+assertion on `className` passes either way — §8 already names this for the
+donut's black disc and the hatched tile that painted white, and this is the
+same failure reached through CSS Modules rather than through the cascade.
+
+### Nineteen more of it, across four other stylesheets
+
+The same sweep run over the build found the defect is not contained. 211
+component/stylesheet pairs checked, 19 undefined classes left after this fix:
+
+- `team.module.css` — nine classes the invite form and the staff detail form
+  apply: `inviteForm`, `field`, `fieldError`, `roleChoices`, `choice`,
+  `choiceOn`, `residentChoices`, `inviteActions`, `hint`. This is the worst
+  of them and it is not cosmetic: screenshotted, the invite drawer's radios
+  and checkboxes run together with no spacing at all — "Care worker○Senior
+  carer○Deputy manager" — on the form that decides what somebody can see.
+- `compliance.module.css` — `ratingLabel`, `ratingDetail`.
+- `dashboard.module.css` — `bar`.
+- `auth.module.css` — `pwCount`.
+
+`scripts/check-css-classes.mjs` is the sweep, and it is **committed without
+being wired into `verify`**, which is stated in its own header as well as
+here. A guard that ships red cannot be acted on, and an allowlist of nineteen
+exceptions is the wallpaper failure this file names three times. The order is
+to style the nineteen and then wire it, where it lands green and a twentieth
+fails the build.
+
+**The check's first run reported 27, and four of those were its own
+defects**: it read the `name.module.css` of an import line as a `name.module`
+usage, it could not resolve the `@/` alias and called three stylesheets
+missing, and it took only the first stylesheet import per file. Each was
+found by checking a finding against the file rather than by reading the
+count, which is the §8 rule about an audit's finding being a claim about the
+code. The 19 that survived were then confirmed a third way, by grep, both
+anchored and unanchored, in case a rule was nested inside a media query.
