@@ -2,19 +2,14 @@
 /**
  * A class a component applies that its stylesheet does not define.
  *
- * **NOT WIRED INTO `verify`, and it must not be counted as coverage until it
- * is.** It currently reports 19 real findings across four stylesheets — the
- * Team invite form, the staff detail form, two compliance rating lines, a
- * dashboard bar and the invitation password counter — and a guard that ships
- * red is a guard nobody can act on. The alternative, an allowlist of 19
- * exceptions, is the wallpaper failure CLAUDE.md §8 names three times. So the
- * order is: style the 19, then wire this into `verify`, where it lands green
- * and any twentieth fails the build.
+ * Wired into `verify` as `lint:cssclasses`. It landed green: the nineteen it
+ * first reported — the Team invite form, the staff detail form, two
+ * compliance rating lines, a dashboard bar row and the invitation password
+ * counter — are styled, so a twentieth fails the build rather than joining an
+ * allowlist, which is the wallpaper failure CLAUDE.md §8 names three times.
  *
- * CSS Modules resolve a missing key to `undefined`, React drops the attribute,
- * and nothing errors: the element renders unstyled. No assertion in this suite
- * can see it, because nothing in the DOM differs between a class that exists
- * and one that does not.
+ * Mutated before being trusted: deleting `.roleChoices` from
+ * `team.module.css` fails it on both files that apply the class.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, dirname, resolve } from 'node:path'
@@ -89,11 +84,29 @@ for (const file of files) {
   }
 }
 
-for (const f of findings) console.log(`✖ ${f}`)
-for (const u of unreadable) console.log(`? unreadable stylesheet: ${u}`)
-console.log(
-  `\n${String(pairs)} component/stylesheet pairs checked; ` +
-    `${String(findings.length)} undefined; ` +
-    `${String(unreadable.length)} unreadable; ` +
-    `${String(dynamic)} computed keys unresolvable.`,
-)
+for (const f of findings) console.error(`✖ ${f}`)
+for (const u of unreadable) console.error(`? unreadable stylesheet: ${u}`)
+
+/*
+ * The count is stated against what was reached, never a bare tick: a check
+ * that silently read half its input would otherwise print the same line
+ * (CLAUDE.md §8). `dynamic` is the part this cannot answer — a computed key
+ * is unresolvable here — so it is named rather than left out of the total.
+ */
+const reached =
+  `${String(pairs)} component/stylesheet pairs checked; ` +
+  `${String(findings.length)} applied and never defined; ` +
+  `${String(unreadable.length)} unreadable; ` +
+  `${String(dynamic)} computed keys this check cannot resolve.`
+
+if (findings.length > 0 || unreadable.length > 0) {
+  console.error(
+    `\n✖ css classes — ${reached}\n` +
+      '  A missing key resolves to `undefined`, so React drops the attribute ' +
+      'and the element renders unstyled. Nothing errors, and no assertion in ' +
+      'the suite can see it.',
+  )
+  process.exit(1)
+}
+
+console.log(`✓ css classes — ${reached}`)

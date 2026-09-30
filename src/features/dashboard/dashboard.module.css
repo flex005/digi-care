@@ -248,6 +248,18 @@
   list-style: none;
 }
 
+/*
+ * One module's row. `.bars` is a flex column, so this was laying out
+ * correctly with no rule at all and the missing class cost nothing visible —
+ * recorded rather than dressed up, because the next reader deserves to know
+ * which of these nineteen were real. What it earns is the floor: a flex item
+ * defaults to `min-width: auto`, so a long label could refuse to shrink and
+ * push the figure and its denominator off the panel.
+ */
+.bar {
+  min-width: 0;
+}
+
 .barHead {
   display: flex;
   gap: var(--space-12);

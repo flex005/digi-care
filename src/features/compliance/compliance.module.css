@@ -465,6 +465,25 @@
   color: var(--status-critical-ink);
 }
 
+/*
+ * The rating word keeps `.rating`'s colour and weight; the driver beside it
+ * does not. A whole sentence in critical ink at bold is the alarm vocabulary
+ * spent on the explanation rather than the finding, and `.rating` sets
+ * `white-space: nowrap` for the word, which would send a sentence of any
+ * length off the side of the panel.
+ */
+.ratingLabel {
+  font-weight: var(--weight-bold);
+}
+
+.ratingDetail {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-regular);
+  white-space: normal;
+}
+
 .dot {
   display: inline-block;
   width: var(--space-8);

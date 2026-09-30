@@ -200,6 +200,20 @@
   line-height: var(--text-body-sm-line);
 }
 
+/*
+ * The count of password rules met. An aggregate, so it carries its
+ * denominator and renders quietly: it is a statement of where somebody has
+ * got to, not a finding, and the checklist above it is what says what to
+ * change. Tabular figures so the number does not jump as rules are met.
+ */
+.pwCount {
+  margin: var(--space-16) 0 var(--space-20);
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-sm-line);
+  font-variant-numeric: tabular-nums;
+}
+
 .siteChoice {
   display: flex;
   flex-direction: column;

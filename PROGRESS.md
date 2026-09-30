@@ -15367,3 +15367,66 @@ found by checking a finding against the file rather than by reading the
 count, which is the §8 rule about an audit's finding being a claim about the
 code. The 19 that survived were then confirmed a third way, by grep, both
 anchored and unanchored, in case a rule was nested inside a media query.
+
+## The nineteen undefined classes, styled, and the check made a gate
+
+All four stylesheets now define what their components apply, and
+`check-css-classes.mjs` is wired into `verify` as `lint:cssclasses`.
+
+**`team.module.css` was the one with stakes.** Nine classes across the invite
+drawer, the staff record and the team list resolved to `undefined`, so the
+form that decides what somebody can see rendered as browser defaults: "Care
+worker○Senior carer○Deputy manager" as one run of text, checkboxes hard
+against their labels, and — with a care worker chosen — twenty-eight
+residents as a bulleted list that pushed the dialog's own actions off the
+bottom of the screen.
+
+The shape is the admission form's `.choice`, which is this build's treatment
+for one selectable option, as a wrapping row of chips rather than a stack of
+cards because these options are two or three words with no hint beneath them.
+Chosen is a border and a tint and never colour alone, and the native control
+stays in the label so the state reaches a screen reader. The resident list
+scrolls at `13rem` for the reason it was unusable: a home with twenty-eight
+of them is the ordinary case, not the edge.
+
+**Two traps in writing it, both avoided by reading before typing.** `.field`
+is used twice over — as a form field wrapper *and* as the `dt`/`dd` pair in
+the read-only `.fields` grid — so its `gap` would have been added to
+`.fieldValue`'s own top margin and moved every detail row on the staff
+record; `.field > .fieldValue` zeroes it. And `.field input` would have put a
+text field's padding and border on every radio and checkbox, because they sit
+inside `.choice` inside `.roleChoices` inside `.field`. Direct-child
+selectors, both times.
+
+### What the other three were, stated honestly
+
+`.pwCount` and the two compliance rating parts were real. `.ratingDetail`
+inherited `.rating`'s bold, its critical ink and its `white-space: nowrap`,
+so a whole driver sentence rendered as alarm text that could not wrap —
+measured after the fix at `ink-500`, weight 400, `white-space: normal`,
+inside a parent still in critical red, which is the alarm vocabulary spent on
+the finding rather than on its explanation.
+
+**`.bar` was inert and is recorded as inert.** `.bars` is a flex column, so
+the row laid out correctly with no rule at all and the missing class cost
+nothing visible. It is defined as `min-width: 0` — a flex item defaults to
+`min-width: auto`, so a long label could refuse to shrink and push a figure
+and its denominator off the panel — and the comment says plainly that this
+one was not a defect. Nineteen findings did not mean nineteen broken screens,
+and saying which were which is the difference between a report and a count.
+
+### The check would have passed the build while printing failures
+
+It had no `process.exit`. Wired in as it stood, it would have listed every
+finding and returned 0, and `verify` would have gone green over them — a gate
+that reports and does not stop, which is the §8 family about a guard whose
+success line outruns what it does. Caught by grepping for the exit before
+wiring it, not after.
+
+So the order was: add the exit, then mutate, then trust. Deleting
+`.roleChoices` from `team.module.css` — confirmed landed with a grep
+returning zero — makes `npm run lint:cssclasses` exit 1 and name both files
+that apply it, and the restored tree exits 0. The success line counts what it
+reached rather than printing a tick, and names the computed keys it cannot
+resolve, because a check that silently read half its input would otherwise
+look identical.

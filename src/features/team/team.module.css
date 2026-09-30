@@ -309,6 +309,138 @@
   line-height: var(--text-body-sm-line);
 }
 
+/* ---------------------------------------------------------------------------
+ * The invite form, and the choice rows the removal dialog shares with it.
+ *
+ * **Nine classes that were applied and never defined.** `InviteDrawer`,
+ * `StaffDetailRoute` and `TeamListRoute` have set these since they were
+ * written, and this stylesheet had a rule for none of them — so every key
+ * resolved to `undefined` and the form rendered as browser defaults: radios
+ * and checkboxes hard against their own labels, "Care worker○Senior
+ * carer○Deputy manager" reading as one run of text, and twenty-eight
+ * residents as a bulleted list. On the form that decides what somebody can
+ * see.
+ *
+ * The shape is the admission form's `.choice`, which is this build's
+ * established treatment for one selectable option, because a reader learns
+ * the shape rather than the screen (§6). It is a wrapping row of chips here
+ * rather than a stack of cards, because these options are two or three words
+ * and carry no hint under them.
+ * ------------------------------------------------------------------------ */
+
+.inviteForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/*
+ * `.fieldValue` carries its own top margin for the read-only pairs in
+ * `.fields`, which are `.field` too. Without this the gap above would be
+ * added to that margin and every detail row on the staff record would move.
+ */
+.field > .fieldValue {
+  margin-top: 0;
+}
+
+/*
+ * Direct children only. The radios and checkboxes below sit inside `.choice`
+ * inside `.roleChoices`, so a plain `.field input` would put a text field's
+ * padding and border on every one of them.
+ */
+.field > input,
+.field > textarea,
+.field > select {
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-body-sm-size);
+}
+
+.fieldError {
+  color: var(--status-critical-ink);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
+.roleChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.choice,
+.choiceOn {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink-900);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  cursor: pointer;
+}
+
+/*
+ * Chosen is a border and a tint, never colour alone — the control itself
+ * stays in the label and carries the state to a screen reader (§7).
+ */
+.choiceOn {
+  border-color: var(--purple-600);
+  background: var(--purple-50);
+  font-weight: var(--weight-semibold);
+}
+
+.choice input,
+.choiceOn input {
+  accent-color: var(--purple-600);
+  cursor: pointer;
+}
+
+/*
+ * A wrapping row rather than a column, and scrolled rather than endless: a
+ * home with twenty-eight residents pushed the dialog's own actions off the
+ * bottom of the screen, which is where the reader is going next.
+ */
+.residentChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+  padding: var(--space-4);
+  max-height: 13rem;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.inviteActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.hint {
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}
+
 .unchanged,
 .confirmBody {
   margin-top: var(--space-16);
