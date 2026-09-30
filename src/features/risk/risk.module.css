@@ -164,14 +164,6 @@
   line-height: var(--text-body-line);
 }
 
-.customEmpty {
-  padding: 0 var(--space-20) var(--space-20);
-  max-width: 90ch;
-  color: var(--ink-700);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-line);
-}
-
 .assessmentList {
   list-style: none;
 }

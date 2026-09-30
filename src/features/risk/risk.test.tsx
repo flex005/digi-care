@@ -840,7 +840,7 @@ describe('the record keeps what the assessment found, and what is being done', (
       new RegExp(`of ${String(RISK_ASSESSMENT_TEMPLATES.length)} risks`),
     )
     expect(container.querySelector('[data-custom-claim]')!.textContent).toMatch(
-      /9.*templates above, plus.*1.*recorded for this resident/s,
+      /9.*templates above, plus.*1.*outside the nine/s,
     )
   }, 30000)
 
@@ -851,10 +851,16 @@ describe('the record keeps what the assessment found, and what is being done', (
     await listed(container)
 
     expect(container.querySelector('[data-custom-risk]')).toBeNull()
-    // Empty is an ordinary state here, not a gap, and the wording says which.
-    expect(container.querySelector('[data-no-custom-risks]')!.textContent).toMatch(
-      /ordinary state rather than a gap/,
-    )
+    /*
+     * **Both facts, in the one sentence that now carries them.** Empty here is
+     * ordinary rather than a gap, and these sit outside the figure at the top.
+     * Those used to be two paragraphs saying nearly the same thing, and
+     * collapsing them is exactly the edit that can quietly drop one — so each
+     * is held by name rather than by a paragraph existing.
+     */
+    const claim = container.querySelector('[data-no-custom-risks]')!.textContent
+    expect(claim).toMatch(/ordinary rather than a gap/)
+    expect(claim).toMatch(/not counted in the figure at the top/)
   }, 30000)
 
   it('carries the findings typed on the form through to the record', async () => {

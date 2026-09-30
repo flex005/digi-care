@@ -956,6 +956,29 @@ describe('a domain outside the ten is written, signed and counted apart', () => 
     )
   }, 30000)
 
+  /*
+   * **The empty case, which nothing asserted until now.** Its two facts used to
+   * live in two paragraphs and now live in one sentence, and collapsing them is
+   * exactly the edit that can quietly drop one — so both are held by name. The
+   * resident is found by the property the test needs rather than pinned by id,
+   * because an id that acquires a custom domain later would make this pass on
+   * the wrong screen.
+   */
+  it('says both facts in one sentence where nothing is written outside the ten', async () => {
+    const withoutCustom = residents.find(
+      (resident) => resident.customCarePlan.length === 0,
+    )
+    expect(withoutCustom, 'every fixture resident has a custom domain').toBeTruthy()
+
+    const { container } = renderAt(`/residents/${withoutCustom!.id}/care-plan`)
+    await waitFor(() => expect(container.querySelector('[data-domain]')).toBeTruthy())
+
+    expect(container.querySelector('[data-custom-domain]')).toBeNull()
+    const claim = container.querySelector('[data-no-custom-domains]')!.textContent
+    expect(claim).toMatch(/ordinary rather than a gap/)
+    expect(claim).toMatch(/counted apart from the ten/)
+  }, 30000)
+
   it('says on a whole plan review that it is not part of one', async () => {
     // Its own router: the review is a route beside the editor, not under it.
     const router = createMemoryRouter(

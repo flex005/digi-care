@@ -205,20 +205,27 @@ function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime
             Add custom domain
           </Button>
         </div>
-        <p className={styles.customNote} data-custom-domain-claim>
+        {/*
+         * One sentence where there is nothing here, for the reason the risk
+         * tab's says: the note and the empty state said the same two facts
+         * twice over. Both still have to be said, so they are said once.
+         */}
+        <p
+          className={styles.customNote}
+          data-custom-domain-claim
+          data-no-custom-domains={domains.length === 0 ? true : undefined}
+        >
           <span data-numeric>{formatCount(CARE_PLAN_DOMAINS.length)}</span> domains
           above, plus <span data-numeric>{formatCount(domains.length)}</span> written
           for this resident, counted apart from the ten and not part of a whole plan
-          review.
+          review
+          {domains.length === 0
+            ? ', and having none is ordinary rather than a gap.'
+            : '.'}
         </p>
       </div>
 
-      {domains.length === 0 ? (
-        <p className={styles.customEmpty} data-no-custom-domains>
-          Nothing outside the ten has been written for {resident.preferredName}, which
-          is an ordinary state rather than a gap.
-        </p>
-      ) : (
+      {domains.length === 0 ? null : (
         <ul className={styles.domainList}>
           {domains.map((domain) => (
             <li key={domain.id}>

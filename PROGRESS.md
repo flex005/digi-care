@@ -15251,3 +15251,63 @@ the treatment cannot be changed in the feature stylesheet alone — it is the
 shared primitive, whose visible label also appears on medication interim,
 goals, activities attendance and incident reporting. That is five modules and
 a §9 decision, not a copy pass, so it is left for Frank rather than taken.
+
+## The two tabs the copy pass never reached
+
+The resident's Risk Assessments and Care Plan tabs still carried their
+original copy: the earlier trim went through admission and stopped there.
+
+**One block on each was saying the same thing twice.** The custom risk and
+custom domain sections each rendered a header note and an empty-state
+paragraph, and both fired when nothing custom had been recorded — "these are
+not part of the nine and are not counted in the figure at the top" directly
+above "that is an ordinary state rather than a gap: the nine are what the
+home is expected to hold". Two facts, four clauses, and a reader who has to
+work out whether the second paragraph is telling them something new.
+
+Both facts had to survive, because between them they are the whole reason
+the list is separate: these are outside the expected set, and a zero here is
+ordinary rather than a gap somebody can close. So they are said once, in the
+note, and the empty case keeps its own attribute rather than its own
+paragraph. The counts stay. Where the list has entries the note carries only
+the first fact, which is the only one true of that state.
+
+### What was left, and the standard
+
+Everything stating the Evidence Invariant in prose stayed: the placeholder
+banner, the lead figures and "Never assessed is not low risk" / "Never
+written down is not 'no needs here'", the retired-template note, "This home
+no longer carries this assessment out", "No description recorded", "No
+actions recorded", and every hatch detail line. So did the part-written
+clause on the care plan lead, which names a count that would otherwise be
+hidden between "never written" and "signed".
+
+Read line by line, nothing else on either screen qualified. The row labels
+are identifications rather than explanations, and the chips are the record.
+That is worth recording as a result rather than a non-event: the two blocks
+found here were the whole of it, and the rest of both files was already
+carrying its weight.
+
+### The empty state on the care plan had never been asserted, or styled
+
+`[data-no-custom-domains]` had no test at all — the risk tab's equivalent
+had one and the care plan's did not, which is the §8 entry about a state no
+fixture or test reaches. It has one now, and the resident it renders for is
+**found by the property the test needs** rather than pinned by id, because an
+id that later acquires a custom domain would make the test pass on the wrong
+screen.
+
+The same paragraph also referenced `styles.customEmpty`, and
+`care-plan.module.css` has no such rule — so it resolved to `undefined` and
+the paragraph rendered unstyled for as long as it existed. CSS Modules give
+no error for a class that is not there, and nothing in the suite can see an
+absent class either. It is gone with the paragraph; the risk tab's real
+`.customEmpty` rule went with it, being dead.
+
+**Both new assertions were mutated before being believed.** Removing "and
+having none is ordinary rather than a gap" from the care plan fails
+`says both facts in one sentence where nothing is written outside the ten`,
+and removing "not counted in the figure at the top" from the risk tab fails
+`says the nine are the expected set where a resident has no custom risk`.
+Each mutation was confirmed landed with a grep returning zero before the
+verdict was read.

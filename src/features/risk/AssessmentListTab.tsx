@@ -232,21 +232,30 @@ function CustomRisks({ resident }: { resident: Resident }) {
             Add custom risk
           </Button>
         </div>
-        <p className={styles.customNote} data-custom-claim>
+        {/*
+         * **One sentence where there is nothing here, not two.** The note and
+         * the empty state fired together and said nearly the same thing twice:
+         * that these sit outside the nine and are not in the figure at the top,
+         * and that having none is ordinary. Both facts still have to be said —
+         * a zero here is not a gap somebody can close — so they are said once,
+         * and the empty case keeps its own attribute rather than its own
+         * paragraph.
+         */}
+        <p
+          className={styles.customNote}
+          data-custom-claim
+          data-no-custom-risks={risks.length === 0 ? true : undefined}
+        >
           <span data-numeric>{formatCount(RISK_ASSESSMENT_TEMPLATES.length)}</span>{' '}
           templates above, plus <span data-numeric>{formatCount(risks.length)}</span>{' '}
-          recorded for this resident. These are not part of the nine and are not counted
-          in the figure at the top.
+          outside the nine
+          {risks.length === 0
+            ? ': not counted in the figure at the top, and having none is ordinary rather than a gap.'
+            : ', not counted in the figure at the top.'}
         </p>
       </div>
 
-      {risks.length === 0 ? (
-        <p className={styles.customEmpty} data-no-custom-risks>
-          Nothing outside the nine has been recorded for {resident.preferredName}. That
-          is an ordinary state rather than a gap: the nine are what the home is expected
-          to hold.
-        </p>
-      ) : (
+      {risks.length === 0 ? null : (
         <ul className={styles.assessmentList}>
           {risks.map((risk) => (
             <li key={risk.id}>
