@@ -223,12 +223,7 @@ function CustomRisks({ resident }: { resident: Resident }) {
            * of one of them, and it asks for a name there because a
            * `CustomRisk` cannot exist before somebody has judged a level.
            */}
-          <Link
-            to={NEW_CUSTOM_RISK}
-            className={styles.rowAction}
-            data-add-custom-risk
-            aria-label={`Record a risk outside the nine for ${resident.fullLegalName}`}
-          >
+          <Link to={NEW_CUSTOM_RISK} className={styles.rowAction} data-add-custom-risk>
             <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
             Add custom risk
           </Link>
