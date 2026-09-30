@@ -54,7 +54,11 @@ import {
   GENDER_ANSWERS,
   RISK_ASSESSMENT_TEMPLATES,
 } from '../types'
-import { SCORED_TEMPLATES } from '@/features/risk/instrument'
+import {
+  SCORED_TEMPLATES,
+  instrumentFor,
+  scoreRangeFor,
+} from '@/features/risk/instrument'
 import { pronounise } from './pronouns'
 import {
   NOW,
@@ -630,12 +634,19 @@ function makeRiskStatus(
    * Same discipline as the pronoun substitution: decide after the draw, never
    * instead of it.
    */
-  const value =
-    level === 'low'
-      ? rng.int(0, 24)
-      : level === 'moderate'
-        ? rng.int(25, 49)
-        : rng.int(50, 90)
+  /*
+   * **The range comes from this template's own bands**, not from one set of
+   * numbers here. Falls scores on Morse and pressure ulcer on Waterlow, whose
+   * thresholds and ceilings are nothing like the placeholder's — a fixture
+   * drawing 0–24 for a "low" Waterlow would be generating a record the
+   * instrument on screen could not produce. `scoreRangeFor` reads the same
+   * band table the form reads, so neither can drift from the other (§6).
+   *
+   * Still exactly one draw, whatever the range: `rng.int` consumes one value
+   * either way, so the seeded stream does not move.
+   */
+  const range = scoreRangeFor(instrumentFor(templateId), level)
+  const value = rng.int(range.from, range.to)
 
   const day = Math.round((Date.now() - assessedAt.getTime()) / 86_400_000)
 

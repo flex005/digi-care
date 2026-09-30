@@ -32,10 +32,11 @@ import { reviewIntervalMonths } from '@/data/access/settings-store'
 import { PlaceholderBanner } from './PlaceholderBanner'
 import {
   CHANGE_WORD,
-  INSTRUMENT_ITEMS,
   LEVEL_LABEL,
   LEVEL_OPTIONS,
+  PLACEHOLDER_INSTRUMENT,
   bandFor,
+  instrumentFor,
   compareScores,
   isScored,
   resolveRisk,
@@ -159,14 +160,21 @@ export function AssessmentFormRoute() {
     )
   }
 
-  /* A risk outside the nine has no instrument, so it is never scored. */
+  /*
+   * A risk outside the nine has no instrument, so it is never scored — and
+   * the placeholder stands in where nothing is rendered from it, so the
+   * running score and the item list have one shape to read either way.
+   */
   const scored = resolved.kind === 'fixed' ? isScored(resolved.id) : false
+  const instrument =
+    resolved.kind === 'fixed' ? instrumentFor(resolved.id) : PLACEHOLDER_INSTRUMENT
+  const items = instrument.items
   const naming = resolved.kind === 'new_custom'
   const name = naming ? newName : resolved.name
   const previous = onRecord.kind === 'assessed' ? onRecord : undefined
   const answered = Object.keys(answers).length
   const total = Object.values(answers).reduce((sum, points) => sum + points, 0)
-  const band = bandFor(total)
+  const band = bandFor(instrument, total)
   /* The arithmetic where there is an instrument, the judgement where not. */
   const nextLevel: RiskLevel | '' = scored ? band : chosenLevel
   const waiting = outstanding({
@@ -175,6 +183,7 @@ export function AssessmentFormRoute() {
     scored,
     level: nextLevel,
     name: naming ? newName : 'not asked here',
+    itemCount: items.length,
   })
 
   return (
@@ -190,7 +199,7 @@ export function AssessmentFormRoute() {
         {resident.fullLegalName}
       </h2>
 
-      <PlaceholderBanner />
+      {instrument.sourced ? null : <PlaceholderBanner />}
 
       {scored ? (
         <div className={styles.runningScore} data-running-score>
@@ -205,7 +214,7 @@ export function AssessmentFormRoute() {
             <span className={styles.progressTrack}>
               <span
                 className={styles.progressFill}
-                style={{ width: `${(answered / INSTRUMENT_ITEMS.length) * 100}%` }}
+                style={{ width: `${(answered / items.length) * 100}%` }}
               />
             </span>
             {/* The figure carries its denominator, and says plainly that it is
@@ -213,8 +222,8 @@ export function AssessmentFormRoute() {
                 figure. */}
             <span className={styles.progressText}>
               <span data-numeric>{answered}</span> of{' '}
-              <span data-numeric>{INSTRUMENT_ITEMS.length}</span> items answered
-              {answered < INSTRUMENT_ITEMS.length
+              <span data-numeric>{items.length}</span> items answered
+              {answered < items.length
                 ? ', the score is not final until every item has an answer'
                 : ''}
             </span>
@@ -230,7 +239,7 @@ export function AssessmentFormRoute() {
       {scored ? (
         <Card>
           <ul className={styles.itemList}>
-            {INSTRUMENT_ITEMS.map((item) => (
+            {items.map((item) => (
               <li key={item.id} className={styles.itemRow} data-item={item.id}>
                 <div className={styles.itemAbout}>
                   <p className={styles.itemQuestion}>{item.question}</p>
@@ -451,7 +460,7 @@ export function AssessmentFormRoute() {
        */}
       {previous !== undefined &&
       nextLevel !== '' &&
-      (scored ? answered === INSTRUMENT_ITEMS.length : true) ? (
+      (scored ? answered === items.length : true) ? (
         <CompareBlock
           previous={previous}
           nextScore={total}
@@ -569,11 +578,19 @@ export function outstanding(input: {
    * the nine and for a custom risk already on the record, whose name is fixed.
    */
   name: string
+  /**
+   * How many items this template's instrument asks.
+   *
+   * Passed rather than read from a constant: Morse has six, Waterlow has ten,
+   * and the placeholder has six. A module-level item count was the right
+   * answer only while every scored template shared one instrument.
+   */
+  itemCount: number
 }): string[] {
   const waiting: string[] = []
 
-  if (input.scored && input.answered < INSTRUMENT_ITEMS.length) {
-    const missing = INSTRUMENT_ITEMS.length - input.answered
+  if (input.scored && input.answered < input.itemCount) {
+    const missing = input.itemCount - input.answered
     waiting.push(`${pluralise(missing, 'unanswered item')}`)
   }
 

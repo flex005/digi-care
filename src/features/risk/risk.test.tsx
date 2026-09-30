@@ -24,7 +24,15 @@ import { ResidentProfileRoute } from '@/features/residents/ResidentProfileRoute'
 import { AssessmentListTab } from './AssessmentListTab'
 import { AssessmentFormRoute, outstanding } from './AssessmentFormRoute'
 import { RiskQueueRoute } from './RiskQueueRoute'
-import { INSTRUMENT_ITEMS, bandFor, compareScores, isScored } from './instrument'
+import {
+  MORSE,
+  PLACEHOLDER_INSTRUMENT,
+  WATERLOW,
+  bandFor,
+  compareScores,
+  isScored,
+  maxScoreOf,
+} from './instrument'
 
 /**
  * Risk assessments. PRD §6.6.
@@ -182,15 +190,27 @@ describe('never assessed is never made to look fine', () => {
   })
 })
 
-describe('the placeholder says so where it appears', () => {
-  it('banners the list and the form', async () => {
+describe('the placeholder says so where it appears, and only where it is true', () => {
+  /*
+   * **The example had to stop being falls.** This test used the falls form to
+   * prove the banner appears, which was right while every scored template
+   * shared one invented instrument. Falls carries the Morse Fall Scale now, so
+   * the same assertion on the same template would have gone on passing while
+   * asserting the opposite of what the screen should say.
+   */
+  const stillPlaceholder = 'nutrition' as const
+
+  it('banners the list, and a form still on the stand-in', async () => {
     const { container } = renderAt(
       `/residents/${NEVER_ASSESSED_FALLS}/risk-assessments`,
     )
     await listed(container)
+    // The list spans all nine, three of which are still invented.
     expect(container.querySelector('[data-placeholder-instrument]')).toBeTruthy()
 
-    const form = renderAt(`/residents/${NEVER_ASSESSED_FALLS}/risk-assessments/falls`)
+    const form = renderAt(
+      `/residents/${NEVER_ASSESSED_FALLS}/risk-assessments/${stillPlaceholder}`,
+    )
     await waitFor(() =>
       expect(
         form.container.querySelector('[data-placeholder-instrument]'),
@@ -200,6 +220,47 @@ describe('the placeholder says so where it appears', () => {
     // appears, not in a release note.
     expect(form.container.textContent).toMatch(/not a validated clinical scale/)
     expect(form.container.textContent).toMatch(/make no clinical decision/)
+  })
+
+  /**
+   * The mirror, which is the half that would have caught this.
+   *
+   * A banner saying the instrument is invented, on a form running a published
+   * scale, is a false claim about a clinical figure — and it is the direction
+   * nothing was watching: the old test asserted the sentence was present and
+   * would have been satisfied by it being present wrongly.
+   */
+  it.each(['falls', 'pressure_ulcer'] as const)(
+    'makes no placeholder claim on %s, which is sourced',
+    async (templateId) => {
+      const { container } = renderAt(
+        `/residents/${NEVER_ASSESSED_FALLS}/risk-assessments/${templateId}`,
+      )
+      await waitFor(() =>
+        expect(container.querySelector('[data-running-score]')).toBeTruthy(),
+      )
+      expect(container.querySelector('[data-placeholder-instrument]')).toBeNull()
+      expect(container.textContent).not.toMatch(/not a validated clinical scale/)
+      expect(container.textContent).not.toMatch(/make no clinical decision/)
+    },
+  )
+
+  it('names the published scale on the row instead of calling it a placeholder', async () => {
+    const { container } = renderAt(
+      `/residents/${NEVER_ASSESSED_FALLS}/risk-assessments`,
+    )
+    await listed(container)
+
+    const falls = container.querySelector('[data-template="falls"]')!
+    expect(falls.textContent).toContain('Morse Fall Scale')
+    expect(falls.textContent).not.toContain('Placeholder scored instrument')
+
+    const waterlow = container.querySelector('[data-template="pressure_ulcer"]')!
+    expect(waterlow.textContent).toContain('Waterlow Score')
+
+    // And the three nobody has sourced still say what they are.
+    const nutrition = container.querySelector('[data-template="nutrition"]')!
+    expect(nutrition.textContent).toContain('Placeholder scored instrument')
   })
 })
 
@@ -238,7 +299,7 @@ describe('the scored form', () => {
     }
     expect(
       container.querySelectorAll('[data-item] [data-state="unrecorded"]').length,
-    ).toBe(INSTRUMENT_ITEMS.length)
+    ).toBe(MORSE.items.length)
   })
 
   it('says the score is not final until every item is answered', async () => {
@@ -259,17 +320,15 @@ describe('the scored form', () => {
     const { container } = await scored()
 
     // Answer every item at its highest weighting.
-    for (const item of INSTRUMENT_ITEMS) {
+    for (const item of MORSE.items) {
       const highest = Math.max(...item.choices.map((choice) => choice.points))
       await user.click(
         container.querySelector(`[data-choice="${item.id}:${highest}"]`)!,
       )
     }
 
-    const expected = INSTRUMENT_ITEMS.reduce(
-      (sum, item) => sum + Math.max(...item.choices.map((choice) => choice.points)),
-      0,
-    )
+    // Derived from the instrument, never typed again beside it.
+    const expected = maxScoreOf(MORSE)
     const running = container.querySelector('[data-running-score]')!
     expect(running.textContent).toContain(String(expected))
     expect(running.textContent).toContain('High')
@@ -278,7 +337,8 @@ describe('the scored form', () => {
 
 describe('an intervention with no responsible person cannot be saved', () => {
   const base = {
-    answered: INSTRUMENT_ITEMS.length,
+    answered: MORSE.items.length,
+    itemCount: MORSE.items.length,
     scored: true,
     /* Irrelevant while `scored` is true: the instrument reaches the level. */
     level: 'low' as const,
@@ -328,6 +388,7 @@ describe('an intervention with no responsible person cannot be saved', () => {
         scored: false,
         level: '',
         name: 'not asked here',
+        itemCount: 0,
       }),
     ).toEqual(['a risk level'])
 
@@ -338,6 +399,7 @@ describe('an intervention with no responsible person cannot be saved', () => {
         scored: false,
         level: 'high',
         name: 'not asked here',
+        itemCount: 0,
       }),
     ).toEqual([])
   })
@@ -350,6 +412,7 @@ describe('an intervention with no responsible person cannot be saved', () => {
         scored: false,
         level: 'moderate',
         name: '   ',
+        itemCount: 0,
       }),
     ).toEqual(['a name for this risk'])
   })
@@ -357,12 +420,31 @@ describe('an intervention with no responsible person cannot be saved', () => {
 
 describe('the instrument', () => {
   it('bands by threshold, and never guesses low', () => {
-    expect(bandFor(0)).toBe('low')
-    expect(bandFor(24)).toBe('low')
-    expect(bandFor(25)).toBe('moderate')
-    expect(bandFor(49)).toBe('moderate')
-    expect(bandFor(50)).toBe('high')
-    expect(bandFor(9999)).toBe('high')
+    // Morse: 0–24 low, 25–44 moderate, 45+ high. Each edge on both sides.
+    expect(bandFor(MORSE, 0)).toBe('low')
+    expect(bandFor(MORSE, 24)).toBe('low')
+    expect(bandFor(MORSE, 25)).toBe('moderate')
+    expect(bandFor(MORSE, 44)).toBe('moderate')
+    expect(bandFor(MORSE, 45)).toBe('high')
+    expect(bandFor(MORSE, maxScoreOf(MORSE))).toBe('high')
+
+    // Waterlow: below 10 low, 10–14 moderate, 15+ high. Different thresholds
+    // on purpose — one shared band table was the thing this phase removed.
+    expect(bandFor(WATERLOW, 0)).toBe('low')
+    expect(bandFor(WATERLOW, 9)).toBe('low')
+    expect(bandFor(WATERLOW, 10)).toBe('moderate')
+    expect(bandFor(WATERLOW, 14)).toBe('moderate')
+    expect(bandFor(WATERLOW, 15)).toBe('high')
+    expect(bandFor(WATERLOW, maxScoreOf(WATERLOW))).toBe('high')
+
+    // And the stand-in the other three still use, unchanged.
+    expect(bandFor(PLACEHOLDER_INSTRUMENT, 24)).toBe('low')
+    expect(bandFor(PLACEHOLDER_INSTRUMENT, 25)).toBe('moderate')
+    expect(bandFor(PLACEHOLDER_INSTRUMENT, 50)).toBe('high')
+
+    // The published maxima, held by name: a weight typed wrong moves these.
+    expect(maxScoreOf(MORSE)).toBe(125)
+    expect(maxScoreOf(WATERLOW)).toBe(46)
   })
 
   it('names five scored templates and four unscored', () => {

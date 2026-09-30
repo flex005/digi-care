@@ -15583,3 +15583,81 @@ value matches no option. `RiskFieldSet` solves this with
 form does not use it. Pre-existing and true of the nine as well, and not data
 loss: the name is preserved on save. Reported rather than folded into this
 change.
+
+## Two of the nine instruments are real now
+
+Falls Risk carries the Morse Fall Scale and Pressure Ulcer Risk the Waterlow
+Score. Nutritional Risk, Moving and Handling and Skin Integrity keep
+`PLACEHOLDER_INSTRUMENT` and keep the banner, because nobody has sourced them.
+
+**The instrument became a per-template record rather than one shared pair.**
+`INSTRUMENT_ITEMS`/`BANDS` were module-level constants every scored template
+read identically; they are now `PLACEHOLDER_INSTRUMENT`, beside `MORSE` and
+`WATERLOW`, behind `instrumentFor(templateId)`. The lookup is a total
+`Record<ScoredTemplateId, Instrument>`, so a sixth scored template is a
+compile error rather than a silent placeholder — the ceiling pattern
+`levelFor` uses, for the reason it uses it.
+
+`bandFor` takes an instrument. `maxScoreOf` derives the ceiling from the
+items, and `scoreRangeFor` gives the fixture generator its draw range from
+the same band table the screens read, so the generator cannot drift from what
+the form can produce. The hand-typed `90` in `residents.ts` is gone with it.
+**Still exactly one `rng.int` call per risk**, whatever the range, so the
+seeded stream does not move — the discipline this file has carried since the
+pronouns defect.
+
+### What was verified, and what was not
+
+Frank sourced and cross-checked both scales and re-verified them against a
+worksheet before handing them over. **What was checked here is arithmetic,
+not clinical**: the item weights sum to the stated maxima (Morse 125,
+Waterlow 46), and Waterlow's combined sex-and-age choices are the correct
+sums of its two separate factors. Both held. Nothing in this build can
+validate a clinical scale, and saying which half was checked is the point.
+
+`maxScoreOf(MORSE)` is `125` and `maxScoreOf(WATERLOW)` is `46` as named
+assertions, so a weight typed wrong moves a number a test is watching.
+
+### Three decisions worth reading
+
+**Waterlow's four tiers into three.** The worksheet bands 10+ at risk, 15+
+high, 20+ very high. `RiskLevel` is a closed three-member union and widening
+it is the fixture type-shape change §9 says to ask about, so the fourth tier
+is merged — **upwards**, so everything the worksheet calls 15 or more takes
+the full high-risk treatment. Merging downwards would have split the
+worksheet's high-risk tier across moderate and high and quietly demoted some
+of it. The reasoning sits next to the band table, not only in the brief.
+
+**Two Waterlow items are simplified, and the screen says so.** Tissue
+Malnutrition and Major Surgery or Trauma let more than one factor apply on
+paper; this form takes one choice per item, so their guidance asks for the
+highest that applies. A total here can read lower than the same worksheet on
+paper, which is the direction worth knowing.
+
+**Moving and Handling can never take this treatment.** Its framework is the
+Manual Handling Operations Regulations assessment — Task, Individual, Load,
+Environment — a qualitative checklist with nothing to weight and no total to
+band. Recorded in the docblock now so nobody gives it bands later.
+
+### The banner claim is now conditional in three places
+
+The form hides it for a sourced instrument. The list keeps it while any row
+is still a placeholder, which is always, because three of the nine are. The
+queue hides it only when the filter is exactly one of the two real
+templates — 'all' and 'custom' still span placeholder templates, so the claim
+is still true there.
+
+**The test that proved the banner appears had to stop using falls.** It used
+the falls form as its example, which was right while every scored template
+shared one invented instrument; on a sourced falls form the same assertion
+would have gone on passing while asserting the opposite of what the screen
+should say. It moved to nutrition, and gained the mirror it never had: falls
+and pressure_ulcer render **no** placeholder claim. That mirror is the half
+that catches this class — the old test asserted the sentence was present and
+would have been satisfied by it being present wrongly.
+
+Both new mechanisms were mutated before being trusted. Moving Waterlow's high
+threshold from 15 to 20 fails the boundary test with `expected 'moderate' to
+be 'high'`; making the form's banner unconditional again fails the mirror
+test on both sourced templates. Each mutation was confirmed landed by grep
+before the verdict was read.

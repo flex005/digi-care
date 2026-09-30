@@ -22,7 +22,7 @@ import { assertNever } from '@/lib/assert-never'
 import { useSiteFormat } from '@/app/session/use-session'
 import { formatCount, formatLateness } from '@/lib/format'
 import { PlaceholderBanner } from './PlaceholderBanner'
-import { LEVEL_LABEL, NEW_CUSTOM_RISK, isScored } from './instrument'
+import { LEVEL_LABEL, NEW_CUSTOM_RISK, isScored, isSourced } from './instrument'
 import { scoreText } from './score'
 import styles from './risk.module.css'
 
@@ -72,7 +72,13 @@ export function AssessmentListTab() {
 
   return (
     <div className={styles.tabPanel}>
-      <PlaceholderBanner />
+      {/*
+       * **Only while something on this list is one.** Two of the nine are
+       * sourced now, and a blanket claim that the instrument is invented is
+       * false of them — but it is still true of the list as a whole while
+       * three placeholder templates render on it, which they always do.
+       */}
+      {rows.some((row) => !isSourced(row.template.id)) ? <PlaceholderBanner /> : null}
 
       <div className={styles.lead} data-never-assessed={never}>
         <span className={styles.leadFigure} data-numeric>
@@ -112,9 +118,13 @@ export function AssessmentListTab() {
                 <div className={styles.rowAbout}>
                   <p className={styles.rowName}>{template.name}</p>
                   <p className={styles.rowInstrument}>
-                    {isScored(template.id)
-                      ? 'Placeholder scored instrument'
-                      : 'Unscored: findings recorded'}
+                    {/* The published scale where there is one, the same way
+                        the admission row labels itself. */}
+                    {!isScored(template.id)
+                      ? 'Unscored: findings recorded'
+                      : isSourced(template.id)
+                        ? template.framework
+                        : 'Placeholder scored instrument'}
                   </p>
                 </div>
 

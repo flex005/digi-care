@@ -18,6 +18,7 @@ import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, formatLateness } from '@/lib/format'
 import { PlaceholderBanner } from './PlaceholderBanner'
+import { isSourced } from './instrument'
 import { LEVEL_LABEL } from './instrument'
 import styles from './risk.module.css'
 
@@ -80,7 +81,17 @@ export function RiskQueueRoute() {
       <div className={styles.page}>
         <h1 className={styles.pageTitle}>Risk assessments</h1>
 
-        <PlaceholderBanner />
+        {/*
+         * **True of every filter but two.** This page spans all nine
+         * templates, so "the instrument is a placeholder" holds for 'all', for
+         * 'custom', and for any template still on the stand-in. It stops
+         * holding only when somebody has filtered down to exactly one of the
+         * two sourced scales, and a claim that is false of what is on screen
+         * is worse than no claim.
+         */}
+        {template !== 'all' && template !== 'custom' && isSourced(template) ? null : (
+          <PlaceholderBanner />
+        )}
 
         {resource.kind === 'loading' ? (
           <p className={styles.loading} role="status">
