@@ -14,17 +14,15 @@ import {
   countsTowardsExpected,
 } from '@/data/access/site-config-store'
 import type { ResidentProfile } from '@/data/access/client'
-import { useState } from 'react'
-import { Button, Card } from '@/components/primitives'
+import { Card } from '@/components/primitives'
 import { withResidentEdits } from '@/data/access/resident-store'
-import { CustomRiskDialog } from './CustomRiskDialog'
 import { StatusPill, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSiteFormat } from '@/app/session/use-session'
 import { formatCount, formatLateness } from '@/lib/format'
 import { PlaceholderBanner } from './PlaceholderBanner'
-import { LEVEL_LABEL, isScored } from './instrument'
+import { LEVEL_LABEL, NEW_CUSTOM_RISK, isScored } from './instrument'
 import { scoreText } from './score'
 import styles from './risk.module.css'
 
@@ -206,10 +204,7 @@ function Findings({ status }: { status: RiskStatus | CustomRisk }) {
  * counted apart, and the heading says which is which.
  */
 function CustomRisks({ resident }: { resident: Resident }) {
-  const [recording, setRecording] = useState<CustomRisk | 'new' | 'none'>('none')
-  const [version, setVersion] = useState(0)
   const risks = withResidentEdits(resident).customRisks
-  void version
 
   return (
     <Card>
@@ -222,15 +217,21 @@ function CustomRisks({ resident }: { resident: Resident }) {
            * a form that only takes the second sends the first somewhere else:
            * a care note, a handover, somebody's memory.
            */}
-          <Button
-            variant="secondary"
-            size="small"
+          {/*
+           * A link to the same form the nine open, not a dialog. A first
+           * assessment outside the nine is the same act as a first assessment
+           * of one of them, and it asks for a name there because a
+           * `CustomRisk` cannot exist before somebody has judged a level.
+           */}
+          <Link
+            to={NEW_CUSTOM_RISK}
+            className={styles.rowAction}
             data-add-custom-risk
-            onClick={() => setRecording('new')}
+            aria-label={`Record a risk outside the nine for ${resident.fullLegalName}`}
           >
             <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
             Add custom risk
-          </Button>
+          </Link>
         </div>
         {/*
          * **One sentence where there is nothing here, not two.** The note and
@@ -271,33 +272,26 @@ function CustomRisks({ resident }: { resident: Resident }) {
                 <StateChip status={{ kind: 'assessed', ...risk }} state="in_use" />
                 <LevelPill status={{ kind: 'assessed', ...risk }} state="in_use" />
 
-                {/* The same act as re-scoring one of the nine, in the list the
-                    risk already renders in. */}
-                <Button
-                  variant="secondary"
-                  size="small"
-                  data-rescore-custom={risk.id}
-                  onClick={() => setRecording(risk)}
+                {/* The nine's row exactly: re-scoring one of these is the same
+                    act, on the same form, so it is the same control. */}
+                <Link
+                  to={risk.id}
+                  className={styles.rowAction}
+                  data-action="rescore"
+                  aria-label={`Re-score ${risk.name} for ${resident.fullLegalName}`}
                 >
                   Re-score
-                </Button>
+                  <Icon
+                    name="arrows-sharp/arrow-right-01-sharp"
+                    size={16}
+                    aria-hidden
+                  />
+                </Link>
               </div>
               <Findings status={risk} />
             </li>
           ))}
         </ul>
-      )}
-
-      {recording === 'none' ? null : (
-        <CustomRiskDialog
-          resident={resident}
-          risk={recording}
-          onClose={() => setRecording('none')}
-          onRecorded={() => {
-            setRecording('none')
-            setVersion((count) => count + 1)
-          }}
-        />
       )}
     </Card>
   )

@@ -2,7 +2,7 @@ import type { IsoDate, RiskFinding, RiskLevel } from '@/data/types'
 import type { AdmissionRiskEntry } from '@/data/access/resident-store'
 import { Button, Select } from '@/components/primitives'
 import { carersAndSeniors } from '@/data/fixtures/organisation'
-import { LEVEL_LABEL } from './instrument'
+import { LEVEL_OPTIONS } from './instrument'
 import { nextReviewFrom } from '@/lib/review-interval'
 import { reviewIntervalMonths } from '@/data/access/settings-store'
 import styles from './risk-draft.module.css'
@@ -97,11 +97,6 @@ function responsibleOptions(current: string): { value: string; label: string }[]
   if (current === '' || listed.some((option) => option.value === current)) return listed
   return [{ value: current, label: current }, ...listed]
 }
-
-const LEVEL_OPTIONS = (['low', 'moderate', 'high'] as const).map((level) => ({
-  value: level,
-  label: LEVEL_LABEL[level],
-}))
 
 /** A draft filled in from a risk already on the record, for a re-score. */
 export function draftFrom(finding: RiskFinding): DraftRisk {

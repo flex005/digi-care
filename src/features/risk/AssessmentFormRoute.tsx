@@ -8,7 +8,6 @@ import type {
   Resident,
   RiskLevel,
   RiskStatus,
-  RiskTemplateId,
   StaffRef,
 } from '@/data/types'
 import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
@@ -21,11 +20,12 @@ import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import {
   recordAssessment,
+  recordCustomRisk,
   recordReviewFlagsCleared,
   undoReviewFlagsCleared,
 } from '@/data/access/client'
 import type { ClearingToken } from '@/data/access/review-flag-store'
-import { flagsClosedBy, riskTemplateName } from '@/data/access/review-flags'
+import { flagsClosedBy } from '@/data/access/review-flags'
 import { formatDate, pluralise } from '@/lib/format'
 import { nextReviewFrom } from '@/lib/review-interval'
 import { reviewIntervalMonths } from '@/data/access/settings-store'
@@ -34,10 +34,15 @@ import {
   CHANGE_WORD,
   INSTRUMENT_ITEMS,
   LEVEL_LABEL,
+  LEVEL_OPTIONS,
   bandFor,
   compareScores,
   isScored,
+  resolveRisk,
+  riskInSentence,
 } from './instrument'
+import type { ResolvedRisk } from './instrument'
+import { RiskNameField } from './RiskFieldSet'
 import { badgeStripChange, notificationNote } from './rescore'
 import styles from './risk.module.css'
 
@@ -87,7 +92,7 @@ export function AssessmentFormRoute() {
   const { resident } = useOutletContext<ResidentProfile>()
   const { templateId } = useParams<{ templateId: string }>()
 
-  const template = RISK_ASSESSMENT_TEMPLATES.find((entry) => entry.id === templateId)
+  const resolved = resolveRisk(resident, templateId)
 
   /*
    * **A re-score starts from what is on the record, never from blank.**
@@ -96,9 +101,12 @@ export function AssessmentFormRoute() {
    * retyping them: data loss dressed as a fresh assessment. The instrument's
    * own answers are not prefilled, because those are this assessment's.
    */
-  const onRecord = templateId
-    ? resident.risks[templateId as RiskTemplateId]
-    : ({ kind: 'not_assessed' } as const)
+  const onRecord: RiskStatus =
+    resolved === 'no_such_risk' || resolved.kind === 'new_custom'
+      ? { kind: 'not_assessed' }
+      : resolved.kind === 'fixed'
+        ? resolved.status
+        : { kind: 'assessed', ...resolved.risk }
   const recorded = onRecord.kind === 'assessed' ? onRecord : undefined
 
   const [answers, setAnswers] = useState<Record<string, number>>({})
@@ -117,29 +125,57 @@ export function AssessmentFormRoute() {
     () => (recorded === undefined ? 1 : recorded.actions.length) + 1,
   )
   const [firstRecorded, setFirstRecorded] = useState(false)
+  /*
+   * **The level, for an instrument that does not compute one.** Four of the
+   * nine are unscored and a custom risk always is, and until this phase there
+   * was no control for it anywhere: `level` was passed `bandFor(total)` with
+   * `total` stuck at 0, so every one of them recorded **Low**, silently,
+   * whatever the assessor had written. That is the default-the-unknown-to-fine
+   * failure §1 exists to prevent, and it was live.
+   *
+   * **Not prefilled from the previous assessment, deliberately.** The scored
+   * instrument's own answers are not prefilled either, for the reason this
+   * file already gives: those are this assessment's. A level on an unscored
+   * template is exactly that judgement, and carrying it forward would make "no
+   * change" the answer nobody had to give.
+   */
+  const [chosenLevel, setChosenLevel] = useState<RiskLevel | ''>('')
+  /** Only ever asked for a first custom assessment; fixed once recorded. */
+  const [newName, setNewName] = useState('')
   const { currentUser } = useSession()
 
-  if (!template) {
+  if (resolved === 'no_such_risk') {
     return (
       <div className={styles.tabPanel}>
         <Card padded>
           <p className={styles.errorTitle}>No such risk assessment</p>
           <p className={styles.errorBody}>
-            Nothing is missing from the record; this address does not name one of the{' '}
-            <span data-numeric>{RISK_ASSESSMENT_TEMPLATES.length}</span> templates.
+            Nothing is missing from the record; this address names neither one of the{' '}
+            <span data-numeric>{RISK_ASSESSMENT_TEMPLATES.length}</span> templates nor a
+            risk recorded for {resident.fullLegalName} outside them.
           </p>
         </Card>
       </div>
     )
   }
 
-  const scored = isScored(template.id as RiskTemplateId)
-  const existing = resident.risks[template.id as RiskTemplateId]
-  const previous = existing.kind === 'assessed' ? existing : undefined
+  /* A risk outside the nine has no instrument, so it is never scored. */
+  const scored = resolved.kind === 'fixed' ? isScored(resolved.id) : false
+  const naming = resolved.kind === 'new_custom'
+  const name = naming ? newName : resolved.name
+  const previous = onRecord.kind === 'assessed' ? onRecord : undefined
   const answered = Object.keys(answers).length
   const total = Object.values(answers).reduce((sum, points) => sum + points, 0)
   const band = bandFor(total)
-  const waiting = outstanding({ answered, interventions, scored })
+  /* The arithmetic where there is an instrument, the judgement where not. */
+  const nextLevel: RiskLevel | '' = scored ? band : chosenLevel
+  const waiting = outstanding({
+    answered,
+    interventions,
+    scored,
+    level: nextLevel,
+    name: naming ? newName : 'not asked here',
+  })
 
   return (
     <div className={styles.tabPanel}>
@@ -150,7 +186,8 @@ export function AssessmentFormRoute() {
 
       <h2 className={styles.formTitle}>
         {previous ? 'Re-score: ' : ''}
-        {template.name}, {resident.fullLegalName}
+        {naming && newName.trim() === '' ? 'A risk outside the nine' : name},{' '}
+        {resident.fullLegalName}
       </h2>
 
       <PlaceholderBanner />
@@ -249,9 +286,39 @@ export function AssessmentFormRoute() {
       ) : (
         <Card padded>
           <p className={styles.settledNote}>
-            {template.name} is not a scored instrument: findings are recorded and a
-            level is judged.
+            {naming
+              ? 'A risk outside the nine has no instrument: findings are recorded and a level is judged.'
+              : `${name} is not a scored instrument: findings are recorded and a level is judged.`}
           </p>
+
+          {/* The name, asked once and only here. A custom risk's name is fixed
+              once it is recorded, because everything written about it was
+              written about that name — so the editor never offers it again. */}
+          {naming ? (
+            <RiskNameField
+              value={newName}
+              onChange={setNewName}
+              idSuffix="-new"
+              hint="This cannot be changed later."
+            />
+          ) : null}
+
+          {/*
+           * **The judgement, which had no control at all.** Without it `level`
+           * was `bandFor(0)`, so an unscored assessment recorded Low whatever
+           * the description said. The same control the admission form and the
+           * re-score dialog use, rather than a second one to keep in step.
+           */}
+          <div className={styles.levelChoice} data-level-choice>
+            <Select
+              label="Risk level"
+              labelVisible
+              placeholder="Not yet judged"
+              value={chosenLevel === '' ? undefined : chosenLevel}
+              options={LEVEL_OPTIONS}
+              onValueChange={(value) => setChosenLevel(value as RiskLevel)}
+            />
+          </div>
         </Card>
       )}
 
@@ -374,13 +441,23 @@ export function AssessmentFormRoute() {
         </section>
       </Card>
 
-      {previous && scored && answered === INSTRUMENT_ITEMS.length ? (
+      {/*
+       * **Reached by an unscored re-score too.** The gate was `scored &&
+       * every item answered`, which no unscored template can ever satisfy — so
+       * the comparison, the consequences and the undo were unreachable for
+       * four of the nine and for every custom risk. What makes the comparison
+       * possible is a new level, and for an unscored assessment that is the
+       * judgement rather than the arithmetic.
+       */}
+      {previous !== undefined &&
+      nextLevel !== '' &&
+      (scored ? answered === INSTRUMENT_ITEMS.length : true) ? (
         <CompareBlock
           previous={previous}
           nextScore={total}
-          nextLevel={band}
+          nextLevel={nextLevel}
           resident={resident}
-          templateId={template.id as RiskTemplateId}
+          resolved={resolved}
           description={description}
           interventions={interventions}
         />
@@ -388,11 +465,11 @@ export function AssessmentFormRoute() {
 
       <div className={styles.foot}>
         <p className={styles.footState}>
-          {waiting.length === 0 ? (
+          {waiting.length === 0 && nextLevel !== '' ? (
             <>
-              <strong>Every item is answered.</strong> This records a{' '}
-              {template.name.toLowerCase()} of {LEVEL_LABEL[band]} for{' '}
-              {resident.fullLegalName}.
+              <strong>Every item is answered.</strong> This records{' '}
+              {riskInSentence({ kind: resolved.kind, name })} as{' '}
+              {LEVEL_LABEL[nextLevel]} for {resident.fullLegalName}.
             </>
           ) : (
             <>
@@ -410,16 +487,43 @@ export function AssessmentFormRoute() {
           disabled={waiting.length > 0}
           data-record-assessment
           onClick={() => {
-            void recordAssessment({
-              residentId: resident.id,
-              templateId: template.id as RiskTemplateId,
-              level: band,
-              score: scored ? { kind: 'scored', value: total } : { kind: 'unscored' },
+            /*
+             * Guarded rather than cast. `outstanding` already refuses an
+             * unscored assessment with no level, so this cannot be reached —
+             * and a cast here would be the one that silences the check §8
+             * names, on the field this whole fix is about.
+             */
+            if (nextLevel === '') return
+            const common = {
+              level: nextLevel,
+              score: scored
+                ? ({ kind: 'scored', value: total } as const)
+                : ({ kind: 'unscored' } as const),
               description,
               actions: asActions(interventions),
               by: currentUser,
               at: appNow().toISOString() as IsoDateTime,
-            }).then(() => setFirstRecorded(true))
+            }
+            /*
+             * Two writers, one act, chosen here rather than in the store: the
+             * nine live in `resident.risks` keyed by template and the rest in
+             * `resident.customRisks` as a list. The screen is where that
+             * difference belongs.
+             */
+            const written =
+              resolved.kind === 'fixed'
+                ? recordAssessment({
+                    residentId: resident.id,
+                    templateId: resolved.id,
+                    ...common,
+                  })
+                : recordCustomRisk({
+                    residentId: resident.id,
+                    name,
+                    ...(resolved.kind === 'custom' ? { riskId: resolved.id } : {}),
+                    ...common,
+                  })
+            void written.then(() => setFirstRecorded(true))
           }}
         >
           Record assessment
@@ -433,7 +537,7 @@ export function AssessmentFormRoute() {
         }}
         tone="positive"
         title="Assessment recorded"
-        description={`${template.name} for ${resident.fullLegalName}.`}
+        description={`${name} for ${resident.fullLegalName}.`}
       />
     </div>
   )
@@ -455,6 +559,16 @@ export function outstanding(input: {
   answered: number
   interventions: { description: string; responsible: string }[]
   scored: boolean
+  /**
+   * The level this assessment will record. Computed from the instrument where
+   * there is one, and chosen where there is not.
+   */
+  level: RiskLevel | ''
+  /**
+   * The name a first custom assessment is being given. `'not asked here'` for
+   * the nine and for a custom risk already on the record, whose name is fixed.
+   */
+  name: string
 }): string[] {
   const waiting: string[] = []
 
@@ -462,6 +576,15 @@ export function outstanding(input: {
     const missing = INSTRUMENT_ITEMS.length - input.answered
     waiting.push(`${pluralise(missing, 'unanswered item')}`)
   }
+
+  /*
+   * **The level, where nothing computes one.** Without this the form was
+   * ready to save with no judgement made, and `bandFor(0)` recorded Low. A
+   * scored instrument reaches its level through the items above instead.
+   */
+  if (!input.scored && input.level === '') waiting.push('a risk level')
+
+  if (input.name.trim() === '') waiting.push('a name for this risk')
 
   // An intervention somebody typed and nobody owns holds the record. An empty
   // row is not an intervention at all and is ignored.
@@ -487,7 +610,7 @@ function CompareBlock({
   nextScore,
   nextLevel,
   resident,
-  templateId,
+  resolved,
   description,
   interventions,
 }: {
@@ -495,18 +618,27 @@ function CompareBlock({
   nextScore: number
   nextLevel: RiskLevel
   resident: Resident
-  templateId: RiskTemplateId
+  resolved: ResolvedRisk
   /** Both typed above, and both written by the same save as a first one. */
   description: string
   interventions: Intervention[]
 }) {
-  /** Only four of the nine produce a number; the rest reach a level. */
-  const scoredTemplate = isScored(templateId)
+  /** Five of the nine produce a number; the rest reach a level by judgement. */
+  const scoredTemplate = resolved.kind === 'fixed' && isScored(resolved.id)
+  const named = resolved.kind === 'new_custom' ? '' : resolved.name
+  const inSentence = riskInSentence({ kind: resolved.kind, name: named })
   const format = useSiteFormat()
   const { currentUser } = useSession()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
   const [confirming, setConfirming] = useState(false)
-  const [recorded, setRecorded] = useState<ClearingToken | 'none'>('none')
+  /*
+   * Outside the nine there is no flag to discharge, so there is nothing to put
+   * back. A state rather than a null, and the same shape `DomainEditorRoute`
+   * uses for exactly this.
+   */
+  const [recorded, setRecorded] = useState<ClearingToken | 'nothing_to_clear' | 'none'>(
+    'none',
+  )
   const [error, setError] = useState('')
 
   const previousScore =
@@ -514,13 +646,23 @@ function CompareBlock({
   const change = compareScores(previousScore, nextScore)
   const levelChanged = previous.level !== nextLevel
 
-  const closes = flagsClosedBy({
-    incidents,
-    residentId: resident.id,
-    target: { kind: 'risk_assessment', templateId },
-    now,
-    formatDate: (at) => format.date(at.slice(0, 10) as IsoDate),
-  })
+  /*
+   * **Only the nine, because only they can be flagged.**
+   * `IncidentReviewTarget` names a `RiskTemplateId` and that union is closed
+   * deliberately: a post-incident review is raised against one of the nine. A
+   * risk outside them has no flags rather than an unread set, so the screen
+   * says nothing about them rather than something un-scoped.
+   */
+  const closes =
+    resolved.kind === 'fixed'
+      ? flagsClosedBy({
+          incidents,
+          residentId: resident.id,
+          target: { kind: 'risk_assessment', templateId: resolved.id },
+          now,
+          formatDate: (at) => format.date(at.slice(0, 10) as IsoDate),
+        })
+      : []
 
   return (
     <Card>
@@ -580,21 +722,25 @@ function CompareBlock({
               The risk level has changed, and these change with it
             </p>
             <ul className={styles.consequencesList}>
-              <li>
-                {badgeStripChange(
-                  templateId,
-                  previous.level,
-                  nextLevel,
-                  (level) => LEVEL_LABEL[level],
-                )}
-              </li>
+              {/* The badge strip is drawn from the nine; a custom risk has no
+                  place on it, so the line is absent rather than invented. */}
+              {resolved.kind === 'fixed' ? (
+                <li>
+                  {badgeStripChange(
+                    resolved.id,
+                    previous.level,
+                    nextLevel,
+                    (level) => LEVEL_LABEL[level],
+                  )}
+                </li>
+              ) : null}
 
               {/* Named individually, never counted. A figure tells somebody how
                   much work vanished; the names tell them what it was. */}
               {closes.map((entry) => (
                 <li key={entry.incident.id} data-closes={entry.incident.id}>
-                  This closes the post-incident review flagged on{' '}
-                  {riskTemplateName(templateId).toLowerCase()} by {entry.description}
+                  This closes the post-incident review flagged on {inSentence} by{' '}
+                  {entry.description}
                   {entry.overdue
                     ? ': it is already past its 48 hours, and will still read as closed late.'
                     : ', which is still inside its 48 hours.'}
@@ -624,13 +770,17 @@ function CompareBlock({
       <div className={styles.foot}>
         <p className={styles.footState}>
           <strong>
-            Confirming records a {riskTemplateName(templateId).toLowerCase()} of{' '}
-            {LEVEL_LABEL[nextLevel]} for {resident.fullLegalName}.
+            Confirming records {inSentence} as {LEVEL_LABEL[nextLevel]} for{' '}
+            {resident.fullLegalName}.
           </strong>{' '}
           The previous score stays on the record; a re-score adds to the history.
         </p>
         {recorded === 'none' ? (
-          <Button size="large" onClick={() => levelChanged && setConfirming(true)}>
+          <Button
+            size="large"
+            data-record-rescore
+            onClick={() => levelChanged && setConfirming(true)}
+          >
             {closes.length === 0
               ? 'Record assessment'
               : `Record and close ${pluralise(closes.length, 'review')}`}
@@ -667,7 +817,7 @@ function CompareBlock({
             name: resident.fullLegalName,
             ...(resident.room.kind === 'recorded' ? { room: resident.room.value } : {}),
           }}
-          action={`Record a ${riskTemplateName(templateId).toLowerCase()} of ${LEVEL_LABEL[nextLevel]}`}
+          action={`Record ${inSentence} as ${LEVEL_LABEL[nextLevel]}`}
           confirmLabel={
             closes.length === 0
               ? 'Record assessment'
@@ -675,14 +825,16 @@ function CompareBlock({
           }
           description={
             <span className={styles.confirmBody}>
-              <span>
-                {badgeStripChange(
-                  templateId,
-                  previous.level,
-                  nextLevel,
-                  (level) => LEVEL_LABEL[level],
-                )}
-              </span>
+              {resolved.kind === 'fixed' ? (
+                <span>
+                  {badgeStripChange(
+                    resolved.id,
+                    previous.level,
+                    nextLevel,
+                    (level) => LEVEL_LABEL[level],
+                  )}
+                </span>
+              ) : null}
               {closes.map((entry) => (
                 <span key={entry.incident.id}>
                   Closes the review flagged by {entry.description}
@@ -726,25 +878,50 @@ function CompareBlock({
        * The order matters — a flag discharged by a re-score that did not land
        * would be an obligation cleared by nothing.
        */
-      await recordAssessment({
-        residentId: resident.id,
-        templateId,
+      const common = {
         level: nextLevel,
         score: scoredTemplate
-          ? { kind: 'scored', value: nextScore }
-          : { kind: 'unscored' },
+          ? ({ kind: 'scored', value: nextScore } as const)
+          : ({ kind: 'unscored' } as const),
         description,
         actions: asActions(interventions),
         by: currentUser,
         at: now,
-      })
+      }
+      if (resolved.kind === 'fixed') {
+        await recordAssessment({
+          residentId: resident.id,
+          templateId: resolved.id,
+          ...common,
+        })
+      } else if (resolved.kind === 'custom') {
+        /*
+         * The name goes back unchanged. `recordCustomRisk` renames silently if
+         * handed a different string, and everything written about this risk
+         * was written about that name.
+         */
+        await recordCustomRisk({
+          residentId: resident.id,
+          name: resolved.name,
+          riskId: resolved.id,
+          ...common,
+        })
+      }
 
-      const token = await recordReviewFlagsCleared({
-        residentId: resident.id,
-        target: { kind: 'risk_assessment', templateId },
-        by: currentUser,
-        at: now,
-      })
+      /*
+       * Only where a flag could exist. Calling this for a risk outside the
+       * nine would mean widening `IncidentReviewTarget` to take an id it is
+       * closed against, to clear a set that is empty by construction.
+       */
+      const token =
+        resolved.kind === 'fixed'
+          ? await recordReviewFlagsCleared({
+              residentId: resident.id,
+              target: { kind: 'risk_assessment', templateId: resolved.id },
+              by: currentUser,
+              at: now,
+            })
+          : ('nothing_to_clear' as const)
       setConfirming(false)
       setRecorded(token)
       setError('')
@@ -754,8 +931,8 @@ function CompareBlock({
     }
   }
 
-  async function undo(token: ClearingToken) {
-    await undoReviewFlagsCleared(token)
+  async function undo(token: ClearingToken | 'nothing_to_clear') {
+    if (token !== 'nothing_to_clear') await undoReviewFlagsCleared(token)
     setRecorded('none')
   }
 }

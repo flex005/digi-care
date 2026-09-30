@@ -1,4 +1,11 @@
-import type { RiskLevel, RiskTemplateId } from '@/data/types'
+import type {
+  CustomRisk,
+  CustomRiskId,
+  RiskLevel,
+  RiskStatus,
+  RiskTemplateId,
+} from '@/data/types'
+import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
 
 /**
  * The scoring instrument. PRD §6.6.
@@ -136,6 +143,18 @@ export const LEVEL_LABEL: Record<RiskLevel, string> = {
 }
 
 /**
+ * The three levels as a control's options.
+ *
+ * Beside the labels it is built from, and shared: the admission field set, the
+ * re-score fields and the routed form all ask for the same judgement, and a
+ * second list of the same three is a second thing to keep in step.
+ */
+export const LEVEL_OPTIONS = (['low', 'moderate', 'high'] as const).map((level) => ({
+  value: level,
+  label: LEVEL_LABEL[level],
+}))
+
+/**
  * How two scores compare.
  *
  * **Every member carries a word**, because the arrow beside it is not readable
@@ -155,3 +174,85 @@ export const CHANGE_WORD: Record<ScoreChange, string> = {
   unchanged: 'Unchanged',
   deteriorated: 'Deteriorated',
 }
+
+/**
+ * The risk an address names, from whichever of the two lists holds it.
+ *
+ * **One lookup, the same reasoning as `resolveDomain`.** `RiskFinding` has
+ * been one shape for the nine templates and for a risk a home records for one
+ * resident since Phase 30 — its own docblock says so — and only the screen
+ * layer ever treated them as two kinds of thing: the nine opened a routed
+ * form and a custom risk opened a modal with no running score, no
+ * previous-against-new comparison, no consequences and no undo.
+ *
+ * The kind is kept rather than discarded, because one thing genuinely differs:
+ * `IncidentReviewTarget` names a `RiskTemplateId`, and that union is closed on
+ * purpose. A custom risk structurally cannot be the target of a post-incident
+ * review flag, so the screen asks this rather than inferring it from the shape
+ * of an id.
+ *
+ * **`new_custom` exists because a `CustomRisk` cannot.** A custom care plan
+ * domain can be created empty and written later, so its naming dialog creates
+ * the record and routes to it. A `CustomRisk` *is* a `RiskFinding`: the level
+ * is required and `RiskLevel` has no unrecorded member, so creating one before
+ * anybody has judged a level would mean inventing a clinical finding to hold a
+ * name — the exact default-the-unknown-to-fine failure §1 exists to prevent.
+ * So a first assessment is a state of this screen rather than a record that
+ * already exists, and it is the one case where the name is asked for here.
+ */
+export type ResolvedRisk =
+  | {
+      kind: 'fixed'
+      id: RiskTemplateId
+      name: string
+      status: RiskStatus
+    }
+  | {
+      kind: 'custom'
+      id: CustomRiskId
+      name: string
+      risk: CustomRisk
+    }
+  | { kind: 'new_custom' }
+
+/** The address a first custom assessment is written at. Names no template. */
+export const NEW_CUSTOM_RISK = 'new'
+
+export function resolveRisk(
+  resident: {
+    risks: Record<RiskTemplateId, RiskStatus>
+    customRisks: CustomRisk[]
+  },
+  riskId: string | undefined,
+): ResolvedRisk | 'no_such_risk' {
+  if (riskId === NEW_CUSTOM_RISK) return { kind: 'new_custom' }
+
+  const template = RISK_ASSESSMENT_TEMPLATES.find((entry) => entry.id === riskId)
+  if (template) {
+    return {
+      kind: 'fixed',
+      id: template.id,
+      name: template.name,
+      status: resident.risks[template.id],
+    }
+  }
+
+  const custom = resident.customRisks.find((entry) => entry.id === riskId)
+  if (custom) {
+    return { kind: 'custom', id: custom.id, name: custom.name, risk: custom }
+  }
+
+  return 'no_such_risk'
+}
+
+/**
+ * The risk's name as it reads inside a sentence.
+ *
+ * `domainInSentence`'s twin, for the same reason and with the same hazard. The
+ * nine are a closed vocabulary we wrote, so lowercasing "Falls Risk" into a
+ * sentence is ours to do. A custom risk carries a name a home typed, and
+ * recasing it is the §8 defect twice recorded already — "DNAR" and a
+ * resident's own words are not ours to alter.
+ */
+export const riskInSentence = (risk: { kind: ResolvedRisk['kind']; name: string }) =>
+  risk.kind === 'fixed' ? risk.name.toLowerCase() : risk.name

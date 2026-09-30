@@ -15501,3 +15501,85 @@ Both new tests were mutated before being trusted: forcing `isMine` false
 removes the disclosure and fails the reveal test, and the phrasing mutation
 above fails the custom signing test. Both mutations were confirmed landed with
 a grep before the verdict was read.
+
+## Every unscored assessment was recording Low, and custom risks now route
+
+### Part 1: a level nobody chose
+
+Four of the nine templates are unscored — choking, behaviour, environmental,
+COSHH — and a custom risk always is. They reach a level by judgement, and
+**there was no control for it anywhere on the screen**. `recordAssessment`
+was handed `bandFor(total)`, and `total` sums the scored item list, which for
+these never renders: it stayed 0, and `bandFor(0)` is `low`. So every first
+assessment and every re-score of those four recorded **Low**, silently,
+whatever the assessor had written in the findings.
+
+That is the "default the unknown to fine" failure §1 exists to prevent, and
+it was live. `instrument.ts` even carries the comment `a default of "low"
+would be the worst possible guess` on the line above the fallback it uses for
+an impossible case — while the reachable path did exactly that.
+
+The fix is the control the admission form and the old re-score dialog already
+used, and `outstanding()` now refuses to save until a level is judged.
+**The level is not prefilled from the previous assessment**, deliberately:
+this file already refuses to prefill the scored instrument's answers because
+"those are this assessment's", and a level on an unscored template is that
+same judgement. Carrying it forward would make "no change" the answer nobody
+had to give.
+
+**The test that asserted the defect.** `asks nothing of an unscored
+instrument` expected `outstanding(...)` to be `[]` — it was pinning the bug.
+It is now `waits for a level on an unscored instrument, and never assumes
+low`, with a note saying why, so the next person who sees it fail reads the
+reason before changing it back.
+
+**The fixtures are clean, and it was checked rather than assumed.**
+`makeRiskStatus` draws the level first and then picks the narrative for that
+level from `RISK_NARRATIVE[templateId][level]`, so a fixture's description
+always matches its level by construction. Nothing was generated through the
+broken path — it only ever affected assessments recorded through the UI in a
+session.
+
+### Part 2: the fork was in the screen layer again
+
+`RiskFinding` has been one shape for the nine and for a custom risk since
+Phase 30, and its docblock says so. Only the screens differed: the nine
+opened a routed form and a custom risk opened a modal with no running score,
+no previous-against-new comparison, no consequences and no undo.
+
+`resolveRisk` mirrors `resolveDomain`, and `riskInSentence` mirrors
+`domainInSentence` — the nine are a closed vocabulary we wrote and safe to
+lowercase, a custom risk's name is what a home typed. The two writers stay
+as they are and the screen chooses between them, because the nine live in
+`resident.risks` keyed by template and the rest in a list.
+
+**A `CustomRisk` cannot be created empty, and that changed the design.** The
+brief suggested a naming dialog that creates the record and routes to it, as
+`AddCustomDomainDialog` does. A `CustomCarePlanDomain` can exist un-started; a
+`CustomRisk` **is** a `RiskFinding`, so `level` is required and `RiskLevel` has
+no unrecorded member. Creating one from a dialog would mean inventing a
+clinical finding to hold a name — the exact defect Part 1 is about. So there
+is no dialog: "Add custom risk" is a link to `risk-assessments/new`, the form
+asks for the name there and only there, and `resolveRisk` carries a
+`new_custom` member. The name is still unchangeable afterwards, which was the
+actual requirement.
+
+**The comparison was unreachable for four of the nine.** Its gate was
+`scored && every item answered`, which no unscored template can satisfy — so
+the previous-against-new block, the consequences and the undo existed only for
+the five scored ones. What makes a comparison possible is a new level, and for
+an unscored assessment that is the judgement rather than the arithmetic.
+
+Post-incident review flags stay scoped to the nine: `closes` is `[]` for a
+custom risk, nothing calls the flag store, and the clearing is
+`'nothing_to_clear'` — the shape `DomainEditorRoute` already uses.
+
+### One thing found and not fixed
+
+On a re-score, the interventions' "who is responsible" Selects render blank.
+The record stores a display name and the options are keyed by staff id, so the
+value matches no option. `RiskFieldSet` solves this with
+`responsibleOptions(current)`, which prepends the current value — and this
+form does not use it. Pre-existing and true of the nine as well, and not data
+loss: the name is preserved on save. Reported rather than folded into this
+change.

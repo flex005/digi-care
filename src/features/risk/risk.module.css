@@ -896,3 +896,12 @@
   line-height: var(--text-caption-line);
   max-width: 40ch;
 }
+
+/*
+ * The level control on an unscored assessment. Sits under the sentence saying
+ * there is no instrument, because it is what stands in place of one.
+ */
+.levelChoice {
+  margin-top: var(--space-16);
+  max-width: 18rem;
+}

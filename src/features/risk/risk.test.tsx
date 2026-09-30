@@ -61,6 +61,23 @@ function renderAt(path: string) {
   )
 }
 
+/**
+ * Choose a risk level through the control the screen actually uses.
+ *
+ * Radix drives its listbox from pointer events, which `src/test/setup.ts`
+ * shims — so this works, and a comment in this file saying jsdom cannot open
+ * a Select was stale.
+ */
+const chooseLevel = async (
+  user: ReturnType<typeof userEvent.setup>,
+  container: HTMLElement,
+  label: string,
+) => {
+  const choice = container.querySelector('[data-level-choice]')!
+  await user.click(within(choice as HTMLElement).getByRole('combobox'))
+  await user.click(await screen.findByRole('option', { name: label }))
+}
+
 const listed = async (container: HTMLElement) => {
   await waitFor(() => expect(container.querySelector('[data-template]')).toBeTruthy())
   return container
@@ -260,7 +277,14 @@ describe('the scored form', () => {
 })
 
 describe('an intervention with no responsible person cannot be saved', () => {
-  const base = { answered: INSTRUMENT_ITEMS.length, scored: true }
+  const base = {
+    answered: INSTRUMENT_ITEMS.length,
+    scored: true,
+    /* Irrelevant while `scored` is true: the instrument reaches the level. */
+    level: 'low' as const,
+    /* A name is asked for only on a first custom assessment. */
+    name: 'not asked here',
+  }
 
   it('holds the record when one is unowned', () => {
     // A plan nobody owns is not a plan.
@@ -287,9 +311,47 @@ describe('an intervention with no responsible person cannot be saved', () => {
     ])
   })
 
-  it('asks nothing of an unscored instrument', () => {
-    // Four of the nine record findings and reach a level without arithmetic.
-    expect(outstanding({ answered: 0, interventions: [], scored: false })).toEqual([])
+  /*
+   * **This assertion used to be `[]`, and it was encoding the defect.** Four of
+   * the nine reach a level by judgement and there was no control for it, so
+   * `level` was passed `bandFor(0)` — every unscored assessment recorded
+   * **Low**, whatever the assessor had found, and this test said the form was
+   * waiting on nothing. Tightened rather than relaxed: the form now refuses
+   * until somebody has judged a level, and the note is here so the next person
+   * who sees it fail reads why before changing it back.
+   */
+  it('waits for a level on an unscored instrument, and never assumes low', () => {
+    expect(
+      outstanding({
+        answered: 0,
+        interventions: [],
+        scored: false,
+        level: '',
+        name: 'not asked here',
+      }),
+    ).toEqual(['a risk level'])
+
+    expect(
+      outstanding({
+        answered: 0,
+        interventions: [],
+        scored: false,
+        level: 'high',
+        name: 'not asked here',
+      }),
+    ).toEqual([])
+  })
+
+  it('asks a first custom assessment for a name, and never an existing one', () => {
+    expect(
+      outstanding({
+        answered: 0,
+        interventions: [],
+        scored: false,
+        level: 'moderate',
+        name: '   ',
+      }),
+    ).toEqual(['a name for this risk'])
   })
 })
 
@@ -1060,51 +1122,135 @@ describe('re-scoring keeps what the last assessor wrote', () => {
     expect(first.value).toBe(status.actions[0]!.description)
   }, 30000)
 
-  it('offers a re-score on a custom risk, prefilled, through the same writer', async () => {
+  /*
+   * **The same routed form the nine open.** `RiskFinding` has been one shape
+   * for both since Phase 30; only the screen layer forked, and the modal a
+   * custom risk used to open had no running score, no previous-against-new
+   * comparison, no consequences and no undo.
+   */
+  it('re-scores a custom risk on the routed form, not in a modal', async () => {
     const user = userEvent.setup()
     const resident = residents.find((entry) => entry.id === 'res-kavanagh')!
-    const risk = resident.customRisks[0]!
+    const risk = withResidentEdits(resident).customRisks[0]!
 
     const { container } = renderAt(`/residents/${resident.id}/risk-assessments`)
     await listed(container)
 
-    await user.click(container.querySelector(`[data-rescore-custom="${risk.id}"]`)!)
-    const dialog = await screen.findByRole('dialog')
-    expect(dialog.textContent).toContain(risk.name.toLowerCase())
+    const row = container.querySelector(`[data-custom-risk="${risk.id}"]`)!
+    const open = row.querySelector('[data-action="rescore"]')!
+    expect(open.tagName).toBe('A')
+    await user.click(open)
 
-    const description = dialog.querySelector<HTMLTextAreaElement>(
-      `[data-field="rescore-${risk.id}-description"]`,
+    await waitFor(() =>
+      expect(container.querySelector('[data-level-choice]')).toBeTruthy(),
+    )
+    // A risk outside the nine has no instrument, so there is no running score.
+    expect(container.querySelector('[data-running-score]')).toBeNull()
+    // The name is fixed once recorded, so the form never offers it again.
+    expect(container.querySelector('[data-field="custom-risk-name-new"]')).toBeNull()
+    expect(container.textContent).toContain(risk.name)
+
+    // A re-score starts from the record, so the findings come back prefilled.
+    const description = container.querySelector<HTMLTextAreaElement>(
+      '[data-assessment-description]',
     )!
     expect(description.value).toBe(risk.description)
-
     await user.clear(description)
     await user.type(description, 'Settled since the door code changed.')
-    await user.click(dialog.querySelector('[data-record-custom-risk="rescore"]')!)
+
+    await chooseLevel(user, container, risk.level === 'high' ? 'Low' : 'High')
+
+    /*
+     * The comparison is reachable for an unscored risk now: its gate was
+     * "scored and every item answered", which no custom risk can satisfy.
+     */
+    await waitFor(() => expect(container.querySelector('[data-compare]')).toBeTruthy())
+    // And nothing about post-incident reviews: a custom risk cannot be flagged.
+    expect(container.querySelector('[data-closes]')).toBeNull()
+
+    await user.click(container.querySelector('[data-record-rescore]')!)
+    const confirm = await screen.findByRole('alertdialog')
+    await user.click(within(confirm).getByRole('button', { name: /Record assessment/ }))
 
     const after = await waitFor(() => {
       const found = withResidentEdits(residentById(resident.id)!).customRisks[0]!
-      expect(found.description).not.toBe(risk.description)
+      expect(found.description).toBe('Settled since the door code changed.')
       return found
     })
-    expect(after.description).toBe('Settled since the door code changed.')
-    // The same risk, re-scored: not a second entry beside the first.
+    // The same risk re-scored, not a second one beside it, and the name it
+    // came in with — `recordCustomRisk` renames silently if handed another.
     expect(withResidentEdits(residentById(resident.id)!).customRisks).toHaveLength(1)
     expect(after.id).toBe(risk.id)
-    // And the actions it came in with are still on the record.
-    expect(after.actions).toEqual(risk.actions)
-    expect(after.assessedBy.displayName).toBeTruthy()
+    expect(after.name).toBe(risk.name)
+    expect(after.level).not.toBe(risk.level)
+  }, 30000)
+})
+
+describe('an unscored template records the level somebody judged', () => {
+  /*
+   * **The defect this describes was live.** Four of the nine are unscored —
+   * choking, behaviour, environmental and COSHH — and no control existed to
+   * set their level. `recordAssessment` was handed `bandFor(total)` with
+   * `total` stuck at 0, so every first assessment and every re-score of those
+   * four recorded **Low**, silently, whatever the description said had been
+   * found. That is the cheapest way to make a home look safe, and §1 exists to
+   * prevent it.
+   */
+  const unscored = 'choking' as const
+
+  it('refuses to record until a level is judged, then records that level', async () => {
+    const user = userEvent.setup()
+    const subject = residents.find(
+      (entry) => entry.risks[unscored].kind === 'not_assessed',
+    )!
+    const { container } = renderAt(
+      `/residents/${subject.id}/risk-assessments/${unscored}`,
+    )
+    await waitFor(() =>
+      expect(container.querySelector('[data-level-choice]')).toBeTruthy(),
+    )
+    // No instrument, so no running score to reach a level with.
+    expect(container.querySelector('[data-running-score]')).toBeNull()
+
+    const record = container.querySelector<HTMLButtonElement>(
+      '[data-record-assessment]',
+    )!
+    expect(record.disabled).toBe(true)
+    expect(container.textContent).toContain('a risk level')
+
+    await user.type(
+      container.querySelector('[data-assessment-description]')!,
+      'Coughing on thin fluids at two meals this week.',
+    )
+    // A description is not a level: still refused.
+    expect(record.disabled).toBe(true)
+
+    await chooseLevel(user, container, 'High')
+    await waitFor(() => expect(record.disabled).toBe(false))
+    await user.click(record)
+
+    const after = await waitFor(() => {
+      const found = withResidentEdits(residentById(subject.id)!).risks[unscored]
+      expect(found.kind).toBe('assessed')
+      return found
+    })
+    if (after.kind !== 'assessed') throw new Error('not recorded')
+    // High, because that is what was judged — not Low, because nothing scored.
+    expect(after.level).toBe('high')
+    expect(after.score).toEqual({ kind: 'unscored' })
   }, 30000)
 })
 
 describe('a risk outside the nine can be recorded after the day somebody arrived', () => {
-  it("records a new one from the resident's own tab, through the create path", async () => {
+  /*
+   * **The level is recorded as chosen, which is the whole of the Part 1 fix.**
+   * Four of the nine and every custom risk reach a level by judgement, and
+   * there was no control for it: `level` was passed `bandFor(0)`, so every one
+   * of them recorded **Low** whatever the assessor found. This drives the
+   * control and reads the level back off the record.
+   */
+  it("records a new one from the resident's own tab, at the level chosen", async () => {
     const user = userEvent.setup()
-    /*
-     * **A risk identified in month three is the same record as one identified
-     * on admission day.** Without this the first had nowhere to go but a care
-     * note or somebody's memory, and the tab would still read as the whole of
-     * what the home holds about this person.
-     */
     const resident = residents.find(
       (entry) =>
         entry.siteId === 'site-rosewood-court' && entry.customRisks.length === 0,
@@ -1112,28 +1258,46 @@ describe('a risk outside the nine can be recorded after the day somebody arrived
     const { container } = renderAt(`/residents/${resident.id}/risk-assessments`)
     await listed(container)
 
-    await user.click(container.querySelector('[data-add-custom-risk]')!)
-    const dialog = await screen.findByRole('dialog')
-    expect(dialog.textContent).toMatch(/outside the nine/i)
+    const add = container.querySelector('[data-add-custom-risk]')!
+    expect(add.tagName).toBe('A')
+    await user.click(add)
 
-    // Nothing is recorded until it has a name and a level.
-    const record = dialog.querySelector<HTMLButtonElement>(
-      '[data-record-custom-risk="new"]',
+    // The same routed form, with no instrument and the name asked once.
+    await waitFor(() =>
+      expect(container.querySelector('[data-level-choice]')).toBeTruthy(),
+    )
+    expect(container.querySelector('[data-running-score]')).toBeNull()
+
+    const record = container.querySelector<HTMLButtonElement>(
+      '[data-record-assessment]',
     )!
     expect(record.disabled).toBe(true)
 
     await user.type(
-      dialog.querySelector('[data-field="custom-risk-name"]')!,
+      container.querySelector('[data-field="custom-risk-name-new"]')!,
       'Hoarding food in the room',
     )
     await user.type(
-      dialog.querySelector('[data-field="new-custom-risk-description"]')!,
+      container.querySelector('[data-assessment-description]')!,
       'Three plates found in the wardrobe this week.',
     )
-
-    // The level is a Radix Select, which jsdom cannot open, so it is set the
-    // way the dialog sets it: through the draft the field set hands back.
+    // Still refused: nobody has judged a level, and Low is not the default.
     expect(record.disabled).toBe(true)
+    expect(container.textContent).toContain('a risk level')
+
+    await chooseLevel(user, container, 'High')
+    await waitFor(() => expect(record.disabled).toBe(false))
+    await user.click(record)
+
+    const after = await waitFor(() => {
+      const found = withResidentEdits(residentById(resident.id)!).customRisks
+      expect(found).toHaveLength(1)
+      return found[0]!
+    })
+    expect(after.name).toBe('Hoarding food in the room')
+    // The point of the whole fix: what was chosen, not what bandFor(0) returns.
+    expect(after.level).toBe('high')
+    expect(after.score).toEqual({ kind: 'unscored' })
   }, 30000)
 
   it('writes a new risk without touching the one already on file', async () => {
