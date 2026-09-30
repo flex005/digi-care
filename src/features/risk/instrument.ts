@@ -10,31 +10,43 @@ import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
 /**
  * The scoring instruments. PRD §6.6.
  *
- * **Two of the nine are sourced; the rest are not, and say so.** Falls Risk
- * carries the Morse Fall Scale and Pressure Ulcer Risk the Waterlow Score,
- * both taken from published references, cross-checked across independent
- * sources and re-verified against a worksheet before being entered here. The
- * item weights and band thresholds below are those instruments', not ours.
+ * **Four of the nine templates score; all four are published scales.** Falls
+ * Risk carries the Morse Fall Scale, Pressure Ulcer Risk the Waterlow Score,
+ * Nutritional Risk the Malnutrition Universal Screening Tool, and Skin
+ * Integrity the Braden Scale. Each was sourced and cross-checked against
+ * independent references before being entered here; the item weights and band
+ * thresholds are those instruments', not ours.
  *
- * Nutritional Risk (MUST), Moving and Handling and Skin Integrity (Braden)
- * keep `PLACEHOLDER_INSTRUMENT` and keep the banner, for the reason this file
- * has carried since Phase 5: reproducing a clinical scale from memory puts
- * invented weightings behind a name that claims authority, which is worse
- * than an invented instrument that admits it, because the name is what a
- * reader trusts.
+ * **The other five record findings and reach a level by judgement** —
+ * choking and dysphagia, behaviour support, environmental risk, COSHH, and
+ * moving and handling. Nothing scores them, and that is not a gap waiting to
+ * be filled.
  *
- * **Moving and Handling can never take this treatment, and that is worth
- * recording now rather than discovering later.** Its named framework is the
- * Manual Handling Operations Regulations assessment — Task, Individual, Load,
- * Environment — which is a qualitative checklist, not a points-based
- * instrument. Sourcing it correctly would produce no items to weight and no
- * total to band. Anybody who later gives it a band table has misread what
- * TILE is.
+ * **Moving and Handling is the one that moved, and the reason is worth
+ * keeping.** It sat in the scored set carrying an invented instrument,
+ * because the architecture had one shared placeholder and no way to say
+ * otherwise. Its named framework is the Manual Handling Operations
+ * Regulations assessment — Task, Individual, Load, Environment — which is a
+ * qualitative checklist. There is nothing in TILE to weight and no total to
+ * band, so sourcing it correctly would produce no instrument at all. It is
+ * unscored now because that is what it always was. Anybody who later gives it
+ * a band table has misread what TILE is.
+ *
+ * `PLACEHOLDER_INSTRUMENT` survives, and nothing scored uses it: it is what
+ * `instrumentFor` answers for the five judged templates, whose draw the
+ * fixture generator discards, and it is what the placeholder banner is keyed
+ * to. The banner still shows on the full risk list, because `sourced` means
+ * *backed by a published scale* and a template that was never meant to carry
+ * a score will never be one.
+ *
+ * **One of the four runs the other way.** Braden counts capacity rather than
+ * risk, so its highest total is its least-risk end. That is `higherIsWorse`
+ * on the instrument, and it is read rather than assumed everywhere two
+ * scores are compared.
  *
  * The banner is the export stub's treatment for the export stub's reason: a
  * control or a figure that does not do what it appears to must say so where
- * it appears, not in a release note. It now says so on seven screens' worth
- * of templates instead of nine.
+ * it appears, not in a release note.
  */
 
 export const PLACEHOLDER_NOTICE =
@@ -76,6 +88,16 @@ export interface Instrument {
   bands: Band[]
   /** True where the items and thresholds are a published scale's. */
   sourced: boolean
+  /**
+   * Which direction a rising total means.
+   *
+   * True everywhere but Braden, where the scale runs the other way: a higher
+   * Braden total is *less* pressure risk. Held on the instrument rather than
+   * assumed by whoever compares two scores, because the assumption was
+   * hardcoded in `compareScores` and would have called a resident getting
+   * better "Deteriorated" on the one screen where it matters.
+   */
+  higherIsWorse: boolean
 }
 
 /** The open end of a top band. Every non-negative total falls in some band. */
@@ -95,6 +117,7 @@ const NO_CEILING = Number.MAX_SAFE_INTEGER
  */
 export const MORSE: Instrument = {
   sourced: true,
+  higherIsWorse: true,
   items: [
     {
       id: 'history_of_falling',
@@ -196,6 +219,7 @@ export const MORSE: Instrument = {
  */
 export const WATERLOW: Instrument = {
   sourced: true,
+  higherIsWorse: true,
   items: [
     {
       id: 'build_weight_for_height',
@@ -329,11 +353,170 @@ export const WATERLOW: Instrument = {
   ],
 }
 
+/* ------------------------------------------------------------------- MUST */
+
+/**
+ * The Malnutrition Universal Screening Tool, for Nutritional Risk.
+ *
+ * Three steps, total 0–6, and the one instrument here whose own tiers map
+ * onto `RiskLevel` with nothing merged: 0 is low, 1 is medium, 2 or more is
+ * high, which is exactly MUST's own overall risk categories.
+ *
+ * MUST's steps 4 and 5 — the management guidelines and the care plan that
+ * follow from the score — are not items and are not scored. What this build
+ * holds is the screening total and the level it produces; what to do about it
+ * is the assessment's findings and its interventions, which is where the rest
+ * of this form already puts it.
+ */
+export const MUST: Instrument = {
+  sourced: true,
+  higherIsWorse: true,
+  items: [
+    {
+      id: 'bmi',
+      question: 'Step 1: body mass index',
+      guidance: 'kg/m². Use the most recent height and weight on the record.',
+      choices: [
+        { label: 'Over 20, or obese at over 30', points: 0 },
+        { label: '18.5 to 20', points: 1 },
+        { label: 'Under 18.5', points: 2 },
+      ],
+    },
+    {
+      id: 'weight_loss',
+      question: 'Step 2: unplanned weight loss in the past 3 to 6 months',
+      guidance: 'Unplanned. Weight lost on purpose is not this item.',
+      choices: [
+        { label: 'Under 5%', points: 0 },
+        { label: '5 to 10%', points: 1 },
+        { label: 'Over 10%', points: 2 },
+      ],
+    },
+    {
+      id: 'acute_disease',
+      question: 'Step 3: acute disease effect',
+      guidance:
+        'Acutely ill, and no or unlikely nutritional intake for more than five days. Both, not either.',
+      choices: [
+        { label: 'No', points: 0 },
+        { label: 'Yes', points: 2 },
+      ],
+    },
+  ],
+  bands: [
+    { from: 0, to: 0, level: 'low' },
+    { from: 1, to: 1, level: 'moderate' },
+    { from: 2, to: NO_CEILING, level: 'high' },
+  ],
+}
+
+/* ----------------------------------------------------------------- Braden */
+
+/**
+ * The Braden Scale, for Skin Integrity.
+ *
+ * Six items, total 6–23, and **the one instrument in this build where a
+ * higher total is better.** Every other scale here counts risk upwards;
+ * Braden counts capacity, so 23 is a resident at no particular risk and 6 is
+ * one at the greatest. That is `higherIsWorse: false`, and it is not
+ * cosmetic: `compareScores` decided improvement by asking whether the number
+ * went up, so without this a resident recovering would have been reported as
+ * having deteriorated.
+ *
+ * **The choices are listed highest-points-first, against this file's
+ * convention, on purpose.** Everywhere else the choices run mild to severe
+ * and that is also ascending points. Here severity descends as points
+ * ascend, so listing them descending is what keeps *mild to severe* reading
+ * the same way down every item on every screen. The order is the convention;
+ * the numbers are what inverted.
+ *
+ * The bands mirror the others too: `NO_CEILING` sits on the **low** band,
+ * because it is the least-risk end that is open here. `scoreRangeFor` clamps
+ * it to the instrument's real maximum of 23.
+ */
+export const BRADEN: Instrument = {
+  sourced: true,
+  higherIsWorse: false,
+  items: [
+    {
+      id: 'sensory_perception',
+      question: 'Sensory perception',
+      guidance: 'Ability to respond meaningfully to pressure-related discomfort.',
+      choices: [
+        { label: 'No impairment', points: 4 },
+        { label: 'Slightly limited', points: 3 },
+        { label: 'Very limited', points: 2 },
+        { label: 'Completely limited', points: 1 },
+      ],
+    },
+    {
+      id: 'moisture',
+      question: 'Moisture',
+      guidance: 'How often the skin is exposed to moisture.',
+      choices: [
+        { label: 'Rarely moist', points: 4 },
+        { label: 'Occasionally moist', points: 3 },
+        { label: 'Very moist', points: 2 },
+        { label: 'Constantly moist', points: 1 },
+      ],
+    },
+    {
+      id: 'activity',
+      question: 'Activity',
+      guidance: 'Degree of physical activity.',
+      choices: [
+        { label: 'Walks frequently', points: 4 },
+        { label: 'Walks occasionally', points: 3 },
+        { label: 'Chairfast', points: 2 },
+        { label: 'Bedfast', points: 1 },
+      ],
+    },
+    {
+      id: 'mobility',
+      question: 'Mobility',
+      guidance: 'Ability to change and control body position.',
+      choices: [
+        { label: 'No limitations', points: 4 },
+        { label: 'Slightly limited', points: 3 },
+        { label: 'Very limited', points: 2 },
+        { label: 'Completely immobile', points: 1 },
+      ],
+    },
+    {
+      id: 'nutrition',
+      question: 'Nutrition',
+      guidance: 'Usual food intake pattern.',
+      choices: [
+        { label: 'Excellent', points: 4 },
+        { label: 'Adequate', points: 3 },
+        { label: 'Probably inadequate', points: 2 },
+        { label: 'Very poor', points: 1 },
+      ],
+    },
+    {
+      id: 'friction_and_shear',
+      question: 'Friction and shear',
+      guidance: 'How much help they need to move without dragging the skin.',
+      choices: [
+        { label: 'No apparent problem', points: 3 },
+        { label: 'Potential problem', points: 2 },
+        { label: 'Problem', points: 1 },
+      ],
+    },
+  ],
+  bands: [
+    { from: 0, to: 12, level: 'high' },
+    { from: 13, to: 14, level: 'moderate' },
+    { from: 15, to: NO_CEILING, level: 'low' },
+  ],
+}
+
 /* ----------------------------------------------------------- The stand-in */
 
 /** The invented instrument, for the templates nobody has sourced yet. */
 export const PLACEHOLDER_INSTRUMENT: Instrument = {
   sourced: false,
+  higherIsWorse: true,
   items: [
     {
       id: 'history',
@@ -405,16 +588,16 @@ export const PLACEHOLDER_INSTRUMENT: Instrument = {
 /**
  * Which instrument a template scores with.
  *
- * Total over the scored five, so adding a sixth is a compile error rather
+ * Total over the scored four, so adding a fifth is a compile error rather
  * than a silent placeholder — the ceiling pattern `levelFor` uses for the
- * same reason.
+ * same reason. Every entry is a published scale now; nothing scored is left
+ * on the stand-in.
  */
 const SCORED_INSTRUMENTS: Record<ScoredTemplateId, Instrument> = {
   falls: MORSE,
   pressure_ulcer: WATERLOW,
-  nutrition: PLACEHOLDER_INSTRUMENT,
-  moving_handling: PLACEHOLDER_INSTRUMENT,
-  skin_integrity: PLACEHOLDER_INSTRUMENT,
+  nutrition: MUST,
+  skin_integrity: BRADEN,
 }
 
 /**
@@ -461,10 +644,30 @@ export const maxScoreOf = (instrument: Instrument): number =>
   )
 
 /**
+ * The lowest total this instrument can produce.
+ *
+ * Braden's is 6, not 0: every one of its items scores at least 1, so no
+ * resident can score below six however they answer. Derived for the same
+ * reason as the maximum — the items already decide it.
+ */
+export const minScoreOf = (instrument: Instrument): number =>
+  instrument.items.reduce(
+    (total, item) => total + Math.min(...item.choices.map((choice) => choice.points)),
+    0,
+  )
+
+/**
  * The range a fixture draws a score from, for a level it has already picked.
  *
  * Here rather than in `residents.ts` so the generator and the screens read one
- * band table. The top band's ceiling is the instrument's own maximum.
+ * band table.
+ *
+ * **Clamped at both ends, because a band is wider than an instrument.** Bands
+ * floor at 0 and the top one is open, deliberately, so `bandFor` can never
+ * fall through on any non-negative total. A fixture drawing from them raw
+ * would generate scores the instrument cannot produce: Braden's high band
+ * starts at 0 and Braden starts at 6, and Waterlow's low band starts at 0
+ * while its lowest possible total is 2. Both ends come from the items.
  */
 export function scoreRangeFor(
   instrument: Instrument,
@@ -472,7 +675,10 @@ export function scoreRangeFor(
 ): { from: number; to: number } {
   const band = instrument.bands.find((entry) => entry.level === level)
   if (!band) throw new Error(`No ${level} band on this instrument`)
-  return { from: band.from, to: Math.min(band.to, maxScoreOf(instrument)) }
+  return {
+    from: Math.max(band.from, minScoreOf(instrument)),
+    to: Math.min(band.to, maxScoreOf(instrument)),
+  }
 }
 
 /**
@@ -486,7 +692,6 @@ export const SCORED_TEMPLATE_IDS = [
   'falls',
   'pressure_ulcer',
   'nutrition',
-  'moving_handling',
   'skin_integrity',
 ] as const
 
@@ -526,10 +731,23 @@ export const LEVEL_OPTIONS = (['low', 'moderate', 'high'] as const).map((level) 
  */
 export type ScoreChange = 'improved' | 'unchanged' | 'deteriorated'
 
-export function compareScores(previous: number, next: number): ScoreChange {
+export function compareScores(
+  previous: number,
+  next: number,
+  /**
+   * Taken from the instrument, never assumed.
+   *
+   * This function read "up is worse" out of a comment for six phases, which
+   * was true of every instrument in the build until Braden. On Braden a
+   * rising total is a resident at less risk, so the hardcoded version would
+   * have printed **Deteriorated** over somebody getting better — on the
+   * screen whose whole job is to say which way a re-score went.
+   */
+  higherIsWorse: boolean,
+): ScoreChange {
   if (next === previous) return 'unchanged'
-  // A higher score is a higher risk on this instrument, so up is worse.
-  return next > previous ? 'deteriorated' : 'improved'
+  const rose = next > previous
+  return rose === higherIsWorse ? 'deteriorated' : 'improved'
 }
 
 export const CHANGE_WORD: Record<ScoreChange, string> = {

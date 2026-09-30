@@ -25,13 +25,18 @@ import { AssessmentListTab } from './AssessmentListTab'
 import { AssessmentFormRoute, outstanding } from './AssessmentFormRoute'
 import { RiskQueueRoute } from './RiskQueueRoute'
 import {
+  BRADEN,
   MORSE,
+  MUST,
   PLACEHOLDER_INSTRUMENT,
   WATERLOW,
   bandFor,
   compareScores,
   isScored,
+  isSourced,
   maxScoreOf,
+  minScoreOf,
+  scoreRangeFor,
 } from './instrument'
 
 /**
@@ -198,9 +203,17 @@ describe('the placeholder says so where it appears, and only where it is true', 
    * the same assertion on the same template would have gone on passing while
    * asserting the opposite of what the screen should say.
    */
-  const stillPlaceholder = 'nutrition' as const
+  /*
+   * **Nothing scored is on the stand-in any more**, so the example is an
+   * unscored template. `instrumentFor` answers `PLACEHOLDER_INSTRUMENT` for
+   * the five judged ones, so its `sourced: false` still raises the banner on
+   * their forms. That wording fits them imperfectly — there is no score there
+   * to make a decision from — and it is a pre-existing quirk of the five
+   * rather than anything this phase introduced.
+   */
+  const stillPlaceholder = 'moving_handling' as const
 
-  it('banners the list, and a form still on the stand-in', async () => {
+  it('banners the list, and a form with no published scale behind it', async () => {
     const { container } = renderAt(
       `/residents/${NEVER_ASSESSED_FALLS}/risk-assessments`,
     )
@@ -251,16 +264,29 @@ describe('the placeholder says so where it appears, and only where it is true', 
     )
     await listed(container)
 
-    const falls = container.querySelector('[data-template="falls"]')!
-    expect(falls.textContent).toContain('Morse Fall Scale')
-    expect(falls.textContent).not.toContain('Placeholder scored instrument')
+    // Each scored row names the scale it actually runs on.
+    for (const [id, framework] of [
+      ['falls', 'Morse Fall Scale'],
+      ['pressure_ulcer', 'Waterlow Score'],
+      ['nutrition', 'MUST'],
+      ['skin_integrity', 'Braden Scale'],
+    ] as const) {
+      const row = container.querySelector(`[data-template="${id}"]`)!
+      expect(row.textContent, id).toContain(framework)
+      expect(row.textContent, id).not.toContain('Placeholder scored instrument')
+    }
 
-    const waterlow = container.querySelector('[data-template="pressure_ulcer"]')!
-    expect(waterlow.textContent).toContain('Waterlow Score')
+    /*
+     * And moving and handling says what it is now: judged, not scored. It read
+     * "Placeholder scored instrument" until this phase, which claimed an
+     * instrument existed for a framework that has none.
+     */
+    const tile = container.querySelector('[data-template="moving_handling"]')!
+    expect(tile.textContent).toContain('Unscored: findings recorded')
+    expect(tile.textContent).not.toContain('Placeholder scored instrument')
 
-    // And the three nobody has sourced still say what they are.
-    const nutrition = container.querySelector('[data-template="nutrition"]')!
-    expect(nutrition.textContent).toContain('Placeholder scored instrument')
+    // No row anywhere claims a stand-in score: every scored template is real.
+    expect(container.textContent).not.toContain('Placeholder scored instrument')
   })
 })
 
@@ -442,23 +468,96 @@ describe('the instrument', () => {
     expect(bandFor(PLACEHOLDER_INSTRUMENT, 25)).toBe('moderate')
     expect(bandFor(PLACEHOLDER_INSTRUMENT, 50)).toBe('high')
 
-    // The published maxima, held by name: a weight typed wrong moves these.
+    // MUST: 0 low, exactly 1 moderate, 2 and above high. No merging needed.
+    expect(bandFor(MUST, 0)).toBe('low')
+    expect(bandFor(MUST, 1)).toBe('moderate')
+    expect(bandFor(MUST, 2)).toBe('high')
+    expect(bandFor(MUST, maxScoreOf(MUST))).toBe('high')
+
+    /*
+     * Braden the other way up: 15 and over is the *least* risk. Read as if it
+     * counted upwards, a resident scoring 20 would be reported as high risk.
+     */
+    expect(bandFor(BRADEN, 12)).toBe('high')
+    expect(bandFor(BRADEN, 13)).toBe('moderate')
+    expect(bandFor(BRADEN, 14)).toBe('moderate')
+    expect(bandFor(BRADEN, 15)).toBe('low')
+    expect(bandFor(BRADEN, maxScoreOf(BRADEN))).toBe('low')
+    expect(bandFor(BRADEN, minScoreOf(BRADEN))).toBe('high')
+
+    // The published ranges, held by name: a weight typed wrong moves these.
     expect(maxScoreOf(MORSE)).toBe(125)
     expect(maxScoreOf(WATERLOW)).toBe(46)
+    expect(maxScoreOf(MUST)).toBe(6)
+    expect(maxScoreOf(BRADEN)).toBe(23)
+    expect(minScoreOf(BRADEN)).toBe(6)
   })
 
-  it('names five scored templates and four unscored', () => {
+  /*
+   * **Moving and handling is not one of them, and that is the point.** It sat
+   * in the scored set carrying an invented instrument because the
+   * architecture had one shared placeholder and no way to say otherwise. Its
+   * framework is the Manual Handling Operations Regulations assessment —
+   * Task, Individual, Load, Environment — a qualitative checklist with
+   * nothing to weight and no total to band.
+   */
+  it('names four scored templates and five judged, and scores none of them on a stand-in', () => {
     const scored = RISK_ASSESSMENT_TEMPLATES.filter((template) => isScored(template.id))
-    expect(scored.length).toBe(5)
-    expect(RISK_ASSESSMENT_TEMPLATES.length - scored.length).toBe(4)
+    expect(scored.map((template) => template.id).sort()).toEqual([
+      'falls',
+      'nutrition',
+      'pressure_ulcer',
+      'skin_integrity',
+    ])
+    expect(isScored('moving_handling')).toBe(false)
+    expect(RISK_ASSESSMENT_TEMPLATES.length - scored.length).toBe(5)
+
+    // Every template that scores now does it on a published scale.
+    for (const template of scored) expect(isSourced(template.id)).toBe(true)
+  })
+
+  it('draws a fixture score only from what the instrument can produce', () => {
+    /*
+     * A band is wider than an instrument on purpose — they floor at 0 and the
+     * open one has no ceiling, so `bandFor` can never fall through. Drawing
+     * from them raw would generate scores no assessor could reach: Braden's
+     * high band starts at 0 and Braden starts at 6.
+     */
+    expect(scoreRangeFor(BRADEN, 'high')).toEqual({ from: 6, to: 12 })
+    expect(scoreRangeFor(BRADEN, 'low')).toEqual({ from: 15, to: 23 })
+    expect(scoreRangeFor(MUST, 'moderate')).toEqual({ from: 1, to: 1 })
+    // Waterlow's lowest possible total is 2: its sex-and-age item floors there.
+    expect(scoreRangeFor(WATERLOW, 'low')).toEqual({ from: 2, to: 9 })
   })
 
   it('compares two scores with a word, not only a direction', () => {
     // An arrow alone is unreadable in greyscale and means nothing to a screen
     // reader, so every comparison carries a word.
-    expect(compareScores(28, 55)).toBe('deteriorated')
-    expect(compareScores(55, 28)).toBe('improved')
-    expect(compareScores(30, 30)).toBe('unchanged')
+    expect(compareScores(28, 55, true)).toBe('deteriorated')
+    expect(compareScores(55, 28, true)).toBe('improved')
+    expect(compareScores(30, 30, true)).toBe('unchanged')
+  })
+
+  /*
+   * **The one scale that runs backwards.** Braden counts capacity rather than
+   * risk, so a rising total is a resident at *less* risk. `compareScores` read
+   * "up is worse" out of a comment until Braden landed, which would have
+   * printed Deteriorated over somebody getting better — on the block whose
+   * entire job is to say which way a re-score went.
+   */
+  it('reads the direction off the instrument, so Braden is not backwards', () => {
+    expect(BRADEN.higherIsWorse).toBe(false)
+    expect(compareScores(12, 18, BRADEN.higherIsWorse)).toBe('improved')
+    expect(compareScores(18, 12, BRADEN.higherIsWorse)).toBe('deteriorated')
+    expect(compareScores(14, 14, BRADEN.higherIsWorse)).toBe('unchanged')
+
+    // The same two numbers on a scale that counts upwards mean the opposite.
+    expect(compareScores(12, 18, MORSE.higherIsWorse)).toBe('deteriorated')
+    expect(compareScores(18, 12, MORSE.higherIsWorse)).toBe('improved')
+
+    // And every other instrument does count upwards.
+    for (const instrument of [MORSE, WATERLOW, MUST, PLACEHOLDER_INSTRUMENT])
+      expect(instrument.higherIsWorse).toBe(true)
   })
 })
 

@@ -905,3 +905,14 @@
   margin-top: var(--space-16);
   max-width: 18rem;
 }
+
+/*
+ * Said on the one instrument whose numbers run backwards. Its own line in the
+ * running score block, in the caution ink a scorer reads before they start.
+ */
+.scoreDirection {
+  flex-basis: 100%;
+  color: var(--status-caution-ink);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
+}

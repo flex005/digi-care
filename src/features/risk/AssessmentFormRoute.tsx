@@ -42,7 +42,7 @@ import {
   resolveRisk,
   riskInSentence,
 } from './instrument'
-import type { ResolvedRisk } from './instrument'
+import type { Instrument, ResolvedRisk } from './instrument'
 import { RiskNameField } from './RiskFieldSet'
 import { badgeStripChange, notificationNote } from './rescore'
 import styles from './risk.module.css'
@@ -228,6 +228,19 @@ export function AssessmentFormRoute() {
                 : ''}
             </span>
           </div>
+
+          {/*
+           * Its own line, not folded into the sentence above. A scale that
+           * reads backwards from every other one in the build is the fact a
+           * scorer most needs before they start, and appending it to a note
+           * about the score not being final would bury it.
+           */}
+          {instrument.higherIsWorse ? null : (
+            <p className={styles.scoreDirection} data-score-direction>
+              This scale runs the other way to the rest:{' '}
+              <b>a lower score is a higher risk</b>.
+            </p>
+          )}
 
           <div className={styles.scoreBand}>
             <span className={styles.scoreLabel}>Band</span>
@@ -467,6 +480,7 @@ export function AssessmentFormRoute() {
           nextLevel={nextLevel}
           resident={resident}
           resolved={resolved}
+          instrument={instrument}
           description={description}
           interventions={interventions}
         />
@@ -628,6 +642,7 @@ function CompareBlock({
   nextLevel,
   resident,
   resolved,
+  instrument,
   description,
   interventions,
 }: {
@@ -636,6 +651,8 @@ function CompareBlock({
   nextLevel: RiskLevel
   resident: Resident
   resolved: ResolvedRisk
+  /** Which way its numbers run, for the comparison below. */
+  instrument: Instrument
   /** Both typed above, and both written by the same save as a first one. */
   description: string
   interventions: Intervention[]
@@ -660,7 +677,13 @@ function CompareBlock({
 
   const previousScore =
     previous.score.kind === 'scored' ? previous.score.value : nextScore
-  const change = compareScores(previousScore, nextScore)
+  /*
+   * The direction comes from the instrument. On Braden a rising total is a
+   * resident at less risk, and this read "up is worse" out of a comment until
+   * Braden landed — which would have printed Deteriorated over somebody
+   * getting better, on the block whose whole job is to say which way it went.
+   */
+  const change = compareScores(previousScore, nextScore, instrument.higherIsWorse)
   const levelChanged = previous.level !== nextLevel
 
   /*

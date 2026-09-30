@@ -2335,6 +2335,149 @@ patch('thorne', (resident) => ({
   },
 }))
 
+/*
+ * **Not a gap — the opposite.** A specific completion, asked for so one
+ * resident carries all nine assessments recorded rather than the generator's
+ * mixture of assessed and never-assessed. Deliberately not in `GAP_RESIDENTS`:
+ * nothing here is a state the product is meant to show as missing.
+ *
+ * Every one is written out rather than patched over what the generator drew,
+ * because two of the instruments changed scale underneath it: nutrition now
+ * scores on MUST's 0–6 and skin integrity on Braden's 6–23, so a generated
+ * value from the old shared 0–49 placeholder means nothing under either.
+ */
+patch('nwachukwu', (resident) => ({
+  ...resident,
+  risks: {
+    ...resident.risks,
+    falls: {
+      kind: 'assessed',
+      level: 'low',
+      // Morse: 0–24 is low.
+      score: { kind: 'scored', value: 10 },
+      description:
+        'Steady on her feet indoors and uses the handrail on the stairs without being prompted. No falls recorded since she came to us.',
+      actions: [],
+      assessedAt: toIsoDateTime(daysAgo(52)),
+      assessedBy: staffHalloran,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(128)) },
+    },
+    pressure_ulcer: {
+      kind: 'assessed',
+      level: 'low',
+      // Waterlow: under 10 is low.
+      score: { kind: 'scored', value: 7 },
+      description:
+        'Moves about freely and shifts her own position in bed and in the chair without help. Skin intact at her last check, with no reddened areas anywhere.',
+      actions: [],
+      assessedAt: toIsoDateTime(daysAgo(45)),
+      assessedBy: staffHalloran,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(135)) },
+    },
+    nutrition: {
+      kind: 'assessed',
+      level: 'moderate',
+      // MUST: 1 is medium risk, and the band is exactly that one value.
+      score: { kind: 'scored', value: 1 },
+      description:
+        'A few kilos lighter than she was on admission. She puts it down to a stomach bug about three weeks ago that took her appetite away, and it has not fully come back. BMI still just above 20. On a food-first approach with fortified snacks between meals.',
+      actions: [
+        {
+          description:
+            'Weighed monthly and recorded on the MUST chart, and the GP asked to review if the weight keeps falling.',
+          responsible: 'Care team',
+        },
+      ],
+      assessedAt: toIsoDateTime(daysAgo(18)),
+      assessedBy: staffOkonkwo,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(42)) },
+    },
+    moving_handling: {
+      kind: 'assessed',
+      level: 'low',
+      // Judged, not scored: TILE is a checklist, not an instrument.
+      score: { kind: 'unscored' },
+      description:
+        'Transfers between bed, chair and toilet on her own, with no hoist and no slide sheet. Steadies herself on the furniture over longer distances and would rather do it that way than be walked with.',
+      actions: [
+        {
+          description:
+            'Walking frame left by the bed overnight rather than by the door, at her own request.',
+          responsible: 'Care team',
+        },
+      ],
+      assessedAt: toIsoDateTime(daysAgo(38)),
+      assessedBy: staffNwosu,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(142)) },
+    },
+    skin_integrity: {
+      kind: 'assessed',
+      level: 'moderate',
+      /*
+       * Braden runs the other way: 13–14 is moderate, and a higher total
+       * would be less risk rather than more.
+       */
+      score: { kind: 'scored', value: 14 },
+      description:
+        'Relies on staff to reposition her overnight and is occasionally damp by the morning, though the skin itself is intact. Two-hourly repositioning chart running overnight.',
+      actions: [
+        {
+          description:
+            'Two-hourly repositioning continued overnight, and her heels checked at every round.',
+          responsible: 'Care team',
+        },
+      ],
+      assessedAt: toIsoDateTime(daysAgo(12)),
+      assessedBy: staffNwosu,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(48)) },
+    },
+    choking: {
+      kind: 'assessed',
+      level: 'low',
+      score: { kind: 'unscored' },
+      description:
+        'Eats a normal diet and drinks thin fluids without difficulty. No coughing and no throat-clearing noted at any meal she has been observed at.',
+      actions: [],
+      assessedAt: toIsoDateTime(daysAgo(60)),
+      assessedBy: staffHalloran,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(120)) },
+    },
+    behaviour: {
+      kind: 'assessed',
+      level: 'low',
+      score: { kind: 'unscored' },
+      description:
+        'Settled and sociable, with no distress or aggression recorded at any point. Looks forward to the Tuesday singing group and reminds staff about it.',
+      actions: [],
+      assessedAt: toIsoDateTime(daysAgo(66)),
+      assessedBy: staffOkonkwo,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(114)) },
+    },
+    environmental: {
+      kind: 'assessed',
+      level: 'low',
+      score: { kind: 'unscored' },
+      description:
+        'Room checked at the last walk-round: no trailing cables, no clutter on the floor and no loose rugs, with the call bell within reach of the bed and the chair.',
+      actions: [],
+      assessedAt: toIsoDateTime(daysAgo(31)),
+      assessedBy: staffNwosu,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(149)) },
+    },
+    coshh: {
+      kind: 'assessed',
+      level: 'low',
+      score: { kind: 'unscored' },
+      description:
+        'Keeps no cleaning products of her own in her room. Housekeeping stores and locks every COSHH item on the trolley bay between rounds.',
+      actions: [],
+      assessedAt: toIsoDateTime(daysAgo(74)),
+      assessedBy: staffOkonkwo,
+      reviewState: { kind: 'scheduled', dueOn: toIsoDate(daysAhead(106)) },
+    },
+  },
+}))
+
 export const residents: Resident[] = generated
 
 export const residentsBySite = (siteId: SiteId): Resident[] =>

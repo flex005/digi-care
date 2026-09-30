@@ -36,9 +36,15 @@ export type RiskLevel = 'low' | 'moderate' | 'high'
  * What an assessment produced, where the instrument produces a number.
  *
  * **Not every risk assessment is scored.** Choking and dysphagia, behaviour
- * support, environmental risk and COSHH record findings and reach a level
- * without arithmetic; falls, pressure ulcer, nutrition, moving and handling
- * and skin integrity are scored instruments.
+ * support, environmental risk, COSHH and moving and handling record findings
+ * and reach a level without arithmetic; falls, pressure ulcer, nutrition and
+ * skin integrity are scored instruments.
+ *
+ * Moving and handling is unscored because its framework is one: the Manual
+ * Handling Operations Regulations assessment is a Task/Individual/Load/
+ * Environment checklist with nothing to weight. It carried an invented
+ * instrument until the four real ones landed and made the distinction
+ * expressible.
  *
  * A union rather than an optional number, because `score?: number` would make
  * a missing score mean either "this instrument does not produce one" or

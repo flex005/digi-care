@@ -15661,3 +15661,97 @@ threshold from 15 to 20 fails the boundary test with `expected 'moderate' to
 be 'high'`; making the form's banner unconditional again fails the mirror
 test on both sourced templates. Each mutation was confirmed landed by grep
 before the verdict was read.
+
+## Four real instruments, one that runs backwards, and Moving and Handling leaves the scored set
+
+MUST joins Nutritional Risk and Braden joins Skin Integrity, so every template
+that scores now does it on a published scale and nothing scored is left on the
+stand-in. Arithmetic checked as before — MUST tops out at 6, Braden runs 6 to
+23, both matching the stated ranges, and Braden's minimum is 6 because every
+one of its six items scores at least 1.
+
+### Braden runs the other way, and that reached further than a band table
+
+Braden counts capacity rather than risk: 23 is a resident at little risk and 6
+is one at the most. Three consequences, all of them real:
+
+`compareScores` read **"up is worse" out of a comment** and had for six
+phases — true of every instrument in the build until this one. Left alone it
+would have printed **Deteriorated** over a resident whose Braden total had
+risen, which is somebody getting better, on the block whose entire job is to
+say which way a re-score went. The direction is now `higherIsWorse` on the
+instrument and is read rather than assumed.
+
+The choices are listed **highest-points-first**, against this file's
+convention everywhere else. On every other instrument ascending points is
+ascending severity, so ascending order reads mild-to-severe; on Braden
+severity descends as points ascend. Listing them descending is what keeps the
+*reading* consistent down every item on every screen. The order is the
+convention; the numbers are what inverted.
+
+And the running score block says so on its own line rather than folded into
+the not-final note, because a scale that reads backwards from every other one
+is the fact a scorer needs before they start.
+
+### A floor to go with the ceiling
+
+`scoreRangeFor` clamped the top of a fixture's draw range to the instrument's
+maximum and left the bottom alone. Bands floor at 0 deliberately so `bandFor`
+can never fall through, which is wider than any instrument — so Braden's high
+band starting at 0 would have generated scores of 0 to 5 that **no assessor
+could reach**, Braden starting at 6. `minScoreOf` is derived the same way
+`maxScoreOf` is and clamps the other end.
+
+It fixed a latent case too: Waterlow's lowest possible total is 2, because its
+sex-and-age item floors there, and its low band drew from 0.
+
+### Moving and Handling was never scored
+
+Its framework is the Manual Handling Operations Regulations assessment —
+Task, Individual, Load, Environment — a qualitative checklist with nothing to
+weight and no total to band. It sat in the scored set carrying an invented
+instrument only because the architecture had one shared placeholder and no way
+to say otherwise. Removing it from `SCORED_TEMPLATE_IDS` made the compiler
+require its removal from the instrument table, which is what a total map is
+for. Nothing else needed touching: every screen and the fixture generator go
+through `isScored`, and the three places naming `moving_handling` directly
+(a label map, a post-incident flag target, the narrative tables) are keyed by
+template generally and stay correct.
+
+### Two things noted and deliberately not changed
+
+**The banner still shows on the full risk list, for a cleaner reason.** There
+are no placeholder-*scored* templates left at all; the five judged ones report
+`isSourced === false` because that flag means *backed by a published scale*,
+and a template never meant to carry a score never will be. `PLACEHOLDER_NOTICE`
+talks about a score, which fits those five imperfectly — a pre-existing quirk
+of the four unscored templates that Moving and Handling now inherits rather
+than a new one.
+
+**The `'Placeholder scored instrument'` row label is now unreachable**, since
+every scored template is sourced. It is kept rather than deleted: the
+instrument table is total, so a future scored template could legitimately be
+wired to `PLACEHOLDER_INSTRUMENT`, and that is the honest label for it. Worth
+knowing it is currently a branch no fixture reaches.
+
+**And one observation, unasked and unfixed.** Before any item is answered the
+band pill reads from a total of 0, which on Braden is `High` where on Morse it
+was `Low`. Neither means anything on an unanswered form, and the block already
+says the score is not final — but the two read very differently, and Braden's
+is at least the safer direction.
+
+### Ada Nwachukwu's nine
+
+Written out in full rather than patched over what the generator drew, because
+nutrition and skin integrity changed scale underneath it: a value from the old
+shared 0–49 placeholder means nothing under MUST's 0–6 or Braden's 6–23.
+Deliberately **not** in `GAP_RESIDENTS` — nothing here is a state the product
+is meant to show as missing. Assessors, dates and review intervals are
+staggered so it does not read as one bulk edit.
+
+Both mutations run before anything was believed: flipping `BRADEN.higherIsWorse`
+to true fails the direction test, and putting `moving_handling` back in the
+scored set fails the classification test. Each was confirmed landed before the
+verdict was read — the first attempt's grep counted a docblock mention as well
+as the code line, which is why the count said 1 where 0 was expected, and the
+code value was checked directly instead.
