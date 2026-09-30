@@ -2,14 +2,7 @@ import { now as appNow } from '@/data/fixtures/clock'
 import { useCallback, useState } from 'react'
 import { SigningIdentity, canSign } from '@/components/signing/SigningIdentity'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
-import type {
-  CarePlanDomainId,
-  CarePlanDomainRecord,
-  CarePlanText,
-  Incident,
-  IsoDate,
-  IsoDateTime,
-} from '@/data/types'
+import type { CarePlanText, Incident, IsoDate, IsoDateTime } from '@/data/types'
 import { CARE_PLAN_DOMAINS } from '@/data/types'
 import type { ResidentProfile } from '@/data/access/client'
 import type { ProfileContext } from '@/features/residents/ResidentProfileRoute'
@@ -40,9 +33,12 @@ import {
   PLAN_FIELDS,
   currentVersion,
   editorStartsFrom,
+  domainInSentence,
   outstandingFields,
+  resolveDomain,
   versionCount,
 } from './plan-fields'
+import type { ResolvedDomain } from './plan-fields'
 
 import styles from './care-plan.module.css'
 import type { AsyncResource } from '@/data/access/resource'
@@ -69,18 +65,24 @@ export function DomainEditorRoute() {
   const { resident } = useOutletContext<ResidentProfile>()
   const { domainId } = useParams<{ domainId: string }>()
 
-  const domain = CARE_PLAN_DOMAINS.find((entry) => entry.id === domainId)
-  const record = resident.carePlan.find((entry) => entry.domainId === domainId)
+  /*
+   * **Either list, one editor.** A domain outside the ten is the same record
+   * under a name the home chose, and it used to open a modal that was missing
+   * the previous version beneath each box, Discard draft, Undo and the version
+   * history. The fork was never in the data — it was here.
+   */
+  const domain = resolveDomain(resident, domainId)
 
-  if (!domain || !record) {
+  if (domain === 'no_such_domain') {
     return (
       <div className={styles.tabPanel}>
         <Card padded>
           <p className={styles.errorTitle}>No such care plan domain</p>
           <p className={styles.errorBody}>
             Nothing is missing from {resident.fullLegalName}&rsquo;s plan; this address
-            does not name one of the{' '}
-            <span data-numeric>{CARE_PLAN_DOMAINS.length}</span> domains.
+            names neither one of the{' '}
+            <span data-numeric>{CARE_PLAN_DOMAINS.length}</span> domains nor one written
+            for them outside the ten.
           </p>
           <Link to=".." relative="path" className={styles.backLink}>
             <Icon name="arrows-sharp/arrow-left-01-sharp" size={16} />
@@ -95,24 +97,20 @@ export function DomainEditorRoute() {
     <Editor
       key={`${resident.id}-${domain.id}`}
       profileName={resident.fullLegalName}
-      domainId={domain.id}
-      domainName={domain.name}
-      record={record}
+      domain={domain}
     />
   )
 }
 
 function Editor({
   profileName,
-  domainId,
-  domainName,
-  record,
+  domain,
 }: {
   profileName: string
-  domainId: CarePlanDomainId
-  domainName: string
-  record: CarePlanDomainRecord
+  domain: ResolvedDomain
 }) {
+  const { id: domainId, name: domainName, record } = domain
+  const inSentence = domainInSentence(domain)
   const { resident, refresh } = useOutletContext<ProfileContext>()
   const { currentUser } = useSession()
   const format = useSiteFormat()
@@ -141,7 +139,14 @@ function Editor({
    * exists. They were one act, so they take one control.
    */
   const [signed, setSigned] = useState<
-    { finalise: FinaliseToken; clearing: ClearingToken; text: CarePlanText } | 'none'
+    | {
+        finalise: FinaliseToken
+        /* Outside the ten there is no flag to discharge, so there is nothing
+           to put back. A state, not a null. */
+        clearing: ClearingToken | 'nothing_to_clear'
+        text: CarePlanText
+      }
+    | 'none'
   >('none')
   const [notice, setNotice] = useState<'none' | 'draft_saved' | 'draft_discarded'>(
     'none',
@@ -180,12 +185,19 @@ function Editor({
   if (incidents.kind === 'refused') {
     return <NotYourHome refusal={incidents} />
   }
+  /*
+   * **Only the fixed ten, because only they can be flagged.**
+   * `IncidentReviewTarget` names a `CarePlanDomainId` and that union is closed
+   * deliberately: a post-incident review is raised against one of the ten. So
+   * a domain outside them has no flags rather than an unread set, and the
+   * screen says nothing about them rather than something un-scoped.
+   */
   const closes =
-    incidents.kind === 'ready'
+    domain.kind === 'fixed' && incidents.kind === 'ready'
       ? flagsClosedBy({
           incidents: incidents.data,
           residentId: resident.id,
-          target: { kind: 'care_plan_domain', domainId },
+          target: { kind: 'care_plan_domain', domainId: domain.id },
           now,
           formatDate: (at) => format.instantDate(at),
         })
@@ -202,12 +214,21 @@ function Editor({
         {domainName}, {profileName}
       </h2>
 
-      <OwedReviews
-        residentId={resident.id}
-        domainId={domainId}
-        now={now}
-        revision={writes}
-      />
+      {/*
+       * Skipped outside the ten rather than shown un-scoped. What it counts is
+       * reviews owed on *this* domain; a resident-wide figure sitting under
+       * this heading would read as being about the domain the reader opened,
+       * which is a claim over a filtered set that does not carry its filter
+       * (Rule 3c).
+       */}
+      {domain.kind === 'fixed' ? (
+        <OwedReviews
+          residentId={resident.id}
+          domainId={domain.id}
+          now={now}
+          revision={writes}
+        />
+      ) : null}
 
       {/* Said, not implied. A screen that expects the resident's voice and
           does not ask for it gets a clinical summary in all three boxes. */}
@@ -275,8 +296,7 @@ function Editor({
               <>
                 <strong>Every field is written.</strong> Finalising signs{' '}
                 {previous === 'none' ? 'version 1' : `version ${versions + 1}`} of{' '}
-                {domainName.toLowerCase()} for {profileName} and moves the next review
-                to{' '}
+                {inSentence} for {profileName} and moves the next review to{' '}
                 <span data-numeric>
                   {format.date(nextReviewFrom(now, reviewIntervalMonths()))}
                 </span>
@@ -288,7 +308,7 @@ function Editor({
                 {waiting.map((field) => field.label).join(' · ')}.
               </>
             )}
-            {signed === 'none' ? (
+            {signed === 'none' && domain.kind === 'fixed' ? (
               <Closes
                 closes={closes}
                 domainName={domainName}
@@ -375,7 +395,7 @@ function Editor({
           name: profileName,
           ...(resident.room.kind === 'recorded' ? { room: resident.room.value } : {}),
         }}
-        action={`Finalise and sign the ${domainName.toLowerCase()} care plan`}
+        action={`Finalise and sign ${inSentence}`}
         confirmLabel={
           closes.length === 0
             ? 'Finalise and sign'
@@ -412,7 +432,7 @@ function Editor({
               who={currentUser}
               code={code}
               onCode={setCode}
-              what={`Signing version ${String(versionCount(record) + 1)} of the ${domainName.toLowerCase()} care plan for ${resident.fullLegalName}.`}
+              what={`Signing version ${String(versionCount(record) + 1)} of ${inSentence} for ${resident.fullLegalName}.`}
             />
           </span>
         }
@@ -434,7 +454,7 @@ function Editor({
           name: profileName,
           ...(resident.room.kind === 'recorded' ? { room: resident.room.value } : {}),
         }}
-        action={`Discard the unsigned ${domainName.toLowerCase()} draft`}
+        action={`Discard the unsigned draft of ${inSentence}`}
         confirmLabel="Discard draft"
         description={
           <span className={styles.confirmBody}>
@@ -524,12 +544,20 @@ function Editor({
         on: now.slice(0, 10) as IsoDate,
         nextReviewOn: nextReviewFrom(now, reviewIntervalMonths()),
       })
-      const clearing = await recordReviewFlagsCleared({
-        residentId: resident.id,
-        target: { kind: 'care_plan_domain', domainId },
-        by: currentUser,
-        at: now,
-      })
+      /*
+       * Only where a flag could exist. Calling this for a domain outside the
+       * ten would mean widening `IncidentReviewTarget` to take an id it is
+       * closed against, to clear a set that is empty by construction.
+       */
+      const clearing =
+        domain.kind === 'fixed'
+          ? await recordReviewFlagsCleared({
+              residentId: resident.id,
+              target: { kind: 'care_plan_domain', domainId: domain.id },
+              by: currentUser,
+              at: now,
+            })
+          : 'nothing_to_clear'
       setConfirming(false)
       setSigned({ finalise: finaliseToken, clearing, text })
       // The boxes empty because the draft became the version. It is now
@@ -546,10 +574,12 @@ function Editor({
 
   async function undo(token: {
     finalise: FinaliseToken
-    clearing: ClearingToken
+    clearing: ClearingToken | 'nothing_to_clear'
     text: CarePlanText
   }) {
-    await undoReviewFlagsCleared(token.clearing)
+    if (token.clearing !== 'nothing_to_clear') {
+      await undoReviewFlagsCleared(token.clearing)
+    }
     await undoCarePlanFinalise(token.finalise)
     setText(token.text)
     setSigned('none')

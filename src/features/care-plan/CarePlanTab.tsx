@@ -1,18 +1,13 @@
 import { now as appNow } from '@/data/fixtures/clock'
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import type {
-  CarePlanDomainBody,
-  CustomCarePlanDomain,
-  IsoDateTime,
-  Resident,
-} from '@/data/types'
+import type { CarePlanDomainBody, IsoDateTime, Resident } from '@/data/types'
 import { CARE_PLAN_DOMAINS } from '@/data/types'
 import type { ResidentProfile } from '@/data/access/client'
 import { Button, Card } from '@/components/primitives'
 import { withResidentEdits } from '@/data/access/resident-store'
 import { withSessionCarePlan } from '@/data/access/care-plan-draft-store'
-import { CustomDomainDialog } from './CustomDomainDialog'
+import { AddCustomDomainDialog } from './AddCustomDomainDialog'
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
@@ -179,7 +174,12 @@ export function CarePlanTab() {
  * rendered together, counted apart, and the heading says which is which.
  */
 function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime }) {
-  const [writing, setWriting] = useState<CustomCarePlanDomain | 'new' | 'none'>('none')
+  /*
+   * Only "am I naming a new one". Writing in an existing one is a route now,
+   * exactly as it is for the ten — the modal that used to do it was missing
+   * the previous version, Discard draft, Undo and the version history.
+   */
+  const [adding, setAdding] = useState(false)
   const [version, setVersion] = useState(0)
   void version
   /*
@@ -199,7 +199,7 @@ function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime
             variant="secondary"
             size="small"
             data-add-custom-domain
-            onClick={() => setWriting('new')}
+            onClick={() => setAdding(true)}
           >
             <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
             Add custom domain
@@ -252,33 +252,46 @@ function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime
                   ) : null}
                 </p>
 
-                <Button
-                  variant="secondary"
-                  size="small"
-                  data-write-custom-domain={domain.id}
-                  onClick={() => setWriting(domain)}
+                {/* The ten's row exactly: same classes, same data-action, same
+                    sentence for a screen reader. Opening one of these is the
+                    same act as opening one of the ten. */}
+                <Link
+                  to={domain.id}
+                  className={
+                    domain.status.kind === 'not_started'
+                      ? styles.rowActionPrimary
+                      : styles.rowAction
+                  }
+                  data-action={domain.status.kind === 'not_started' ? 'write' : 'open'}
+                  aria-label={`${
+                    domain.status.kind === 'not_started' ? 'Write' : 'Open'
+                  } the ${domain.name} care plan domain for ${resident.fullLegalName}`}
                 >
                   {domain.status.kind === 'not_started'
                     ? 'Write this domain'
                     : 'Open domain'}
-                </Button>
+                  <Icon
+                    name="arrows-sharp/arrow-right-01-sharp"
+                    size={16}
+                    aria-hidden
+                  />
+                </Link>
               </div>
             </li>
           ))}
         </ul>
       )}
 
-      {writing === 'none' ? null : (
-        <CustomDomainDialog
+      {adding ? (
+        <AddCustomDomainDialog
           resident={resident}
-          domain={writing}
-          onClose={() => setWriting('none')}
-          onWritten={() => {
-            setWriting('none')
+          onClose={() => setAdding(false)}
+          onAdded={() => {
+            setAdding(false)
             setVersion((count) => count + 1)
           }}
         />
-      )}
+      ) : null}
     </Card>
   )
 }

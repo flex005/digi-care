@@ -8,7 +8,7 @@ import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSiteFormat } from '@/app/session/use-session'
 import { formatCount } from '@/lib/format'
-import { compareVersions } from './plan-fields'
+import { compareVersions, resolveDomain } from './plan-fields'
 import styles from './care-plan.module.css'
 
 /**
@@ -32,24 +32,28 @@ export function VersionHistoryRoute() {
   const { domainId } = useParams<{ domainId: string }>()
   const format = useSiteFormat()
 
-  const domain = CARE_PLAN_DOMAINS.find((entry) => entry.id === domainId)
-  const record = resident.carePlan.find((entry) => entry.domainId === domainId)
+  // Either list, one lookup — the editor's, so the two cannot disagree about
+  // which addresses name a domain.
+  const domain = resolveDomain(resident, domainId)
 
   const history: CarePlanVersion[] =
-    record?.versions.kind === 'finalised' ? record.versions.history : []
+    domain !== 'no_such_domain' && domain.record.versions.kind === 'finalised'
+      ? domain.record.versions.history
+      : []
 
   // The most recent by default: it is the one staff are following, and the
   // question this screen is opened with is usually "what changed last time".
   const [selected, setSelected] = useState(() => Math.max(history.length - 1, 0))
 
-  if (!domain || !record) {
+  if (domain === 'no_such_domain') {
     return (
       <div className={styles.tabPanel}>
         <Card padded>
           <p className={styles.errorTitle}>No such care plan domain</p>
           <p className={styles.errorBody}>
-            This address does not name one of the{' '}
-            <span data-numeric>{CARE_PLAN_DOMAINS.length}</span> domains.
+            This address names neither one of the{' '}
+            <span data-numeric>{CARE_PLAN_DOMAINS.length}</span> domains nor one written
+            for {resident.fullLegalName} outside the ten.
           </p>
         </Card>
       </div>

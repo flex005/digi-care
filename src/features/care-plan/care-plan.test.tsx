@@ -1101,7 +1101,57 @@ describe('finalising is a signature, and asks for the code like every other one'
     )
   }, 40000)
 
-  it('asks for it on a domain outside the ten too, and never to save a draft', async () => {
+  /*
+   * **The bar is not that something opens, it is that the same screen opens.**
+   * A domain outside the ten used to open a modal with three boxes, and that
+   * modal had no previous version beneath them, no Discard draft, no Undo and
+   * no version history. `CarePlanDomainBody` has been one shape for both kinds
+   * since Phase 31 and every store function already took either id; the fork
+   * was in the screen layer alone.
+   */
+  /*
+   * **Discoverable, because it was never a secret and nothing could reach it.**
+   * The code is derived from a staff id rather than issued, so only somebody
+   * who had just chosen one on the invitation screen knew theirs — everybody
+   * signed in as a pre-seeded member of staff had no way to find it, which
+   * left every signing surface in the product unreachable by ordinary use.
+   */
+  it('shows the signed-in person their own code, and only theirs', async () => {
+    const user = userEvent.setup()
+    const { resident, record } = partWritten
+    const { container } = renderAt(
+      `/residents/${resident.id}/care-plan/${record.domainId}`,
+    )
+    await settled(container)
+    // Finalising is refused until all three are written, so write them.
+    for (const box of container.querySelectorAll('textarea'))
+      await user.type(box, 'Written for this test.')
+    await user.click(container.querySelector('[data-finalise]')!)
+    const dialog = await screen.findByRole('alertdialog')
+
+    // Not on screen until it is asked for, and it is the viewer's own.
+    expect(dialog.querySelector('[data-my-signing-code]')).toBeNull()
+    await user.click(dialog.querySelector('[data-reveal-code]')!)
+    await waitFor(() =>
+      expect(dialog.querySelector('[data-my-signing-code]')).toBeTruthy(),
+    )
+    expect(dialog.querySelector('[data-my-signing-code]')!.textContent).toContain(
+      signingCodeFor(staffOkonkwo.id),
+    )
+
+    // And it is enough on its own: typing what it showed signs the version.
+    await user.type(
+      within(dialog).getByLabelText(/signing code/i),
+      signingCodeFor(staffOkonkwo.id),
+    )
+    await waitFor(() =>
+      expect(
+        within(dialog).getByRole('button', { name: /Finalise and sign/ }),
+      ).toBeEnabled(),
+    )
+  }, 40000)
+
+  it('opens on the same routed editor the ten use, with everything that page has', async () => {
     const user = userEvent.setup()
     const resident = residents.find((entry) => entry.id === 'res-adeyemi')!
     const { container } = renderAt(`/residents/${resident.id}/care-plan`)
@@ -1109,43 +1159,112 @@ describe('finalising is a signature, and asks for the code like every other one'
       expect(container.querySelector('[data-custom-domain]')).toBeTruthy(),
     )
 
-    await user.click(container.querySelector('[data-write-custom-domain]')!)
-    const dialog = await screen.findByRole('dialog')
+    const row = container.querySelector('[data-custom-domain]')!
+    // The same control the ten's rows carry, not a button that opens a dialog.
+    const open = row.querySelector('[data-action]')!
+    expect(open.tagName).toBe('A')
+    expect(open.getAttribute('aria-label')).toContain(resident.fullLegalName)
+    await user.click(open)
 
-    /*
-     * Saving a draft asks for nothing: a draft is not a signature, and a code
-     * typed to save one is a code typed out of habit.
-     */
-    expect(dialog.querySelector('[data-save-custom-draft]')).toBeTruthy()
-    expect(dialog.querySelector('[data-signing-identity]')).toBeNull()
-
-    /*
-     * Written out first. The dialog opens from the draft or from nothing,
-     * never from the signed version — carrying last year's words into this
-     * year's boxes turns a review into a formality — so a signed domain opens
-     * empty and nothing can be signed until somebody writes it again.
-     */
-    const boxes = dialog.querySelectorAll('textarea')
-    for (const box of boxes) await user.type(box, 'Written again this time.')
-
-    // Pressing finalise turns the dialog into its signing step.
-    await user.click(dialog.querySelector('[data-finalise-custom-domain]')!)
     await waitFor(() =>
-      expect(dialog.querySelector('[data-signing-identity]')).toBeTruthy(),
+      expect(container.querySelector('[data-history-link]')).toBeTruthy(),
     )
-    const confirm = dialog.querySelector<HTMLButtonElement>(
-      '[data-finalise-custom-domain]',
-    )!
-    expect(confirm.textContent).toMatch(/Confirm and sign/)
-    expect(confirm.disabled).toBe(true)
-    // Saving a draft is not offered mid-signature: one act at a time.
-    expect(dialog.querySelector('[data-save-custom-draft]')).toBeNull()
+    expect(container.querySelectorAll('textarea')).toHaveLength(PLAN_FIELDS.length)
+    expect(container.querySelector('[data-save-draft]')).toBeTruthy()
+    expect(container.querySelector('[data-finalise]')).toBeTruthy()
+    expect(container.querySelector('[data-foot-state]')).toBeTruthy()
+    // The name is fixed once the domain exists, so the editor never asks again.
+    expect(container.querySelector('[data-field="custom-domain-name"]')).toBeNull()
 
+    /*
+     * And the one thing that is deliberately *not* the same. A post-incident
+     * review flag names a `CarePlanDomainId` and that union is closed on
+     * purpose, so a domain outside the ten has nothing to owe and nothing to
+     * close — and the figure is absent rather than shown resident-wide, which
+     * would read as being about this domain (Rule 3c).
+     */
+    expect(container.querySelector('[data-owed]')).toBeNull()
+    expect(container.querySelector('[data-closes]')).toBeNull()
+  }, 40000)
+
+  it('signs a domain outside the ten through the same code the ten ask for', async () => {
+    const user = userEvent.setup()
+    const resident = residents.find((entry) => entry.id === 'res-adeyemi')!
+    const { container } = renderAt(`/residents/${resident.id}/care-plan`)
+    await waitFor(() =>
+      expect(container.querySelector('[data-custom-domain]')).toBeTruthy(),
+    )
+    await user.click(container.querySelector('[data-custom-domain] [data-action]')!)
+    await waitFor(() => expect(container.querySelector('[data-finalise]')).toBeTruthy())
+
+    /*
+     * Written out first: the editor starts from the draft or from nothing and
+     * never from the signed version, so a signed domain opens empty and
+     * nothing can be signed until somebody writes it again.
+     */
+    for (const box of container.querySelectorAll('textarea'))
+      await user.type(box, 'Written again this time.')
+
+    await user.click(container.querySelector('[data-finalise]')!)
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog.querySelector('[data-signing-identity]')).toBeTruthy()
+
+    const confirm = within(dialog).getByRole('button', { name: /Finalise and sign/ })
+    expect(confirm).toBeDisabled()
     await user.type(
       within(dialog).getByLabelText(/signing code/i),
       signingCodeFor(staffOkonkwo.id),
     )
-    await waitFor(() => expect(confirm.disabled).toBe(false))
+    await waitFor(() => expect(confirm).toBeEnabled())
     expect(dialog.textContent).toMatch(/Signing version \d+ of/)
+    expect(dialog.textContent).toContain(resident.fullLegalName)
+    /*
+     * **The name as somebody typed it.** The sentence puts "the" in front of a
+     * lowercased name, which is right for the ten and wrong here: "The
+     * allotment" read as "Finalise and sign the the allotment care plan", and
+     * a name like "DNAR" would have been recased into something nobody wrote.
+     */
+    const custom = withResidentEdits(resident).customCarePlan[0]!
+    expect(dialog.textContent).toContain(custom.name)
+    expect(dialog.textContent).not.toMatch(/\bthe the\b/i)
+
+    await user.click(confirm)
+    // Signed, and the undo the modal never offered is the control that proves
+    // this is the routed editor rather than something shaped like it.
+    await waitFor(() =>
+      expect(container.querySelector('[data-undo-clearing]')).toBeTruthy(),
+    )
+  }, 40000)
+
+  it('asks for a name before anything exists, and opens what it created', async () => {
+    const user = userEvent.setup()
+    const resident = residents.find((entry) => entry.id === 'res-adeyemi')!
+    const { container } = renderAt(`/residents/${resident.id}/care-plan`)
+    await waitFor(() =>
+      expect(container.querySelector('[data-custom-domain]')).toBeTruthy(),
+    )
+
+    await user.click(container.querySelector('[data-add-custom-domain]')!)
+    const dialog = await screen.findByRole('dialog')
+    // A name and nothing else: there is no record to write into yet.
+    expect(dialog.querySelectorAll('textarea')).toHaveLength(0)
+
+    const submit = dialog.querySelector<HTMLButtonElement>('[data-add-domain-submit]')!
+    expect(submit.disabled).toBe(true)
+    await user.type(
+      dialog.querySelector('[data-field="custom-domain-name"]')!,
+      'The allotment shed',
+    )
+    await waitFor(() => expect(submit.disabled).toBe(false))
+    await user.click(submit)
+
+    // Straight onto the full page, empty and ready to write.
+    await waitFor(() =>
+      expect(container.querySelector('[data-history-link]')).toBeTruthy(),
+    )
+    expect(container.textContent).toContain('The allotment shed')
+    expect(container.querySelectorAll('textarea')).toHaveLength(PLAN_FIELDS.length)
+    for (const box of container.querySelectorAll('textarea'))
+      expect((box as HTMLTextAreaElement).value).toBe('')
   }, 40000)
 })

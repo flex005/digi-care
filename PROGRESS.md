@@ -15430,3 +15430,74 @@ that apply it, and the restored tree exits 0. The success line counts what it
 reached rather than printing a tick, and names the computed keys it cannot
 resolve, because a check that silently read half its input would otherwise
 look identical.
+
+## A person can read their own signing code, and the two kinds of domain open the same screen
+
+### The code was never secret and nothing could reach it
+
+`signingCodeFor` derives from a staff id rather than issuing one, and both it
+and `SigningIdentity` say outright that it is an identifier and not a security
+mechanism. Nothing in the reachable UI ever showed somebody theirs. Only a
+person who had just chosen one on the invitation screen knew it, so anybody
+signed in as a pre-seeded member of staff could not sign anything — care plan
+finalising, round countersigning, handover signing were all unreachable by
+ordinary use.
+
+`SigningIdentity` now carries a disclosure. It is **guarded on the viewer, not
+on `who`**: all three call sites pass `currentUser` today, and the day one
+passes a second signatory this must not hand their code to whoever is at the
+screen. The standing caveat gained four words rather than a second sentence —
+"so yours is not kept from you" — because the reason it can be shown is the
+sentence that was already there.
+
+**Restructuring cost a lesson.** The disclosure first went inside the
+`<label>`, and `getByLabelText(/signing code/i)` then resolved to the button
+rather than the input: three existing signing tests failed, none of them about
+this change. A `<button>` inside a `<label>` is wrong HTML and a second thing
+the label appears to name. Label and control are now associated by id.
+
+### The fork between the ten and the rest was only ever in the screen layer
+
+`CarePlanDomainBody` has been one shape for both kinds since Phase 31, every
+store function already took `CarePlanDomainId | CustomDomainId`, and
+`care-plan/:domainId` already matched any string. Only the screens differed:
+the ten routed to a full page, and a domain outside them opened a modal with
+no previous version beneath each box, no Discard draft, no Undo and no version
+history.
+
+`resolveDomain` is one lookup used by the editor and the version history, so
+the two cannot drift about which addresses name a domain. It keeps the kind
+rather than discarding it, because one thing genuinely does differ: a
+post-incident review flag names a `CarePlanDomainId` and that union is closed
+on purpose. So for a domain outside the ten, `OwedReviews` is **skipped rather
+than shown un-scoped** — a resident-wide figure under that heading would read
+as being about the domain the reader opened (Rule 3c) — the `Closes` sentence
+is skipped, and the clearing is `'nothing_to_clear'` rather than a call that
+would need the closed union widened to take an id it excludes.
+
+`CustomDomainDialog` is gone. `AddCustomDomainDialog` asks the one thing the
+ten never need — a name, because there is no address until the record exists —
+then creates it and lands on the same editor. It **refreshes the profile
+before navigating**: the editor resolves `:domainId` against the resident it
+was handed, and that copy does not hold a domain created a moment earlier, so
+navigating first lands on "No such care plan domain" until the read catches
+up.
+
+### The screenshot found a defect no assertion was looking for
+
+The confirmation read **"Finalise and sign the the allotment care plan"**. The
+sentence puts "the" in front of a lowercased name, which is ours to do for the
+ten — their names are a closed vocabulary we wrote — and wrong for a name
+somebody typed. The lowercase is the worse half and §8 has it twice already:
+"DNAR" and "Gwen's garden" are not ours to recase.
+
+So the phrase has a seventh owner, `domainInSentence`, and the five call sites
+ask it rather than each agreeing an article and a case for itself. Held by an
+assertion that the dialog contains the name as recorded and never `the the`;
+mutating the owner back to the unconditional form reproduces the exact string
+and fails it.
+
+Both new tests were mutated before being trusted: forcing `isMine` false
+removes the disclosure and fails the reveal test, and the phrasing mutation
+above fails the custom signing test. Both mutations were confirmed landed with
+a grep before the verdict was read.

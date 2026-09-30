@@ -1,4 +1,13 @@
-import type { CarePlanDomainBody, CarePlanText, CarePlanVersion } from '@/data/types'
+import type {
+  CarePlanDomainBody,
+  CarePlanDomainId,
+  CarePlanDomainRecord,
+  CarePlanText,
+  CarePlanVersion,
+  CustomCarePlanDomain,
+  CustomDomainId,
+} from '@/data/types'
+import { CARE_PLAN_DOMAINS } from '@/data/types'
 
 /**
  * The three fields a care plan domain is made of, and whose voice each is
@@ -141,3 +150,71 @@ export function compareVersions(
     changed: was[field.id] !== now[field.id],
   }))
 }
+
+/**
+ * The domain an address names, from whichever of the two lists holds it.
+ *
+ * **One resolver, because two screens ask the same question.** The editor and
+ * the version history both turn `:domainId` into a domain, and a second copy
+ * of the lookup is a second rule that is free to drift from the first (§6) —
+ * which is how the two kinds forked in the first place: `CarePlanDomainBody`
+ * has been one shape for both since Phase 31 and every store function already
+ * takes either id, and only the screen layer ever treated them as different
+ * things.
+ *
+ * The kind is kept rather than discarded, because one thing does still differ:
+ * a post-incident review flag names a `CarePlanDomainId`, and that union is
+ * closed on purpose. A domain outside the ten cannot be the target of one, so
+ * the screens ask this rather than inferring it from the shape of an id.
+ */
+export type ResolvedDomain =
+  | {
+      kind: 'fixed'
+      id: CarePlanDomainId
+      name: string
+      record: CarePlanDomainRecord
+    }
+  | {
+      kind: 'custom'
+      id: CustomDomainId
+      name: string
+      record: CustomCarePlanDomain
+    }
+
+export function resolveDomain(
+  plan: {
+    carePlan: CarePlanDomainRecord[]
+    customCarePlan: CustomCarePlanDomain[]
+  },
+  domainId: string | undefined,
+): ResolvedDomain | 'no_such_domain' {
+  const fixed = CARE_PLAN_DOMAINS.find((entry) => entry.id === domainId)
+  const record = plan.carePlan.find((entry) => entry.domainId === domainId)
+  if (fixed && record) {
+    return { kind: 'fixed', id: fixed.id, name: fixed.name, record }
+  }
+
+  const custom = plan.customCarePlan.find((entry) => entry.id === domainId)
+  if (custom) {
+    return { kind: 'custom', id: custom.id, name: custom.name, record: custom }
+  }
+
+  return 'no_such_domain'
+}
+
+/**
+ * The domain's name as it reads inside a sentence.
+ *
+ * **A seventh owner (§6), found in a screenshot.** The confirmation read
+ * "Finalise and sign the the allotment care plan": the sentence puts "the" in
+ * front of a lowercased name, which is ours to do for the ten because their
+ * names are a closed vocabulary we wrote, and wrong for a domain named by
+ * whoever added it. The lowercase is the same defect one step worse — §8 has
+ * it twice already — because "DNAR" and "Gwen's garden" are not ours to
+ * recase.
+ *
+ * So the phrase has one owner and the call sites ask for it, rather than each
+ * agreeing an article and a case for itself.
+ */
+export const domainInSentence = (domain: ResolvedDomain): string =>
+  domain.kind === 'fixed' ? `the ${domain.name.toLowerCase()} care plan` : domain.name

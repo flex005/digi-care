@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import type { StaffRef } from '@/data/types'
 import { signingCodeFor, signingCodeMatches } from '@/data/access/team-store'
+import { useSession } from '@/app/session/use-session'
 import styles from './SigningIdentity.module.css'
 
 /**
@@ -18,6 +20,14 @@ import styles from './SigningIdentity.module.css'
  * **It is not a security mechanism, and the screen says so.** There are no
  * accounts and no secrets in this build; a code that implied otherwise would be
  * the more dangerous of the two, because a home would trust it.
+ *
+ * **Which is why somebody can read their own.** The code is derived from a
+ * staff id rather than issued, so the only people who knew one were those who
+ * had just chosen it on the invitation screen; everybody signed in as a
+ * pre-seeded member of staff had no way to find theirs, and every signing
+ * surface in the product was therefore unreachable by ordinary use. Keeping it
+ * from them bought nothing — there is nothing to keep — and cost the screens
+ * it guards.
  */
 export function SigningIdentity({
   who,
@@ -31,8 +41,11 @@ export function SigningIdentity({
   /** What the signature covers, so the code signs something named. */
   what: string
 }) {
+  const { currentUser } = useSession()
+  const [shown, setShown] = useState(false)
   const matches = signingCodeMatches(who.id, code)
   const entered = code.trim() !== ''
+  const isMine = who.id === currentUser.id
 
   return (
     <div className={styles.identity} data-signing-identity>
@@ -41,9 +54,38 @@ export function SigningIdentity({
       </p>
       <p className={styles.what}>{what}</p>
 
-      <label className={styles.field}>
-        <span className={styles.label}>Your signing code</span>
+      {/*
+       * The label and the control are associated by id rather than by wrapping,
+       * because the disclosure sits on this row and a `<button>` inside a
+       * `<label>` is both wrong HTML and a second thing the label appears to
+       * name — `getByLabelText` resolved to the button rather than the field.
+       */}
+      <div className={styles.field}>
+        <span className={styles.labelRow}>
+          <label className={styles.label} htmlFor="signing-code">
+            Your signing code
+          </label>
+          {/*
+           * **Guarded on the viewer, not on `who`.** Today every call site
+           * signs as the person at the keyboard, but this component also
+           * stands in front of countersigning somebody else's work, and the
+           * day `who` is a second signatory this must not hand their code to
+           * whoever is looking at the screen.
+           */}
+          {isMine ? (
+            <button
+              type="button"
+              className={styles.reveal}
+              onClick={() => setShown((was) => !was)}
+              aria-expanded={shown}
+              data-reveal-code
+            >
+              {shown ? 'Hide my code' : 'Show my code'}
+            </button>
+          ) : null}
+        </span>
         <input
+          id="signing-code"
           type="password"
           inputMode="numeric"
           autoComplete="off"
@@ -53,7 +95,7 @@ export function SigningIdentity({
           data-signing-code
           aria-describedby="signing-code-state"
         />
-      </label>
+      </div>
 
       <p className={styles.state} id="signing-code-state" data-signing-state>
         {!entered ? (
@@ -71,12 +113,20 @@ export function SigningIdentity({
         )}
       </p>
 
+      {isMine && shown ? (
+        <p className={styles.mine} data-my-signing-code>
+          Yours is <span data-numeric>{signingCodeFor(currentUser.id)}</span>.
+        </p>
+      ) : null}
+
       {/*
        * Said plainly, because a home would otherwise take it for one. There
-       * are no accounts in this build and nothing here is kept secret.
+       * are no accounts in this build and nothing here is kept secret — which
+       * is the same sentence that lets the disclosure above exist.
        */}
       <p className={styles.caveat}>
-        An identifier, not a password: it establishes which member of staff signed.
+        An identifier, not a password: it establishes which member of staff signed, so
+        yours is not kept from you.
       </p>
     </div>
   )
