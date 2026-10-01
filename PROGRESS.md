@@ -15911,3 +15911,51 @@ crawl, not the MAR chart's inclusion in it. Frank took this decision knowing
 some medication-chart columns may clip at 1280 on some residents, and the
 guard reporting it is the guard working. It stays red until he decides what
 the floor should be.
+
+## The layout guard's floor catches up with a decision already taken
+
+`check:layout` had encoded the old trade-off as the rule, so after 169597b it
+failed forever, reporting a choice Frank had already made as though it were a
+regression. A guard that reports a settled decision is noise, and noise is how
+a guard stops being read.
+
+`MIN_WEEKS_FIT` is 8, from 23. The comment explaining why 23 was reachable is
+replaced by why 8 is: the Medications tab stopped calling `useWideScreen`, so
+it no longer borrows the rail's 176px and the gutter's 48px to fit a grid
+needing 1,188px against the 970 the content column gives at 1280. Most weeks
+scroll sideways now, and the grid declares its scroller, which is what keeps a
+clipped week from being a finding at all. Still worded as a floor, so anything
+below 8 is a regression nobody agreed to.
+
+**The narrow-width gutter check asserted the opposite of what is now true.**
+It failed unless the gutter was 0 *and* the week fitted at 1280 — both halves
+of the behaviour that was removed. It now fails only if the gutter goes back
+to 0, which is the rail-eating mode returning.
+
+It no longer says anything about whether the week fits. `MIN_WEEKS_FIT` owns
+that, and this was asserting the same fact under the opposite polarity one
+screen away — two rules about one thing, which is how they drift. That is the
+§8 proxy entry: the pair would have disagreed the moment either moved.
+
+### Mutated before being trusted, because it had just been loosened
+
+Requiring `pad === 0` at 1280 again — the old rule — against the current,
+correct code:
+
+    ✖ layout: 1 thing(s) a reader cannot get to:
+        the medications tab  ""
+    EXIT=1
+
+And raising the floor to 9, so the measured 8 falls below it:
+
+    ✖ layout: 1 thing(s) a reader cannot get to:
+        8 of 28 weeks fit without scrolling, below the 9 that did
+    EXIT=1
+
+Both halves still fire. Run clean, the measured line reads:
+
+    8 of 28 weeks fit at 1280px without scrolling
+    the medications tab is inset 24px at 1440px and 24px at 1280px
+    ✓ layout — nothing lost at 1280px; 8 of 28 weeks fit on screen
+
+`npm run verify` is back to exit 0.

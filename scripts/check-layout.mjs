@@ -45,13 +45,21 @@ const MAX_SCREENS = 70
  */
 const MIN_SCREENS = 35
 /**
- * How many residents' weeks fit at 1280 without scrolling. Not all 28: the
- * five on four rounds a day need 1,454px against the 1,194 the content column
- * gives, and closing that would cost either the dose target's WCAG 2.5.8 floor
- * or the medication column's drug names. Held as a floor rather than a target,
- * so the number cannot quietly fall.
+ * How many residents' weeks fit at 1280 without scrolling.
+ *
+ * **Eight, because the chart stopped buying the other fifteen.** Until commit
+ * 169597b the Medications tab called `useWideScreen`, which collapsed the rail
+ * and dropped the page gutter while the chart was open — 224px borrowed from
+ * the shell to fit a grid that needs 1,188px against the 970 the content
+ * column gives at 1280. Frank chose to keep the sidebar and the gutter
+ * instead, knowing the cost, so most weeks now scroll sideways rather than
+ * fit. The grid still declares its scroller, which is what stops a clipped
+ * week being a finding.
+ *
+ * Still a floor rather than a target: this is what the accepted trade-off
+ * produces, and anything below it is a regression nobody has agreed to.
  */
-const MIN_WEEKS_FIT = 23
+const MIN_WEEKS_FIT = 8
 
 function serve() {
   const server = spawn(
@@ -336,18 +344,24 @@ try {
   }
 
   /*
-   * The gutter the wide screen borrows, and gives back.
+   * The gutter, which no longer goes anywhere.
    *
-   * The Medications tab collapses the rail and drops the page gutter so the
-   * week fits at 1280. It kept dropping it at every width above that, so the
-   * whole tab — heading, tab strip and cards, not only the grid — sat flush
-   * against both window edges while every other tab on the profile had 24px.
-   * jsdom applies no CSS and cannot see a padding, so this is the only place
-   * the two states can be told apart.
+   * The Medications tab used to collapse the rail and drop the page gutter so
+   * the week fitted at 1280, and it kept dropping it at every width above
+   * that — the whole tab, heading and tab strip and cards, sat flush against
+   * both window edges while every other tab on the profile had 24px. A reader
+   * reported that one. jsdom applies no CSS and cannot see a padding, so this
+   * is the only place the states can be told apart.
    *
-   * Both halves are checked, because each is how the other goes wrong: no
-   * gutter at 1440 is the defect a reader reported, and a gutter at 1280 would
-   * buy it back by clipping the week this whole mode exists to fit.
+   * **Since 169597b the gutter stays out at every width, 1280 included**, and
+   * both checks below are now the same rule rather than opposite halves of a
+   * trade-off: the tab is inset, wherever you look at it. The narrow one
+   * exists to catch the old rail-eating behaviour coming back, which is what
+   * a gutter of 0 at 1280 would mean.
+   *
+   * It deliberately says nothing about whether the week fits. `MIN_WEEKS_FIT`
+   * above owns that, and asserting it here as well — under the opposite
+   * polarity, as this did — is how two rules about one fact drift apart.
    */
   const GUTTER_AT = 1440
   const gutterCheck = async (width) => {
@@ -379,10 +393,10 @@ try {
     })
   }
   const narrow = await gutterCheck(MIN_WIDTH)
-  if (narrow.pad !== 0 || !narrow.weekFits) {
+  if (narrow.pad === 0) {
     findings.push({
       route: `/residents/${residents[0]}/medications`,
-      why: `at ${MIN_WIDTH}px the gutter is ${narrow.pad}px and the week ${narrow.weekFits ? 'fits' : 'does not fit'} — the gutter has to stay out at the narrowest supported width, or it is bought with the week`,
+      why: `at ${MIN_WIDTH}px the tab has no page gutter, which is the rail-eating mode coming back: the chart stopped borrowing the shell's width in 169597b, and the gutter is meant to stay out at every width`,
       label: 'the medications tab',
       text: '',
     })
