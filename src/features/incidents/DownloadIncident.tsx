@@ -5,7 +5,6 @@ import { Button, Toast } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { incidentPdfContent } from './incident-pdf'
-import { downloadIncidentPdf } from './download-incident'
 
 /**
  * Taking an incident away as a file.
@@ -60,7 +59,25 @@ export function DownloadIncident({
         data-download-incident={incident.id}
         aria-label={`Download the ${residentName} incident of ${format.dateTime(incident.occurredAt)} as a PDF`}
         onClick={() => {
-          void downloadIncidentPdf(content)
+          /*
+           * Loaded on the click, not on the page.
+           *
+           * jsPDF reaches `html2canvas` and `purify.es`, about 450 kB that
+           * nothing in this build uses — it writes text and calls `addImage`,
+           * and never rasterises HTML. Behind a static import that weight
+           * landed in the main chunk for every visitor to every screen,
+           * including the ones with no download on them.
+           *
+           * `incidentPdfContent` stays a top-level import: it touches no PDF
+           * library and `content` is built on every render, for the file name
+           * the toast prints.
+           *
+           * A chunk that fails to load lands in the same `catch` as a file
+           * that fails to write, which is the right place for it — both are
+           * "nothing was downloaded", and the toast already says so.
+           */
+          void import('./download-incident')
+            .then(({ downloadIncidentPdf }) => downloadIncidentPdf(content))
             .then(() => {
               setState('done')
             })

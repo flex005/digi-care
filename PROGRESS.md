@@ -16307,13 +16307,22 @@ Hardcoding the singular again:
 
 ### What jsPDF cost the bundle
 
-Worth recording rather than discovering later: jsPDF pulls `html2canvas`
-(199 kB) and `purify.es` (28 kB) alongside its own 151 kB, and the main chunk
-went from about 1.47 MB to **1.92 MB**. None of that is needed for what this
+Worth recording rather than discovering later: the main chunk went from
+1,501.67 kB to **1,915.85 kB**. None of that weight is needed for what this
 build uses — text and `addImage`, no HTML rasterising — so it is reachable by
 importing the slim entry point or code-splitting the download behind a dynamic
 import. Not done here, because it is a bundling decision rather than part of
 either fix.
+
+**Corrected afterwards, and both halves of this paragraph were wrong when
+first written.** It said "about 1.47 MB" for the baseline, from memory rather
+than from a build, and the real figure is 1,501.67 kB — measured by building
+e0a763b in a throwaway worktree. And it attributed the growth to `html2canvas`
+and `purify.es`, which were **never in the main chunk**: they are jsPDF's own
+dynamic imports, emitted as side chunks from the first build and fetched only
+by `doc.html()`, which this build never calls. The 414 kB was jsPDF core. §8's
+entry about a number that decides an argument not coming from memory, in the
+file that records the entries.
 
 ## Both whole-report actions moved into the incident header (ac5f2a2)
 
@@ -16360,3 +16369,85 @@ Live at `digi-care-zeta.vercel.app`: the served stylesheet downloaded whole
 grepping) and carries
 `_detailHead_wkbl1_1356{… justify-content:space-between; display:flex}`, with
 `correctOpen` appearing 0 times.
+
+
+## The PDF writer moved behind a dynamic import (main chunk −401 kB)
+
+`downloadIncidentPdf` was only ever called inside the Download button's
+`onClick`, behind a static top-level import, so jsPDF rode in the main chunk
+for every visitor to every screen. It is now
+`import('./download-incident').then(({ downloadIncidentPdf }) => …)`.
+`incidentPdfContent` stays a top-level import: it touches no PDF library, and
+`content` is built on every render for the file name the toast prints.
+
+    main chunk   1,915.85 kB  ->  1,514.53 kB   (gzip 549.93 -> 418.28)
+    new chunk    download-incident-BcUdsjbO.js   400.30 kB (gzip 130.13)
+    pre-jsPDF    1,501.67 kB                     (e0a763b, measured)
+
+So the main chunk is within **12.86 kB** of where it was before jsPDF existed,
+and that remainder is this feature's own code rather than the library.
+
+**What the chunk list corrects.** The reason given for doing this — jsPDF plus
+`html2canvas` and `purify.es`, about 450 kB in the main chunk — was wrong, and
+the build output says so. `__vite__mapDeps` at the head of the new chunk lists
+`html2canvas`, `index.es` and `purify.es` as **its** dependencies: they are
+jsPDF's own dynamic imports, they were separate chunks before this change too,
+and the browser never requested one of them. They are reached by `doc.html()`,
+which this build does not call. What was actually sitting in the main chunk was
+jsPDF core, 414 kB of it, and 401 kB has now moved out. Right conclusion,
+wrong reason, and the figure that settled it was in the build log all along.
+
+**No test reaches the line that changed.** Nothing in the suite renders
+`DownloadIncident` — `grep` for `data-download-incident` across every
+`*.test.tsx` returns nothing — so the 104 incident tests passing says only
+that they still pass. Worse, a chunk that fails to load lands in the same
+`catch` as a file that fails to write, so from inside jsdom a broken dynamic
+import and a working one are the same toast. This is the §8 family about a
+check that cannot perceive its own subject, and the instrument is a browser.
+
+Driven in Chromium against `vite preview`: signed in as the registered
+manager, into the log, into `inc-901`, clicked Download.
+
+    pdfChunksBeforeClick: []
+    pdfChunksAfterClick:  ["download-incident-BcUdsjbO.js"]
+    fileName: incident-inc-901-2026-09-26.pdf
+    bytes: 6413   header: "%PDF-1.3"   hasEof: true
+    toast: "Incident downloaded / incident-inc-901-2026-09-26.pdf"
+    consoleErrors: []
+
+`file` agrees: *PDF document, version 1.3, 1 pages*.
+
+**The mutation, and what it exposed about the assertion.** "No PDF chunk
+requested before the click" is satisfied by correct lazy loading *and* by a
+wholly static bundle, where there is no such chunk to request — so on its own
+it is an assertion that cannot fail in the direction that matters. It only
+means something paired with "the chunk was requested after the click".
+Restoring the static import, rebuilding with the output visible (1,915.85 kB,
+no `download-incident` chunk emitted) and re-running gives
+
+    pdfChunksBeforeClick: []     <- unchanged, which is the point
+    pdfChunksAfterClick:  []     <- the discriminating reading
+
+and the pair is true only of the lazy arrangement. The download itself was
+**byte-identical across both builds** — 6,413 bytes, same file name, same
+toast, no console errors — which is the actual evidence that behaviour did not
+change, rather than the suite being green. Restored from a file copy, not
+`git checkout --`, and confirmed: 0 static imports, 1 dynamic.
+
+**Three failures of the browser script before it measured anything**, each
+worth keeping because each would recur:
+
+1. `page.goto('/incidents/inc-901')` landed on `/sign-in`. The session is in
+   memory (§6), so a hard navigation to any deep link signs out. All
+   navigation in the script is in-app clicking for that reason.
+2. `waitForSelector('[data-download-incident]')` after clicking a row was
+   satisfied by the **log's own** row control, which then detached mid
+   navigation: `element was detached from the DOM, retrying`. The script now
+   waits for the count to be exactly 1, which is both the detail page's
+   signature and a thing that cannot be satisfied by the page it is leaving.
+3. `a[href^="/incidents/"]` matched "Report an incident" first. Narrowed to
+   `inc-`.
+
+The second is the specificity entry in a browser rather than in jsdom: a
+selector that names a condition the whole product satisfies, where the test
+meant one element on one page.
