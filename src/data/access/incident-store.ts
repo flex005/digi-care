@@ -15,6 +15,7 @@ import type {
   IncidentUrgency,
   ImmediateResponse,
   InjuryMap,
+  WitnessRecord,
   IsoDateTime,
   ManagerReview,
   SiteId,
@@ -67,6 +68,52 @@ export interface ReporterCorrection {
   location: IncidentLocation
   description: string
   immediateAction: string
+  /**
+   * The two observations a correction may also reach, both carrying the
+   * correcting admin's name — see `sameInjuries`/`sameWitnesses` below for
+   * why that name is only applied where the fact actually moved.
+   *
+   * **What a correction still cannot reach**, each for its own reason: the
+   * resident it happened to, because changing the subject of a clinical
+   * record is a different and graver act than fixing what it says (§2); the
+   * evidence, because those are session-only object URLs with nothing to
+   * re-attach; and the family decision, which `recordFamilyDecision` already
+   * owns on the detail page. And still not `ManagerReview` — that wall is
+   * what this type exists to hold.
+   */
+  injuries: InjuryMap
+  witnesses: WitnessRecord
+}
+
+/**
+ * Whether the correction says anything new about the body map / the witnesses.
+ *
+ * **A stamp is a claim that somebody observed something.** Re-stamping a
+ * field the admin never touched would put their name on an observation they
+ * did not make — the same defect as leaving the reporter's name on one they
+ * did not make, pointed the other way. A correction to the description must
+ * leave both of these exactly as the reporter wrote them, author included.
+ *
+ * Regions and names compare as **sets**: re-marking the same two regions in
+ * the other order, or retyping the same two names swapped, is not a different
+ * observation, and treating it as one would re-attribute the record for a
+ * reordering nobody can see.
+ */
+const sameRegions = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && [...a].sort().join('\u0000') === [...b].sort().join('\u0000')
+
+function sameInjuries(current: InjuryMap, next: InjuryMap): boolean {
+  if (current.kind !== next.kind) return false
+  if (current.kind === 'marked' && next.kind === 'marked')
+    return sameRegions(current.regions, next.regions)
+  return true
+}
+
+function sameWitnesses(current: WitnessRecord, next: WitnessRecord): boolean {
+  if (current.kind !== next.kind) return false
+  if (current.kind === 'witnessed' && next.kind === 'witnessed')
+    return sameRegions(current.people, next.people)
+  return true
 }
 
 const edits = new Map<IncidentId, Edit>()
@@ -123,9 +170,11 @@ export function withIncidentEdits(incident: Incident): Incident {
           occurredAt: edit.correction.occurredAt,
           location: edit.correction.location,
           description: edit.correction.description,
+          injuries: edit.correction.injuries,
           response: {
             ...incident.response,
             immediateAction: edit.correction.immediateAction,
+            witnesses: edit.correction.witnesses,
           },
           edited: edit.edited ?? incident.edited,
         }),
@@ -308,6 +357,16 @@ export function correctReport(
       ...correction,
       description: correction.description.trim(),
       immediateAction: correction.immediateAction.trim(),
+      /*
+       * The *existing* record where the fact has not moved, so its original
+       * author and time survive a correction that was about something else.
+       */
+      injuries: sameInjuries(incident.injuries, correction.injuries)
+        ? incident.injuries
+        : correction.injuries,
+      witnesses: sameWitnesses(incident.response.witnesses, correction.witnesses)
+        ? incident.response.witnesses
+        : correction.witnesses,
     },
     edited: { kind: 'edited', edited: act(by) },
   })

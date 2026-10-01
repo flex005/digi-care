@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import type {
+  BodyRegionId,
   CommunalAreaId,
   Incident,
+  IncidentAct,
   IncidentSeverityId,
   IncidentTypeId,
+  IsoDateTime,
 } from '@/data/types'
 import { COMMUNAL_AREAS, INCIDENT_SEVERITIES, INCIDENT_TYPES } from '@/data/types'
 import { correctReport } from '@/data/access/incident-store'
@@ -12,6 +15,7 @@ import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
 import { instantFromWallClockField, wallClockField } from '@/lib/format'
 import { useViewer } from '@/app/session/use-viewer'
+import { InjurySection, type InjuryChoice } from './InjurySection'
 import styles from './incidents.module.css'
 
 /**
@@ -111,13 +115,55 @@ export function CorrectReportForm({
   )
 
   /*
+   * The two observations, opened from the record rather than blank — the same
+   * reason the account is: a form that started empty would erase a body map by
+   * being saved untouched.
+   */
+  const [injury, setInjury] = useState<InjuryChoice>(
+    incident.injuries.kind === 'marked'
+      ? 'found'
+      : incident.injuries.kind === 'no_injuries_found'
+        ? 'none_found'
+        : 'not_checked',
+  )
+  const [marked, setMarked] = useState<BodyRegionId[]>(
+    incident.injuries.kind === 'marked' ? [...incident.injuries.regions] : [],
+  )
+  const [witnessChoice, setWitnessChoice] = useState<'nobody' | 'witnessed'>(
+    incident.response.witnesses.kind === 'witnessed' ? 'witnessed' : 'nobody',
+  )
+  const [witnessNames, setWitnessNames] = useState(
+    incident.response.witnesses.kind === 'witnessed'
+      ? incident.response.witnesses.people.join(', ')
+      : '',
+  )
+
+  /*
    * The act, not the page. Everybody reads an incident; one role rewrites one.
    * Asked here as well as on the trigger: a form reachable without the trigger
    * would be gated only by whichever control somebody happened to use.
    */
   if (!mayCorrectReport(viewer) || !open) return null
 
-  const blank = description.trim() === '' || immediateAction.trim() === ''
+  const names = witnessNames
+    .split(',')
+    .map((name) => name.trim())
+    .filter((name) => name !== '')
+
+  /*
+   * **What the types make unconstructable, the form has to refuse.**
+   * `InjuryMap` 'marked' is `[BodyRegionId, ...BodyRegionId[]]` and
+   * `WitnessRecord` 'witnessed' requires a non-empty `people`, so "injuries
+   * found" with nothing marked, and "somebody saw it" with nobody named, are
+   * not states this record can hold. The report form gates on exactly this;
+   * saving is refused here rather than quietly downgrading the answer, which
+   * would record a different claim from the one that was made.
+   */
+  const blank =
+    description.trim() === '' ||
+    immediateAction.trim() === '' ||
+    (injury === 'found' && marked.length === 0) ||
+    (witnessChoice === 'witnessed' && names.length === 0)
 
   return (
     <Card padded>
@@ -226,6 +272,56 @@ export function CorrectReportForm({
           />
         </label>
 
+        {/* The same body map the report form uses, not a second one. A
+            second implementation of the one control that records where
+            somebody was hurt is a second thing to keep in step. */}
+        <InjurySection
+          choice={injury}
+          marked={marked}
+          onChoice={setInjury}
+          onToggle={(id) => {
+            setMarked((current) =>
+              current.includes(id)
+                ? current.filter((entry) => entry !== id)
+                : [...current, id],
+            )
+          }}
+        />
+
+        {/* Asked, never left blank — the same reason as on the report form:
+            an empty field would mean either "nobody saw it" or "nobody
+            recorded who", and on an unwitnessed fall that is the difference
+            the record turns on. */}
+        <div className={styles.field}>
+          <Select
+            labelVisible
+            label="Anyone who saw it"
+            placeholder="Choose an answer"
+            value={witnessChoice}
+            data-correct-witness
+            onValueChange={(value) => {
+              setWitnessChoice(value as 'nobody' | 'witnessed')
+            }}
+            options={[
+              { value: 'nobody', label: 'Nobody saw it happen' },
+              { value: 'witnessed', label: 'Somebody saw it' },
+            ]}
+          />
+          {witnessChoice === 'witnessed' ? (
+            <input
+              className={styles.input}
+              type="text"
+              value={witnessNames}
+              data-correct-witness-names
+              onChange={(event) => {
+                setWitnessNames(event.target.value)
+              }}
+              placeholder="Who saw it"
+              aria-label="Who saw it"
+            />
+          ) : null}
+        </div>
+
         <div className={styles.decisionActions}>
           <Button variant="ghost" size="small" onClick={onClose}>
             Cancel
@@ -263,6 +359,18 @@ export function CorrectReportForm({
         }
         onConfirm={() => {
           try {
+            /*
+             * Stamped with the admin doing the correcting. Leaving the
+             * original recorder's name on an observation they did not write
+             * is what the separate reporter and manager records exist to
+             * prevent — and the store only keeps this stamp where the fact
+             * actually moved, so a correction to the description does not
+             * re-attribute a body map nobody touched.
+             */
+            const stamp: IncidentAct = {
+              by: currentUser,
+              at: new Date().toISOString() as IsoDateTime,
+            }
             correctReport(
               incident,
               {
@@ -277,6 +385,24 @@ export function CorrectReportForm({
                       : { kind: 'communal', area },
                 description,
                 immediateAction,
+                injuries:
+                  injury === 'found' && marked.length > 0
+                    ? {
+                        kind: 'marked',
+                        regions: marked as [BodyRegionId, ...BodyRegionId[]],
+                        recorded: stamp,
+                      }
+                    : injury === 'none_found'
+                      ? { kind: 'no_injuries_found', recorded: stamp }
+                      : { kind: 'not_recorded' },
+                witnesses:
+                  witnessChoice === 'witnessed' && names.length > 0
+                    ? {
+                        kind: 'witnessed',
+                        people: names as [string, ...string[]],
+                        recordedBy: currentUser,
+                      }
+                    : { kind: 'nobody_witnessed', recordedBy: currentUser },
               },
               currentUser,
             )

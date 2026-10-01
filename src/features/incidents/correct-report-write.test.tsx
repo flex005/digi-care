@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
 import { TooltipProvider } from '@/components/primitives'
-import type { Incident } from '@/data/types'
+import type { Incident, IncidentAct, IsoDateTime } from '@/data/types'
 import { SignInAs } from '@/test/sign-in-as'
 import { incidents } from '@/data/fixtures/incidents'
 import { staffOkonkwo } from '@/data/fixtures/organisation'
@@ -45,6 +45,10 @@ const correction = {
   location: subject.location,
   description: 'Found on the floor beside the bed, not beside the chair.',
   immediateAction: 'Checked for injury, helped up with two staff, GP rang.',
+  // Unchanged, which is the ordinary case: a correction about the account
+  // says nothing new about the body map or who saw it.
+  injuries: subject.injuries,
+  witnesses: subject.response.witnesses,
 }
 
 describe('a correction replaces the reporter’s account', () => {
@@ -211,4 +215,175 @@ describe('a correction leaves the time alone unless somebody changes it', () => 
     // And the field had been showing the site's wall clock, not raw UTC.
     expect(asOpened).toBe(wallClockField(subject.occurredAt, 'Europe/London'))
   }, 30000)
+})
+
+/**
+ * What a correction may now also reach, and whose name ends up on it.
+ *
+ * **A stamp is a claim that somebody observed something**, so the rule has two
+ * halves and both are defects if missed. Leaving the reporter's name on a body
+ * map an admin redrew credits an observation to the wrong person. Moving it on
+ * a correction that only fixed a typo does the same thing in the other
+ * direction — and that one is the easier to ship, because it looks like
+ * consistency.
+ *
+ * `inc-034` is used rather than `incidents[0]` because it carries both a
+ * marked body map and a named witness, each recorded by C. Nwosu, so the
+ * correcting admin's name appearing where it should not is visible.
+ */
+describe('a correction reaches the two observations, and only re-stamps what moved', () => {
+  const marked = incidents.find((entry) => entry.id === 'inc-034')!
+  const read = (): Incident => withIncidentEdits(marked)
+
+  /*
+   * **Stamped with the admin, exactly as the form sends it.** The form rebuilds
+   * both observations on every save with `currentUser` on them, so the store is
+   * what has to notice the fact did not move and keep the original author. An
+   * earlier version of this block passed `marked.injuries` straight back —
+   * the original object, original stamp and all — and then asserted the
+   * original author survived, which is true however the store behaves. It
+   * passed against a store that re-stamped unconditionally. The mutation
+   * caught it; reading it did not.
+   */
+  const adminStamp: IncidentAct = {
+    by: staffOkonkwo,
+    at: '2026-10-02T09:00:00.000Z' as IsoDateTime,
+  }
+  const asFormSends = {
+    injuries:
+      marked.injuries.kind === 'marked'
+        ? ({
+            kind: 'marked',
+            regions: marked.injuries.regions,
+            recorded: adminStamp,
+          } as const)
+        : ({ kind: 'not_recorded' } as const),
+    witnesses:
+      marked.response.witnesses.kind === 'witnessed'
+        ? ({
+            kind: 'witnessed',
+            people: marked.response.witnesses.people,
+            recordedBy: staffOkonkwo,
+          } as const)
+        : ({ kind: 'nobody_witnessed', recordedBy: staffOkonkwo } as const),
+  }
+
+  const base = {
+    type: marked.type,
+    severity: marked.severity,
+    occurredAt: marked.occurredAt,
+    location: marked.location,
+    description: marked.description,
+    immediateAction: marked.response.immediateAction,
+    ...asFormSends,
+  }
+
+  it('leaves both stamps alone when only the description changed', () => {
+    if (marked.injuries.kind !== 'marked') throw new Error('fixture lost its body map')
+    if (marked.response.witnesses.kind !== 'witnessed')
+      throw new Error('fixture lost its witness')
+    const injuryAuthor = marked.injuries.recorded.by.id
+    const injuryAt = marked.injuries.recorded.at
+    const witnessAuthor = marked.response.witnesses.recordedBy.id
+
+    correctReport(
+      marked,
+      { ...base, description: 'Reworded, and nothing else.' },
+      staffOkonkwo,
+    )
+
+    const after = read()
+    expect(after.description).toBe('Reworded, and nothing else.')
+    if (after.injuries.kind !== 'marked') throw new Error('the body map was lost')
+    if (after.response.witnesses.kind !== 'witnessed')
+      throw new Error('the witness was lost')
+
+    // The assertion this block exists for: the admin's name is NOT on these.
+    expect(after.injuries.recorded.by.id).toBe(injuryAuthor)
+    expect(after.injuries.recorded.at).toBe(injuryAt)
+    expect(after.response.witnesses.recordedBy.id).toBe(witnessAuthor)
+    expect(after.injuries.recorded.by.id).not.toBe(staffOkonkwo.id)
+    expect(after.response.witnesses.recordedBy.id).not.toBe(staffOkonkwo.id)
+  })
+
+  it('does not re-stamp for a reordering, which is not a different observation', () => {
+    if (marked.response.witnesses.kind !== 'witnessed')
+      throw new Error('fixture lost its witness')
+    const people = marked.response.witnesses.people
+    correctReport(
+      marked,
+      {
+        ...base,
+        witnesses: {
+          kind: 'witnessed',
+          people: [...people].reverse() as [string, ...string[]],
+          recordedBy: staffOkonkwo,
+        },
+      },
+      staffOkonkwo,
+    )
+
+    const after = read()
+    if (after.response.witnesses.kind !== 'witnessed') throw new Error('witness lost')
+    expect(after.response.witnesses.recordedBy.id).not.toBe(staffOkonkwo.id)
+  })
+
+  it('puts the admin on the body map when the regions actually change', () => {
+    correctReport(
+      marked,
+      {
+        ...base,
+        injuries: {
+          kind: 'marked',
+          regions: ['elbow_right'],
+          recorded: {
+            by: staffOkonkwo,
+            at: '2026-10-02T09:00:00.000Z' as IsoDateTime,
+          },
+        },
+      },
+      staffOkonkwo,
+    )
+
+    const after = read()
+    if (after.injuries.kind !== 'marked') throw new Error('the body map was lost')
+    expect(after.injuries.regions).toEqual(['elbow_right'])
+    expect(after.injuries.recorded.by.id).toBe(staffOkonkwo.id)
+  })
+
+  it('puts the admin on the witnesses when who saw it actually changes', () => {
+    correctReport(
+      marked,
+      {
+        ...base,
+        witnesses: {
+          kind: 'nobody_witnessed',
+          recordedBy: staffOkonkwo,
+        },
+      },
+      staffOkonkwo,
+    )
+
+    const after = read()
+    expect(after.response.witnesses.kind).toBe('nobody_witnessed')
+    expect(after.response.witnesses.recordedBy.id).toBe(staffOkonkwo.id)
+  })
+
+  /*
+   * The resident, the evidence and the family decision are deliberately out of
+   * reach. Held by the type rather than by a test asserting a sentence: the
+   * fields are not on `ReporterCorrection`, so a form that tried would not
+   * compile. What is worth asserting is that a correction does not disturb
+   * them in passing.
+   */
+  it('leaves the subject, the evidence and the family decision alone', () => {
+    correctReport(marked, { ...base, description: 'Reworded again.' }, staffOkonkwo)
+
+    const after = read()
+    expect(after.subject).toEqual(marked.subject)
+    expect(after.evidence).toEqual(marked.evidence)
+    expect(after.familyTold).toEqual(marked.familyTold)
+    // And the wall this patch type exists to hold.
+    expect(after.review).toEqual(marked.review)
+  })
 })
