@@ -3,7 +3,7 @@ import {
   NotificationDecisionDialog,
   type DecideStep,
 } from './NotificationDecisionDialog'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import type {
   ContactState,
@@ -127,6 +127,29 @@ function Found({
    * header and the form stayed below it: two components, one piece of state.
    */
   const [correcting, setCorrecting] = useState(false)
+
+  /*
+   * **Focus goes back to the trigger when the modal closes.**
+   *
+   * Radix returns focus to whatever opened a dialog, and it could not here:
+   * the form is keyed on `correcting` so that each opening starts from the
+   * record, which unmounts it, and saving re-renders the page underneath —
+   * between them the element Radix was holding is gone by the time it looks.
+   * Measured in Chromium rather than assumed: `document.activeElement` came
+   * back as `BODY`, which drops a keyboard user at the top of the document
+   * with no idea where they were. jsdom cannot see this; it has no focus
+   * behaviour to get wrong.
+   *
+   * The trigger is found by the data attribute rather than a ref, so this
+   * stays inside the route and does not widen the shared Button's props.
+   */
+  const wasCorrecting = useRef(false)
+  useEffect(() => {
+    if (wasCorrecting.current && !correcting) {
+      document.querySelector<HTMLElement>('[data-correct-report]')?.focus()
+    }
+    wasCorrecting.current = correcting
+  }, [correcting])
   const incident = data.incidents.find((entry) => entry.id === incidentId)
 
   if (!incident) {
@@ -199,7 +222,16 @@ function Found({
 
       {/* Full width, under the header, because it is no longer scoped to any
           one section of the record. */}
+      {/*
+       * Keyed on whether it is open, so every opening starts from the record.
+       * The form's `useState` initialisers run on mount, and the component
+       * stays mounted while closed, so without this a cancelled edit came
+       * back the next time somebody opened it — a Cancel that discards
+       * nothing is a lie about what the button does, and it got easier to hit
+       * once Escape and the overlay could close it too.
+       */}
       <CorrectReportForm
+        key={correcting ? 'correcting' : 'idle'}
         incident={incident}
         subjectName={subjectName}
         open={correcting}

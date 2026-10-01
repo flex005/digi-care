@@ -39,6 +39,20 @@
   transform: translate(-50%, -50%);
 }
 
+/*
+ * Width only, and applied *beside* `.panel` rather than replacing it.
+ *
+ * Everything else a dialog is — the surface, the centring, the max-height and
+ * the scroll — stays in one place. This rule sets one property, so there is
+ * nothing here that can drift from the standard panel, and it sits after
+ * `.panel` because both are single-class selectors of equal specificity and
+ * source order is what decides. That is the cascade the hatched tile lost to,
+ * so it is checked in a browser rather than reasoned about.
+ */
+.panelWide {
+  width: min(920px, calc(100vw - var(--space-64)));
+}
+
 /* Anchored floating panel — dropdown, select, popover. */
 .floating {
   composes: surface;

@@ -8,6 +8,7 @@ import { SignInAs } from '@/test/sign-in-as'
 import { incidents } from '@/data/fixtures/incidents'
 import { resetSessionIncidents } from '@/data/access/incident-store'
 import { IncidentDetailRoute } from './IncidentDetailRoute'
+import { CorrectReportForm } from './CorrectReportForm'
 
 /**
  * Who may rewrite somebody else's account of what happened.
@@ -81,5 +82,56 @@ describe('the record says it was changed', () => {
     const { container } = renderAs('registered_manager')
     await loaded(container)
     expect(container.querySelector('[data-edited]')).toBeNull()
+  })
+})
+
+/**
+ * The form's own gate, asked separately from the trigger's.
+ *
+ * **The trigger being hidden is not the form being refused.** Every test above
+ * asserts the control is absent from the page, which is a fact about
+ * `CorrectReportTrigger`. The form asks `mayCorrectReport` a second time, and
+ * until this block nothing checked that it does — so the gate could have been
+ * deleted from the form and the whole suite would have stayed green, because
+ * no test ever renders the form with `open` set by anything other than the
+ * trigger that is already hidden.
+ *
+ * Rendered directly, with `open` forced, which is the state a second route to
+ * the form would produce.
+ */
+describe('the form refuses on its own, not only because the trigger is hidden', () => {
+  function renderFormAs(role: StaffRole) {
+    return render(
+      <SessionProvider>
+        <TooltipProvider>
+          <SignInAs as={role} />
+          <CorrectReportForm
+            incident={subject}
+            subjectName="Emmanuel Okafor"
+            open
+            onClose={() => undefined}
+            onCorrected={() => undefined}
+          />
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+  }
+
+  it.each<StaffRole>(['care_worker', 'senior_carer', 'deputy_manager', 'auditor'])(
+    'renders nothing for %s even with open forced',
+    async (role) => {
+      renderFormAs(role)
+      await waitFor(() => {
+        expect(document.querySelector('[data-section="correct-report"]')).toBeNull()
+      })
+      expect(document.querySelector('[data-correct-description]')).toBeNull()
+    },
+  )
+
+  it('renders the form for the role that may correct one', async () => {
+    renderFormAs('registered_manager')
+    await waitFor(() => {
+      expect(document.querySelector('[data-section="correct-report"]')).toBeTruthy()
+    })
   })
 })

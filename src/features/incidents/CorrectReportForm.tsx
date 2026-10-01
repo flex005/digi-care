@@ -10,7 +10,7 @@ import type {
 } from '@/data/types'
 import { COMMUNAL_AREAS, INCIDENT_SEVERITIES, INCIDENT_TYPES } from '@/data/types'
 import { correctReport } from '@/data/access/incident-store'
-import { AlertDialog, Button, Card, Select } from '@/components/primitives'
+import { AlertDialog, Button, Dialog, Select } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
 import { instantFromWallClockField, wallClockField } from '@/lib/format'
@@ -166,10 +166,34 @@ export function CorrectReportForm({
     (witnessChoice === 'witnessed' && names.length === 0)
 
   return (
-    <Card padded>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        // Escape and the overlay close it too, and they mean the same thing
+        // Cancel does.
+        if (!next) onClose()
+      }}
+      size="wide"
+      title={`Correct the report about ${subjectName}`}
+      actions={
+        <>
+          <Button variant="ghost" size="small" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            disabled={blank}
+            data-correct-save
+            onClick={() => {
+              setConfirming(true)
+            }}
+          >
+            Save the correction
+          </Button>
+        </>
+      }
+    >
       <section className={styles.section} data-section="correct-report">
-        <h2 className={styles.sectionTitle}>Correct this report</h2>
-
         {/*
          * Said before the act, not after. Somebody about to overwrite another
          * person's account should know that is what it does.
@@ -322,20 +346,6 @@ export function CorrectReportForm({
           ) : null}
         </div>
 
-        <div className={styles.decisionActions}>
-          <Button variant="ghost" size="small" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="small"
-            disabled={blank}
-            data-correct-save
-            onClick={() => setConfirming(true)}
-          >
-            Save the correction
-          </Button>
-        </div>
-
         {failure === '' ? null : (
           <p className={styles.footState} data-correction-failure>
             {failure}
@@ -415,6 +425,6 @@ export function CorrectReportForm({
           }
         }}
       />
-    </Card>
+    </Dialog>
   )
 }

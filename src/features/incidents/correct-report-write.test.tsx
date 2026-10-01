@@ -129,16 +129,21 @@ describe('through the screen somebody actually uses', () => {
     await waitFor(() => expect(container.querySelector('[data-subject]')).toBeTruthy())
 
     await user.click(container.querySelector('[data-correct-report]')!)
-    const description = container.querySelector<HTMLTextAreaElement>(
-      '[data-correct-description]',
-    )!
+    /*
+     * `screen`, not `container`: the form is a modal now and Radix renders it
+     * through a Portal to document.body, which is outside the tree `render`
+     * hands back. The trigger above is still queried on `container` because
+     * it sits in the page header and is not portalled.
+     */
+    const description =
+      await screen.findByLabelText<HTMLTextAreaElement>('What happened')
     // The form opens from the record rather than blank: a correction that
     // started empty would delete an account by being saved untouched.
     expect(description.value).toBe(subject.description)
 
     await user.clear(description)
     await user.type(description, 'Found beside the bed, not the chair.')
-    await user.click(container.querySelector('[data-correct-save]')!)
+    await user.click(screen.getByRole('button', { name: /Save the correction/ }))
 
     const confirm = await screen.findByRole('alertdialog')
     await user.click(within(confirm).getByRole('button', { name: /Replace it/ }))
@@ -194,15 +199,13 @@ describe('a correction leaves the time alone unless somebody changes it', () => 
     await user.click(container.querySelector('[data-correct-report]')!)
 
     // Untouched: the field is read, never typed into.
-    const when = container.querySelector<HTMLInputElement>('[data-correct-occurred]')!
+    const when = await screen.findByLabelText<HTMLInputElement>('When it happened')
     const asOpened = when.value
 
-    const description = container.querySelector<HTMLTextAreaElement>(
-      '[data-correct-description]',
-    )!
+    const description = screen.getByLabelText<HTMLTextAreaElement>('What happened')
     await user.clear(description)
     await user.type(description, 'Corrected wording, nothing about the time.')
-    await user.click(container.querySelector('[data-correct-save]')!)
+    await user.click(screen.getByRole('button', { name: /Save the correction/ }))
 
     const confirm = await screen.findByRole('alertdialog')
     await user.click(within(confirm).getByRole('button', { name: /Replace it/ }))
@@ -386,4 +389,76 @@ describe('a correction reaches the two observations, and only re-stamps what mov
     // And the wall this patch type exists to hold.
     expect(after.review).toEqual(marked.review)
   })
+})
+
+/**
+ * The two states the record cannot hold, refused at the form.
+ *
+ * `InjuryMap` 'marked' is `[BodyRegionId, ...BodyRegionId[]]` and
+ * `WitnessRecord` 'witnessed' requires a non-empty `people`, so neither
+ * "injuries found, nothing marked" nor "somebody saw it, nobody named" is
+ * constructable. The form has to refuse rather than quietly downgrade the
+ * answer to the adjacent one, which would record a different claim from the
+ * one that was made.
+ */
+describe('the form refuses what the record cannot hold', () => {
+  function renderDetail() {
+    const router = createMemoryRouter(
+      [{ path: '/incidents/:incidentId', element: <IncidentDetailRoute /> }],
+      { initialEntries: [`/incidents/${subject.id}`] },
+    )
+    return render(
+      <SessionProvider>
+        <TooltipProvider>
+          <SignInAs as="registered_manager" />
+          <RouterProvider router={router} />
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+  }
+
+  async function openForm() {
+    const user = userEvent.setup()
+    const { container } = renderDetail()
+    await waitFor(() => expect(container.querySelector('[data-subject]')).toBeTruthy())
+    await user.click(container.querySelector('[data-correct-report]')!)
+    const save = await screen.findByRole('button', { name: /Save the correction/ })
+    return { user, save: save as HTMLButtonElement }
+  }
+
+  it('will not save "injuries found" with nothing marked on the body map', async () => {
+    const { user, save } = await openForm()
+    expect(save.disabled).toBe(false)
+
+    await user.click(screen.getByRole('radio', { name: /Checked: injuries found/ }))
+    expect(save.disabled).toBe(true)
+  }, 30000)
+
+  /*
+   * Emptying the names while "somebody saw it" stands is the reachable way
+   * into this state: the form opens from the record, so an incident that was
+   * witnessed arrives with the choice already made and the names already in.
+   * An earlier version of this test chose "somebody saw it" on a record that
+   * already said so, which changed nothing and asserted nothing.
+   */
+  it('will not save "somebody saw it" once the names are emptied', async () => {
+    const { user, save } = await openForm()
+
+    if (subject.response.witnesses.kind !== 'witnessed')
+      throw new Error('fixture no longer has a witnessed incident to empty')
+
+    const named = screen.getByLabelText<HTMLInputElement>('Who saw it')
+    expect(named.value).not.toBe('')
+    expect(save.disabled).toBe(false)
+
+    await user.clear(named)
+    await waitFor(() => {
+      expect(save.disabled).toBe(true)
+    })
+
+    await user.type(named, 'S. Patel')
+    await waitFor(() => {
+      expect(save.disabled).toBe(false)
+    })
+  }, 30000)
 })

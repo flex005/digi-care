@@ -25,6 +25,20 @@ export interface DialogProps {
   children?: ReactNode
   /** Buttons, right-aligned. */
   actions?: ReactNode
+  /**
+   * How wide the panel is. `standard` is 560px and is what every dialog in
+   * the product gets unless it asks otherwise.
+   *
+   * **Opt-in, because widening `.panel` would move every dialog there is.**
+   * A shared shape rule quietly changing for all its users is the defect §8
+   * records about `.tile` — the fix there was shape in the shared rule and
+   * paint per tile, and this is the same split: `.panel` keeps everything
+   * about what a dialog *is*, and the modifier overrides width alone.
+   *
+   * `wide` exists for the incident correction, which carries two side-by-side
+   * grids and two body maps and is unusable at 560px.
+   */
+  size?: 'standard' | 'wide'
 }
 
 export function Dialog({
@@ -34,12 +48,17 @@ export function Dialog({
   description,
   children,
   actions,
+  size = 'standard',
 }: DialogProps) {
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
         <RadixDialog.Overlay className={styles.overlay} />
-        <RadixDialog.Content className={styles.panel}>
+        <RadixDialog.Content
+          className={
+            size === 'wide' ? `${styles.panel} ${styles.panelWide}` : styles.panel
+          }
+        >
           <RadixDialog.Title className={styles.title}>{title}</RadixDialog.Title>
           {description ? (
             <RadixDialog.Description className={styles.description}>
