@@ -243,8 +243,10 @@ describe('the placeholder warning is a claim about a score', () => {
 describe('and so it appears nowhere in the current fixtures', () => {
   const noClaim = (container: HTMLElement, where: string) => {
     expect(container.querySelector('[data-placeholder-instrument]'), where).toBeNull()
-    expect(container.textContent, where).not.toMatch(/not a validated clinical scale/)
-    expect(container.textContent, where).not.toMatch(/make no clinical decision/)
+    expect(container.textContent, where).not.toMatch(
+      /Not yet backed by a real clinical scale/,
+    )
+    expect(container.textContent, where).not.toMatch(/placeholder scoring/)
   }
 
   it('is absent from the assessment list, including its unscored rows', async () => {
@@ -1058,8 +1060,10 @@ describe('the fifth queue', () => {
       )
 
       expect(container.querySelector('[data-placeholder-instrument]'), what).toBeNull()
-      expect(container.textContent, what).not.toMatch(/not a validated clinical scale/)
-      expect(container.textContent, what).not.toMatch(/make no clinical decision/)
+      expect(container.textContent, what).not.toMatch(
+        /Not yet backed by a real clinical scale/,
+      )
+      expect(container.textContent, what).not.toMatch(/placeholder scoring/)
     },
   )
 

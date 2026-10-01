@@ -15835,3 +15835,79 @@ Confirmed in a browser across every surface it could render on — the queue at
 `all`, `custom`, a single unscored template and a single sourced one, the
 assessment list with all nine rows, a scored form and an unscored form: zero
 banners and zero occurrences of the sentence.
+
+## The placeholder banner said one thing twice, and the MAR chart stops taking the rail
+
+### Part A: the wording
+
+The title and the sentence under it both opened with *"This instrument is a
+placeholder"*. That is §8's entry about a repeated segment in a rendered
+string being two owners agreeing the same fact, the one the pharmacy cycle's
+"30mg · 30mg · capsules" is named for: a reader got the same words twice and
+no second fact.
+
+**The repetition was the lesser failure.** "This instrument is a placeholder"
+reads like a note about the software — something not built yet — rather than
+a warning about a number. A reader who takes it for a development note
+ignores it, which is the opposite of what a clinical warning is for. The new
+copy says what is true in one pass: the figure came from invented scoring
+rather than a recognised instrument, don't act on it, use the written findings
+until a real scale lands.
+
+`PlaceholderBanner.test.tsx` renders the component on its own — not through a
+route or a fixture, because *where* it appears is a separate question with its
+own tests and *what it says* was wrong for reasons no route test could see. It
+asserts the title, the two load-bearing phrases, and mechanically that the
+detail does not open by restating the title. Mutating the title back to the
+old string fails it:
+
+    × names what is missing, and what to do instead
+    × does not open the detail by repeating the title
+    AssertionError: expected 'This instrument is a placeholderThis …'
+      not to match /This instrument is a placeholder/
+
+**One departure from the copy as written.** The supplied text used an em dash
+before "like the ones used for Falls or Pressure Ulcer". `check-em-dashes`
+exists because an em dash went into 338 lines of copy over sixteen phases
+without anybody deciding, and the house rule is a comma, a colon or a full
+stop. Written as a `—` escape the guard passed it — which is wording
+around a rule rather than keeping it, the exact habit §8 says a badly-scoped
+guard teaches. Confirmed by putting the literal character in and watching it
+fire on `instrument.ts:53`, then replaced with a comma. Say if the dash was
+deliberate and it can take a `dash-ok`.
+
+### Part B: the MAR chart no longer collapses the rail
+
+`useWideScreen()` collapsed the sidebar and dropped the content gutter while
+the medication chart was open, and restored both on the way out. It existed
+because the MAR week grid needs 1188px and the content column gives 970 at
+1280 — the bug §8 records as the week captioned "31/08 to 06/09" and
+rendering six days, found by a screenshot after 517 green tests.
+
+It is removed from `MarChartRoute` only. `wide-screen.ts` and its test are
+untouched: this stops one caller using the mechanism, it does not remove the
+mechanism.
+
+**`check:layout` before and after, both real:**
+
+    before:  23 of 28 weeks fit at 1280px without scrolling
+    after:    8 of 28 weeks fit at 1280px without scrolling
+
+and the check now **fails**, with two findings rather than one:
+
+    ✖ layout: 2 thing(s) a reader cannot get to:
+        8 of 28 weeks fit without scrolling, below the 23 that did
+        at 1280px the gutter is 24px and the week fits — the gutter has to
+        stay out at the narrowest supported width, or it is bought with the week
+
+The second one is the same change seen from the other side: the gutter was
+dropping to 0 at 1280 because `useWideScreen` dropped it, and with the hook
+gone the medications tab keeps its 24px inset. Both findings are consequences
+of the one decision.
+
+`npm run verify` therefore exits 1 at the layout stage, with every other stage
+green. **Nothing was adjusted to make it pass** — not the threshold, not the
+crawl, not the MAR chart's inclusion in it. Frank took this decision knowing
+some medication-chart columns may clip at 1280 on some residents, and the
+guard reporting it is the guard working. It stays red until he decides what
+the floor should be.

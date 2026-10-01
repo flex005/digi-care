@@ -50,7 +50,7 @@ import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
  */
 
 export const PLACEHOLDER_NOTICE =
-  'This instrument is a placeholder, not a validated clinical scale: make no clinical decision from its score.'
+  'This score comes from placeholder scoring rather than a recognised instrument, like the ones used for Falls or Pressure Ulcer. Don’t base a care decision on it: use the written findings here until a real scale is added.'
 
 export interface InstrumentChoice {
   label: string

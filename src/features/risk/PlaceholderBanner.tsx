@@ -17,7 +17,7 @@ export function PlaceholderBanner() {
     <div className={styles.placeholder} data-placeholder-instrument>
       <Unrecorded
         variant="panel"
-        label="This instrument is a placeholder"
+        label="Not yet backed by a real clinical scale"
         detail={PLACEHOLDER_NOTICE}
       />
     </div>

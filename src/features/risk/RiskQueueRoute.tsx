@@ -78,7 +78,7 @@ export function RiskQueueRoute() {
 
   /*
    * **'custom' never warrants it** — a custom risk has no instrument at all,
-   * so "not a validated clinical scale" is a category error there too.
+   * so a warning about placeholder scoring is a category error there too.
    * **'all' asks the aggregate question** — is there any scored template
    * among the nine whose instrument is not sourced — rather than firing just
    * because the filter happens to be 'all'. A single template asks the same
