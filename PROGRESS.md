@@ -16451,3 +16451,60 @@ worth keeping because each would recur:
 The second is the specificity entry in a browser rather than in jsdom: a
 selector that names a condition the whole product satisfies, where the test
 meant one element on one page.
+## The download came off the incident log (detail page only)
+
+Asked for directly. The act is unchanged and still on the detail page; what
+went is the per-row control on `/incidents`.
+
+**Three things went with it, and none of them is tidying.**
+
+`.logRowWrap`, `.logRowWrap > a` and `.rowDownload` existed to sit the row and
+its download side by side, and nothing applies them now. `check-css-classes`
+reads the other direction — applied and never defined — so it cannot see a
+defined-and-never-applied rule, and it printed the same 215 pairs before and
+after. The deletion was checked by `grep`, the same way `.correctOpen` was.
+
+`iconOnly` on `DownloadIncident` had exactly one caller, the log row, and its
+docblock said so: the row's column floors fill the content column at 1280
+exactly, and a labelled button pushed the row 114px past its own box. With the
+row's download gone the prop could not be reached by anything, so it went too
+rather than staying as a variant with a docblock describing a screen that no
+longer has one. `size` stayed, but the remaining call site passes `medium`, so
+the `small` default is currently unreached and the type says so.
+
+**The action track stayed at 7rem and the comment explaining it did not.** It
+read "the action track gave up 3rem when the download joined the row beside
+it … now they have a sibling button to sum with", and there is no sibling any
+more. Returning the 3rem was the tempting symmetry and it is wrong: 10rem was
+never a measurement of anything ("Open" and its arrow do not need it), and the
+floors sum to 50rem plus four gaps and the row's padding, 912px against the
+970px the content column gives at 1280. Spending 48px of that 58px of headroom
+on whitespace after the word "Open" buys nothing. The comment now says that
+instead of describing a button that is not there.
+
+**Measured, not reasoned about.** Removing the control also removed a *flex
+container*: `.logRowWrap` was the flex parent and `.logRowWrap > a` carried
+`flex: 1 1 auto; min-width: 0`. The row is now a direct child of the `<li>` in
+normal flow, which is §8's entry about a layout conversion silently re-scoping
+declarations nobody edited — the diff touches a container and the regression
+appears on a child. At 1280, with the filter on **All** so the measurement is
+over all 40 rows rather than the 2 the default filter leaves on screen:
+
+    downloadControls: 0        rows: 40
+    rowWidths:  [970]          rowRights: [1255]      cardWidth: 972
+    horizontalOverflow: 0      spilling: 0            lastCellGap: 24
+
+One width and one right edge across all 40, `lastCellGap` being the row's own
+24px padding. The detail page still has exactly one download, labelled, at
+`top: 202` beside the title, and its visible label is contained in its
+accessible name (WCAG 2.5.3). No console errors. Screenshot read as well as
+the numbers, because numbers do not show a gap where a button used to be.
+
+**The first measurement was over 2 rows and said the same thing.** The status
+filter defaults to "not acknowledged" and `selectOption` did nothing, because
+the filters are buttons carrying `data-status-filter`, not a native select. A
+clean reading over 2 of 40 rows is the §8 entry about a guard that names one
+subject, and it was only caught by the row count being in the output.
+
+As ever, no test renders `DownloadIncident`, so the 1502 passing tests say
+nothing about this change either way.

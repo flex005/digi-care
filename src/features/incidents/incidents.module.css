@@ -978,9 +978,16 @@
    */
 
   /*
-   * The action track gave up 3rem when the download joined the row beside it.
-   * "Open" and its arrow never needed 10rem; the floors still have to sum to
-   * what 1280 can hold, and now they have a sibling button to sum with.
+   * The action track is 7rem, which is what "Open" and its arrow need.
+   *
+   * It was 10rem until a download button joined the row beside it, and this
+   * comment used to explain the 3rem as room made for that sibling. The
+   * download has since been taken off the log, and the track stayed at 7rem
+   * rather than going back: 10rem was never a measurement of anything, and
+   * the floors have to sum to what 1280 can hold. They currently sum to 50rem
+   * plus four gaps and the row's padding — 912px against the 970px the
+   * content column gives at 1280. Returning 3rem would spend 48px of that
+   * 58px of headroom on whitespace after the word "Open".
    */
   grid-template-columns:
     minmax(10rem, 1fr) minmax(10rem, 1fr) minmax(14rem, 2fr)
@@ -1312,26 +1319,6 @@
   color: var(--status-caution-ink);
   font-size: var(--text-caption-size);
   line-height: var(--text-body-line);
-}
-
-/*
- * The row and its download, side by side. The row is a link and the download
- * is a button, so they are siblings rather than one inside the other.
- */
-.logRowWrap {
-  display: flex;
-  gap: var(--space-12);
-  align-items: center;
-}
-
-.logRowWrap > a {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.rowDownload {
-  flex-shrink: 0;
-  padding-right: var(--space-24);
 }
 
 .detailActions {

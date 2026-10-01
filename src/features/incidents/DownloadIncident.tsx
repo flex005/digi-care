@@ -13,25 +13,25 @@ import { incidentPdfContent } from './incident-pdf'
  * reader checking their downloads folder to find out whether it worked, and a
  * failed one looks identical to a slow one. Both outcomes are stated.
  *
- * The same control on the log row and on the detail page, because they are the
- * same act and a second implementation would be a second thing to keep in step
- * — the one that goes stale is always the one somebody is looking at.
+ * **One call site: the detail header.** It was on the log row as well, as an
+ * icon-only control, and the `iconOnly` prop existed for that one place — the
+ * row's column floors are tuned to fill the content column at 1280 exactly,
+ * and a labelled button pushed the row 114px past its own box. The log's
+ * download has been taken off, so the prop went with it rather than staying
+ * as a variant nothing can reach.
  */
 export function DownloadIncident({
   incident,
   residents,
   size = 'small',
-  iconOnly = false,
 }: {
   incident: Incident
   residents: Resident[]
-  size?: 'small' | 'medium'
   /**
-   * On the log, where the row's columns are tuned to exactly fill the content
-   * column at 1280 and a labelled button pushes it 114px past its own box.
-   * §7's condition is met: an aria-label and a tooltip.
+   * Still a prop with both values declared, though the one remaining call site
+   * passes `medium`, so the `small` default is currently unreached.
    */
-  iconOnly?: boolean
+  size?: 'small' | 'medium'
 }) {
   const { activeSite } = useSession()
   const format = useSiteFormat()
@@ -90,7 +90,7 @@ export function DownloadIncident({
         }}
       >
         <Icon name="download-upload/download-01" size={16} aria-hidden />
-        {iconOnly ? null : 'Download'}
+        Download
       </Button>
 
       <Toast
