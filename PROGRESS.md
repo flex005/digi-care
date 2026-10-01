@@ -16134,3 +16134,43 @@ throws if it ever changes the length of its input — and `stripCssComments` for
 the stylesheet, because a stripper for one medium is not a stripper for
 another. It was caught only because the swallowed class was one I had just
 added and expected to be reported.
+
+## Two defects in f6cb142, both mine
+
+**The hatch on a storage caveat.** `EvidencePanel` carried its "held for this
+session only" note through `<Unrecorded variant="panel">`. That component is
+the one entry point to the unrecorded treatment and it means *a clinical fact
+is missing*. Nothing was missing: the evidence was recorded, with who attached
+it and when. It is a storage caveat, and dressing it in gap vocabulary spends
+the alarm on something nobody has to act on — which is how the alarm stops
+working where there is a gap.
+
+The identical sentence was already a plain paragraph in `EvidenceField`, one
+file over. The two now say the same thing the same way, because it is the same
+fact.
+
+**A decision with no reason, on the screen that writes the record.**
+`outstanding` never checked `notTellingReason`, so "No, and here is why" could
+be submitted with no why. The form's own hint says a decision without a reason
+reads the same as one nobody made, and `FamilyDecision` on the detail page
+already refuses it — its button is disabled until a reason is typed. The
+report form was the one place not enforcing it and the only place that creates
+the record.
+
+Tested at both levels on purpose: the predicate, beside the `notRequiredReason`
+rule it mirrors, and the screen, because the defect was never that the rule was
+wrong but that the form did not ask it. A test on `outstanding` alone would
+have passed while the button stayed enabled.
+
+### A mutation that did not mutate, caught by its own confirmation
+
+The first attempt to put the hatch back failed to land: prettier had reflowed
+the paragraph and the replacement matched nothing. The test run then printed
+**4 passed**, which read exactly like a guard failing to catch a defect.
+
+What separated the two was the line printed before the verdict — `landed (want
+1): 0`. That is §8's entry about a mutation that silently does not mutate being
+indistinguishable from a guard that catches nothing, and the cheap defence
+working as described. Re-landed against the real text, the panel test fails on
+`expected <span> to be null`, and removing the reason check fails both the
+predicate test and the screen test.

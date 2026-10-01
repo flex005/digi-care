@@ -257,6 +257,46 @@ describe('injury is three states, not a checkbox', () => {
   })
 })
 
+/**
+ * The reason, on the screen that writes the record.
+ *
+ * The predicate is tested above; this drives the control, because the defect
+ * was not that the rule was wrong but that the form never asked it. A test on
+ * `outstanding` alone would have passed while the button stayed enabled.
+ */
+describe('a family decision with no reason cannot be reported', () => {
+  it('keeps the report refused until the reason is typed', async () => {
+    const user = userEvent.setup()
+    const { container } = renderForm()
+
+    const submit = () =>
+      container.querySelector<HTMLButtonElement>('[data-report-submit]')!
+
+    await user.click(container.querySelector('[data-family-choice="not"]')!)
+    expect(submit().disabled).toBe(true)
+    expect(container.textContent).toContain('why the family are not being told')
+
+    await user.type(
+      container.querySelector('[data-not-telling-reason]')!,
+      'Family asked to be told weekly rather than each time.',
+    )
+    // Still refused, but no longer for this reason: the rest of the form is
+    // empty, and what matters here is that this one left the list.
+    expect(container.textContent).not.toContain('why the family are not being told')
+  })
+
+  it('asks nothing extra where they should be told, or where nobody has decided', async () => {
+    const user = userEvent.setup()
+    const { container } = renderForm()
+
+    await user.click(container.querySelector('[data-family-choice="should"]')!)
+    expect(container.textContent).not.toContain('why the family are not being told')
+
+    await user.click(container.querySelector('[data-family-choice="undecided"]')!)
+    expect(container.textContent).not.toContain('why the family are not being told')
+  })
+})
+
 describe('what the form is waiting on', () => {
   const complete = {
     subject: 'resident' as const,
@@ -274,6 +314,8 @@ describe('what the form is waiting on', () => {
     family: 'contacted' as const,
     emergency: 'not_called' as const,
     notRequiredReason: '',
+    tellFamily: 'undecided' as const,
+    notTellingReason: '',
   }
 
   it('is satisfied by a complete answer', () => {
@@ -319,6 +361,33 @@ describe('what the form is waiting on', () => {
     expect(outstanding({ ...complete, immediateAction: '   ' })).toEqual([
       'what you did about it',
     ])
+  })
+
+  /*
+   * **The same rule the screen states and the detail page already enforces.**
+   * `FamilyDecision` refuses "they are not to be told" until a reason is
+   * typed, and the form's own hint says a decision without one reads the same
+   * as a decision nobody made — but the form is the place that writes the
+   * record, and it was the one place not checking.
+   */
+  it('asks why the family are not being told, before it will take the report', () => {
+    expect(outstanding({ ...complete, tellFamily: 'not' })).toEqual([
+      'why the family are not being told',
+    ])
+    expect(
+      outstanding({ ...complete, tellFamily: 'not', notTellingReason: '   ' }),
+    ).toEqual(['why the family are not being told'])
+    expect(
+      outstanding({
+        ...complete,
+        tellFamily: 'not',
+        notTellingReason: 'Family asked to be told weekly rather than each time.',
+      }),
+    ).toEqual([])
+
+    // Deciding they should be told needs no reason, and nor does not deciding.
+    expect(outstanding({ ...complete, tellFamily: 'should' })).toEqual([])
+    expect(outstanding({ ...complete, tellFamily: 'undecided' })).toEqual([])
   })
 
   it('asks for a reason wherever contact was not required', () => {

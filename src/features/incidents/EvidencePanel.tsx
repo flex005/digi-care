@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { IncidentEvidence } from '@/data/types'
 import { Dialog } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
 import { useSiteFormat } from '@/app/session/use-session'
 import { formatSize } from './EvidenceField'
 import styles from './incidents.module.css'
@@ -93,13 +92,22 @@ export function EvidencePanel({ evidence }: { evidence: IncidentEvidence[] }) {
             ))}
           </ul>
 
-          <div className={styles.sessionOnly} data-evidence-session-only>
-            <Unrecorded
-              variant="panel"
-              label="Held for this session only"
-              detail="These files live in this browser and go when the tab closes. Nothing is stored anywhere, so the originals are still the only copy that lasts."
-            />
-          </div>
+          {/*
+           * **Not the hatch.** `Unrecorded` is the one entry point to the
+           * unrecorded treatment and it means a clinical fact is missing.
+           * Nothing is missing here: the evidence is recorded, with who
+           * attached it and when. This is a storage caveat, and dressing it in
+           * gap vocabulary spends the alarm on something nobody has to act on
+           * — which is how the alarm stops working where there is a gap.
+           *
+           * The same sentence is a plain paragraph on the report form, and the
+           * two say the identical thing because it is the identical fact.
+           */}
+          <p className={styles.sessionOnly} data-evidence-session-only>
+            Held on this device for this session only, like everything else here.
+            Nothing is uploaded anywhere, so if this needs to be kept, keep the original
+            too.
+          </p>
         </>
       )}
 

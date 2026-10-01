@@ -144,6 +144,8 @@ export function ReportIncidentRoute() {
     family,
     emergency,
     notRequiredReason,
+    tellFamily,
+    notTellingReason,
   })
 
   return (
@@ -838,6 +840,8 @@ export function outstanding(input: {
   family: ContactChoice | ''
   emergency: EmergencyChoice | ''
   notRequiredReason: string
+  tellFamily: FamilyChoice
+  notTellingReason: string
 }): string[] {
   const waiting: string[] = []
 
@@ -871,6 +875,18 @@ export function outstanding(input: {
     input.notRequiredReason.trim() === ''
   ) {
     waiting.push('why contact was not required')
+  }
+
+  /*
+   * **The same rule as the line above it, on the decision that creates the
+   * record.** The screen's own hint says a decision without a reason reads the
+   * same as one nobody made, and `FamilyDecision` on the detail page already
+   * refuses one — its button is disabled until a reason is typed. The report
+   * form was the one place it was not enforced, and the only place that
+   * actually writes the decision down.
+   */
+  if (input.tellFamily === 'not' && input.notTellingReason.trim() === '') {
+    waiting.push('why the family are not being told')
   }
 
   return waiting

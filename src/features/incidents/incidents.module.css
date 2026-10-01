@@ -1281,6 +1281,10 @@
 
 .sessionOnly {
   margin-top: var(--space-4);
+  max-width: 80ch;
+  color: var(--ink-500);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-body-line);
 }
 
 .decisionState {
