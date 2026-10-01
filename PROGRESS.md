@@ -16508,3 +16508,145 @@ subject, and it was only caught by the row count being in the output.
 
 As ever, no test renders `DownloadIncident`, so the 1502 passing tests say
 nothing about this change either way.
+
+## Four changes to the incident correction flow (ac7679c, 9e31248, ac0772e, 11e72a1)
+
+### 1. The datetime-local field had no owner, and both ends were wrong
+
+The correction form pre-filled `occurredAt.slice(0, 16)` — raw stored UTC —
+on a page whose every other timestamp renders in the site's zone, so the form
+and the record it was correcting showed different times for one incident.
+Both incident forms then saved through `new Date(field)`, which the HTML spec
+parses as the **viewer's** local time. Together: open a correction, fix a typo
+in the description, save, and the instant the incident happened moves.
+
+`format.ts` gains the pair `zonedWallClock` was missing. The inverse searches
+offsets rather than doing arithmetic, because a zone's offset is not a
+constant: it probes a day either side, which brackets any single transition.
+
+**The clock change is decided out loud.** The repeated hour takes the earlier
+instant; the skipped hour shifts forward, so 01:30 becomes 02:30 rather than
+being refused. Both are an hour wrong at most, once a year — what is worse is
+being wrong inconsistently, or refusing a time somebody has already typed for
+a reason about a clock change.
+
+**Why nothing caught it, which is the part worth keeping.** Every fixture site
+is Europe/London and so is the machine running the suite, so the viewer's zone
+and the site's zone were the same string and the wrong code gave the right
+answer. §8's rule about anything deriving from `now` is the same rule one step
+out: a value derived from the *environment* needs that environment pinned. The
+tests pin the viewer to Africa/Lagos, which agrees with London all summer and
+diverges every winter — the exact shape of the latent bug on the report form.
+
+Mutated both ways. Helpers reverted to slice/parse: 9 of 12 unit tests fail.
+Form reverted: the screen round trip fails by exactly one hour,
+`expected '2026-10-01T12:22:00.000Z' to be '2026-10-01T13:22:00.000Z'`.
+
+### 2. A correction reaches the injuries and the witnesses
+
+Both are the reporter's own observations. The body map is the same
+`InjurySection` the report form uses rather than a second one.
+
+Out of reach, each for its own reason, and held by the type rather than by a
+sentence: the resident it happened to (changing the subject of a clinical
+record is a graver act than fixing what it says), the evidence (session-only
+object URLs with nothing to re-attach), the family decision
+(`recordFamilyDecision` owns it), and `ManagerReview`.
+
+The admin's name goes on an observation **only where the fact moved**. Regions
+and witness names compare as sets, so re-marking the same regions in another
+order is not a new observation.
+
+**The mutation earned its keep, and the test it broke was mine.** Removing the
+keep-what-did-not-change rule failed only one of the two tests written to
+catch it. "Leaves both stamps alone" passed — it handed the store back the
+*original* stamp objects and then asserted the original author survived, which
+is true however the store behaves. The form always rebuilds both observations
+with `currentUser` on them, so the test now does what the form does, and both
+fail on the mutation with the defect legible:
+`expected 'staff-a-okonkwo' to be 'staff-c-nwosu'`.
+
+That is §8's "assertion that cannot fail", found by the mutation and not by
+reading, in a test written specifically to catch this defect by somebody who
+had just written the rule it encodes.
+
+### 3. Urgency after the report
+
+Urgency could only be set while filing, so a manager reading an incident an
+hour later and realising it could not wait had no control anywhere.
+`withIncidentEdits` did not mention `urgency` at all, so even a store function
+would have had its result dropped on the way back out of the single read
+everything flows through.
+
+**Raise or reword, never stand down.** Going back to `ordinary` would delete
+the fact that somebody raised it and what they said, leaving the record unable
+to distinguish "nobody thought this urgent" from "somebody did and was
+overruled". A `stood_down` member carrying who and why is the honest shape;
+that is a status-union change, so it is asked for rather than taken, and the
+screen says so where somebody would look for the control.
+
+**Rewording moves the stamp, and that is a trade rather than a free choice.**
+`IncidentUrgency` holds one act, so the record can say who first raised it or
+who stands behind the words that are there now, not both. It keeps the second,
+because leaving a reworded reason under the first person's name attributes
+somebody's words to somebody else — the same defect change 2 goes to some
+length to avoid. Holding both needs a second act on the type.
+
+The docblock said urgency is a judgement "only the person who was there can
+make". True while the report form was the only way to set it, false the moment
+this control landed, so the claim is gone rather than left to go stale.
+
+`resetSessionIncidents` would have leaked the new counter across sign-outs and
+tests; caught by reading it rather than by anything failing.
+
+### 4. The correction form is a modal
+
+`Dialog` gains `size`, defaulting to exactly today's behaviour, and
+`.panelWide` overrides width and nothing else. Widening the shared `.panel`
+would have moved every dialog in the product.
+
+**Three things the browser found that jsdom cannot see.**
+
+*Focus came back as `BODY`.* The form is keyed on whether it is open so each
+opening starts from the record, and saving re-renders the page underneath, so
+the element Radix was holding had gone by the time it looked. A keyboard user
+was dropped at the top of the document with no idea where they were. The route
+now returns focus to the trigger; `activeElement` reads "Correct this report".
+
+*The wide class actually won the cascade*: computed width 920px, not 560. A
+class can be applied and still lose, which is the hatched tile.
+
+*The nested confirm stacks correctly*: hit-testable at its centre, the confirm
+button reachable by a real click, focus trapped inside it, both dialogs gone
+afterwards, no stray overlays, `pointer-events: auto` on body, and a plain
+navigation works after. Read as a screenshot as well as numbers.
+
+**One false alarm, recorded because the method was wrong rather than the
+page.** The first browser run reported `anythingSpillsSideways: true`. The
+check scanned every element for `scrollWidth > clientWidth` while only
+excluding `overflow-x: auto`, so it flagged elements with legitimate `scroll`
+and `hidden`. Scoped to the dialog, nothing spills and the page has zero
+horizontal overflow.
+
+**Fixed while here**: the form kept its React state while closed, so a
+cancelled edit came back next time somebody opened it. A Cancel that discards
+nothing is a lie about the button, and Escape and the overlay can close it now
+too.
+
+**The form's own gate had no test at all.** Every existing one asserts the
+*trigger* is absent, which is a fact about `CorrectReportTrigger`. Removing
+the gate from the form while leaving the trigger's would have been invisible —
+no test ever rendered the form with `open` set by anything but the trigger
+that is already hidden. It is now rendered directly with `open` forced, and
+the mutation fails four role cases.
+
+### Decisions taken that were not specified
+
+- **Rewording urgency re-stamps** rather than keeping the original raiser. The
+  union holds one act and cannot hold both; reasoning above.
+- **The form remounts on each open** (keyed), to make Cancel discard.
+- **Focus restoration is done in the route via the `data-correct-report`
+  attribute** rather than by widening the shared `Button`'s props with a ref.
+- **The wide panel is 920px.** Content is 872px after padding, which gives the
+  body map area 272px for its sites panel and ~292px per map.
+- **A `stood_down` urgency member is not added** — flagged for a decision.
