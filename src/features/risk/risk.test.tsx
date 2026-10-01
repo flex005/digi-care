@@ -26,6 +26,7 @@ import { AssessmentFormRoute, outstanding } from './AssessmentFormRoute'
 import { RiskQueueRoute } from './RiskQueueRoute'
 import {
   BRADEN,
+  needsPlaceholderWarning,
   MORSE,
   MUST,
   PLACEHOLDER_INSTRUMENT,
@@ -195,56 +196,67 @@ describe('never assessed is never made to look fine', () => {
   })
 })
 
-describe('the placeholder says so where it appears, and only where it is true', () => {
-  /*
-   * **The example had to stop being falls.** This test used the falls form to
-   * prove the banner appears, which was right while every scored template
-   * shared one invented instrument. Falls carries the Morse Fall Scale now, so
-   * the same assertion on the same template would have gone on passing while
-   * asserting the opposite of what the screen should say.
-   */
-  /*
-   * **Nothing scored is on the stand-in any more**, so the example is an
-   * unscored template. `instrumentFor` answers `PLACEHOLDER_INSTRUMENT` for
-   * the five judged ones, so its `sourced: false` still raises the banner on
-   * their forms. That wording fits them imperfectly — there is no score there
-   * to make a decision from — and it is a pre-existing quirk of the five
-   * rather than anything this phase introduced.
-   */
-  const stillPlaceholder = 'moving_handling' as const
+/**
+ * Who the placeholder warning is for.
+ *
+ * **Its trigger stopped meaning what it said, with nothing on screen edited.**
+ * `sourced === false` was a real "do not trust this number" while some scored
+ * template was still on the invented instrument. The moment Braden was
+ * sourced, the only things left reporting false were the five templates that
+ * never had a score to distrust and a custom risk with no instrument at all —
+ * so a sentence about a score was being shown where there is no score. §8's
+ * entry about a screen's meaning changing because a constant changed.
+ *
+ * The predicate is unit-tested rather than driven, because **no fixture can
+ * reach its true branch**: every scored template in this build is sourced, so
+ * "scored and unsourced" has no route through the UI. An untested branch is
+ * either the fixture's fault or the branch's, and this one is neither — it is
+ * the case the function exists to keep working for a future template that
+ * ships ahead of its instrument.
+ */
+describe('the placeholder warning is a claim about a score', () => {
+  it.each([
+    {
+      scored: true,
+      sourced: true,
+      warn: false,
+      why: 'a real scale: nothing to warn about',
+    },
+    { scored: true, sourced: false, warn: true, why: 'the only case it is for' },
+    {
+      scored: false,
+      sourced: true,
+      warn: false,
+      why: 'cannot occur, and still not a warning',
+    },
+    {
+      scored: false,
+      sourced: false,
+      warn: false,
+      why: 'plumbing, not a placeholder score',
+    },
+  ])('scored=$scored sourced=$sourced → $warn ($why)', ({ scored, sourced, warn }) => {
+    expect(needsPlaceholderWarning(scored, sourced)).toBe(warn)
+  })
+})
 
-  it('banners the list, and a form with no published scale behind it', async () => {
+describe('and so it appears nowhere in the current fixtures', () => {
+  const noClaim = (container: HTMLElement, where: string) => {
+    expect(container.querySelector('[data-placeholder-instrument]'), where).toBeNull()
+    expect(container.textContent, where).not.toMatch(/not a validated clinical scale/)
+    expect(container.textContent, where).not.toMatch(/make no clinical decision/)
+  }
+
+  it('is absent from the assessment list, including its unscored rows', async () => {
     const { container } = renderAt(
       `/residents/${NEVER_ASSESSED_FALLS}/risk-assessments`,
     )
     await listed(container)
-    // The list spans all nine, three of which are still invented.
-    expect(container.querySelector('[data-placeholder-instrument]')).toBeTruthy()
-
-    const form = renderAt(
-      `/residents/${NEVER_ASSESSED_FALLS}/risk-assessments/${stillPlaceholder}`,
-    )
-    await waitFor(() =>
-      expect(
-        form.container.querySelector('[data-placeholder-instrument]'),
-      ).toBeTruthy(),
-    )
-    // A figure that does not do what it appears to must say so where it
-    // appears, not in a release note.
-    expect(form.container.textContent).toMatch(/not a validated clinical scale/)
-    expect(form.container.textContent).toMatch(/make no clinical decision/)
+    noClaim(container, 'the assessment list')
   })
 
-  /**
-   * The mirror, which is the half that would have caught this.
-   *
-   * A banner saying the instrument is invented, on a form running a published
-   * scale, is a false claim about a clinical figure — and it is the direction
-   * nothing was watching: the old test asserted the sentence was present and
-   * would have been satisfied by it being present wrongly.
-   */
-  it.each(['falls', 'pressure_ulcer'] as const)(
-    'makes no placeholder claim on %s, which is sourced',
+  it.each(['falls', 'pressure_ulcer', 'nutrition', 'skin_integrity'] as const)(
+    'is absent on %s, which runs a published scale',
     async (templateId) => {
       const { container } = renderAt(
         `/residents/${NEVER_ASSESSED_FALLS}/risk-assessments/${templateId}`,
@@ -252,12 +264,30 @@ describe('the placeholder says so where it appears, and only where it is true', 
       await waitFor(() =>
         expect(container.querySelector('[data-running-score]')).toBeTruthy(),
       )
-      expect(container.querySelector('[data-placeholder-instrument]')).toBeNull()
-      expect(container.textContent).not.toMatch(/not a validated clinical scale/)
-      expect(container.textContent).not.toMatch(/make no clinical decision/)
+      noClaim(container, templateId)
     },
   )
 
+  /*
+   * **This asserts the opposite of what it used to.** Moving and handling was
+   * the example proving the banner still showed somewhere; it is unscored
+   * now, so a sentence about its score is a sentence about nothing.
+   */
+  it.each(['moving_handling', 'choking', 'coshh'] as const)(
+    'is absent on %s, which has no score to distrust',
+    async (templateId) => {
+      const { container } = renderAt(
+        `/residents/${NEVER_ASSESSED_FALLS}/risk-assessments/${templateId}`,
+      )
+      await waitFor(() =>
+        expect(container.querySelector('[data-level-choice]')).toBeTruthy(),
+      )
+      noClaim(container, templateId)
+    },
+  )
+})
+
+describe('the row label still names what each template runs on', () => {
   it('names the published scale on the row instead of calling it a placeholder', async () => {
     const { container } = renderAt(
       `/residents/${NEVER_ASSESSED_FALLS}/risk-assessments`,
@@ -994,11 +1024,44 @@ describe('the fifth queue', () => {
     )
   })
 
-  it('banners the placeholder here too', async () => {
-    const { container } = renderQueue()
-    await queued(container)
-    expect(container.querySelector('[data-placeholder-instrument]')).toBeTruthy()
-  })
+  /*
+   * **This asserted the opposite until now.** The queue bannered on every
+   * filter, which was right while a scored template was still on the invented
+   * instrument. All four are sourced, so the sentence is about a score that
+   * no longer exists anywhere it can be shown — and the three filter shapes
+   * reach it by three different routes, so all three are held.
+   */
+  it.each([
+    ['Any template', 'all'],
+    ['Recorded for one resident', 'custom'],
+    ['Moving and Handling', 'a single unscored template'],
+  ] as const)(
+    'makes no placeholder claim when filtered to %s',
+    async (option, what) => {
+      const user = userEvent.setup()
+      const { container } = renderQueue()
+      await queued(container)
+
+      /*
+       * **Driven through the Template select, not a `data-filter` button.**
+       * Those are the status tabs — never assessed, overdue, due, all — and a
+       * first version of this test queried one by a template id, found nothing,
+       * and asserted three times over that the banner was absent from the
+       * default view. It passed, because the banner is absent there too.
+       */
+      await user.click(within(container).getByRole('combobox', { name: /Template/i }))
+      await user.click(await screen.findByRole('option', { name: option }))
+      await waitFor(() =>
+        expect(
+          within(container).getByRole('combobox', { name: /Template/i }).textContent,
+        ).toContain(option),
+      )
+
+      expect(container.querySelector('[data-placeholder-instrument]'), what).toBeNull()
+      expect(container.textContent, what).not.toMatch(/not a validated clinical scale/)
+      expect(container.textContent, what).not.toMatch(/make no clinical decision/)
+    },
+  )
 
   it('has no axe violations', async () => {
     const { container } = renderQueue()

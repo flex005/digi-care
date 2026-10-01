@@ -18,7 +18,7 @@ import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, formatLateness } from '@/lib/format'
 import { PlaceholderBanner } from './PlaceholderBanner'
-import { isSourced } from './instrument'
+import { isScored, isSourced, needsPlaceholderWarning } from './instrument'
 import { LEVEL_LABEL } from './instrument'
 import styles from './risk.module.css'
 
@@ -76,22 +76,39 @@ export function RiskQueueRoute() {
   const load = useCallback(() => getResidentsBySite(activeSite.id), [activeSite.id])
   const resource = useResource<Resident[]>(load, [activeSite.id])
 
+  /*
+   * **'custom' never warrants it** — a custom risk has no instrument at all,
+   * so "not a validated clinical scale" is a category error there too.
+   * **'all' asks the aggregate question** — is there any scored template
+   * among the nine whose instrument is not sourced — rather than firing just
+   * because the filter happens to be 'all'. A single template asks the same
+   * question `AssessmentFormRoute` and `AssessmentListTab` ask, through the
+   * one shared predicate.
+   */
+  const showPlaceholderBanner =
+    template === 'custom'
+      ? false
+      : template === 'all'
+        ? RISK_ASSESSMENT_TEMPLATES.some((risk) =>
+            needsPlaceholderWarning(isScored(risk.id), isSourced(risk.id)),
+          )
+        : needsPlaceholderWarning(isScored(template), isSourced(template))
+
   return (
     <SiteTimeZone timeZone={activeSite.timeZone}>
       <div className={styles.page}>
         <h1 className={styles.pageTitle}>Risk assessments</h1>
 
         {/*
-         * **True of every filter but two.** This page spans all nine
-         * templates, so "the instrument is a placeholder" holds for 'all', for
-         * 'custom', and for any template still on the stand-in. It stops
-         * holding only when somebody has filtered down to exactly one of the
-         * two sourced scales, and a claim that is false of what is on screen
-         * is worse than no claim.
+         * **Only while the aggregate above says so.** All four scored
+         * templates are sourced now, so this is currently false for every
+         * filter — 'custom' by definition, any single unscored template by
+         * definition, and 'all' because nothing in the nine still needs the
+         * warning. It reappears automatically the moment a future scored
+         * template ships ahead of its real instrument, through
+         * `needsPlaceholderWarning`.
          */}
-        {template !== 'all' && template !== 'custom' && isSourced(template) ? null : (
-          <PlaceholderBanner />
-        )}
+        {showPlaceholderBanner ? <PlaceholderBanner /> : null}
 
         {resource.kind === 'loading' ? (
           <p className={styles.loading} role="status">

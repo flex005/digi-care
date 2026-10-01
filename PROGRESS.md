@@ -15755,3 +15755,83 @@ scored set fails the classification test. Each was confirmed landed before the
 verdict was read — the first attempt's grep counted a docblock mention as well
 as the code line, which is why the count said 1 where 0 was expected, and the
 code value was checked directly instead.
+
+## The placeholder banner stopped meaning what it said
+
+**Its trigger was `instrument.sourced === false`, and that was right until it
+wasn't.** While some *scored* template was still on the invented instrument,
+`sourced: false` was a genuine "do not trust this number" — the figure above
+came from a scale nobody had sourced. Commit fc66a51 sourced the last of them
+(Braden), and from that moment the only things reporting `sourced: false` were
+the five templates that were never meant to be scored and a custom risk with
+no instrument at all.
+
+So a sentence about a score — *"not a validated clinical scale: make no
+clinical decision from its score"* — was being shown on screens where there is
+no score to make a decision from. **Nobody edited the banner.** It is §8's
+entry about a screen's meaning changing because a constant changed, with
+nothing on the screen touched: the condition kept evaluating exactly as
+written while the population it selected turned into something else.
+
+`needsPlaceholderWarning(scored, sourced)` is `scored && !sourced`, and it owns
+the decision for all three call sites — `AssessmentFormRoute`,
+`AssessmentListTab`, `RiskQueueRoute` — so they cannot drift on what "still a
+placeholder" means. The queue works it out per filter shape: `custom` never
+warrants it, `all` asks the aggregate question over the nine rather than
+firing because the filter happens to be `all`, and a single template asks the
+same question the other two screens ask.
+
+**`PLACEHOLDER_INSTRUMENT` and `instrumentFor`'s fallback are untouched, on
+purpose.** They are what keeps the fixture generator's `scoreRangeFor` /
+`rng.int` draw happening for the five unscored templates, where the value is
+drawn and discarded — remove them and every resident's seeded draw order
+shifts. That `sourced: false` is plumbing, and reading it as a warning was the
+bug.
+
+The list keeps a `.some` over its rows rather than a constant `false`, and the
+queue keeps its aggregate, so the banner reappears by itself the day a scored
+template ships ahead of its instrument.
+
+### The branch no fixture can reach, and the test that was passing for nothing
+
+`scored && !sourced` has **no route through the UI**: every scored template in
+this build is sourced. So the predicate is unit-tested directly across all four
+boolean combinations, per §8's rule that an untested branch is either the
+fixture's fault or the branch's — here it is neither, it is the case the
+function exists to keep working for a template that has not shipped yet.
+
+**And the first version of the queue test was vacuous.** It drove the filter
+with `container.querySelector('[data-filter="custom"]')` — but `data-filter`
+is on the *status* tabs (never assessed, overdue, due, all), and the template
+filter is a Select. The query returned null, the click did nothing, and the
+test asserted three times over that the banner was absent from the **default
+view**, which it is. Three green assertions about one screen. It now drives
+the Select by its accessible name and waits for the trigger's own text to
+change before asserting.
+
+### What the mutations actually printed
+
+Breaking the predicate back to the old condition, `!sourced`:
+
+    × scored=false sourced=false → false ('plumbing, not a placeholder score')
+    AssertionError: expected true to be false
+
+Breaking it the other way, `scored && sourced`:
+
+    × scored=true sourced=true → false ('a real scale: nothing to warn about')
+    × scored=true sourced=false → true ('the only case it is for')
+    AssertionError: expected true to be false
+    AssertionError: expected false to be true
+
+And making the queue banner unconditional, to prove the rewritten integration
+test could fail at all:
+
+    × makes no placeholder claim when filtered to Any template
+    × makes no placeholder claim when filtered to Recorded for one resident
+    × makes no placeholder claim when filtered to Moving and Handling
+    AssertionError: all: expected <div …(2)>…(1)</div> to be null
+
+Confirmed in a browser across every surface it could render on — the queue at
+`all`, `custom`, a single unscored template and a single sourced one, the
+assessment list with all nine rows, a scored form and an unscored form: zero
+banners and zero occurrences of the sentence.

@@ -22,7 +22,13 @@ import { assertNever } from '@/lib/assert-never'
 import { useSiteFormat } from '@/app/session/use-session'
 import { formatCount, formatLateness } from '@/lib/format'
 import { PlaceholderBanner } from './PlaceholderBanner'
-import { LEVEL_LABEL, NEW_CUSTOM_RISK, isScored, isSourced } from './instrument'
+import {
+  LEVEL_LABEL,
+  NEW_CUSTOM_RISK,
+  isScored,
+  isSourced,
+  needsPlaceholderWarning,
+} from './instrument'
 import { scoreText } from './score'
 import styles from './risk.module.css'
 
@@ -73,12 +79,19 @@ export function AssessmentListTab() {
   return (
     <div className={styles.tabPanel}>
       {/*
-       * **Only while something on this list is one.** Two of the nine are
-       * sourced now, and a blanket claim that the instrument is invented is
-       * false of them — but it is still true of the list as a whole while
-       * three placeholder templates render on it, which they always do.
+       * **Only while some SCORED row on this list is unsourced.** All four
+       * scored templates are real now, so there is currently no row this can
+       * be true of — the five unscored templates and any custom risk are not
+       * what this banner is about, and showing it for them is a category
+       * error (see `needsPlaceholderWarning`). Kept as a `.some` over the
+       * rows, not a constant `false`, so it reappears automatically if a
+       * future scored template ships before its instrument is sourced.
        */}
-      {rows.some((row) => !isSourced(row.template.id)) ? <PlaceholderBanner /> : null}
+      {rows.some((row) =>
+        needsPlaceholderWarning(isScored(row.template.id), isSourced(row.template.id)),
+      ) ? (
+        <PlaceholderBanner />
+      ) : null}
 
       <div className={styles.lead} data-never-assessed={never}>
         <span className={styles.leadFigure} data-numeric>

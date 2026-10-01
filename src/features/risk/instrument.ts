@@ -682,9 +682,9 @@ export function scoreRangeFor(
 }
 
 /**
- * The five templates whose instrument produces a number.
+ * The four templates whose instrument produces a number.
  *
- * The other four record findings and reach a level without arithmetic — a
+ * The other five record findings and reach a level without arithmetic — a
  * clinician's judgement rather than a sum. Kept beside the instrument because
  * it is a fact about what this build ships, not about the template list.
  */
@@ -703,6 +703,30 @@ export const SCORED_TEMPLATES: ReadonlySet<RiskTemplateId> = new Set<RiskTemplat
 )
 
 export const isScored = (id: RiskTemplateId) => SCORED_TEMPLATES.has(id)
+
+/**
+ * Whether the placeholder warning is the right thing to show.
+ *
+ * It is a claim about a *score* — "the figure above is not a validated
+ * clinical scale" — so it only applies to a template that is scored at all.
+ * An unscored template's instrument is always `PLACEHOLDER_INSTRUMENT` by
+ * construction (see `instrumentFor`), purely to keep the fixture generator's
+ * draw count aligned — that `sourced: false` is plumbing, not a warning, and
+ * showing the banner from it is the bug this function exists to stop.
+ *
+ * **Nothing on screen changed to cause it.** `sourced === false` was a
+ * genuine "do not trust this number" while some scored template was still on
+ * the stand-in; the moment Braden was sourced, the only things left reporting
+ * false were templates that never had a score to distrust. §8's entry about a
+ * screen's meaning changing because a constant changed, with nothing on the
+ * screen edited.
+ *
+ * The single owner for all three call sites (`AssessmentFormRoute`,
+ * `AssessmentListTab`, `RiskQueueRoute`), so they cannot drift on what "still
+ * a placeholder" means.
+ */
+export const needsPlaceholderWarning = (scored: boolean, sourced: boolean): boolean =>
+  scored && !sourced
 
 export const LEVEL_LABEL: Record<RiskLevel, string> = {
   low: 'Low',

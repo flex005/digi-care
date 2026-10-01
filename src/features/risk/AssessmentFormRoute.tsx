@@ -37,6 +37,7 @@ import {
   PLACEHOLDER_INSTRUMENT,
   bandFor,
   instrumentFor,
+  needsPlaceholderWarning,
   compareScores,
   isScored,
   resolveRisk,
@@ -199,7 +200,9 @@ export function AssessmentFormRoute() {
         {resident.fullLegalName}
       </h2>
 
-      {instrument.sourced ? null : <PlaceholderBanner />}
+      {needsPlaceholderWarning(scored, instrument.sourced) ? (
+        <PlaceholderBanner />
+      ) : null}
 
       {scored ? (
         <div className={styles.runningScore} data-running-score>
