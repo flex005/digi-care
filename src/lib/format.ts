@@ -136,6 +136,95 @@ export function zonedWallClock(value: IsoDateTime, timeZone: TimeZone): number {
 }
 
 /**
+ * The two directions a `datetime-local` field needs, in the **site's** zone.
+ *
+ * `zonedWallClock` above produces a number for arithmetic that must never be
+ * rendered or stored. These are the pair that may be: one hands a form field
+ * the wall clock a reader of this site would recognise, the other reads that
+ * field back as a real instant. They exist because both incident forms were
+ * doing their own conversion and both were wrong in different ways — the
+ * correction form pre-filled `occurredAt.slice(0, 16)`, which is raw UTC,
+ * against a page rendering the same instant in the site's zone; and both
+ * saved through `new Date(field)`, which the HTML spec parses as the
+ * **viewer's** local time. Open a correction in Lagos, fix a typo in the
+ * description, save, and the time the incident happened moves an hour.
+ *
+ * One owner, because a conversion written twice is two conversions.
+ */
+
+/** An instant as the `datetime-local` value for that wall clock at the site. */
+export function wallClockField(value: IsoDateTime, timeZone: TimeZone): string {
+  const wall = new Date(zonedWallClock(value, timeZone))
+  const pad = (part: number) => String(part).padStart(2, '0')
+  return (
+    `${wall.getUTCFullYear()}-${pad(wall.getUTCMonth() + 1)}-${pad(wall.getUTCDate())}` +
+    `T${pad(wall.getUTCHours())}:${pad(wall.getUTCMinutes())}`
+  )
+}
+
+/**
+ * A `datetime-local` value read back as the instant it names **at the site**.
+ *
+ * The search is offset-based rather than arithmetic: a zone's offset is not a
+ * constant, so the only way to invert a wall clock is to propose instants and
+ * ask the zone what it would have shown. Probing a day either side brackets
+ * any single transition, which is what makes the two awkward hours visible
+ * instead of silently wrong.
+ *
+ * **The clock change, decided rather than stumbled into.** Twice a year a
+ * wall clock is not a function of an instant, and a field carrying no offset
+ * cannot say which it meant:
+ *
+ * - **The repeated hour** (clocks go back; 01:30 happens twice). Both
+ *   candidates are real instants. This takes the **earlier** one, the one
+ *   still on summer time. The record cannot distinguish them and neither can
+ *   this function — what it can do is pick the same side every time and say
+ *   so here, rather than depending on which way a rounding fell. An hour is
+ *   the error, and it is an hour either way; what would be worse is it being
+ *   an hour on some days and not others.
+ * - **The skipped hour** (clocks go forward; 01:30 never happens). No
+ *   candidate round-trips. This shifts **forward** by the gap, so 01:30
+ *   becomes 02:30, rather than rejecting the input. A form that refuses a
+ *   time somebody has already typed, for a reason about a clock change, is a
+ *   worse answer than the adjacent minute that did exist.
+ *
+ * Both are an hour wrong at most, once a year, and visible in the field the
+ * reader is looking at. Picking silently and inconsistently is the thing
+ * being avoided.
+ */
+export function instantFromWallClockField(
+  field: string,
+  timeZone: TimeZone,
+): IsoDateTime {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(field)
+  if (!match) throw new Error(`Not a datetime-local value: ${field}`)
+  const [, year, month, day, hour, minute] = match
+  const target = Date.UTC(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+  )
+
+  const asInstant = (at: number) => new Date(at).toISOString() as IsoDateTime
+  const offsetAt = (at: number) => zonedWallClock(asInstant(at), timeZone) - at
+
+  const DAY = 24 * 60 * 60 * 1000
+  const candidates = [
+    ...new Set([target - offsetAt(target - DAY), target - offsetAt(target + DAY)]),
+  ]
+  const real = candidates.filter(
+    (at) => zonedWallClock(asInstant(at), timeZone) === target,
+  )
+
+  if (real.length === 1) return asInstant(real[0]!)
+  // Repeated: the earlier of the two. Skipped: the later candidate, which is
+  // the one past the gap. Both are stated above.
+  return asInstant(real.length > 1 ? Math.min(...real) : Math.max(...candidates))
+}
+
+/**
  * The calendar day an instant falls on, **in the site's zone**, as an IsoDate.
  *
  * The only correct way to ask "was this today?" about a clinical record. The

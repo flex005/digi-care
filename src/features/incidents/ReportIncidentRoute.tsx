@@ -21,6 +21,8 @@ import { reportIncident, type IncidentReport } from '@/data/access/incident-stor
 import { Avatar, Button, Card, Select } from '@/components/primitives'
 import { AllergyBadge } from '@/components/status'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import type { TimeZone } from '@/lib/format'
+import { instantFromWallClockField } from '@/lib/format'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { TELL_THEM } from '@/features/family/family-statement'
 import { ChoiceMark } from './ChoiceMark'
@@ -591,6 +593,7 @@ export function ReportIncidentRoute() {
                     assembleReport(
                       {
                         siteId: activeSite.id,
+                        timeZone: activeSite.timeZone,
                         subject,
                         resident,
                         type,
@@ -694,6 +697,14 @@ function SubjectCard({ resident, siteName }: { resident: Resident; siteName: str
 export function assembleReport(
   input: {
     siteId: SiteId
+    /**
+     * The site's zone, because `occurredAt` arrives as a `datetime-local`
+     * value and that string names a wall clock with no offset on it. Parsing
+     * it with `new Date` reads it as the **viewer's** local time, which is
+     * the site's only while the two agree — London and Lagos agree all
+     * summer and differ every winter.
+     */
+    timeZone: TimeZone
     subject: SubjectChoice
     resident: Resident | undefined
     type: IncidentTypeId
@@ -761,7 +772,7 @@ export function assembleReport(
         : { kind: 'no_resident_involved', recordedBy: by },
     type: input.type,
     severity: input.severity,
-    occurredAt: new Date(input.occurredAt).toISOString() as IsoDateTime,
+    occurredAt: instantFromWallClockField(input.occurredAt, input.timeZone),
     location:
       input.area === ''
         ? { kind: 'not_recorded' }

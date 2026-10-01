@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
@@ -13,6 +13,7 @@ import {
   resetSessionIncidents,
   withIncidentEdits,
 } from '@/data/access/incident-store'
+import { wallClockField } from '@/lib/format'
 import { IncidentDetailRoute } from './IncidentDetailRoute'
 
 /**
@@ -143,5 +144,71 @@ describe('through the screen somebody actually uses', () => {
       staffOkonkwo.displayName,
     )
     expect(current().description).toBe('Found beside the bed, not the chair.')
+  }, 30000)
+})
+
+/**
+ * **Saving a correction must not move when the incident happened.**
+ *
+ * The field pre-filled from `occurredAt.slice(0, 16)` — raw stored UTC — and
+ * saved through `new Date(value)`, which parses a `datetime-local` string as
+ * the **viewer's** local time. So opening the form to fix a typo and saving
+ * it, with the time field never touched, rewrote the instant.
+ *
+ * The viewer's zone is pinned away from the site's, because that is the whole
+ * mechanism: with both on Europe/London the two wrongs cancel and the test
+ * passes on the defect. §8's rule about `now` applied to the environment.
+ */
+describe('a correction leaves the time alone unless somebody changes it', () => {
+  beforeAll(() => {
+    vi.stubEnv('TZ', 'Africa/Lagos')
+  })
+  afterAll(() => {
+    vi.unstubAllEnvs()
+  })
+
+  function renderDetail() {
+    const router = createMemoryRouter(
+      [{ path: '/incidents/:incidentId', element: <IncidentDetailRoute /> }],
+      { initialEntries: [`/incidents/${subject.id}`] },
+    )
+    return render(
+      <SessionProvider>
+        <TooltipProvider>
+          <SignInAs as="registered_manager" />
+          <RouterProvider router={router} />
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+  }
+
+  it('comes back as the same instant when only the description changed', async () => {
+    const user = userEvent.setup()
+    const { container } = renderDetail()
+    await waitFor(() => expect(container.querySelector('[data-subject]')).toBeTruthy())
+
+    await user.click(container.querySelector('[data-correct-report]')!)
+
+    // Untouched: the field is read, never typed into.
+    const when = container.querySelector<HTMLInputElement>('[data-correct-occurred]')!
+    const asOpened = when.value
+
+    const description = container.querySelector<HTMLTextAreaElement>(
+      '[data-correct-description]',
+    )!
+    await user.clear(description)
+    await user.type(description, 'Corrected wording, nothing about the time.')
+    await user.click(container.querySelector('[data-correct-save]')!)
+
+    const confirm = await screen.findByRole('alertdialog')
+    await user.click(within(confirm).getByRole('button', { name: /Replace it/ }))
+
+    await waitFor(() => expect(container.querySelector('[data-edited]')).toBeTruthy())
+
+    expect(current().description).toBe('Corrected wording, nothing about the time.')
+    // The assertion this exists for.
+    expect(current().occurredAt).toBe(subject.occurredAt)
+    // And the field had been showing the site's wall clock, not raw UTC.
+    expect(asOpened).toBe(wallClockField(subject.occurredAt, 'Europe/London'))
   }, 30000)
 })

@@ -4,13 +4,13 @@ import type {
   Incident,
   IncidentSeverityId,
   IncidentTypeId,
-  IsoDateTime,
 } from '@/data/types'
 import { COMMUNAL_AREAS, INCIDENT_SEVERITIES, INCIDENT_TYPES } from '@/data/types'
 import { correctReport } from '@/data/access/incident-store'
 import { AlertDialog, Button, Card, Select } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
+import { instantFromWallClockField, wallClockField } from '@/lib/format'
 import { useViewer } from '@/app/session/use-viewer'
 import styles from './incidents.module.css'
 
@@ -80,14 +80,21 @@ export function CorrectReportForm({
   onClose: () => void
   onCorrected: () => void
 }) {
-  const { currentUser } = useSession()
+  const { activeSite, currentUser } = useSession()
   const viewer = useViewer()
   const [confirming, setConfirming] = useState(false)
   const [failure, setFailure] = useState('')
 
   const [type, setType] = useState<IncidentTypeId>(incident.type)
   const [severity, setSeverity] = useState<IncidentSeverityId>(incident.severity)
-  const [occurredAt, setOccurredAt] = useState(incident.occurredAt.slice(0, 16))
+  /*
+   * The site's wall clock, not the stored UTC. The slice this replaced put a
+   * different time in the field from the one the page beside it was showing,
+   * for the same incident.
+   */
+  const [occurredAt, setOccurredAt] = useState(
+    wallClockField(incident.occurredAt, activeSite.timeZone),
+  )
   const [area, setArea] = useState<CommunalAreaId | 'resident_room' | 'not_recorded'>(
     incident.location.kind === 'communal'
       ? incident.location.area
@@ -261,7 +268,7 @@ export function CorrectReportForm({
               {
                 type,
                 severity,
-                occurredAt: new Date(occurredAt).toISOString() as IsoDateTime,
+                occurredAt: instantFromWallClockField(occurredAt, activeSite.timeZone),
                 location:
                   area === 'not_recorded'
                     ? { kind: 'not_recorded' }
