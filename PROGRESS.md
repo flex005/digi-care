@@ -16071,3 +16071,66 @@ Both predicates reverted to the old three-field check:
 
 Four failures across both implementations and both shapes of the assertion —
 the named case and the sweep. Restored, and the eleven pass again.
+
+## Incident reports: the form had no submit path at all
+
+**Found before building anything on top of it.** `ReportIncidentRoute`
+collected a complete, validated incident and its button had no `onClick`.
+`incident-store` exported `acknowledge`, `recordReview` and `close` and no
+create path; nothing anywhere minted an `IncidentId`; `getIncidents` read
+`patchedIncidents()`, which maps over fixtures and applies *edits to existing
+incidents*. Not one of the 25 tests in `report.test.tsx` drove a submission —
+they cover the body map, the `waiting` predicate and the subject card.
+
+So the form gathered everything and threw it away. That is §8's "a field that
+accepts input and hands it to nothing", at the size of a screen, and it
+blocked three of the four parts asked for: evidence attached on the form,
+the urgency and family decisions set on the form and still true on the detail
+page, and editing a *submitted* incident. Raised rather than worked around.
+
+`reportIncident` mints from a counter that never decrements — the
+family-access defect §8 records, where `members.length + 1` reissued a live
+id after a removal — and session reports are folded into `patchedIncidents`
+so the log, the dashboard count and the sidebar badge see a new one without
+any of them knowing the list exists.
+
+### The family decision had to come from what the reporter did
+
+Adding "nobody has decided whether to tell the family" to
+`outstandingDecisions` made **every fixture incident owe one**, and the test
+proving the outstanding block does not render when nothing is owed failed
+with *"no incident in the set has nothing outstanding"* — a state that had
+become unreachable.
+
+The fix was not to drop the decision but to stop inventing an undecided state
+beside a decision already on the record: a reporter who rang the family
+decided they should be told, and one who recorded "not required" with a reason
+decided they should not. Only `not_yet` is genuinely undecided. The fixture
+derives it from `response.family` rather than defaulting.
+
+### A video with no captions, and what was not done about it
+
+`jsx-a11y/media-has-caption` failed on the evidence player. It is written for
+authored media, where captions exist and somebody left them out; this is a
+phone recording made minutes after an incident, and an empty `<track>` would
+satisfy the linter by asserting a caption track exists. That is the fabricated
+record this build refuses everywhere else, so the rule is disabled on that one
+line with the reason attached, and the element carries an accessible name
+saying what it is, who recorded it and when.
+
+### My own guard had the defect CLAUDE.md records
+
+`check-css-classes.mjs` stripped comments with a regex. A file input carries
+`accept="image/[star],video/[star]"`, and the slash-star inside that string
+reads as a comment opener: it blanked from there to the next terminator in a
+docblock below, taking eight `styles.x` usages with it. The guard reported
+**one** undefined class out of nine and printed a count over a file it had read
+part of.
+
+That is exactly the `check-selector-specificity` failure §8 describes, in a
+guard written after it, by somebody who had read that entry. It uses
+`scripts/lib/strip-comments.mjs` now — which knows a string from a comment and
+throws if it ever changes the length of its input — and `stripCssComments` for
+the stylesheet, because a stripper for one medium is not a stripper for
+another. It was caught only because the swallowed class was one I had just
+added and expected to be reported.

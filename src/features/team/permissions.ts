@@ -424,6 +424,15 @@ export const ADMIN_ACTS = [
     why: 'The pack is the evidence the service hands to a regulator, and it goes out in the name of the person the service is registered to.',
   },
   {
+    id: 'correct_incident_report',
+    module: '/incidents',
+    // A control on the incident itself. The manager reads that screen.
+    route: undefined,
+    what: 'Change what a reporter wrote on an incident',
+    phrase: 'Changing what a reporter wrote',
+    why: 'It overwrites somebody else\u2019s account of what happened, and the original is not kept.',
+  },
+  {
     id: 'statutory_notification',
     module: '/compliance',
     // A control on the notifications screen. The manager reads that screen.

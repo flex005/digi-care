@@ -72,6 +72,43 @@ export function outstandingDecisions(
   const decisions: OutstandingDecision[] = []
 
   /*
+   * **Urgency first, because that is what it is for.** The reporter said this
+   * one cannot wait its turn, and the whole point of raising it that way is
+   * that it is seen before the ordinary queue of things owed. It leaves the
+   * list the moment somebody acknowledges the incident — the claim is "nobody
+   * has picked this up yet and it needs picking up now", and acknowledgement
+   * is exactly what settles it.
+   */
+  if (
+    incident.urgency.kind === 'needs_attention_now' &&
+    incident.status.kind === 'reported_not_acknowledged'
+  ) {
+    decisions.push({
+      id: 'urgent',
+      name: `${incident.urgency.raised.by.displayName} said this one cannot wait`,
+      detail: `${incident.urgency.because} Nobody has acknowledged it yet.`,
+      action: 'Acknowledge',
+      availableInPhase: 'now',
+    })
+  }
+
+  /*
+   * The family decision, where nobody has made one. Deciding is not telling,
+   * and `TELL_THEM.incident` says so wherever the decision is shown — but a
+   * decision nobody has taken is a thing owed, like any other.
+   */
+  if (incident.familyTold.kind === 'not_decided') {
+    decisions.push({
+      id: 'family',
+      name: 'Nobody has decided whether to tell the family',
+      detail:
+        'This product cannot reach a family member, so what is owed is a decision and, if they should be told, a telephone call somebody makes.',
+      action: 'Decide',
+      availableInPhase: 'now',
+    })
+  }
+
+  /*
    * Two notification states are outstanding, not one.
    *
    * `not_yet_decided` is a decision nobody has taken. `required_not_yet_notified`

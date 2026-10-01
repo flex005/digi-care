@@ -13,6 +13,7 @@
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, dirname, resolve } from 'node:path'
+import { stripComments, stripCssComments } from './lib/strip-comments.mjs'
 
 const files = []
 ;(function walk(dir) {
@@ -23,7 +24,23 @@ const files = []
   }
 })('src')
 
-const stripComments = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
+/*
+ * **The scanner, not a regex, and this file learned why the hard way.**
+ * A file input carries `accept="image/[star],video/[star]"`, and a slash-star
+ * inside that string reads to a regex as a comment opener: it blanked from
+ * there to the next comment terminator in a docblock far below, taking eight
+ * `styles.x` usages with it. The guard then reported one undefined class out
+ * of nine, and printed a count over a file it had read part of — the exact
+ * defect CLAUDE.md records for `check-selector-specificity`, reproduced in a
+ * guard written after it and caught only because the missing class was one I
+ * had just added.
+ *
+ * `stripComments` knows a string from a comment and throws if it ever changes
+ * the length of its input. CSS gets `stripCssComments`, because a stripper for
+ * one medium is not a stripper for another: the JS scanner treats a slash
+ * after an opening bracket as a regex literal, which is the shape of
+ * `url(/assets/x.svg)`.
+ */
 /** `@/x` is an alias for `src/x`; an unresolved path would read as missing. */
 const resolveCss = (fromFile, spec) =>
   spec.startsWith('@/')
@@ -31,7 +48,7 @@ const resolveCss = (fromFile, spec) =>
     : resolve(dirname(fromFile), spec)
 
 function defined(cssPath) {
-  const css = stripComments(readFileSync(cssPath, 'utf8'))
+  const css = stripCssComments(readFileSync(cssPath, 'utf8'))
   const names = new Set()
   // Everything before a `{` is a selector list; declarations never reach here.
   for (const m of css.matchAll(/(^|\})([^{}]*)\{/g))

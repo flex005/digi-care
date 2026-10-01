@@ -406,6 +406,82 @@ export type IncidentSubject =
   | { kind: 'resident'; residentId: ResidentId }
   | { kind: 'no_resident_involved'; recordedBy: StaffRef }
 
+/**
+ * A photo or a video somebody attached when they reported it.
+ *
+ * **In memory for the session, and the screen says so.** There is no backend
+ * here, so the file lives on an object URL that dies with the tab. That is
+ * what every other write in this build does, and the one thing it must not do
+ * is imply otherwise — a reader who believes an evidence photo is filed
+ * somewhere will not take another one.
+ *
+ * Stamped like every other act on this type. A photo with no name against it
+ * is a photo nobody can ask about.
+ */
+export interface IncidentEvidence {
+  id: string
+  kind: 'photo' | 'video'
+  /** As the file was named on the device it came off. */
+  fileName: string
+  /** Bytes, so the screen can say how big a thing it is holding. */
+  size: number
+  /** An object URL. Alive for this session only. */
+  url: string
+  attached: IncidentAct
+}
+
+/**
+ * Whether the reporter said this one needs attention now.
+ *
+ * **Not a duplicate of the unacknowledged queue.** Every incident already
+ * starts `reported_not_acknowledged` and already counts on the sidebar badge
+ * and the dashboard, so a plain "alert the manager" toggle would restate a
+ * signal the product already sends and teach people to ignore both. What was
+ * missing is *urgency* — the reporter saying this one is not like the other
+ * nine waiting, which is a judgement only the person who was there can make.
+ *
+ * It is a recorded judgement with a name on it, never a flag somebody set, and
+ * it is surfaced through `outstandingDecisions` rather than a second
+ * things-needing-attention surface of its own.
+ */
+export type IncidentUrgency =
+  | { kind: 'ordinary' }
+  | { kind: 'needs_attention_now'; raised: IncidentAct; because: string }
+
+/**
+ * Whether anybody has decided to tell the family, and the fact that deciding
+ * is not telling.
+ *
+ * **This product cannot reach a family member.** The Family Portal is a
+ * separate product with its own UI, so what this records is a decision, and
+ * `TELL_THEM.incident` says the rest out loud on the screen rather than behind
+ * a click. The same shape `ShareWithFamily` uses for a care note, and for the
+ * same reason: a manager who reads "family told" as *the family were told* may
+ * not telephone them, and for an incident that is a family not hearing that
+ * their relative fell.
+ *
+ * `not_decided` is a real third state. Somebody choosing not to tell the
+ * family is a decision with a reason and a name; nobody having considered it
+ * is a gap.
+ */
+export type FamilyTold =
+  | { kind: 'not_decided' }
+  | { kind: 'should_be_told'; decided: IncidentAct }
+  | { kind: 'not_to_be_told'; decided: IncidentAct; reason: string }
+
+/**
+ * Whether the reporter's own account has been changed since they wrote it.
+ *
+ * **This type otherwise refuses this, and the refusal is in the store.**
+ * `incident-store`'s patch cannot reach `response` on purpose, so the
+ * reporter's record and the manager's stay two records by two people. An admin
+ * edit crosses that line deliberately — see PROGRESS.md — and the one thing
+ * that cannot be optional is the stamp. A record changed with no trace of who
+ * touched it is worse than one that was never editable.
+ */
+export type IncidentEdited =
+  { kind: 'not_edited' } | { kind: 'edited'; edited: IncidentAct }
+
 export interface Incident {
   id: IncidentId
   siteId: SiteId
@@ -431,6 +507,15 @@ export interface Incident {
   /** Empty until the incident is closed. */
   reviewFlags: PostIncidentReviewFlag[]
   origin: IncidentOrigin
+
+  /** Photos and video attached when it was reported. Session-held. */
+  evidence: IncidentEvidence[]
+  /** Whether the reporter said this one cannot wait its turn. */
+  urgency: IncidentUrgency
+  /** Whether anybody decided to tell the family. Deciding is not telling. */
+  familyTold: FamilyTold
+  /** Whether the reporter's own account has been changed since. */
+  edited: IncidentEdited
 }
 
 /** A day's worth of incidents, for the log's date filter. */

@@ -1,12 +1,23 @@
 import { held, type SessionHolding } from './session-holding'
 import { now as appNow } from '@/data/fixtures/clock'
 import type {
+  FamilyTold,
   Incident,
   IncidentAct,
+  IncidentEdited,
+  IncidentEvidence,
   IncidentId,
+  IncidentLocation,
+  IncidentSeverityId,
   IncidentStatus,
+  IncidentSubject,
+  IncidentTypeId,
+  IncidentUrgency,
+  ImmediateResponse,
+  InjuryMap,
   IsoDateTime,
   ManagerReview,
+  SiteId,
   StaffRef,
 } from '../types'
 
@@ -31,12 +42,64 @@ import type {
 interface Edit {
   status?: IncidentStatus
   review?: Partial<ManagerReview>
+  familyTold?: FamilyTold
+  correction?: ReporterCorrection
+  edited?: IncidentEdited
+}
+
+/**
+ * What an admin may change about the reporter's own account.
+ *
+ * **Its own patch type, deliberately kept apart from `Edit` above.** That one
+ * is typed to the manager's fields so a review can never reach what the
+ * reporter wrote — the protection this file's docblock describes, and it is
+ * still intact for that path. This is a second, narrower door with its own
+ * key: admin-gated, stamped, and unable to touch the manager's review.
+ *
+ * It overwrites in place and the original is not kept. That is a decision
+ * taken knowingly against what this module otherwise protects; the reasoning
+ * is in PROGRESS.md so it is findable rather than looking like an oversight.
+ */
+export interface ReporterCorrection {
+  type: IncidentTypeId
+  severity: IncidentSeverityId
+  occurredAt: IsoDateTime
+  location: IncidentLocation
+  description: string
+  immediateAction: string
 }
 
 const edits = new Map<IncidentId, Edit>()
 let acknowledged = 0
 let reviewed = 0
 let closed = 0
+let familyDecided = 0
+let corrected = 0
+
+/**
+ * Incidents reported in this session.
+ *
+ * **The form had nowhere to put one until now.** `ReportIncidentRoute`
+ * collected a complete, validated incident and its button did nothing: no
+ * handler, no create path in this store, no test driving a submission. A whole
+ * form handing everything it gathered to nothing, which is §8's "a field that
+ * accepts input and hands it to nothing" at the size of a screen.
+ *
+ * In memory for the session like every other write here, and read through
+ * `patchedIncidents` so the log, the dashboard count and the sidebar badge all
+ * see a new one without any of them being told about this list.
+ */
+const reported: Incident[] = []
+
+/**
+ * Never reused, even though nothing removes a reported incident.
+ *
+ * A counter off `reported.length` is the family-access defect §8 records: name
+ * two, remove one, name another, and the third carries an id the first still
+ * holds. There is no removal here today and this costs nothing to be right
+ * about.
+ */
+let minted = 0
 
 const act = (by: StaffRef): IncidentAct => ({
   by,
@@ -51,10 +114,73 @@ export function withIncidentEdits(incident: Incident): Incident {
     ...incident,
     status: edit.status ?? incident.status,
     review: { ...incident.review, ...edit.review },
+    familyTold: edit.familyTold ?? incident.familyTold,
+    ...(edit.correction === undefined
+      ? {}
+      : {
+          type: edit.correction.type,
+          severity: edit.correction.severity,
+          occurredAt: edit.correction.occurredAt,
+          location: edit.correction.location,
+          description: edit.correction.description,
+          response: {
+            ...incident.response,
+            immediateAction: edit.correction.immediateAction,
+          },
+          edited: edit.edited ?? incident.edited,
+        }),
   }
 }
 
 export const editedThisSession = (id: IncidentId): boolean => edits.has(id)
+
+/** What the reporter gathered. The store stamps the rest. */
+export interface IncidentReport {
+  siteId: SiteId
+  subject: IncidentSubject
+  type: IncidentTypeId
+  severity: IncidentSeverityId
+  occurredAt: IsoDateTime
+  location: IncidentLocation
+  description: string
+  response: ImmediateResponse
+  injuries: InjuryMap
+  evidence: IncidentEvidence[]
+  urgency: IncidentUrgency
+  familyTold: FamilyTold
+}
+
+/**
+ * Reporting one, which is the act this module was missing.
+ *
+ * It arrives `reported_not_acknowledged` with nothing reviewed and nothing
+ * decided, because that is what a new incident is: somebody wrote it down and
+ * nobody has picked it up. Every later state is reached through the acts that
+ * already exist.
+ */
+export function reportIncident(report: IncidentReport, by: StaffRef): Incident {
+  minted += 1
+  const incident: Incident = {
+    ...report,
+    id: `inc-session-${String(minted)}` as IncidentId,
+    reported: act(by),
+    status: { kind: 'reported_not_acknowledged' },
+    review: {
+      rootCause: { kind: 'unrecorded' },
+      actionsTaken: { kind: 'unrecorded' },
+      preventiveMeasures: { kind: 'unrecorded' },
+    },
+    notification: { kind: 'not_yet_decided' },
+    reviewFlags: [],
+    origin: { kind: 'reported' },
+    edited: { kind: 'not_edited' },
+  }
+  reported.push(incident)
+  return incident
+}
+
+/** Everything reported this session, for the read every screen goes through. */
+export const reportedThisSession = (): Incident[] => [...reported]
 
 function patch(id: IncidentId, next: Edit): void {
   edits.set(id, { ...edits.get(id), ...next })
@@ -140,18 +266,73 @@ export function close(
   return status
 }
 
+/**
+ * Whether the family should be told, decided by whoever decided it last.
+ *
+ * Deciding is not telling, and the screen says the rest. Changeable after the
+ * report because the reporter decided with what they knew at the time.
+ */
+export function recordFamilyDecision(
+  incident: Incident,
+  decision: { kind: 'should' } | { kind: 'not'; reason: string },
+  by: StaffRef,
+): void {
+  patch(incident.id, {
+    familyTold:
+      decision.kind === 'should'
+        ? { kind: 'should_be_told', decided: act(by) }
+        : { kind: 'not_to_be_told', decided: act(by), reason: decision.reason },
+  })
+  familyDecided += 1
+}
+
+/**
+ * An admin correcting the reporter's own account, in place.
+ *
+ * **The original is not kept, and that is the decision rather than an
+ * oversight.** Every other write here adds a record beside what was there; this
+ * one overwrites. What cannot be optional is the stamp — a record changed with
+ * no trace of who touched it would be worse than one nobody could change.
+ */
+export function correctReport(
+  incident: Incident,
+  correction: ReporterCorrection,
+  by: StaffRef,
+): void {
+  if (correction.description.trim() === '')
+    throw new Error('An incident cannot be left with no account of what happened.')
+  if (correction.immediateAction.trim() === '')
+    throw new Error('An incident cannot be left with no account of what was done.')
+  patch(incident.id, {
+    correction: {
+      ...correction,
+      description: correction.description.trim(),
+      immediateAction: correction.immediateAction.trim(),
+    },
+    edited: { kind: 'edited', edited: act(by) },
+  })
+  corrected += 1
+}
+
 export function incidentHoldings(): SessionHolding[] {
   return [
+    ...held('incidents you reported', reported.length),
     ...held('incidents you acknowledged', acknowledged),
     ...held('review findings you recorded', reviewed),
     ...held('incidents you closed', closed),
+    ...held('family decisions you recorded', familyDecided),
+    ...held('reports you corrected', corrected),
   ]
 }
 
 /** Emptied on sign out, and by tests. */
 export function resetSessionIncidents(): void {
   edits.clear()
+  reported.length = 0
+  minted = 0
   acknowledged = 0
   reviewed = 0
   closed = 0
+  familyDecided = 0
+  corrected = 0
 }

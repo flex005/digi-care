@@ -1,18 +1,30 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type {
   BodyRegionId,
   CommunalAreaId,
+  ContactState,
+  IncidentAct,
+  IncidentEvidence,
   IncidentSeverityId,
   IncidentTypeId,
+  InjuryMap,
+  IsoDateTime,
   Resident,
+  SiteId,
+  StaffRef,
 } from '@/data/types'
 import { COMMUNAL_AREAS, INCIDENT_TYPES } from '@/data/types'
+import { now as appNow } from '@/data/fixtures/clock'
 import { residentsBySite } from '@/data/fixtures/residents'
+import { reportIncident, type IncidentReport } from '@/data/access/incident-store'
 import { Avatar, Button, Card, Select } from '@/components/primitives'
 import { AllergyBadge } from '@/components/status'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
+import { TELL_THEM } from '@/features/family/family-statement'
 import { ChoiceMark } from './ChoiceMark'
+import { EvidenceField } from './EvidenceField'
 import { InjurySection, type InjuryChoice } from './InjurySection'
 import styles from './incidents.module.css'
 
@@ -76,11 +88,14 @@ const SEVERITIES: {
 const NO_RESIDENT_TYPES: IncidentTypeId[] = ['equipment_failure', 'near_miss']
 
 type SubjectChoice = 'resident' | 'no_resident' | undefined
+/** Whether the reporter decided the family should be told. */
+export type FamilyChoice = 'undecided' | 'should' | 'not'
 type ContactChoice = 'not_yet' | 'not_required' | 'contacted'
 type EmergencyChoice = 'not_called' | 'ambulance_999' | 'nhs_111'
 
 export function ReportIncidentRoute() {
-  const { activeSite } = useSession()
+  const { activeSite, currentUser } = useSession()
+  const navigate = useNavigate()
 
   const [subjectChoice, setSubjectChoice] = useState<SubjectChoice>(undefined)
   const [residentId, setResidentId] = useState('')
@@ -98,6 +113,11 @@ export function ReportIncidentRoute() {
   const [family, setFamily] = useState<ContactChoice | ''>('')
   const [emergency, setEmergency] = useState<EmergencyChoice | ''>('')
   const [notRequiredReason, setNotRequiredReason] = useState('')
+  const [evidence, setEvidence] = useState<IncidentEvidence[]>([])
+  const [urgentBecause, setUrgentBecause] = useState('')
+  const [tellFamily, setTellFamily] = useState<FamilyChoice>('undecided')
+  const [notTellingReason, setNotTellingReason] = useState('')
+  const [failure, setFailure] = useState('')
 
   const people = residentsBySite(activeSite.id)
   const resident = people.find((person) => person.id === residentId)
@@ -437,6 +457,106 @@ export function ReportIncidentRoute() {
             ) : null}
           </section>
 
+          <section className={styles.section} data-section="evidence">
+            <h2 className={styles.sectionTitle}>Photographs or video</h2>
+            <p className={styles.sectionNote}>
+              Anything you took at the time. Nothing is required.
+            </p>
+            <EvidenceField
+              evidence={evidence}
+              onChange={setEvidence}
+              by={currentUser}
+            />
+          </section>
+
+          {/*
+           * **Urgency, not an alert.** Every incident already arrives
+           * unacknowledged and already counts on the sidebar badge and the
+           * dashboard, so a plain "tell the manager" toggle would restate a
+           * signal the product already sends — and a warning that fires on
+           * every row stops being read on the one that matters. What only the
+           * person who was there can say is that this one cannot wait its
+           * turn, and why.
+           */}
+          <section className={styles.section} data-section="urgency">
+            <h2 className={styles.sectionTitle}>Does this need attention now?</h2>
+            <p className={styles.sectionNote}>
+              Every incident goes to a manager unacknowledged. This says yours should
+              not wait its turn, and it shows up on the incident as something owed.
+            </p>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Why it cannot wait</span>
+              <textarea
+                className={styles.input}
+                rows={2}
+                value={urgentBecause}
+                data-urgent-because
+                placeholder="Leave blank unless it genuinely cannot wait."
+                onChange={(event) => setUrgentBecause(event.target.value)}
+              />
+              <span className={styles.hint}>
+                A reason, not a tick: &ldquo;needs attention now&rdquo; with nothing
+                behind it tells a manager to hurry and not what about.
+              </span>
+            </label>
+          </section>
+
+          {/*
+           * **Deciding is not telling, and the instruction is not behind a
+           * click.** This product cannot reach a family member — the Family
+           * Portal is a separate product — so what this records is a decision.
+           * `TELL_THEM.incident` is in front of the control rather than inside
+           * a dialog, because the risk here is precisely somebody not clicking.
+           */}
+          <section className={styles.section} data-section="family">
+            <h2 className={styles.sectionTitle}>Should the family be told?</h2>
+
+            <p className={styles.instruction} data-nothing-sent>
+              <b>{TELL_THEM.incident}</b>
+            </p>
+
+            <div className={styles.choices} data-family-choices>
+              {(
+                [
+                  ['should', 'Yes, they should be told'],
+                  ['not', 'No, and here is why'],
+                  ['undecided', 'Not decided yet'],
+                ] as const
+              ).map(([id, label]) => (
+                <label
+                  key={id}
+                  className={tellFamily === id ? styles.choiceOn : styles.choice}
+                  data-family-choice={id}
+                >
+                  <input
+                    type="radio"
+                    name="tell-family"
+                    checked={tellFamily === id}
+                    onChange={() => setTellFamily(id)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+
+            {tellFamily === 'not' ? (
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Why not</span>
+                <textarea
+                  className={styles.input}
+                  rows={2}
+                  value={notTellingReason}
+                  data-not-telling-reason
+                  onChange={(event) => setNotTellingReason(event.target.value)}
+                  placeholder="No injury, and the family asked to be told weekly rather than each time."
+                />
+                <span className={styles.hint}>
+                  A decision without a reason reads the same as one nobody made.
+                </span>
+              </label>
+            ) : null}
+          </section>
+
           <div className={styles.foot}>
             {/* Names exactly what is missing, as the round's footer does. A
                 count would make somebody hunt. */}
@@ -452,10 +572,65 @@ export function ReportIncidentRoute() {
                 </>
               )}
             </p>
-            <Button size="large" disabled={waiting.length > 0}>
+            <Button
+              size="large"
+              disabled={waiting.length > 0}
+              data-report-submit
+              onClick={() => {
+                /*
+                 * Guarded rather than trusted to the disabled attribute. The
+                 * assembler needs a type and a severity, and `outstanding`
+                 * already refuses without them — but a cast here would be the
+                 * one §8 names, on the write that creates a clinical record.
+                 */
+                if (type === '' || severity === '') return
+                try {
+                  const incident = reportIncident(
+                    assembleReport(
+                      {
+                        siteId: activeSite.id,
+                        subject,
+                        resident,
+                        type,
+                        occurredAt,
+                        area,
+                        description,
+                        severity,
+                        injury,
+                        marked,
+                        witnessChoice,
+                        witnessNames,
+                        immediateAction,
+                        gp,
+                        family,
+                        emergency,
+                        notRequiredReason,
+                        evidence,
+                        urgentBecause,
+                        tellFamily,
+                        notTellingReason,
+                      },
+                      currentUser,
+                    ),
+                    currentUser,
+                  )
+                  void navigate(`/incidents/${incident.id}`)
+                } catch (cause) {
+                  setFailure(
+                    cause instanceof Error ? cause.message : 'Nothing was reported.',
+                  )
+                }
+              }}
+            >
               Report incident
             </Button>
           </div>
+
+          {failure === '' ? null : (
+            <p className={styles.footState} data-report-failure>
+              {failure}
+            </p>
+          )}
         </Card>
       </div>
     </SiteTimeZone>
@@ -503,6 +678,150 @@ function SubjectCard({ resident, siteName }: { resident: Resident; siteName: str
  * Exported so it can be tested without driving the whole screen — the rule is
  * the thing under test, not the wiring.
  */
+/**
+ * Everything the form gathered, as the record holds it.
+ *
+ * **Exported and pure, so the mapping is testable without driving a screen.**
+ * This is where a form's answers become a clinical record, and every one of
+ * these conversions is somewhere a wrong answer could be written down under
+ * somebody's name: a witness list that drops a name, an injury map that says
+ * "none found" where nobody looked, a family decision recorded as made when it
+ * was not. `outstanding` above refuses an incomplete answer; this one has to
+ * carry a complete one faithfully.
+ */
+export function assembleReport(
+  input: {
+    siteId: SiteId
+    subject: SubjectChoice
+    resident: Resident | undefined
+    type: IncidentTypeId
+    occurredAt: string
+    area: CommunalAreaId | 'resident_room' | ''
+    description: string
+    severity: IncidentSeverityId
+    injury: InjuryChoice
+    marked: BodyRegionId[]
+    witnessChoice: 'nobody' | 'witnessed' | ''
+    witnessNames: string
+    immediateAction: string
+    gp: ContactChoice | ''
+    family: ContactChoice | ''
+    emergency: EmergencyChoice | ''
+    notRequiredReason: string
+    evidence: IncidentEvidence[]
+    urgentBecause: string
+    tellFamily: FamilyChoice
+    notTellingReason: string
+  },
+  by: StaffRef,
+): IncidentReport {
+  const at = appNow().toISOString() as IsoDateTime
+  const stamp: IncidentAct = { by, at }
+
+  const contact = (choice: ContactChoice | ''): ContactState =>
+    choice === 'contacted'
+      ? { kind: 'contacted', at, by, outcome: '' }
+      : choice === 'not_required'
+        ? {
+            kind: 'not_required',
+            reason: input.notRequiredReason.trim(),
+            recordedBy: by,
+            recordedAt: at,
+          }
+        : { kind: 'not_yet' }
+
+  /*
+   * Three injury states, never two. "Nobody checked" and "checked, nothing
+   * found" are the distinction the body map exists to keep, and collapsing
+   * them here would undo it at the one point the record is written.
+   */
+  const injuries: InjuryMap =
+    input.injury === 'none_found'
+      ? { kind: 'no_injuries_found', recorded: stamp }
+      : input.injury === 'found' && input.marked.length > 0
+        ? {
+            kind: 'marked',
+            regions: input.marked as [BodyRegionId, ...BodyRegionId[]],
+            recorded: stamp,
+          }
+        : { kind: 'not_recorded' }
+
+  const names = input.witnessNames
+    .split(',')
+    .map((name) => name.trim())
+    .filter((name) => name !== '')
+
+  return {
+    siteId: input.siteId,
+    subject:
+      input.subject === 'resident' && input.resident
+        ? { kind: 'resident', residentId: input.resident.id }
+        : { kind: 'no_resident_involved', recordedBy: by },
+    type: input.type,
+    severity: input.severity,
+    occurredAt: new Date(input.occurredAt).toISOString() as IsoDateTime,
+    location:
+      input.area === ''
+        ? { kind: 'not_recorded' }
+        : input.area === 'resident_room'
+          ? {
+              kind: 'resident_room',
+              room:
+                input.resident && input.resident.room.kind === 'recorded'
+                  ? input.resident.room.value
+                  : 'Not recorded',
+            }
+          : { kind: 'communal', area: input.area },
+    description: input.description.trim(),
+    response: {
+      immediateAction: input.immediateAction.trim(),
+      witnesses:
+        input.witnessChoice === 'witnessed' && names.length > 0
+          ? {
+              kind: 'witnessed',
+              people: names as [string, ...string[]],
+              recordedBy: by,
+            }
+          : { kind: 'nobody_witnessed', recordedBy: by },
+      gp: contact(input.gp),
+      family: contact(input.family),
+      emergencyServices:
+        input.emergency === 'ambulance_999' || input.emergency === 'nhs_111'
+          ? { kind: 'called', service: input.emergency, at, by, outcome: '' }
+          : { kind: 'not_called' },
+    },
+    injuries,
+    evidence: input.evidence,
+    /*
+     * Urgency is a judgement with a reason, never a tick. "This one needs
+     * attention now" with nothing behind it tells a manager to hurry and not
+     * what to hurry about.
+     */
+    urgency:
+      input.urgentBecause.trim() === ''
+        ? { kind: 'ordinary' }
+        : {
+            kind: 'needs_attention_now',
+            raised: stamp,
+            because: input.urgentBecause.trim(),
+          },
+    /*
+     * Deciding is not telling, and the third state is nobody having decided.
+     * `TELL_THEM.incident` says the rest on the screen.
+     */
+    familyTold:
+      input.tellFamily === 'should'
+        ? { kind: 'should_be_told', decided: stamp }
+        : input.tellFamily === 'not'
+          ? {
+              kind: 'not_to_be_told',
+              decided: stamp,
+              reason: input.notTellingReason.trim(),
+            }
+          : { kind: 'not_decided' },
+  }
+}
+
 export function outstanding(input: {
   subject: SubjectChoice
   resident: Resident | undefined

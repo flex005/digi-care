@@ -26,6 +26,8 @@ import { regionLabel } from '@/assets/body-map/regions'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
+import { EvidencePanel } from './EvidencePanel'
+import { FamilyDecision } from './FamilyDecision'
 import {
   flagClearedBy,
   flagName,
@@ -322,6 +324,10 @@ function Found({
         </section>
 
         <InjurySummary incident={incident} />
+
+        <EvidencePanel evidence={incident.evidence} />
+
+        <FamilyDecision incident={incident} onChanged={onDecided} />
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>What was done at the time</h2>

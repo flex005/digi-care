@@ -1,6 +1,6 @@
 import { held, type SessionHolding } from './session-holding'
 import { decisionFor } from './notification-store'
-import { withIncidentEdits } from './incident-store'
+import { reportedThisSession, withIncidentEdits } from './incident-store'
 import type {
   CarePlanDomainId,
   Incident,
@@ -135,7 +135,17 @@ export function patchedIncidents(): Incident[] {
    * not see would leave the screen saying nobody had decided, immediately
    * after somebody did.
    */
-  const withDecisions = fixtureIncidents.map((incident) => {
+  /*
+   * **This session's own reports are incidents like any other**, so they are
+   * folded in here rather than at each screen. One read is what makes a newly
+   * reported incident appear on the log, in the dashboard's count and on the
+   * sidebar badge without any of those being told this list exists — and it is
+   * what lets the acts below work on it, since an incident somebody reported
+   * can be acknowledged, reviewed and closed exactly like a fixture one.
+   */
+  const everyIncident = [...fixtureIncidents, ...reportedThisSession()]
+
+  const withDecisions = everyIncident.map((incident) => {
     /*
      * This session's acknowledgement, review findings and closure first, then
      * its notification decisions. Both are overlays on the same record and a

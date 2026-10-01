@@ -1,4 +1,5 @@
 import type {
+  FamilyTold,
   BodyRegionId,
   Incident,
   IncidentAct,
@@ -446,6 +447,26 @@ for (let index = 0; index < 34; index += 1) {
   const involvesNobody =
     (type === 'equipment_failure' || type === 'near_miss') && rng.chance(0.55)
 
+  /*
+   * **The family decision follows what the reporter actually did.** A
+   * reporter who rang the family decided they should be told, and one who
+   * recorded "not required" with a reason decided they should not — both are
+   * decisions already on the record, and inventing a separate undecided state
+   * beside them would make every incident in the fixtures owe a decision
+   * somebody had plainly taken. Only `not_yet` is genuinely undecided.
+   */
+  const generatedResponse = responseFor(type, reporter, reportedAt, rng.int(0, 9))
+  const familyTold: FamilyTold =
+    generatedResponse.family.kind === 'contacted'
+      ? { kind: 'should_be_told', decided: act(reporter, reportedAt) }
+      : generatedResponse.family.kind === 'not_required'
+        ? {
+            kind: 'not_to_be_told',
+            decided: act(reporter, reportedAt),
+            reason: generatedResponse.family.reason,
+          }
+        : { kind: 'not_decided' }
+
   list.push({
     id: nextId(),
     siteId: resident.siteId,
@@ -458,7 +479,7 @@ for (let index = 0; index < 34; index += 1) {
     location: locationFor(resident.id, rng.int(0, 9)),
     description: rng.pick(DESCRIPTIONS[type]),
     reported: act(reporter, reportedAt),
-    response: responseFor(type, reporter, reportedAt, rng.int(0, 9)),
+    response: generatedResponse,
     status: closed
       ? {
           kind: 'closed',
@@ -513,6 +534,16 @@ for (let index = 0; index < 34; index += 1) {
             }
           : { kind: 'not_yet_decided' },
     reviewFlags: closed ? flagsFor(type, closedAt, manager, daysBack > 10) : [],
+    /*
+     * **No invented evidence.** A generated incident carrying a photograph
+     * nobody took is exactly the fabricated record this build's rules exist to
+     * prevent, and most real incidents have none anyway. Evidence reaches an
+     * incident by somebody attaching it.
+     */
+    evidence: [],
+    urgency: { kind: 'ordinary' },
+    familyTold,
+    edited: { kind: 'not_edited' },
     origin: { kind: 'reported' },
   })
 }
@@ -608,6 +639,16 @@ for (const entry of unacknowledged) {
     review: emptyReview,
     notification: { kind: 'not_yet_decided' },
     reviewFlags: [],
+    /*
+     * **No invented evidence.** A generated incident carrying a photograph
+     * nobody took is exactly the fabricated record this build's rules exist to
+     * prevent, and most real incidents have none anyway. Evidence reaches an
+     * incident by somebody attaching it.
+     */
+    evidence: [],
+    urgency: { kind: 'ordinary' },
+    familyTold: { kind: 'not_decided' },
+    edited: { kind: 'not_edited' },
     origin: { kind: 'reported' },
   })
 }
@@ -658,6 +699,16 @@ export const NO_LOCATION_RECORDED = 'inc-931' as IncidentId
     review: emptyReview,
     notification: { kind: 'not_yet_decided' },
     reviewFlags: [],
+    /*
+     * **No invented evidence.** A generated incident carrying a photograph
+     * nobody took is exactly the fabricated record this build's rules exist to
+     * prevent, and most real incidents have none anyway. Evidence reaches an
+     * incident by somebody attaching it.
+     */
+    evidence: [],
+    urgency: { kind: 'ordinary' },
+    familyTold: { kind: 'not_decided' },
+    edited: { kind: 'not_edited' },
     origin: { kind: 'reported' },
   })
 }
@@ -708,6 +759,16 @@ export const NO_LOCATION_RECORDED = 'inc-931' as IncidentId
       reason: 'No allegation of abuse and no harm requiring notification.',
     },
     reviewFlags: flagsFor('injury_unexplained', closedAt, staffOkonkwo, false),
+    /*
+     * **No invented evidence.** A generated incident carrying a photograph
+     * nobody took is exactly the fabricated record this build's rules exist to
+     * prevent, and most real incidents have none anyway. Evidence reaches an
+     * incident by somebody attaching it.
+     */
+    evidence: [],
+    urgency: { kind: 'ordinary' },
+    familyTold: { kind: 'not_decided' },
+    edited: { kind: 'not_edited' },
     origin: { kind: 'reported' },
   })
 }
@@ -765,6 +826,16 @@ export const FLAG_STILL_IN_TIME = 'inc-941' as IncidentId
     },
     notification: { kind: 'not_yet_decided' },
     reviewFlags: [],
+    /*
+     * **No invented evidence.** A generated incident carrying a photograph
+     * nobody took is exactly the fabricated record this build's rules exist to
+     * prevent, and most real incidents have none anyway. Evidence reaches an
+     * incident by somebody attaching it.
+     */
+    evidence: [],
+    urgency: { kind: 'ordinary' },
+    familyTold: { kind: 'not_decided' },
+    edited: { kind: 'not_edited' },
     origin: { kind: 'reported' },
   })
 }
@@ -818,6 +889,16 @@ export const FLAG_STILL_IN_TIME = 'inc-941' as IncidentId
     // and can still do on time, which is a different thing to show than one
     // already missed.
     reviewFlags: flagsFor('fall_witnessed', closedAt, staffOkonkwo, false),
+    /*
+     * **No invented evidence.** A generated incident carrying a photograph
+     * nobody took is exactly the fabricated record this build's rules exist to
+     * prevent, and most real incidents have none anyway. Evidence reaches an
+     * incident by somebody attaching it.
+     */
+    evidence: [],
+    urgency: { kind: 'ordinary' },
+    familyTold: { kind: 'not_decided' },
+    edited: { kind: 'not_edited' },
     origin: { kind: 'reported' },
   })
 }
@@ -889,6 +970,16 @@ export const FLAG_REVIEW_OVERDUE = 'inc-942' as IncidentId
     // and it stays past them once somebody does it — lateness is derived from
     // the completion against the deadline, so the work cannot erase it.
     reviewFlags: flagsFor('fall_witnessed', closedAt, staffOkonkwo, false),
+    /*
+     * **No invented evidence.** A generated incident carrying a photograph
+     * nobody took is exactly the fabricated record this build's rules exist to
+     * prevent, and most real incidents have none anyway. Evidence reaches an
+     * incident by somebody attaching it.
+     */
+    evidence: [],
+    urgency: { kind: 'ordinary' },
+    familyTold: { kind: 'not_decided' },
+    edited: { kind: 'not_edited' },
     origin: { kind: 'reported' },
   })
 }
@@ -959,6 +1050,16 @@ const brennan = residents.find(
     // regulatory question was never asked.
     notification: { kind: 'not_yet_decided' },
     reviewFlags: flagsFor('choking', closedAt, staffOkonkwo, true),
+    /*
+     * **No invented evidence.** A generated incident carrying a photograph
+     * nobody took is exactly the fabricated record this build's rules exist to
+     * prevent, and most real incidents have none anyway. Evidence reaches an
+     * incident by somebody attaching it.
+     */
+    evidence: [],
+    urgency: { kind: 'ordinary' },
+    familyTold: { kind: 'not_decided' },
+    edited: { kind: 'not_edited' },
     origin: { kind: 'reported' },
   })
 }
@@ -1020,6 +1121,16 @@ const brennan = residents.find(
       decided: act(staffOkonkwo, after(occurredAt, 30)),
     },
     reviewFlags: flagsFor('safeguarding_concern', closedAt, staffOkonkwo, true),
+    /*
+     * **No invented evidence.** A generated incident carrying a photograph
+     * nobody took is exactly the fabricated record this build's rules exist to
+     * prevent, and most real incidents have none anyway. Evidence reaches an
+     * incident by somebody attaching it.
+     */
+    evidence: [],
+    urgency: { kind: 'ordinary' },
+    familyTold: { kind: 'not_decided' },
+    edited: { kind: 'not_edited' },
     origin: { kind: 'reported' },
   })
 }
@@ -1072,6 +1183,16 @@ if (discrepancy && discrepancy.entry.kind === 'routine') {
     review: emptyReview,
     notification: { kind: 'not_yet_decided' },
     reviewFlags: [],
+    /*
+     * **No invented evidence.** A generated incident carrying a photograph
+     * nobody took is exactly the fabricated record this build's rules exist to
+     * prevent, and most real incidents have none anyway. Evidence reaches an
+     * incident by somebody attaching it.
+     */
+    evidence: [],
+    urgency: { kind: 'ordinary' },
+    familyTold: { kind: 'not_decided' },
+    edited: { kind: 'not_edited' },
     origin: {
       kind: 'stock_count',
       medicationId: OKAFOR_MORPHINE,
