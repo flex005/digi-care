@@ -35,6 +35,7 @@ import IconDateAndTime_CalendarBlock01 from '@/assets/icons-generated/date-and-t
 import IconDateAndTime_Clock01 from '@/assets/icons-generated/date-and-time/clock-01.svg?react'
 import IconDownloadUpload_Download01 from '@/assets/icons-generated/download-upload/download-01.svg?react'
 import IconDownloadUpload_Upload01 from '@/assets/icons-generated/download-upload/upload-01.svg?react'
+import IconEditFormatting_Edit02 from '@/assets/icons-generated/edit-formatting/edit-02.svg?react'
 import IconEditFormatting_View from '@/assets/icons-generated/edit-formatting/view.svg?react'
 import IconEditFormatting_ViewOff from '@/assets/icons-generated/edit-formatting/view-off.svg?react'
 import IconEducation_Clipboard from '@/assets/icons-generated/education/clipboard.svg?react'
@@ -60,7 +61,7 @@ import IconUsers_UserShield01 from '@/assets/icons-generated/users/user-shield-0
 import IconUsers_UserSwitch from '@/assets/icons-generated/users/user-switch.svg?react'
 
 /**
- * Only the 48 icons actually used in source. Importing all of them
+ * Only the 49 icons actually used in source. Importing all of them
  * would compile every icon in the set into the bundle.
  *
  * Partial because it is keyed by the full IconName union. A missing entry
@@ -95,6 +96,7 @@ export const iconRegistry: Partial<
   'date-and-time/clock-01': IconDateAndTime_Clock01,
   'download-upload/download-01': IconDownloadUpload_Download01,
   'download-upload/upload-01': IconDownloadUpload_Upload01,
+  'edit-formatting/edit-02': IconEditFormatting_Edit02,
   'edit-formatting/view': IconEditFormatting_View,
   'edit-formatting/view-off': IconEditFormatting_ViewOff,
   'education/clipboard': IconEducation_Clipboard,

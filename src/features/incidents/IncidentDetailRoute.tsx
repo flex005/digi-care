@@ -26,6 +26,8 @@ import { regionLabel } from '@/assets/body-map/regions'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
+import { CorrectReportForm } from './CorrectReportForm'
+import { DownloadIncident } from './DownloadIncident'
 import { EvidencePanel } from './EvidencePanel'
 import { FamilyDecision } from './FamilyDecision'
 import {
@@ -139,6 +141,12 @@ function Found({
       ? data.residents.find((person) => person.id === subject.residentId)
       : undefined
 
+  /** Who the record is about, for the confirmation that names them (§2.4). */
+  const subjectName =
+    subject.kind === 'no_resident_involved'
+      ? 'No resident involved'
+      : (resident?.fullLegalName ?? 'Not recorded')
+
   const typeName =
     INCIDENT_TYPES.find((entry) => entry.id === incident.type)?.name ?? incident.type
   const severity = INCIDENT_SEVERITIES.find((entry) => entry.id === incident.severity)
@@ -159,6 +167,14 @@ function Found({
           · <span data-numeric>{format.dateTime(incident.occurredAt)}</span> ·{' '}
           {siteName}
         </p>
+
+        <div className={styles.detailActions}>
+          <DownloadIncident
+            incident={incident}
+            residents={data.residents}
+            size="medium"
+          />
+        </div>
       </div>
 
       {decisions.length === 0 ? null : (
@@ -300,6 +316,20 @@ function Found({
             <span data-numeric>{format.dateTime(incident.reported.at)}</span>
           </p>
 
+          {/*
+           * **Always visible, never hover-only**, like every other author and
+           * timestamp here. An admin can replace this account and the original
+           * is not kept, so the one thing the record must carry is who changed
+           * it and when.
+           */}
+          {incident.edited.kind === 'edited' ? (
+            <p className={styles.editedStamp} data-edited>
+              Edited by <strong>{incident.edited.edited.by.displayName}</strong> ·{' '}
+              <span data-numeric>{format.dateTime(incident.edited.edited.at)}</span>.
+              The account above is the edited one; what it said before was not kept.
+            </p>
+          ) : null}
+
           <div className={styles.threeUp}>
             <Field label="Where">
               <LocationValue incident={incident} resident={resident} />
@@ -328,6 +358,12 @@ function Found({
         <EvidencePanel evidence={incident.evidence} />
 
         <FamilyDecision incident={incident} onChanged={onDecided} />
+
+        <CorrectReportForm
+          incident={incident}
+          subjectName={subjectName}
+          onCorrected={onDecided}
+        />
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>What was done at the time</h2>

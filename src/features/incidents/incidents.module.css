@@ -976,9 +976,15 @@
    * Both ends matter — a row wide enough to reach a 1,990px card and too wide
    * to fit a 1,280px one is one measurement short, not fixed.
    */
+
+  /*
+   * The action track gave up 3rem when the download joined the row beside it.
+   * "Open" and its arrow never needed 10rem; the floors still have to sum to
+   * what 1280 can hold, and now they have a sibling button to sum with.
+   */
   grid-template-columns:
     minmax(10rem, 1fr) minmax(10rem, 1fr) minmax(14rem, 2fr)
-    minmax(9rem, 1fr) 10rem;
+    minmax(9rem, 1fr) 7rem;
   gap: var(--space-16);
   align-items: start;
   width: 100%;
@@ -1306,4 +1312,40 @@
   color: var(--status-caution-ink);
   font-size: var(--text-caption-size);
   line-height: var(--text-body-line);
+}
+
+/*
+ * The row and its download, side by side. The row is a link and the download
+ * is a button, so they are siblings rather than one inside the other.
+ */
+.logRowWrap {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.logRowWrap > a {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rowDownload {
+  flex-shrink: 0;
+  padding-right: var(--space-24);
+}
+
+.detailActions {
+  display: flex;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+}
+
+.correctOpen {
+  margin-top: var(--space-16);
+}
+
+.confirmBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
 }

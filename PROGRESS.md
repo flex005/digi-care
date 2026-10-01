@@ -16174,3 +16174,84 @@ indistinguishable from a guard that catches nothing, and the cheap defence
 working as described. Re-landed against the real text, the panel test fails on
 `expected <span> to be null`, and removing the reason check fails both the
 predicate test and the screen test.
+
+## Downloading an incident, and an admin correcting one
+
+### Part B: the PDF
+
+jsPDF **4.2.1**, the current major. Chosen over building a PDF by hand because
+the format is not something to hand-roll, and over a server renderer because
+there is no server.
+
+**Assembly is a pure function and writing the file is not.**
+`incidentPdfContent` turns an incident into headings and lines; `downloadIncidentPdf`
+lays that out and calls jsPDF. The file is bytes no test can read, so the
+thing worth holding — that every recorded fact reaches the page — is held one
+step earlier where it is readable. The writer makes no decisions about what to
+include.
+
+**The document says what it is leaving out.** A PDF cannot hold a playable
+video, and an export that quietly dropped one would let a reader conclude no
+video was taken, which is the opposite of what the record says. So each video
+is named, the file says it is not included and why, and it says where the
+video actually is — "held in the browser for this session only" — because
+"attached" would otherwise imply somewhere a reader could go and fetch it.
+
+Absences are sections, not omissions: a review nobody has written says so.
+A reader who downloads an incident and finds no review heading cannot tell
+whether the review is missing or the export is.
+
+The photo and video paths are tested against a **constructed** incident, not a
+fixture, because no fixture carries evidence by design.
+
+### Part D: correcting a report
+
+The control is gated **in the page, not at the route**. `/incidents/:id` is a
+page every role reads, which is why `correct_incident_report` carries
+`route: undefined`; refusing the page would take the incident away from the
+people who need to read it. What is admin-only is the act.
+
+**The trade-off, stated to the person about to make it.** This overwrites the
+reporter's own account and the original is not kept — recorded earlier as a
+knowing decision against what this module otherwise protects. The form says so
+before the save, and the confirmation names the resident (§2.4). The structural
+separation survives where it still can: `ReporterCorrection` is its own patch
+type covering six fields and cannot reach the manager's review.
+
+`IncidentEdited` now renders. **It had not been.** The insertion that was meant
+to add it in f6cb142 failed silently — I retried only the panels beside it and
+assumed the stamp had landed. It was found by grepping for `data-edited` before
+building on top, not by anything failing.
+
+### What the guards caught
+
+**The layout guard caught a real regression.** Putting a labelled Download
+button beside each log row pushed the row **114px past its own box at 1280**.
+The row's column floors were tuned in an earlier phase to sum to exactly what
+the content column gives at that width, and the comment there says so. Fixed by
+making the log control icon-only — aria-label and tooltip, which is §7's
+condition — and giving back 3rem from the action track, which never needed
+10rem for "Open". Measured again rather than assumed.
+
+**The em-dash guard caught two in the PDF strings**, which reach a page a
+reader holds. Both are colons now.
+
+### Mutations
+
+Dropping the video note so videos are silently omitted:
+
+    × names an attached video, says it is not in the file, and says why
+    × names every video where more than one is attached
+    AssertionError: expected '' to contain 'corridor-clip.mp4'
+
+Removing the admin gate from the correction form:
+
+    × offers it to nobody signed in as deputy_manager
+    × offers it to nobody signed in as senior_carer
+    × offers it to nobody signed in as care_worker
+    × offers it to nobody signed in as auditor
+    AssertionError: expected <button type="button"> to be null
+
+The negative case is the one that matters there: a control that appears for
+everybody still works, and nothing about the screen looks wrong — the only
+thing wrong is who can use it.

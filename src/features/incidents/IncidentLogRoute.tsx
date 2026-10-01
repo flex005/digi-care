@@ -26,6 +26,7 @@ import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount } from '@/lib/format'
 import { elapsedMinutesBetween } from '@/lib/shift'
 import { coarseWait } from '@/features/notes/note-parts'
+import { DownloadIncident } from './DownloadIncident'
 import { outstandingDecisions } from './decisions'
 import styles from './incidents.module.css'
 
@@ -282,8 +283,18 @@ function Found({
         ) : (
           <ul className={styles.logList}>
             {visible.map((incident) => (
-              <li key={incident.id}>
+              <li key={incident.id} className={styles.logRowWrap}>
                 <IncidentRow incident={incident} residents={data.residents} now={now} />
+                {/* Beside the row rather than inside it: the row is a link,
+                    and a button nested in one is both invalid and a click
+                    fighting a navigation. */}
+                <span className={styles.rowDownload}>
+                  <DownloadIncident
+                    incident={incident}
+                    residents={data.residents}
+                    iconOnly
+                  />
+                </span>
               </li>
             ))}
           </ul>
