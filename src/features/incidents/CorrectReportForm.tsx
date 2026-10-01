@@ -33,19 +33,55 @@ import styles from './incidents.module.css'
  * that reason — refusing the whole page would take the incident away from the
  * people who need to read it. What is admin-only is the act.
  */
+/**
+ * Whether this viewer may rewrite a report.
+ *
+ * Exported because the trigger and the form are rendered in two places now —
+ * the header action row and the panel below it — and **both** ask. One gate
+ * read by one caller would leave the other reachable by whoever could find it.
+ */
+export function mayCorrectReport(viewer: ReturnType<typeof useViewer>): boolean {
+  return viewer.may('correct_incident_report')
+}
+
+/**
+ * The control that opens the form, rendered in the header beside Download.
+ *
+ * **It belongs with the whole-report actions, not inside a section.** A
+ * correction rewrites the type, the severity, when it happened, where, the
+ * account and what was done — so a trigger sitting inside "What the reporter
+ * recorded" implied it touched only that card's text, which was a smaller
+ * claim than the act makes.
+ */
+export function CorrectReportTrigger({ onOpen }: { onOpen: () => void }) {
+  const viewer = useViewer()
+  if (!mayCorrectReport(viewer)) return null
+
+  return (
+    <Button variant="secondary" size="medium" data-correct-report onClick={onOpen}>
+      <Icon name="edit-formatting/edit-02" size={16} aria-hidden />
+      Correct this report
+    </Button>
+  )
+}
+
 export function CorrectReportForm({
   incident,
   subjectName,
+  open,
+  onClose,
   onCorrected,
 }: {
   incident: Incident
   /** Who the incident is about, so the confirmation names them (§2.4). */
   subjectName: string
+  /** Held by the route, because the trigger lives in its header now. */
+  open: boolean
+  onClose: () => void
   onCorrected: () => void
 }) {
   const { currentUser } = useSession()
   const viewer = useViewer()
-  const [open, setOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [failure, setFailure] = useState('')
 
@@ -67,24 +103,12 @@ export function CorrectReportForm({
     incident.response.immediateAction,
   )
 
-  // The act, not the page. Everybody reads an incident; one role rewrites one.
-  if (!viewer.may('correct_incident_report')) return null
-
-  if (!open) {
-    return (
-      <div className={styles.correctOpen}>
-        <Button
-          variant="secondary"
-          size="small"
-          data-correct-report
-          onClick={() => setOpen(true)}
-        >
-          <Icon name="edit-formatting/edit-02" size={16} aria-hidden />
-          Correct this report
-        </Button>
-      </div>
-    )
-  }
+  /*
+   * The act, not the page. Everybody reads an incident; one role rewrites one.
+   * Asked here as well as on the trigger: a form reachable without the trigger
+   * would be gated only by whichever control somebody happened to use.
+   */
+  if (!mayCorrectReport(viewer) || !open) return null
 
   const blank = description.trim() === '' || immediateAction.trim() === ''
 
@@ -196,7 +220,7 @@ export function CorrectReportForm({
         </label>
 
         <div className={styles.decisionActions}>
-          <Button variant="ghost" size="small" onClick={() => setOpen(false)}>
+          <Button variant="ghost" size="small" onClick={onClose}>
             Cancel
           </Button>
           <Button
@@ -250,7 +274,7 @@ export function CorrectReportForm({
               currentUser,
             )
             setConfirming(false)
-            setOpen(false)
+            onClose()
             onCorrected()
           } catch (cause) {
             setConfirming(false)

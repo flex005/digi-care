@@ -1336,16 +1336,31 @@
 
 .detailActions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-8);
-  margin-top: var(--space-12);
-}
-
-.correctOpen {
-  margin-top: var(--space-16);
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .confirmBody {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
+}
+
+/*
+ * The detail header: what this incident is on the left, the acts that are
+ * about the whole of it on the right, level with the title rather than
+ * stacked beneath it.
+ */
+.detailHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.detailHeadAbout {
+  min-width: 0;
 }

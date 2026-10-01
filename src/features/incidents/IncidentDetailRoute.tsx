@@ -26,7 +26,7 @@ import { regionLabel } from '@/assets/body-map/regions'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
-import { CorrectReportForm } from './CorrectReportForm'
+import { CorrectReportForm, CorrectReportTrigger } from './CorrectReportForm'
 import { DownloadIncident } from './DownloadIncident'
 import { EvidencePanel } from './EvidencePanel'
 import { FamilyDecision } from './FamilyDecision'
@@ -121,6 +121,11 @@ function Found({
   const format = useSiteFormat()
   /** Which decision the reader is taking, if any. */
   const [deciding, setDeciding] = useState<DecideStep>('none')
+  /*
+   * Held here rather than in the form, because the trigger moved into the
+   * header and the form stayed below it: two components, one piece of state.
+   */
+  const [correcting, setCorrecting] = useState(false)
   const incident = data.incidents.find((entry) => entry.id === incidentId)
 
   if (!incident) {
@@ -154,19 +159,28 @@ function Found({
 
   return (
     <>
-      <div>
-        {/* The type, not a reference number. A manager recognises "Unwitnessed
-            fall"; nobody recognises INC-2026-0341. */}
-        <h1 className={styles.detailTitle}>{typeName}</h1>
-        <p className={styles.detailRef}>
-          <span data-numeric>{incident.id.toUpperCase()}</span> ·{' '}
-          {resident ? resident.fullLegalName : 'No resident involved'}
-          {resident && resident.room.kind === 'recorded'
-            ? `, Room ${resident.room.value}`
-            : ''}{' '}
-          · <span data-numeric>{format.dateTime(incident.occurredAt)}</span> ·{' '}
-          {siteName}
-        </p>
+      {/*
+       * **The acts that are about the whole report sit together, at the top.**
+       * Both of these reach every field on the incident — the download writes
+       * all of them to a file, and a correction rewrites six — so neither
+       * belongs inside a section, where its position would claim a narrower
+       * scope than the act has.
+       */}
+      <div className={styles.detailHead}>
+        <div className={styles.detailHeadAbout}>
+          {/* The type, not a reference number. A manager recognises "Unwitnessed
+              fall"; nobody recognises INC-2026-0341. */}
+          <h1 className={styles.detailTitle}>{typeName}</h1>
+          <p className={styles.detailRef}>
+            <span data-numeric>{incident.id.toUpperCase()}</span> ·{' '}
+            {resident ? resident.fullLegalName : 'No resident involved'}
+            {resident && resident.room.kind === 'recorded'
+              ? `, Room ${resident.room.value}`
+              : ''}{' '}
+            · <span data-numeric>{format.dateTime(incident.occurredAt)}</span> ·{' '}
+            {siteName}
+          </p>
+        </div>
 
         <div className={styles.detailActions}>
           <DownloadIncident
@@ -174,8 +188,25 @@ function Found({
             residents={data.residents}
             size="medium"
           />
+          <CorrectReportTrigger
+            onOpen={() => {
+              setCorrecting(true)
+            }}
+          />
         </div>
       </div>
+
+      {/* Full width, under the header, because it is no longer scoped to any
+          one section of the record. */}
+      <CorrectReportForm
+        incident={incident}
+        subjectName={subjectName}
+        open={correcting}
+        onClose={() => {
+          setCorrecting(false)
+        }}
+        onCorrected={onDecided}
+      />
 
       {decisions.length === 0 ? null : (
         <div className={styles.outstanding} data-outstanding={decisions.length}>
@@ -358,12 +389,6 @@ function Found({
         <EvidencePanel evidence={incident.evidence} />
 
         <FamilyDecision incident={incident} onChanged={onDecided} />
-
-        <CorrectReportForm
-          incident={incident}
-          subjectName={subjectName}
-          onCorrected={onDecided}
-        />
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>What was done at the time</h2>
