@@ -42,6 +42,7 @@ import type {
 
 interface Edit {
   status?: IncidentStatus
+  urgency?: IncidentUrgency
   review?: Partial<ManagerReview>
   familyTold?: FamilyTold
   correction?: ReporterCorrection
@@ -122,6 +123,7 @@ let reviewed = 0
 let closed = 0
 let familyDecided = 0
 let corrected = 0
+let urgencyRaised = 0
 
 /**
  * Incidents reported in this session.
@@ -160,6 +162,9 @@ export function withIncidentEdits(incident: Incident): Incident {
   return {
     ...incident,
     status: edit.status ?? incident.status,
+    // Not handled here at all until now, so an urgency written to this store
+    // would have been dropped on the way back out.
+    urgency: edit.urgency ?? incident.urgency,
     review: { ...incident.review, ...edit.review },
     familyTold: edit.familyTold ?? incident.familyTold,
     ...(edit.correction === undefined
@@ -336,6 +341,38 @@ export function recordFamilyDecision(
 }
 
 /**
+ * Saying an incident needs attention now, after it was filed.
+ *
+ * **Raise or reword, never stand down.** Going back to `ordinary` would erase
+ * the fact that somebody raised it and what they said, and a recorded
+ * judgement that disappears is the Evidence Invariant run backwards: the
+ * record would no longer be able to say whether nobody thought it urgent or
+ * somebody did and was overruled. A `stood_down` member carrying who stood it
+ * down and why is the honest shape for that, and it is a status-union change,
+ * so it is asked for rather than taken.
+ *
+ * **Rewording moves the stamp, and that is a trade rather than a free
+ * choice.** `IncidentUrgency` has one act on it, so the record can hold
+ * either who first raised it or who stands behind the words that are there
+ * now, not both. It keeps the second: leaving a reworded reason under the
+ * first person's name attributes somebody's words to somebody else, which is
+ * the defect `correctReport` goes to some length to avoid in the other
+ * direction. Holding both needs a second act on the type.
+ */
+export function raiseUrgency(incident: Incident, because: string, by: StaffRef): void {
+  if (because.trim() === '')
+    throw new Error('Saying an incident is urgent means saying why.')
+  patch(incident.id, {
+    urgency: {
+      kind: 'needs_attention_now',
+      raised: act(by),
+      because: because.trim(),
+    },
+  })
+  urgencyRaised += 1
+}
+
+/**
  * An admin correcting the reporter's own account, in place.
  *
  * **The original is not kept, and that is the decision rather than an
@@ -381,6 +418,7 @@ export function incidentHoldings(): SessionHolding[] {
     ...held('incidents you closed', closed),
     ...held('family decisions you recorded', familyDecided),
     ...held('reports you corrected', corrected),
+    ...held('incidents you marked urgent', urgencyRaised),
   ]
 }
 
@@ -394,4 +432,5 @@ export function resetSessionIncidents(): void {
   closed = 0
   familyDecided = 0
   corrected = 0
+  urgencyRaised = 0
 }

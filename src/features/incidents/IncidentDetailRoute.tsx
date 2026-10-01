@@ -30,6 +30,7 @@ import { CorrectReportForm, CorrectReportTrigger } from './CorrectReportForm'
 import { DownloadIncident } from './DownloadIncident'
 import { EvidencePanel } from './EvidencePanel'
 import { FamilyDecision } from './FamilyDecision'
+import { UrgencySection } from './UrgencySection'
 import {
   flagClearedBy,
   flagName,
@@ -387,6 +388,11 @@ function Found({
         <InjurySummary incident={incident} />
 
         <EvidencePanel evidence={incident.evidence} />
+
+        {/* Beside the family decision, because they are the same kind of
+            thing: a judgement the reporter made at the time that somebody
+            reading it later may need to change. */}
+        <UrgencySection incident={incident} onChanged={onDecided} />
 
         <FamilyDecision incident={incident} onChanged={onDecided} />
 

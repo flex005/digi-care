@@ -431,18 +431,33 @@ export interface IncidentEvidence {
 }
 
 /**
- * Whether the reporter said this one needs attention now.
+ * Whether anybody has said this one needs attention now.
  *
  * **Not a duplicate of the unacknowledged queue.** Every incident already
  * starts `reported_not_acknowledged` and already counts on the sidebar badge
  * and the dashboard, so a plain "alert the manager" toggle would restate a
  * signal the product already sends and teach people to ignore both. What was
- * missing is *urgency* — the reporter saying this one is not like the other
- * nine waiting, which is a judgement only the person who was there can make.
+ * missing is *urgency* — somebody saying this one is not like the other nine
+ * waiting, with a reason attached.
  *
  * It is a recorded judgement with a name on it, never a flag somebody set, and
  * it is surfaced through `outstandingDecisions` rather than a second
  * things-needing-attention surface of its own.
+ *
+ * **This used to say the judgement is one "only the person who was there can
+ * make", and it is not.** That was true while urgency could only be set on
+ * the report form, and it stopped being true the moment the detail page got a
+ * control: the reporter decides at the time with what they knew then, and a
+ * manager reading it an hour later may know more — the argument
+ * `FamilyDecision` already makes about the family. What is actually required
+ * is not presence at the scene but a reason, which is why `because` is on the
+ * member rather than optional beside it.
+ *
+ * **There is no member for standing it down**, so the record cannot say that
+ * somebody raised this and somebody else disagreed. Going back to `ordinary`
+ * would delete the first judgement rather than answer it, so the store
+ * refuses; a `stood_down` member carrying who and why is what would make that
+ * honest, and adding one is a change to this union's shape.
  */
 export type IncidentUrgency =
   | { kind: 'ordinary' }
