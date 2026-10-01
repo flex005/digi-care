@@ -219,7 +219,17 @@ export function incidentPdfContent(
                     (video) =>
                       `  ${video.fileName} (attached by ${video.attached.by.displayName}, ${format.dateTime(video.attached.at)})`,
                   ),
-                  'The video is held in the browser for this session only. It is not stored anywhere, so the original recording is the only lasting copy.',
+                  /*
+                   * Agreed with the count, not written once in the singular.
+                   * The line above it already counts through `pluralise`, so a
+                   * report with two videos said "2 videos attached" and then
+                   * "The video is held" two lines later — the same defect
+                   * `pluralise` exists for, in a sentence that happens to carry
+                   * no number of its own.
+                   */
+                  videos.length === 1
+                    ? 'The video is held in the browser for this session only. It is not stored anywhere, so the original recording is the only lasting copy.'
+                    : 'The videos are held in the browser for this session only. They are not stored anywhere, so the original recordings are the only lasting copies.',
                 ]),
           ],
   })

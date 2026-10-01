@@ -140,6 +140,30 @@ describe('the file says what it is leaving out', () => {
     expect(lines).toContain('this session only')
   })
 
+  /*
+   * The closing line carries no number of its own, so it was written once in
+   * the singular and printed under "2 videos attached" two lines above it.
+   * Both ends of the count are asserted, because a line correct for one video
+   * and wrong for two is correct in the case somebody is most likely to try.
+   */
+  it('agrees the closing line with how many videos there are', () => {
+    const one = linesOf(
+      withEvidence([evidence('video', 'only.mp4')]),
+      'Photographs and video',
+    ).join(' ')
+    expect(one).toContain('The video is held in the browser')
+    expect(one).toContain('the original recording is the only lasting copy')
+    expect(one).not.toContain('The videos are')
+
+    const two = linesOf(
+      withEvidence([evidence('video', 'first.mp4'), evidence('video', 'second.mp4')]),
+      'Photographs and video',
+    ).join(' ')
+    expect(two).toContain('The videos are held in the browser')
+    expect(two).toContain('the original recordings are the only lasting copies')
+    expect(two).not.toContain('The video is held')
+  })
+
   it('names every video where more than one is attached', () => {
     const lines = linesOf(
       withEvidence([

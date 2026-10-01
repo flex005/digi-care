@@ -16255,3 +16255,62 @@ Removing the admin gate from the correction form:
 The negative case is the one that matters there: a control that appears for
 everybody still works, and nothing about the screen looks wrong — the only
 thing wrong is who can use it.
+
+## Two corrections to e7515d7
+
+**A sentence agreeing with a count it does not contain.** The closing line
+about attached video was written once in the singular, so a report with two
+videos said "2 videos attached to this report" through `pluralise` and then
+"The video is held in the browser" two lines below it. The same defect
+`pluralise` exists for, in a sentence carrying no number of its own — which is
+why the plurals guard could not see it: it looks for a count agreeing with its
+word at a call site, and here there is no count.
+
+Both ends are asserted. A line correct for one video and wrong for two is
+correct in the case somebody is most likely to try first.
+
+**`correctReport` had no coverage of what it writes.** `correct-report.test.tsx`
+asserted who can see the control, which is a different question from whether
+using it changes anything: the form could have saved nothing, or saved to the
+wrong field, and every existing assertion would still have passed.
+
+Three things are held now. That both fields land and the stamp names the
+person. That the reporter's original is **genuinely nowhere** — asserted by
+serialising the whole record and searching it, rather than checking one field,
+because "not kept anywhere" is a claim about all of it and the form makes that
+promise to somebody before they save. And that a blank account throws and
+writes nothing, including no partial stamp.
+
+The screen test also asserts the form **opens from the record rather than
+blank**: a correction that started empty would delete an account by being
+saved untouched.
+
+### Mutations
+
+Making the write a no-op:
+
+    × writes both fields and stamps who changed them
+    × keeps the original nowhere, which is what the form warns
+    × saves what was typed and shows the stamp afterwards
+
+Removing the blank guards:
+
+    × throws on a blank description, and writes nothing
+    × throws on a blank immediateAction, and writes nothing
+    AssertionError: expected [Function] to throw an error
+
+Hardcoding the singular again:
+
+    × agrees the closing line with how many videos there are
+    AssertionError: expected '2 videos attached to this report and …'
+      to contain 'The videos are held in the browser'
+
+### What jsPDF cost the bundle
+
+Worth recording rather than discovering later: jsPDF pulls `html2canvas`
+(199 kB) and `purify.es` (28 kB) alongside its own 151 kB, and the main chunk
+went from about 1.47 MB to **1.92 MB**. None of that is needed for what this
+build uses — text and `addImage`, no HTML rasterising — so it is reachable by
+importing the slim entry point or code-splitting the download behind a dynamic
+import. Not done here, because it is a bundling decision rather than part of
+either fix.
