@@ -16314,3 +16314,49 @@ build uses — text and `addImage`, no HTML rasterising — so it is reachable b
 importing the slim entry point or code-splitting the download behind a dynamic
 import. Not done here, because it is a bundling decision rather than part of
 either fix.
+
+## Both whole-report actions moved into the incident header (ac5f2a2)
+
+Download sat in a stacked block under the title, and the correction trigger
+sat *inside* the "What the reporter recorded" card. The second one is the
+substantive half: `correctReport()` rewrites type, severity, occurredAt,
+location, description **and** immediateAction, so a trigger inside one card
+made a smaller claim than the act makes — it read as an edit to the
+reporter's prose. Both are acts on the whole incident, so both are now in the
+header: title and reference left, actions right, level with the title.
+
+**What that cost structurally.** `CorrectReportForm` owned its own `open`
+state and rendered both the trigger and the expanded form. A trigger in the
+header and a form below it cannot both come from one uncontrolled component,
+so `open` was lifted to `IncidentDetailRoute` and the file now exports three
+things: `mayCorrectReport(viewer)`, `CorrectReportTrigger`, and a controlled
+`CorrectReportForm`.
+
+**The gate is asked twice, deliberately.** `CorrectReportTrigger` returns
+null for a non-admin, and the form's own guard is
+`if (!mayCorrectReport(viewer) || !open) return null`. Asking only on the
+trigger would leave the act gated by whichever control somebody happened to
+reach, which is the §8 shape about a check whose subject is narrower than its
+claim. Mutated to confirm: replacing the form's gate with `void viewer` fails
+all four non-admin role cases —
+
+    AssertionError: expected <button type="button" …> to be null
+
+**Verified in a browser, because jsdom applies no layout.** At 1280px the
+title, Download and Correct all return `top: 202` — `sameRowAsTitle: true`,
+`sideBySide: true`, Correct at `right: 24`, Download at `right: 206`.
+
+`.correctOpen` was deleted: it existed to wrap the in-card trigger, and
+nothing applied it afterwards. `check-css-classes` reports 215 pairs, 0
+applied and never defined — the guard reads it in the other direction, so the
+deletion was checked by `grep` rather than by the tick.
+
+No data attribute moved. `correct-report.test.tsx` and
+`correct-report-write.test.tsx` query by attribute rather than position and
+both pass unchanged; full suite 1502 passed, 85 files.
+
+Live at `digi-care-zeta.vercel.app`: the served stylesheet downloaded whole
+(363,618 bytes against a `content-length` of 363,618, checked before
+grepping) and carries
+`_detailHead_wkbl1_1356{… justify-content:space-between; display:flex}`, with
+`correctOpen` appearing 0 times.
