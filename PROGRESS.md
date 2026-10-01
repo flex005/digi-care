@@ -16030,3 +16030,44 @@ attorney, which the id had been carrying silently.
   "Still transferring themselves from bed to chair in three months…" ·
   Version 2 "Walking to the dining room and…"` — a comparison row like the
   other three.
+
+## The two predicates the last phase changed, and nothing watched
+
+`isWritten` and `written` are one rule implemented twice — has anybody written
+anything into this domain — and both had to change from three named fields to
+every declared one when `expectedOutcome` landed. **Neither had a test.** A
+domain whose only filled field was the new one would have read as *never
+started*: a gap on the screen over a plan somebody had written, which is the
+Evidence Invariant inverted — not a blank meaning two things, but a written
+record rendering as a blank.
+
+Tested at the source rather than through a screen: it is a one-line rule, and
+a render test would assert it through three other components.
+
+Both are asserted **side by side in one file**, and that is the point rather
+than a convenience. Two implementations of one rule is drift waiting to
+happen, and the last phase found five such copies at once; the file ends with
+a case asserting the two agree, which is the only thing that makes two safe.
+`written` is exported to allow it, with the reasoning `outstanding` already
+carries: exported so the rule can be tested without driving the screen.
+
+The cases run **both ways round the new field**. Only "the outcome is the only
+filled field" was broken; "the outcome is the only blank field" never was, and
+is here because a rule covered only where it failed is covered on one side.
+The per-field sweep walks `PLAN_FIELDS` rather than naming four, so a fifth
+field forgotten in either predicate fails without anybody editing the test.
+
+### The mutation, run before the sentence was written
+
+Both predicates reverted to the old three-field check:
+
+    × isWritten, the editor’s counts a domain whose only filled field is the outcome
+    × written, admission’s counts a domain whose only filled field is the outcome
+    × isWritten, the editor’s reaches every declared field, one at a time
+    × written, admission’s reaches every declared field, one at a time
+    AssertionError: expected false to be true
+    AssertionError: expectedOutcome: expected false to be true
+    Tests  4 failed | 7 passed (11)
+
+Four failures across both implementations and both shapes of the assertion —
+the named case and the sweep. Restored, and the eleven pass again.

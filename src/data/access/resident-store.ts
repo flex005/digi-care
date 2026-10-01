@@ -312,7 +312,16 @@ function asDraft(text: CarePlanText, by: StaffRef) {
   }
 }
 
-const written = (text: CarePlanText): boolean =>
+/**
+ * Whether anything has been written into a domain at admission.
+ *
+ * Exported so the rule can be tested without driving the screen — the rule is
+ * what matters, not the wiring. It is `isWritten`'s twin in
+ * `CarePlanTextFields`, and both had to be changed from three named fields to
+ * every declared one when `expectedOutcome` landed; two copies of one rule is
+ * what their tests are written side by side to keep honest.
+ */
+export const written = (text: CarePlanText): boolean =>
   PLAN_FIELDS.some((field) => text[field.id].trim() !== '')
 
 function admittedCarePlan(
