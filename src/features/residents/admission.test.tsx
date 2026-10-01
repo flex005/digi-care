@@ -666,6 +666,7 @@ describe('care plan domains can be written on the day, as drafts', () => {
           currentNeeds: 'I can walk to the dining room if somebody is with me.',
           preferences: 'I would rather use my own stick than a frame.',
           agreedActions: 'Walk with her to meals, her stick on her left.',
+          expectedOutcome: 'Walking to every meal with the stick, and no falls.',
         },
       },
     })
@@ -686,6 +687,7 @@ describe('care plan domains can be written on the day, as drafts', () => {
           currentNeeds: 'I have never been a big eater.',
           preferences: '',
           agreedActions: '',
+          expectedOutcome: '',
         },
       },
     })
@@ -709,6 +711,7 @@ describe('care plan domains can be written on the day, as drafts', () => {
           currentNeeds: 'I have had the same plot for thirty years.',
           preferences: 'Tuesday and Friday mornings.',
           agreedActions: 'Walk down with her and stay.',
+          expectedOutcome: 'Still going twice a week through the summer.',
         },
       ],
     })

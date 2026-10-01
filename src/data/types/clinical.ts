@@ -178,6 +178,17 @@ export interface CarePlanVersion {
    * about staff rather than the first person about the resident.
    */
   agreedActions: string
+  /**
+   * What success looks like if the plan works. Staff voice, like the actions
+   * above it.
+   *
+   * **A sentence, not a status.** `Goal` already models an outcome with an
+   * achieved lifecycle and its docblock argues against repeating that here;
+   * this is the plan saying what it is for, so the next person reading it can
+   * tell whether it is still the right plan. Nothing closes it and nothing
+   * marks it met.
+   */
+  expectedOutcome: string
   finalisedBy: StaffRef
   finalisedOn: IsoDate
 }
@@ -233,13 +244,18 @@ export type CarePlanReviewState =
  * The written part of a plan: a version without its signature.
  *
  * Declared once and derived from `CarePlanVersion`, because three things need
- * exactly these three fields and no others — the editor's boxes, the draft, and
- * the diff. A second hand-written copy of the list is how a fourth field ends
- * up in two of them and not the third.
+ * exactly these fields and no others — the editor's boxes, the draft, and the
+ * diff. A second hand-written copy of the list is how a new field ends up in
+ * two of them and not the third.
+ *
+ * **Which is what happened.** `expectedOutcome` was the fourth, and the draft
+ * below had spelled the three out rather than reusing this — so the list that
+ * exists to be the one copy had a second copy twenty lines under it. The draft
+ * composes this now.
  */
 export type CarePlanText = Pick<
   CarePlanVersion,
-  'currentNeeds' | 'preferences' | 'agreedActions'
+  'currentNeeds' | 'preferences' | 'agreedActions' | 'expectedOutcome'
 >
 
 /**
@@ -274,14 +290,11 @@ export interface CarePlanDomainBody {
    */
   draft:
     | { kind: 'none' }
-    | {
+    | ({
         kind: 'draft'
-        currentNeeds: string
-        preferences: string
-        agreedActions: string
         updatedBy: StaffRef
         updatedAt: IsoDateTime
-      }
+      } & CarePlanText)
 }
 
 /**

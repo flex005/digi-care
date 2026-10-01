@@ -1,4 +1,5 @@
 import { held, type SessionHolding } from './session-holding'
+import { PLAN_FIELDS } from '@/features/care-plan/plan-fields'
 import { now as appNow } from '@/data/fixtures/clock'
 import type {
   AllergyStatus,
@@ -292,22 +293,27 @@ function blankConsents(): ConsentRecord {
   return consents as ConsentRecord
 }
 
-/** A draft as the record holds it: part-written, with whoever wrote it. */
+/**
+ * A draft as the record holds it: part-written, with whoever wrote it.
+ *
+ * Trimmed field by field from `PLAN_FIELDS` rather than named one at a time —
+ * this listed three while `CarePlanText` had four, so a new field arrived
+ * untrimmed and, worse, absent from the draft the editor reads back.
+ */
 function asDraft(text: CarePlanText, by: StaffRef) {
+  const trimmed = Object.fromEntries(
+    PLAN_FIELDS.map((field) => [field.id, text[field.id].trim()]),
+  ) as CarePlanText
   return {
     kind: 'draft' as const,
-    currentNeeds: text.currentNeeds.trim(),
-    preferences: text.preferences.trim(),
-    agreedActions: text.agreedActions.trim(),
+    ...trimmed,
     updatedBy: by,
     updatedAt: now(),
   }
 }
 
 const written = (text: CarePlanText): boolean =>
-  text.currentNeeds.trim() !== '' ||
-  text.preferences.trim() !== '' ||
-  text.agreedActions.trim() !== ''
+  PLAN_FIELDS.some((field) => text[field.id].trim() !== '')
 
 function admittedCarePlan(
   answered: Partial<Record<CarePlanDomainId, CarePlanText>>,

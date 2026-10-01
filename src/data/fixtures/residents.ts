@@ -895,6 +895,57 @@ const DOMAIN_SUMMARIES: Record<CarePlanDomainId, string[]> = {
  * the second person about staff rather than the first person about the
  * resident.
  */
+/**
+ * What each plan is trying to achieve, in the staff voice.
+ *
+ * Domain-specific for the reason the other three pools are: a falls outcome
+ * that could equally be a nutrition outcome is filler, and filler in a fixture
+ * is a screen nobody can review — every domain reads the same and no reviewer
+ * can tell a plan that says something from one that does not.
+ */
+const EXPECTED_OUTCOMES: Record<CarePlanDomainId, string[]> = {
+  personal_care: [
+    'Washed and dressed the way they like it, with one carer, and no rush on the days they shower.',
+    'Still doing their own face and hands in six months, with help only where they ask for it.',
+  ],
+  nutrition: [
+    'Weight steady, and finishing most of a meal without being prompted through it.',
+    'Eating in company rather than alone in the room, and saying when they have had enough.',
+  ],
+  mobility: [
+    'Walking to the dining room and back without a fall, with the frame and one carer alongside.',
+    'Still transferring themselves from bed to chair in three months, with nothing more than a rail.',
+  ],
+  continence: [
+    'Dry overnight on most nights, and reaching the toilet in time during the day.',
+    'Continence managed without a pad in the daytime, and no skin damage from it.',
+  ],
+  communication: [
+    'Understood first time by whoever is on shift, without having to repeat themselves.',
+    'Telling staff what they want rather than waiting to be asked, with the hearing aid in.',
+  ],
+  cognitive: [
+    'Settled through the afternoon, recognising the staff who work with them regularly.',
+    'Orientated enough to find their own room, with the door sign and the photograph in place.',
+  ],
+  social_emotional: [
+    'Going to the activities they chose, and low mood noticed early rather than at the review.',
+    'In touch with family weekly, and spending less of the day alone in the room.',
+  ],
+  end_of_life: [
+    'Comfortable, in the place they asked to be, with the people they named beside them.',
+    'Their wishes followed without anybody having to ask the family what to do at the time.',
+  ],
+  physical_health: [
+    'Long-term conditions stable between reviews, with changes picked up before they need a GP visit.',
+    'Pain controlled well enough to get up and sit out every day.',
+  ],
+  medication: [
+    'Every dose taken as prescribed, with refusals recorded and the reason understood.',
+    'Taking their own tablets with supervision in three months, if the review agrees it is safe.',
+  ],
+}
+
 const AGREED_ACTIONS: Record<CarePlanDomainId, string[]> = {
   personal_care: [
     'Offer a wash at the basin before breakfast. Lay out clothes and let them choose.',
@@ -960,6 +1011,7 @@ function makeCarePlan(rng: Rng, completeness: number): CarePlanDomainRecord[] {
     const summaries = DOMAIN_SUMMARIES[domain.id]
     const preferences = DOMAIN_PREFERENCES[domain.id]
     const actions = AGREED_ACTIONS[domain.id]
+    const outcomes = EXPECTED_OUTCOMES[domain.id]
 
     if (!started) {
       return {
@@ -996,6 +1048,7 @@ function makeCarePlan(rng: Rng, completeness: number): CarePlanDomainRecord[] {
           currentNeeds: rng.pick(summaries),
           preferences: '',
           agreedActions: '',
+          expectedOutcome: '',
           updatedBy: rng.pick(managers),
           updatedAt: toIsoDateTime(updatedAt),
         },
@@ -1021,11 +1074,12 @@ function makeCarePlan(rng: Rng, completeness: number): CarePlanDomainRecord[] {
       currentNeeds: rng.pick(summaries),
       preferences: rng.pick(preferences),
       agreedActions: rng.pick(actions),
+      expectedOutcome: rng.pick(outcomes),
       finalisedBy: rng.pick(managers),
       finalisedOn: toIsoDate(finalisedOn),
     }
     /*
-     * A previous version fills all three fields, like any other.
+     * A previous version fills every field, like any other.
      *
      * Its `preferences` used to be the empty string, which said a manager had
      * signed a plan with a blank in it — and the editor refuses to finalise on
@@ -1040,6 +1094,7 @@ function makeCarePlan(rng: Rng, completeness: number): CarePlanDomainRecord[] {
             currentNeeds: rng.pick(summaries),
             preferences: rng.pick(preferences),
             agreedActions: rng.pick(actions),
+            expectedOutcome: rng.pick(outcomes),
             finalisedBy: rng.pick(managers),
             finalisedOn: toIsoDate(previousOn),
           },
@@ -1789,6 +1844,8 @@ patch('adeyemi', (resident) => ({
               'Tuesday and Friday mornings, before it gets hot. I like to take my own flask.',
             agreedActions:
               'Walk down with her Tuesday and Friday before 10am, stay on the site, and bring her back if she is short of breath. Tell the family if she stops wanting to go, because that is the first sign she is unwell.',
+            expectedOutcome:
+              'Still going down twice a week through the summer, and any decline in her chest noticed at the allotment before it shows anywhere else.',
             finalisedBy: staffHalloran,
             finalisedOn: toIsoDate(daysAgo(52)),
           },
@@ -2052,6 +2109,8 @@ patch('adeyemi', (resident) => ({
                 preferences:
                   'I would rather walk than be pushed, even if it takes a while.',
                 agreedActions: 'Walk beside them to the dining room at every meal.',
+                expectedOutcome:
+                  'Walking to every meal rather than being pushed, and no fall on the way.',
                 finalisedBy: staffHalloran,
                 finalisedOn: toIsoDate(fourteenMonthsAgo),
               },
@@ -2094,6 +2153,7 @@ patch('gallagher', (resident) => {
                 'I get more tired than I did. I can still manage but it takes me longer.',
               preferences: '',
               agreedActions: '',
+              expectedOutcome: '',
               updatedBy: staffOkonkwo,
               updatedAt: toIsoDateTime(daysAgo(2)),
             },

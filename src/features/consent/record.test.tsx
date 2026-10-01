@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import { residents } from '@/data/fixtures/residents'
+import type { Resident } from '@/data/types'
 import { render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Outlet, createMemoryRouter, RouterProvider } from 'react-router-dom'
@@ -29,10 +31,46 @@ afterEach(() => {
   resetSessionFamilyAccess()
 })
 
-/** A resident nobody has asked about Family Portal access. */
-const UNASKED = 'res-pemberton' as ResidentId
+/*
+ * **Found by the property, not pinned by id.** Both of these were ids with a
+ * sentence beside them describing the state they were meant to be in, and a
+ * new draw in the generator moved that state to other residents — the consent
+ * these tests open on was `given` rather than `not_sought`, and they failed
+ * for a reason that had nothing to do with consent. `residents.ts` already
+ * reaches for its own subjects this way, "derived by property rather than by
+ * index, so it survives a change to the draw order"; this is the same rule
+ * applied one file over.
+ */
+const subject = (
+  matches: (resident: Resident) => boolean,
+  what: string,
+): ResidentId => {
+  const found = residents.find(matches)
+  if (!found) throw new Error(`No fixture reaches ${what}`)
+  return found.id
+}
+
+/** Whether a health and welfare attorney is on this resident's record. */
+const hasWelfareLpa = (resident: Resident): boolean =>
+  resident.importantPeople.lpaHolder.kind === 'recorded' &&
+  resident.importantPeople.lpaHolder.value.lpaType === 'health_and_welfare'
+
+/**
+ * A resident nobody has asked about Family Portal access, **and who has no
+ * welfare attorney** — the second half matters, because one of the tests below
+ * uses this subject to prove the no-LPA route is the one offered.
+ */
+const UNASKED = subject(
+  (resident) =>
+    resident.consents.family_portal.kind === 'not_sought' && !hasWelfareLpa(resident),
+  'a resident never asked about Family Portal access, with no welfare LPA',
+)
 /** A resident with a health and welfare LPA on file, and a consent still pending. */
-const WITH_LPA = 'res-wilkinson' as ResidentId
+const WITH_LPA = subject(
+  (resident) =>
+    resident.consents.family_portal.kind === 'not_sought' && hasWelfareLpa(resident),
+  'a resident with a health and welfare LPA and a pending consent',
+)
 
 function renderGate(residentId: ResidentId) {
   const router = createMemoryRouter(

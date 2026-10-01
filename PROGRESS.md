@@ -15959,3 +15959,74 @@ Both halves still fire. Run clean, the measured line reads:
     ✓ layout — nothing lost at 1280px; 8 of 28 weeks fit on screen
 
 `npm run verify` is back to exit 0.
+
+## Expected Outcome, a fourth field on every care plan domain
+
+A plain descriptive sentence in the staff voice, parallel to `agreedActions`.
+**Not a goal**: `Goal` holds an outcome with an achieved lifecycle and argues
+in its own docblock against repeating that here, so this has no status,
+nothing closes it, and it is not wired to that feature. It is the plan saying
+what it is for, so the next reader can judge whether it is still the right
+plan.
+
+### What flowed through, and what did not
+
+The claim that a field added to the type and to `PLAN_FIELDS` reaches the
+editor, the version history and the diff without touching them **held**:
+`DomainEditorRoute.tsx`, `VersionHistoryRoute.tsx` and `CarePlanTab.tsx` are
+all absent from the diff. `compareVersions` maps `PLAN_FIELDS`, so the diff
+gained a fourth row by itself.
+
+**Five helpers underneath them did hardcode the three**, and each is reported
+rather than quietly patched:
+
+- `CarePlanDomainBody.draft` spelled the three fields out, twenty lines under
+  the `CarePlanText` docblock that exists to stop exactly that. It composes
+  `CarePlanText` now.
+- `EMPTY_PLAN` listed three empty strings; built from `PLAN_FIELDS`.
+- `editorStartsFrom` copied three named fields off the draft; derived.
+- `isWritten` in `CarePlanTextFields` OR-ed three fields, so a domain whose
+  only written field was the new one would have read as never started.
+- `asDraft` and `written` in `resident-store` did the same, so the new field
+  would have arrived untrimmed and absent from the draft the editor reads back.
+
+All five now iterate `PLAN_FIELDS`, so a fifth field arrives by itself. The
+`CarePlanText` docblock records that its own one-copy rule had a second copy
+underneath it.
+
+### The fixture draw, and what it cost
+
+`EXPECTED_OUTCOMES` is a pool per domain, in the `DOMAIN_SUMMARIES` pattern,
+drawn once per version. This is a genuinely new draw on the seeded stream and
+is **meant** to shift everything after it.
+
+Spot-checked across three residents, every outcome reads as its own domain's:
+mobility gets *"Walking to the dining room and back without a fall, with the
+frame and one carer alongside"*, continence gets *"Dry overnight on most
+nights, and reaching the toilet in time during the day"*, medication gets
+*"Every dose taken as prescribed, with refusals recorded and the reason
+understood"*. No filler that would read the same under any heading.
+
+**Four tests failed on the shift, and none of them was about care plans.**
+Two consent tests and one family-access test pinned residents by id —
+`res-pemberton`, `res-wilkinson` — each with a comment beside it describing
+the state it was supposed to be in. The draw moved that state to other
+residents, so a test about an unsought consent opened on a resident who had
+given one. They are found by property now, the way `residents.ts` already
+reaches for its own subjects: *"derived by property rather than by index, so
+it survives a change to the draw order"*. One needed two properties, not one —
+the no-LPA route test needs a resident with no consent **and** no welfare
+attorney, which the id had been carrying silently.
+
+### Seen on screen, all three states
+
+- **complete**: four boxes, the previous version beneath each including the
+  new one, footer waiting on all four. The box starts empty, which is right —
+  the editor never prefills from the signed version.
+- **in progress**: four boxes, the part-written draft's one field filled, the
+  footer naming the other three including Expected outcome.
+- **never started**: four empty boxes, all four outstanding.
+- **the diff**, on a domain with two versions: `Expected outcome · Version 1
+  "Still transferring themselves from bed to chair in three months…" ·
+  Version 2 "Walking to the dining room and…"` — a comparison row like the
+  other three.

@@ -45,10 +45,14 @@ export function CarePlanTextFields({
   )
 }
 
-/** Nothing typed anywhere: a domain nobody has started rather than a blank one. */
+/**
+ * Nothing typed anywhere: a domain nobody has started rather than a blank one.
+ *
+ * Over the declared fields, not a list of them — this named three while
+ * `CarePlanText` had four, so a domain whose only written field was the new
+ * one read as never started.
+ */
 export const isWritten = (text: CarePlanText): boolean =>
-  text.currentNeeds.trim() !== '' ||
-  text.preferences.trim() !== '' ||
-  text.agreedActions.trim() !== ''
+  PLAN_FIELDS.some((field) => text[field.id].trim() !== '')
 
 export const emptyText = (): CarePlanText => ({ ...EMPTY_PLAN })

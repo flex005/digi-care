@@ -68,18 +68,37 @@ const FIELDS: Record<PlanFieldId, Omit<PlanField, 'id'>> = {
     emptyNote:
       'Not written: a plan that says nothing about what will be done cannot be signed',
   },
+  /*
+   * **What the plan is for, not whether it worked.** `Goal` holds an outcome
+   * with an achieved lifecycle and argues in its own docblock against
+   * repeating that here. This is a sentence: it tells the next person what
+   * this plan was trying to achieve, so they can judge whether it is still the
+   * right one. Nothing closes it.
+   */
+  expectedOutcome: {
+    label: 'Expected outcome',
+    voice: 'staff',
+    guidance:
+      'What good looks like if this works. Specific enough that somebody could tell whether it is happening.',
+    placeholder: 'Walking to the dining room without a fall, and…',
+    emptyNote: 'Not written: a plan that does not say what it is for cannot be signed',
+  },
 }
 
 export const PLAN_FIELDS: PlanField[] = (Object.keys(FIELDS) as PlanFieldId[]).map(
   (id) => ({ id, ...FIELDS[id] }),
 )
 
-/** An empty plan, for a domain nobody has started. */
-export const EMPTY_PLAN: CarePlanText = {
-  currentNeeds: '',
-  preferences: '',
-  agreedActions: '',
-}
+/**
+ * An empty plan, for a domain nobody has started.
+ *
+ * Built from `PLAN_FIELDS` rather than listed, because a hand-written copy of
+ * the field list is the thing `CarePlanText` exists to prevent — and this was
+ * one, three lines under the declaration that says so.
+ */
+export const EMPTY_PLAN: CarePlanText = Object.fromEntries(
+  PLAN_FIELDS.map((field) => [field.id, '']),
+) as CarePlanText
 
 /**
  * The version staff are following today, or nothing.
@@ -112,14 +131,14 @@ export function versionCount(record: CarePlanDomainBody): number {
  */
 export function editorStartsFrom(record: CarePlanDomainBody): CarePlanText {
   if (record.draft.kind !== 'draft') return EMPTY_PLAN
-  return {
-    currentNeeds: record.draft.currentNeeds,
-    preferences: record.draft.preferences,
-    agreedActions: record.draft.agreedActions,
-  }
+  const draft = record.draft
+  // Field by field from the declaration, so a fifth arrives here by itself.
+  return Object.fromEntries(
+    PLAN_FIELDS.map((field) => [field.id, draft[field.id]]),
+  ) as CarePlanText
 }
 
-/** Which fields are still empty. Finalising requires all three. */
+/** Which fields are still empty. Finalising requires every one of them. */
 export function outstandingFields(text: CarePlanText): PlanField[] {
   return PLAN_FIELDS.filter((field) => text[field.id].trim() === '')
 }

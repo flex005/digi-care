@@ -38,7 +38,26 @@ import { FamilyQueueRoute } from './FamilyQueueRoute'
 
 afterEach(() => resetSessionFamilyAccess())
 
-const UNSEEDED = 'res-pemberton' as ResidentId
+/*
+ * **Found by the properties it needs, not pinned by id.** This was
+ * `res-pemberton`, and a new draw in the fixture generator moved that
+ * resident's Family Portal consent from `not_sought` to `given` — so a test
+ * about an unsought consent opened on a resident who had given one, and
+ * failed for a reason that had nothing to do with family access. Both halves
+ * of the name are asserted here: nobody has asked about the consent, and
+ * nobody is seeded on the list.
+ */
+const UNSEEDED = ((): ResidentId => {
+  const found = residents.find(
+    (resident) =>
+      resident.consents.family_portal.kind === 'not_sought' &&
+      !familyMembers.some((member) => member.residentId === resident.id),
+  )
+  if (!found) {
+    throw new Error('No fixture reaches a resident with no consent and no family named')
+  }
+  return found.id
+})()
 
 function renderTab(residentId: ResidentId, as: StaffRole = 'registered_manager') {
   const resident = residents.find((entry) => entry.id === residentId)!
