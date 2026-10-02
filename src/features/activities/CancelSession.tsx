@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { Activity } from '@/data/types'
 import { Button, Dialog } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { cancelSession } from '@/data/access/activity-store'
 import { pluralise } from '@/lib/format'
 import styles from './activities.module.css'
@@ -34,6 +36,7 @@ export function CancelSession({
   onCancelled: () => void
 }) {
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')
 
@@ -42,6 +45,12 @@ export function CancelSession({
   const recorded = activity.invited.filter(
     (invitation) => invitation.attendance.kind !== 'not_recorded',
   ).length
+
+  if (!viewer.canRecordIn('/activities')) {
+    return (
+      <ReadOnlyHere roleName={viewer.roleName} subject="this session" act="cancel it" />
+    )
+  }
 
   return (
     <>

@@ -5,7 +5,7 @@ import { SessionProvider } from '@/app/session/SessionProvider'
 import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
 import type { StaffRole } from '@/data/types'
 import { SignInAs } from '@/test/sign-in-as'
-import { levelFor } from '@/features/team/permissions'
+import { levelFor, mayDo } from '@/features/team/permissions'
 import { residents } from '@/data/fixtures/residents'
 import { ResidentProfileRoute } from '@/features/residents/ResidentProfileRoute'
 import { AssessmentFormRoute } from '@/features/risk/AssessmentFormRoute'
@@ -17,6 +17,11 @@ import { GeneralInformationTab } from '@/features/residents/GeneralInformationTa
 import { UploadDrawer } from '@/features/documents/UploadDrawer'
 import { StatusDialog } from '@/features/handover/StatusDialog'
 import { handovers } from '@/data/fixtures/handover'
+import { PlanSession } from '@/features/activities/PlanSession'
+import { FamilyMessage } from '@/features/family/FamilyMessage'
+import { NotificationDecisionDialog } from '@/features/incidents/NotificationDecisionDialog'
+import { InviteDrawer } from '@/features/team/InviteDrawer'
+import { incidents } from '@/data/fixtures/incidents'
 
 /**
  * Write gates on the clinical record modules.
@@ -337,4 +342,143 @@ describe('marking a resident on the handover board', () => {
     expect(container.textContent).toContain('Review')
     expect(container.querySelector('[data-read-only-here]')).toBeNull()
   })
+})
+
+/** No router needed: these take props and render in place. */
+function bare(role: StaffRole, element: React.ReactElement) {
+  return render(
+    <SessionProvider>
+      <TooltipProvider>
+        <ToastProvider>
+          <SignInAs as={role} />
+          {element}
+          <ToastViewport />
+        </ToastProvider>
+      </TooltipProvider>
+    </SessionProvider>,
+  )
+}
+
+describe('planning an activity session', () => {
+  const at = (role: StaffRole) =>
+    bare(
+      role,
+      <PlanSession
+        siteId={resident.siteId}
+        timeZone="Europe/London"
+        residents={[resident]}
+        onPlanned={() => undefined}
+      />,
+    )
+
+  it.each(mayNotRecordIn('/activities'))('refuses %s, and says why', async (role) => {
+    await refusedFor(at(role).container, 'plan a session')
+  })
+
+  it.each(mayRecordIn('/activities'))('offers %s the control', async (role) => {
+    const { container } = at(role)
+    await waitFor(
+      () => {
+        expect(container.querySelector('button')).toBeTruthy()
+      },
+      { timeout: 5000 },
+    )
+    expect(container.querySelector('[data-read-only-here]')).toBeNull()
+  })
+})
+
+describe('sharing an incident update with the family', () => {
+  const incident = incidents.find((one) => one.siteId === 'site-rosewood-court')!
+  const at = (role: StaffRole) =>
+    bare(role, <FamilyMessage incident={incident} onChanged={() => undefined} />)
+
+  it.each(mayNotRecordIn('/family'))('refuses %s, and says why', async (role) => {
+    await refusedFor(at(role).container, 'share an update')
+  })
+
+  it.each(mayRecordIn('/family'))('offers %s the control', async (role) => {
+    const { container } = at(role)
+    await waitFor(
+      () => {
+        expect(container.querySelector('button')).toBeTruthy()
+      },
+      { timeout: 5000 },
+    )
+    expect(container.querySelector('[data-read-only-here]')).toBeNull()
+  })
+})
+
+/*
+ * The approve act on `/incidents`, declared as "deciding whether the CQC must
+ * be told". Asserted against `canApproveIn`, which is a different and smaller
+ * set than the roles who may report an incident.
+ */
+describe('deciding whether the CQC must be told', () => {
+  const incident = incidents.find((one) => one.siteId === 'site-rosewood-court')!
+  const at = (role: StaffRole) =>
+    bare(
+      role,
+      <NotificationDecisionDialog
+        step="required"
+        incident={incident}
+        onClose={() => undefined}
+        onDecided={() => undefined}
+      />,
+    )
+
+  const mayDecide = TESTABLE.filter(
+    (role) => levelFor(role, '/incidents') === 'approve',
+  )
+  const mayNotDecide = TESTABLE.filter((role) => !mayDecide.includes(role))
+
+  it.each(mayNotDecide)('refuses %s, and says why', async (role) => {
+    await refusedFor(at(role).container, 'decide whether the CQC must be told')
+  })
+
+  /*
+   * Asserted on the document, not on `container`: this is a Radix Dialog and
+   * renders through a Portal to document.body, outside the tree `render`
+   * returns. The refusal above is not portalled, which is why the negative
+   * case reads `container` and this one does not.
+   */
+  it.each(mayDecide)('offers %s the decision', async (role) => {
+    const { container } = at(role)
+    await waitFor(
+      () => {
+        expect(document.querySelector('[role="dialog"]')).toBeTruthy()
+      },
+      { timeout: 5000 },
+    )
+    expect(container.querySelector('[data-read-only-here]')).toBeNull()
+  })
+})
+
+describe('inviting somebody onto the team', () => {
+  const at = (role: StaffRole) => bare(role, <InviteDrawer onAdded={() => undefined} />)
+
+  /*
+   * Governed by the `manage_team` admin act rather than a module level, and
+   * already gated by its caller — `TeamListRoute` renders it only for a role
+   * that may. Asked here too so the gate and the act live in the same file.
+   */
+  it.each(TESTABLE.filter((role) => !mayDo(role, 'manage_team')))(
+    'refuses %s, and says why',
+    async (role) => {
+      await refusedFor(at(role).container, 'invite somebody')
+    },
+  )
+
+  it.each(TESTABLE.filter((role) => mayDo(role, 'manage_team')))(
+    'offers %s the drawer',
+    async (role) => {
+      const { container } = at(role)
+      await waitFor(
+        () => {
+          expect(container.querySelector('button')).toBeTruthy()
+        },
+        { timeout: 5000 },
+      )
+      expect(container.querySelector('[data-read-only-here]')).toBeNull()
+    },
+  )
 })

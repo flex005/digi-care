@@ -5,6 +5,8 @@ import type { TimeZone } from '@/lib/format'
 import { Button, Dialog } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { planSession } from '@/data/access/activity-store'
 import { pluralise } from '@/lib/format'
 import { siteInstant } from './session-time'
@@ -39,6 +41,7 @@ export function PlanSession({
   onPlanned: (activity: Activity) => void
 }) {
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [place, setPlace] = useState('')
@@ -93,6 +96,17 @@ export function PlanSession({
     reset()
     setOpen(false)
     onPlanned(activity)
+  }
+
+  /* `/activities` declares `records: 'recording attendance'`, `approves: false`. */
+  if (!viewer.canRecordIn('/activities')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject="the activities programme"
+        act="plan a session"
+      />
+    )
   }
 
   return (

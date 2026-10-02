@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import type { Activity, IsoDate } from '@/data/types'
 import type { TimeZone } from '@/lib/format'
 import { Button, Dialog } from '@/components/primitives'
@@ -31,6 +33,7 @@ export function EditSession({
   timeZone: TimeZone
   onEdited: () => void
 }) {
+  const viewer = useViewer()
   const initial = () => {
     const start = siteWallParts(activity.startsAt, timeZone)
     return {
@@ -70,6 +73,12 @@ export function EditSession({
     })
     setOpen(false)
     onEdited()
+  }
+
+  if (!viewer.canRecordIn('/activities')) {
+    return (
+      <ReadOnlyHere roleName={viewer.roleName} subject="this session" act="change it" />
+    )
   }
 
   return (
