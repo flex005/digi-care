@@ -12,10 +12,11 @@ import { recordWholePlanReview, undoWholePlanReviewRecord } from '@/data/access/
 import type { WholePlanReviewToken } from '@/data/access/whole-plan-review-store'
 import type { ProfileContext } from '@/features/residents/ResidentProfileRoute'
 import { AlertDialog, Button, Card, Toast } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
+import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { formatLateness, pluralise } from '@/lib/format'
 import { nextReviewFrom } from '@/lib/review-interval'
 import { reviewTiming } from '@/features/care-plan/review-timing'
@@ -44,6 +45,7 @@ import { staffLabel } from '@/data/access/team-store'
 export function WholePlanReviewRoute() {
   const { resident, refresh } = useOutletContext<ProfileContext>()
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const format = useSiteFormat()
 
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
@@ -73,6 +75,25 @@ export function WholePlanReviewRoute() {
       : ({ kind: 'never_scheduled' } as const)
   const today = now.slice(0, 10) as IsoDate
   const nextDueOn = nextReviewFrom(now)
+
+  /*
+   * `/reviews` declares `records: 'completing a review'`. Recording the
+   * review is the write; what the plan says and when it was last reviewed is
+   * read everywhere else.
+   */
+  if (!viewer.canRecordIn('/reviews')) {
+    return (
+      <div className={styles.page}>
+        <Card padded>
+          <ReadOnlyHere
+            roleName={viewer.roleName}
+            subject="this care plan review"
+            act="complete one"
+          />
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.page}>
