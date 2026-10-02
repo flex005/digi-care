@@ -7,6 +7,8 @@ import type {
 } from '@/data/types'
 import { fileDocument } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { Button, Dialog } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { toIsoDate } from '@/data/fixtures/generate'
@@ -39,7 +41,23 @@ export function UploadDrawer({
   subjectName: string
   onFiled: () => void
 }) {
+  const viewer = useViewer()
   const [open, setOpen] = useState(false)
+
+  /*
+   * `/documents` declares `records: 'filing a document and deciding its
+   * expiry'`. What is already on file stays readable — a document nobody may
+   * add to is still a record somebody may need to read.
+   */
+  if (!viewer.canRecordIn('/documents')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject={`the documents held for ${subjectName}`}
+        act="file one"
+      />
+    )
+  }
 
   return (
     <>
