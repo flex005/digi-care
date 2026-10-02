@@ -4,6 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
 import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
 import type { StaffRole } from '@/data/types'
+import { STAFF_ROLE_NAMES } from '@/data/types'
 import { SignInAs } from '@/test/sign-in-as'
 import { levelFor, mayDo } from '@/features/team/permissions'
 import { residents } from '@/data/fixtures/residents'
@@ -46,13 +47,13 @@ import { incidents } from '@/data/fixtures/incidents'
  * Only roles a staff fixture actually holds, because `SignInAs` refuses to
  * render as one nobody has.
  */
-const TESTABLE: StaffRole[] = [
-  'registered_manager',
-  'deputy_manager',
-  'senior_carer',
-  'care_worker',
-  'auditor',
-]
+/*
+ * Every role in the model, now that one can be signed in as. Until this
+ * sweep, `activities_coordinator` had levels for sixteen modules and no
+ * member of staff with access, so `SignInAs` threw on it and none of those
+ * levels was enforced by anything observable.
+ */
+const TESTABLE = Object.keys(STAFF_ROLE_NAMES) as StaffRole[]
 const mayRecordIn = (moduleId: string) =>
   TESTABLE.filter((role) => {
     const level = levelFor(role, moduleId)

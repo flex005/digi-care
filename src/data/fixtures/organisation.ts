@@ -155,6 +155,27 @@ export const staffBennett = makeStaff(
   'Laura Bennett',
   'activities_coordinator',
 )
+/**
+ * A second activities coordinator, and the only one anybody can sign in as.
+ *
+ * `staffBennett` is the role's other holder and is deliberately
+ * `never_given_access` — an invitation nobody accepted, which the team screen
+ * needs. That left `activities_coordinator` declared in the permission table
+ * with levels for sixteen modules and **no member of staff with access**, so
+ * `SignInAs` refused to render the product as one and every one of those
+ * levels was enforced by nothing anybody could observe.
+ *
+ * Added at the end of the list rather than beside Bennett, because the staff
+ * array feeds `carersAndSeniors` by reference and a reorder is the kind of
+ * change that moves a seeded draw.
+ */
+export const staffOkereke = makeStaff(
+  'n-okereke',
+  'N. Okereke',
+  'Ngozi Okereke',
+  'activities_coordinator',
+)
+
 export const staffFitzgerald = makeStaff(
   'p-fitzgerald',
   'P. Fitzgerald',
@@ -252,6 +273,7 @@ export const staff: StaffRef[] = [
   staffFitzgerald,
   staffDeactivated,
   staffPrice,
+  staffOkereke,
 ]
 
 /** Staff who write care notes and administer medication. */

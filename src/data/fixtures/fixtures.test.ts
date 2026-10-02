@@ -1,3 +1,4 @@
+import { teamMembers } from '@/data/access/team-store'
 import { describe, expect, it } from 'vitest'
 import { STAFF_ROLE_NAMES, type StaffRole } from '@/data/types'
 import { CONSENT_TYPES, CARE_PLAN_DOMAINS, RISK_ASSESSMENT_TEMPLATES } from '../types'
@@ -84,7 +85,14 @@ describe('fixture volume: PRD §5.2', () => {
      * Nineteen from the Care Worker build: Hannah Price, a senior carer whose
      * invitation expired, so that product's expired invitation is reachable.
      */
-    expect(staff).toHaveLength(19)
+    /*
+     * Twenty from the permission sweep: Ngozi Okereke, an activities
+     * coordinator **with access**. Laura Bennett already held that role and
+     * was deliberately never given access, so the role was held and
+     * unreachable — see the standing assertion below, which is what this
+     * member exists to satisfy.
+     */
+    expect(staff).toHaveLength(20)
 
     const held = new Set(staff.map((member) => member.role))
     const unheld = (Object.keys(STAFF_ROLE_NAMES) as StaffRole[]).filter(
@@ -93,6 +101,27 @@ describe('fixture volume: PRD §5.2', () => {
     expect(
       unheld,
       `no member of staff holds: ${unheld.join(', ')}, so nothing in the product renders one`,
+    ).toEqual([])
+
+    /*
+     * **Held is not reachable, and this is the assertion that says so.**
+     * `activities_coordinator` passed the check above for sixteen phases
+     * while its only holder had `never_given_access`, so `SignInAs` threw on
+     * it and every permission level written for that role was enforced by
+     * nothing anybody could observe. A role nobody can sign in as cannot be
+     * tested, and a permission that cannot be tested is a comment.
+     */
+    const reachable = new Set(
+      teamMembers()
+        .filter((member) => member.standing.kind === 'has_access')
+        .map((member) => member.role),
+    )
+    const unreachable = (Object.keys(STAFF_ROLE_NAMES) as StaffRole[]).filter(
+      (role) => !reachable.has(role),
+    )
+    expect(
+      unreachable,
+      `no member of staff WITH ACCESS holds: ${unreachable.join(', ')}, so no test can sign in as one and their permissions are enforced by nothing`,
     ).toEqual([])
 
     expect(staff.filter((s) => !s.isActive)).toHaveLength(1)
