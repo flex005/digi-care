@@ -21,9 +21,10 @@ import type { ClosableFlag } from '@/data/access/review-flags'
 import type { ClearingToken } from '@/data/access/review-flag-store'
 import type { FinaliseToken } from '@/data/access/care-plan-draft-store'
 import { AlertDialog, Button, Card, Toast } from '@/components/primitives'
-import { Unrecorded, NotYourHome } from '@/components/status'
+import { NotYourHome, ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { pluralise } from '@/lib/format'
 import { nextReviewFrom } from '@/lib/review-interval'
 import { reviewIntervalMonths } from '@/data/access/settings-store'
@@ -113,6 +114,7 @@ function Editor({
   const inSentence = domainInSentence(domain)
   const { resident, refresh } = useOutletContext<ProfileContext>()
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const format = useSiteFormat()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
 
@@ -317,8 +319,23 @@ function Editor({
             ) : null}
           </p>
 
+          {/*
+            **Two levels on one screen, because the module declares two acts.**
+            `/care-plans` is `records: 'saving a draft of a domain'` and
+            `approves: 'finalising and signing a domain'`. A role that may
+            draft but not sign keeps Save draft and loses Finalise, which is
+            the distinction the declaration exists to make.
+          */}
+          {viewer.canRecordIn('/care-plans') ? null : (
+            <ReadOnlyHere
+              roleName={viewer.roleName}
+              subject="this care plan domain"
+              act="save a draft of it or sign it off"
+            />
+          )}
           <span className={styles.footActions}>
-            {record.draft.kind === 'draft' && signed === 'none' ? (
+            {!viewer.canRecordIn('/care-plans') ? null : record.draft.kind ===
+                'draft' && signed === 'none' ? (
               <Button
                 variant="ghost"
                 data-discard-draft
@@ -327,24 +344,29 @@ function Editor({
                 Discard draft
               </Button>
             ) : null}
-            <Button
-              variant="secondary"
-              data-save-draft
-              disabled={signed !== 'none'}
-              onClick={() => {
-                void save()
-              }}
-            >
-              Save draft
-            </Button>
-            {signed === 'none' ? (
+            {!viewer.canRecordIn('/care-plans') ? null : (
               <Button
-                disabled={waiting.length > 0}
-                onClick={() => setConfirming(true)}
-                data-finalise
+                variant="secondary"
+                data-save-draft
+                disabled={signed !== 'none'}
+                onClick={() => {
+                  void save()
+                }}
               >
-                Finalise and sign
+                Save draft
               </Button>
+            )}
+            {signed === 'none' ? (
+              /* Signing it off is the approve act, and a stricter question. */
+              !viewer.canApproveIn('/care-plans') ? null : (
+                <Button
+                  disabled={waiting.length > 0}
+                  onClick={() => setConfirming(true)}
+                  data-finalise
+                >
+                  Finalise and sign
+                </Button>
+              )
             ) : (
               /*
                * Persistent while the clearing stands, rather than a toast

@@ -8,10 +8,11 @@ import { Button, Card } from '@/components/primitives'
 import { withResidentEdits } from '@/data/access/resident-store'
 import { withSessionCarePlan } from '@/data/access/care-plan-draft-store'
 import { AddCustomDomainDialog } from './AddCustomDomainDialog'
-import { Unrecorded } from '@/components/status'
+import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { formatCount, formatLateness, pluralise } from '@/lib/format'
 import { OwedReviews } from './OwedReviews'
 import { currentVersion, versionCount } from './plan-fields'
@@ -179,6 +180,7 @@ function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime
    * exactly as it is for the ten — the modal that used to do it was missing
    * the previous version, Discard draft, Undo and the version history.
    */
+  const viewer = useViewer()
   const [adding, setAdding] = useState(false)
   const [version, setVersion] = useState(0)
   void version
@@ -195,15 +197,26 @@ function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime
       <div className={styles.customHead}>
         <div className={styles.customHeadRow}>
           <h3 className={styles.customTitle}>Written for {resident.preferredName}</h3>
-          <Button
-            variant="secondary"
-            size="small"
-            data-add-custom-domain
-            onClick={() => setAdding(true)}
-          >
-            <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
-            Add custom domain
-          </Button>
+          {/* Adding a domain writes to the resident's record, so it asks the
+              same question drafting one does. The domains themselves, custom
+              or not, stay readable. */}
+          {viewer.canRecordIn('/care-plans') ? (
+            <Button
+              variant="secondary"
+              size="small"
+              data-add-custom-domain
+              onClick={() => setAdding(true)}
+            >
+              <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
+              Add custom domain
+            </Button>
+          ) : (
+            <ReadOnlyHere
+              roleName={viewer.roleName}
+              subject="this care plan"
+              act="add a domain to it"
+            />
+          )}
         </div>
         {/*
          * One sentence where there is nothing here, for the reason the risk
