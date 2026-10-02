@@ -163,3 +163,18 @@ export function resetSessionActivities(): void {
   changed = 0
   cancelled = 0
 }
+
+/**
+ * The exports that change a record, declared so a guard can read them.
+ *
+ * `scripts/check-write-gates.mjs` requires every component calling one of
+ * these to ask about the viewer's level, or to say in a comment why it does
+ * not. Declared rather than guessed from naming: `recordStatus` writes and
+ * `statusFor` reads, and no spelling rule separates them reliably.
+ *
+ * **It can go stale in one direction**, and the guard says so in its output:
+ * a new write left off this list is a write the guard will not look for. The
+ * guard checks the other direction for you — every name here must be a real
+ * export of this file.
+ */
+export const WRITE_EXPORTS = ['planSession', 'editSession', 'cancelSession'] as const

@@ -1,3 +1,10 @@
+/*
+ * permission-ok: refused by the shell, not by this file. `set_up_organisation`
+ * carries `route: '/settings/setup'`, and `AppShell` refuses any route that
+ * matches an admin act the viewer may not perform — so this screen is already
+ * unreachable for every role but the registered person. `/settings` is also
+ * `no_access` for four of the six roles, which covers it a second time.
+ */
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'

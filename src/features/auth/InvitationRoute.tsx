@@ -3,6 +3,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useSession } from '@/app/session/use-session'
 import { Button, PasswordField } from '@/components/primitives'
 import { STAFF_ROLE_NAMES } from '@/data/types'
+/*
+ * permission-ok: the person accepting an invitation sets their OWN signing
+ * code, and is not signed in while they do it. There is no viewer to ask
+ * about — asking `canRecordIn` here would be a question about a session that
+ * does not exist yet, and would refuse everybody.
+ */
 import { setSigningCode } from '@/data/access/team-store'
 import type { IsoDate, IsoDateTime } from '@/data/types'
 import { now as appNow } from '@/data/fixtures/clock'

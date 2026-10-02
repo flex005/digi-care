@@ -1877,3 +1877,46 @@ export function getResidentSummaries(
     })),
   )
 }
+
+/**
+ * The exports that change a record, declared so a guard can read them.
+ *
+ * **This file is the layer that made the first audit of this wrong.** Almost
+ * no component imports a store; they import this facade, and these 28
+ * functions wrap the stores' writes. An audit that looked only at
+ * `src/data/access/*-store.ts` imports found 25 call sites and missed every
+ * care note, every dose and every consent.
+ *
+ * Same contract as a store's `WRITE_EXPORTS`: the guard checks every name
+ * here is a real export, and cannot tell you about a write left off the list.
+ */
+export const WRITE_EXPORTS = [
+  'submitCareNote',
+  'submitCorrectionNote',
+  'recordNoteReview',
+  'undoNoteReview',
+  'recordHandoverStatus',
+  'signHandover',
+  'closeOmission',
+  'recordReviewFlagsCleared',
+  'undoReviewFlagsCleared',
+  'saveCarePlanDraft',
+  'recordCustomCarePlanDomain',
+  'discardCarePlanDraft',
+  'finaliseCarePlanDomain',
+  'undoCarePlanFinalise',
+  'recordWholePlanReview',
+  'fileDocument',
+  'admit',
+  'editResident',
+  'recordAssessment',
+  'recordCustomRisk',
+  'withdrawConsent',
+  'recordConsent',
+  'undoWholePlanReviewRecord',
+  'recordOpeningCount',
+  'recordRound',
+  'countersignControlledDrug',
+  'recordPrn',
+  'recordPrnOutcomeFor',
+] as const
