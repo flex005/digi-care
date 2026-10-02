@@ -17153,3 +17153,72 @@ knowing. It now goes through `pluralise`, which owns that agreement.
 ### Not started, as instructed
 
 The other nine terms and the brand colour. Both depend on this working.
+
+## Nineteen counts agreed with the configurable plural, and a guard for the shape (2fd9326)
+
+### The list of seven was eleven short
+
+A grep for `formatCount(…)` adjacent to `term.many` finds the template-literal
+cases and misses every count held in a variable. Checking rather than trusting
+it turned up eleven more: `RoundRoute`'s progress line, three in
+`SignaturePanel`, two in `FamilyQueueRoute`, `ConsentDashboardRoute`,
+`CarePlanQueueRoute`, `RiskQueueRoute`, two in `ResidentsRoute`, `AppShell`'s
+review badge and a compliance detail.
+
+**The nineteenth was found by the guard, after the other eighteen had been
+fixed by hand** — `SignaturePanel:115`, where the count was
+`{signature.reviewed + signature.notReviewed}`, an arithmetic expression no
+grep of mine had looked for. That is the clearest argument for the guard over
+the sweep.
+
+The three handover tiles were the ones that would have been seen wrong daily:
+`board.reviewed` is how many people have been marked this shift, so **one is
+the ordinary state early in a shift**.
+
+### Why this guard ships where two were refused
+
+§8 records the lowercasing guard (30 sites, 27 legitimate) and the
+clock-ordered-fixture guard (11 sites, 11 legitimate) being costed and thrown
+away. Both were looking for arbitrary prose with nothing a script could name.
+
+**This shape has both halves coming from declared owners.** The count is a
+`formatCount(…)` call or a `.length`; the plural is a form the vocabulary
+declares in `PLURAL_FORMS`, read rather than guessed from the property name —
+so a form added later is plural when the vocabulary says it is. **Zero
+opt-outs**, which is what the condition asked for.
+
+The general rule, now in §8: *the test for whether a class is enforceable is
+not how often it recurs, but whether both sides of it have names.*
+
+### What the guard cannot see, in its own success line
+
+```
+✓ plural agreement — 2 declared plural form(s); 39 counts agreed through
+  pluralise, 0 sitting beside one without it (0 deliberate). It sees a count
+  adjacent to a declared form; a count further away, or one held in a variable
+  named like a noun, it cannot.
+```
+
+39 and 0 are numbers that fall if somebody undoes one, rather than a tick.
+
+### `check-plurals` is narrower than its name
+
+Recorded in §8 as asked. It finds a count agreeing with its word **in one
+expression**, which is the shape it was written for. It cannot see the two
+halves as separate expressions, and three real defects have gone past it that
+way. It is not broken; its name is wider than its reach, and that is the thing
+worth writing down.
+
+### Mutations
+
+- One call site reverted to the raw pairing: the guard exits 1 and names
+  `HandoverRoute.tsx:174` with the offending line.
+- `pluralise` made to always return the plural: two existing tests in
+  `src/lib` fail.
+
+### Read in a browser
+
+As Service User, with the count forced to one by a throwaway patch: **"of 1
+service user reviewed this shift"** on all four handover tiles, and "of 1
+service user living at Rosewood Court". The patch was reverted and the revert
+confirmed by `grep -c` rather than assumed.
