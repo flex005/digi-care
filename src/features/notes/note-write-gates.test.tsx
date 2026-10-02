@@ -32,6 +32,11 @@ const MAY_NOT_WRITE: StaffRole[] = ['auditor']
 
 const resident = residents[0]!
 const site = sites.find((one) => one.id === resident.siteId)!
+/*
+ * index-ok: CorrectionDialog renders the same for any note — it reads only
+ * `original.id` and `original.category` — and these tests assert whether the
+ * control is offered, never what it says about this note.
+ */
 const note = careNotes.find((one) => one.residentId === resident.id) ?? careNotes[0]!
 
 function renderAs(role: StaffRole, element: React.ReactElement) {

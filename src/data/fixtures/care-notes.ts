@@ -530,6 +530,13 @@ notes.push({
   corrects: 'none',
 })
 
+/**
+ * **This order moves with the clock.** `recordedAt` comes from `daysAgo`, so
+ * which note is first changes as the day turns — `careNotes[0]` is "a recent
+ * note", never a particular one. Fine for a template, a timestamp or an id to
+ * attach something to; not fine for a subject a component will branch on. See
+ * CLAUDE.md §8, under the entry about `now`.
+ */
 export const careNotes: CareNote[] = notes.sort(
   (a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime(),
 )

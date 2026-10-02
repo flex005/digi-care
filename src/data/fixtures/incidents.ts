@@ -1245,6 +1245,13 @@ if (discrepancy && discrepancy.entry.kind === 'routine') {
   })
 }
 
+/**
+ * **This order moves with the clock**, and it has already cost a day's green:
+ * `occurredAt` comes from `daysAgo`, so `incidents[0]` became `inc-903` when
+ * that fixture gained a stood-down urgency, and three test files that took
+ * their subject by index started failing after midnight. Select by the
+ * property a test needs. CLAUDE.md §8, under the entry about `now`.
+ */
 export const incidents: Incident[] = list.sort((a, b) =>
   b.occurredAt.localeCompare(a.occurredAt),
 )

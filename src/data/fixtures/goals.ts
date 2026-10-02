@@ -456,7 +456,13 @@ export const GOAL_GAP_IDS = {
   })
 }
 
-/** Oldest first, so a timeline reads in the order it happened. */
+/**
+ * Oldest first, so a timeline reads in the order it happened.
+ *
+ * **This order moves with the clock** — `recordedAt` comes from `daysAgo` —
+ * so an index into `goalProgressNotes` names a position and not a note.
+ * Nothing indexes it today. CLAUDE.md §8, under the entry about `now`.
+ */
 progressList.sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))
 
 export const goals: Goal[] = goalList

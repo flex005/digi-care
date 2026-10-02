@@ -24,6 +24,12 @@ const format: PdfFormat = {
   date: (on) => `[${on}]`,
 }
 
+/*
+ * index-ok: every expectation here is read back off `base` itself —
+ * `expect(text).toContain(base.description)` compares a subject against
+ * itself — so this holds whichever incident the clock puts first. The cases
+ * that need a particular shape build it explicitly from `base` instead.
+ */
 const base = incidents[0]!
 
 const evidence = (kind: 'photo' | 'video', fileName: string): IncidentEvidence => ({

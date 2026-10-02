@@ -667,6 +667,8 @@ describe('signing out names what it would destroy', () => {
   })
 
   it('names each kind of writing, with its count, and puts the total on the button', async () => {
+    // index-ok: templates with fresh ids. The assertion is the count of what
+    // signing out would discard, which no note's content can change.
     appendNote({ ...careNotes[0]!, id: 'note-signout-a' as CareNote['id'] })
     appendNote({ ...careNotes[0]!, id: 'note-signout-b' as CareNote['id'] })
 
@@ -688,6 +690,7 @@ describe('signing out names what it would destroy', () => {
   })
 
   it('actually destroys it, and returns to sign in', async () => {
+    // index-ok: a template with a fresh id; the test asserts destruction.
     appendNote({ ...careNotes[0]!, id: 'note-signout-c' as CareNote['id'] })
     const user = userEvent.setup()
     const { container } = await signedInAt('/sign-out')

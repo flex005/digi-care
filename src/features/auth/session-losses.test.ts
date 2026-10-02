@@ -25,6 +25,8 @@ afterEach(() => {
   endSession()
 })
 
+// index-ok: a template to spread, with the id overridden below. These tests
+// count what the session holds; which note it was copied from never shows.
 const note = (over: Partial<CareNote> = {}): CareNote => ({
   ...careNotes[0]!,
   id: 'note-session-guard' as CareNote['id'],
@@ -40,6 +42,9 @@ describe('the list is what is actually there', () => {
 
   it('names each kind of writing separately rather than as one number', () => {
     appendNote(note())
+    // index-ok: any note will do — this records a review against one and
+    // counts the phrases. The flagged and reviewed instants are read from the
+    // same note, so the record stays self-consistent whichever one it is.
     recordReview(careNotes[1]!.id, {
       kind: 'reviewed',
       flaggedBy: staffOkonkwo,
@@ -75,6 +80,7 @@ describe('the list is what is actually there', () => {
       {
         kind: 'given',
         givenBy: staffOkonkwo,
+        // index-ok: borrowing a plausible instant, not a subject.
         givenAt: careNotes[0]!.recordedAt as IsoDateTime,
         witness: { kind: 'not_required' },
       },
@@ -127,6 +133,7 @@ describe('signing out empties everything, not most things', () => {
       {
         kind: 'given',
         givenBy: staffOkonkwo,
+        // index-ok: borrowing a plausible instant, not a subject.
         givenAt: careNotes[0]!.recordedAt as IsoDateTime,
         witness: { kind: 'not_required' },
       },
