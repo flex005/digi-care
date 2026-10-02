@@ -6,6 +6,7 @@ import { useSession } from '@/app/session/use-session'
 import { Icon } from '@/components/icon/Icon'
 import { Unrecorded } from '@/components/status'
 import { formatCount } from '@/lib/format'
+import { useTerm } from '@/app/session/use-term'
 import { reportById } from './catalogue'
 import { loadReportData, type ReportData } from './data'
 import {
@@ -35,8 +36,9 @@ import styles from './reports.module.css'
  */
 export function ReportViewRoute() {
   const { activeSite } = useSession()
+  const term = useTerm()
   const { reportId } = useParams()
-  const definition = reportId === undefined ? undefined : reportById(reportId)
+  const definition = reportId === undefined ? undefined : reportById(reportId, term)
 
   const [data, setData] = useState<ReportData | 'loading'>('loading')
   const [days, setDays] = useState<PeriodDays>(REPORT_PERIOD_DAYS)
@@ -60,13 +62,14 @@ export function ReportViewRoute() {
     return runReport({
       data,
       definition,
+      term,
       period,
       // A state report has no previous period to compare with, and the control
       // that would offer one is absent rather than disabled.
       previous: definition.comparison && compare ? previousPeriod(period) : undefined,
       cut: cut ?? definition.cuts[0]?.id ?? '',
     })
-  }, [data, definition, days, compare, cut])
+  }, [data, definition, term, days, compare, cut])
 
   if (definition === undefined) {
     return (

@@ -1,5 +1,6 @@
 import { minPopulationForARate } from '@/data/access/settings-store'
 import type { ReportResult } from '@/data/types'
+import type { Term } from '@/lib/vocabulary'
 import { reportGroups, type ReportDefinition } from './catalogue'
 import type { ReportData } from './data'
 import { REPORT_PERIOD_DAYS, periodEndingToday, previousPeriod } from './period'
@@ -23,15 +24,16 @@ export interface ReportRun {
   result: ReportResult
 }
 
-export function runAll(data: ReportData): ReportRun[] {
+export function runAll(data: ReportData, term: Term): ReportRun[] {
   const period = periodEndingToday(data.now, data.site.timeZone, REPORT_PERIOD_DAYS)
-  return reportGroups()
+  return reportGroups(term)
     .flatMap((group) => group.reports)
     .map((definition) => ({
       definition,
       result: runReport({
         data,
         definition,
+        term,
         period,
         previous: definition.comparison ? previousPeriod(period) : undefined,
         cut: definition.cuts[0]?.id ?? '',

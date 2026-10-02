@@ -18,6 +18,7 @@ import { AlertDialog, Button, Card, Select, Toast } from '@/components/primitive
 import { ReadOnlyHere, StatusPill, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import {
   recordAssessment,
@@ -687,6 +688,7 @@ function CompareBlock({
   const named = resolved.kind === 'new_custom' ? '' : resolved.name
   const inSentence = riskInSentence({ kind: resolved.kind, name: named })
   const format = useSiteFormat()
+  const term = useTerm()
   const { currentUser } = useSession()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
   const [confirming, setConfirming] = useState(false)
@@ -929,7 +931,7 @@ function CompareBlock({
             ? 'Assessment recorded'
             : `Assessment recorded: ${pluralise(closes.length, 'review')} closed`
         }
-        description="Recorded against this resident."
+        description={`Recorded against this ${term.one}.`}
       />
 
       {error === '' ? null : <p className={styles.errorBody}>{error}</p>}

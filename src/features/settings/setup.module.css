@@ -174,3 +174,41 @@
   color: var(--purple-600);
   font-weight: var(--weight-semibold);
 }
+
+/*
+ * The service-type choice.
+ *
+ * Radio cards rather than a dropdown, because there are three and the choice
+ * sets the default word every screen then uses — a control that decides that
+ * much should show its options rather than hide two of them.
+ *
+ * The chosen one is marked by the radio itself as well as the tint: §7, colour
+ * is never the sole carrier of a state.
+ */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.choice,
+.choiceOn {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  padding: var(--space-12) var(--space-16);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  color: var(--ink-900);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  text-align: left;
+  cursor: pointer;
+}
+
+.choiceOn {
+  border-color: var(--purple-600);
+  background-color: var(--purple-50);
+  font-weight: var(--weight-semibold);
+}

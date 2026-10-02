@@ -1,3 +1,4 @@
+import type { Term } from '@/lib/vocabulary'
 import type { DocumentCategoryId } from '@/data/types'
 
 /**
@@ -25,42 +26,43 @@ export const DOCUMENT_CATEGORIES: {
    * rather than capitalised and lowercased at the call site. A `.toLowerCase()`
    * here would turn "DNAR" into "dnar".
    */
-  holds: string
+  /** A function, because one of these names the person (§6). */
+  holds: (term: Term) => string
 }[] = [
   {
     id: 'legal_authority',
     label: 'Legal and authority',
-    holds: 'DNAR, ADRT, Lasting Power of Attorney, court orders and deputyship',
+    holds: () => 'DNAR, ADRT, Lasting Power of Attorney, court orders and deputyship',
   },
   {
     id: 'identity_admission',
     label: 'Identity and admission',
-    holds: 'ID, the admission agreement and funding authority',
+    holds: () => 'ID, the admission agreement and funding authority',
   },
   {
     id: 'health_clinical',
     label: 'Health and clinical',
-    holds: 'GP and hospital letters, discharge summaries and prescriptions',
+    holds: () => 'GP and hospital letters, discharge summaries and prescriptions',
   },
   {
     id: 'assessments_care_planning',
     label: 'Assessments and care planning',
-    holds: 'risk assessments, care plans and reviews',
+    holds: () => 'risk assessments, care plans and reviews',
   },
   {
     id: 'consent_records',
     label: 'Consent records',
-    holds: 'signed consent forms and capacity assessments',
+    holds: () => 'signed consent forms and capacity assessments',
   },
   {
     id: 'correspondence',
     label: 'Correspondence',
-    holds: 'letters and emails with family and professionals',
+    holds: () => 'letters and emails with family and professionals',
   },
   {
     id: 'photographs_media',
     label: 'Photographs and media',
-    holds: 'photographs, video and audio of the resident',
+    holds: (term) => `photographs, video and audio of the ${term.one}`,
   },
 ]
 

@@ -79,6 +79,25 @@ function serve() {
   })
 }
 
+/**
+ * Choose "Service User" in the setup wizard, so the crawl reads a product
+ * configured with a term that is not the default.
+ *
+ * Through the wizard rather than a back door: a query parameter or a test-only
+ * global would be a way in that ships, and it would also prove less — this way
+ * the control somebody actually uses is the thing under test.
+ */
+async function setSubjectTermToServiceUser(page) {
+  await go(page, '/settings/setup')
+  const organisation = await page.$('[data-confirm-step="organisation"]')
+  if (organisation) await organisation.click()
+  await page.waitForSelector('[data-setup-section="vocabulary"]', { timeout: 15000 })
+  await page.click('[data-setup-section="vocabulary"] [role="combobox"]')
+  await page.click('[role="option"]:has-text("Service User")')
+  await page.click('[data-confirm-step="vocabulary"]')
+  await page.waitForTimeout(300)
+}
+
 /** Client-side navigation, so the crawl keeps one signed-in session. */
 async function go(page, route) {
   await page.evaluate((r) => {
@@ -92,6 +111,9 @@ const server = await serve()
 const browser = await chromium.launch()
 const findings = []
 let visited = 0
+/** Screens still printing the literal word, outside recorded free text. */
+const staleTerm = []
+let screensShowingTerm = 0
 let weeksFit = 0
 let weeksTotal
 
@@ -192,6 +214,22 @@ try {
   }
 
   const seen = new Set(['/sign-in', '/sign-out'])
+  /*
+   * **The term is set before the crawl, and set to the hard one.**
+   *
+   * A source-level check cannot tell `residentId` from the word "resident" in
+   * a sentence, and a guard needing hundreds of escape comments is wallpaper —
+   * §8 records that costed and thrown away twice. The rendered page has no
+   * such problem: an identifier does not render, so it cannot be a false
+   * positive. So the question is asked of the screen.
+   *
+   * "Service User" rather than an invented sentinel, because it is a real
+   * option somebody can choose and it is the case the grammar breaks on: two
+   * words, a plural that is not the singular plus an s, and a possessive.
+   * A sentinel would have proved the plumbing and not the English.
+   */
+  await setSubjectTermToServiceUser(page)
+
   const queue = ['/']
 
   while (queue.length > 0 && visited < MAX_SCREENS) {
@@ -259,10 +297,52 @@ try {
         .map((a) => a.getAttribute('href'))
         .filter((h) => h && !h.startsWith('//'))
 
-      return { lost: lost.slice(0, 4), links: [...new Set(links)] }
+      /*
+       * **The old word, anywhere a person can read it.**
+       *
+       * Recorded free text is excluded by `data-recorded-text`, because a care
+       * note that says "the resident was unsettled" is its author's words and
+       * goes on saying them — labels change, what somebody typed does not.
+       * Anything NOT carrying that marker is chrome, and chrome must ask the
+       * owner.
+       */
+      const stale = []
+      const walker = document.createTreeWalker(
+        main ?? document.body,
+        NodeFilter.SHOW_TEXT,
+      )
+      let node = walker.nextNode()
+      while (node) {
+        const text = (node.textContent ?? '').trim()
+        if (/\bresidents?\b/i.test(text)) {
+          const el = node.parentElement
+          const recorded =
+            el?.closest('[data-recorded-text]') !== null &&
+            el?.closest('[data-recorded-text]') !== undefined
+          if (!recorded) {
+            stale.push({
+              label: `${el?.tagName.toLowerCase() ?? '?'}.${String(el?.className ?? '').slice(0, 24)}`,
+              text: text.replace(/\s+/g, ' ').slice(0, 72),
+            })
+          }
+        }
+        node = walker.nextNode()
+      }
+
+      // And the configured term is actually reaching the screen.
+      const sawTerm = /service users?/i.test(main?.textContent ?? '')
+
+      return {
+        lost: lost.slice(0, 4),
+        links: [...new Set(links)],
+        stale: stale.slice(0, 4),
+        sawTerm,
+      }
     })
 
     for (const l of found.lost) findings.push({ route, ...l })
+    for (const t of found.stale) staleTerm.push({ route, ...t })
+    if (found.sawTerm) screensShowingTerm += 1
     for (const link of found.links) if (!seen.has(link)) queue.push(link)
   }
 
@@ -520,6 +600,23 @@ if (visited < MIN_SCREENS) {
   process.exit(1)
 }
 
+if (staleTerm.length > 0) {
+  console.error(
+    `✖ layout: ${staleTerm.length} place(s) still print the word "resident" with the` +
+      `\n  organisation configured to say Service User:\n`,
+  )
+  for (const f of staleTerm) {
+    console.error(`  ${f.route}`)
+    console.error(`    ${f.label}  "${f.text}"\n`)
+  }
+  console.error(
+    `  A label asks the owner — useTerm() in a component, or a Term parameter` +
+      `\n  threaded into a module that has no component. Recorded free text is` +
+      `\n  exempt and is excluded by data-recorded-text on the element holding it.\n`,
+  )
+  process.exit(1)
+}
+
 if (findings.length > 0) {
   console.error(`✖ layout: ${findings.length} thing(s) a reader cannot get to:\n`)
   for (const f of findings) {
@@ -546,4 +643,20 @@ if (findings.length > 0) {
 console.log(
   `✓ layout — nothing lost at ${MIN_WIDTH}px; ${weeksFit} of ${weeksTotal} weeks` +
     ` fit on screen, the rest reachable by scrolling\n`,
+)
+
+/*
+ * What this says and what it checked, kept the same size — the rule this file
+ * already follows for the week count.
+ *
+ * It cannot see a screen the crawl did not reach, and it cannot see free text
+ * that nobody marked: an unmarked record value containing the word would be
+ * reported as a finding rather than missed, which is the safe direction, but a
+ * marker put on a LABEL by mistake would hide one. That is the limit.
+ */
+console.log(
+  `✓ terminology — crawled as Service User across ${visited} screens; the word` +
+    ` "resident" appears nowhere outside recorded free text, and the configured` +
+    ` term reaches ${screensShowingTerm} of them. Free text is exempt by` +
+    ` data-recorded-text; a marker on a label would hide a finding.\n`,
 )

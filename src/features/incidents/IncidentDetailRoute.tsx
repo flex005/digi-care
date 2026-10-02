@@ -25,6 +25,7 @@ import { BodyMap } from '@/assets/body-map/BodyMap'
 import { regionLabel } from '@/assets/body-map/regions'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { CorrectReportForm, CorrectReportTrigger } from './CorrectReportForm'
 import { DownloadIncident } from './DownloadIncident'
@@ -120,6 +121,7 @@ function Found({
   onDecided: () => void
 }) {
   const format = useSiteFormat()
+  const term = useTerm()
   /** Which decision the reader is taking, if any. */
   const [deciding, setDeciding] = useState<DecideStep>('none')
   /*
@@ -173,7 +175,7 @@ function Found({
   /** Who the record is about, for the confirmation that names them (§2.4). */
   const subjectName =
     subject.kind === 'no_resident_involved'
-      ? 'No resident involved'
+      ? `No ${term.one} involved`
       : (resident?.fullLegalName ?? 'Not recorded')
 
   const typeName =
@@ -197,7 +199,7 @@ function Found({
           <h1 className={styles.detailTitle}>{typeName}</h1>
           <p className={styles.detailRef}>
             <span data-numeric>{incident.id.toUpperCase()}</span> ·{' '}
-            {resident ? resident.fullLegalName : 'No resident involved'}
+            {resident ? resident.fullLegalName : `No ${term.one} involved`}
             {resident && resident.room.kind === 'recorded'
               ? `, Room ${resident.room.value}`
               : ''}{' '}
@@ -355,7 +357,7 @@ function Found({
             </>
           ) : (
             <div className={styles.subjectWho}>
-              <p className={styles.subjectName}>No resident was involved</p>
+              <p className={styles.subjectName}>No {term.one} was involved</p>
               <p className={styles.subjectMeta}>
                 Recorded by{' '}
                 {subject.kind === 'no_resident_involved'
@@ -374,7 +376,12 @@ function Found({
             person, which is why they are separate sections. */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>What the reporter recorded</h2>
-          <p className={styles.account}>{incident.description}</p>
+          {/* data-recorded-text: somebody's own words. The terminology crawl
+              skips these, because a label changes with the configured term and
+              a record keeps saying what its author wrote. */}
+          <p className={styles.account} data-recorded-text>
+            {incident.description}
+          </p>
           <p className={styles.byline}>
             Recorded by <strong>{incident.reported.by.displayName}</strong> ·{' '}
             <span data-numeric>{format.dateTime(incident.reported.at)}</span>
@@ -430,7 +437,9 @@ function Found({
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>What was done at the time</h2>
-          <p className={styles.account}>{incident.response.immediateAction}</p>
+          <p className={styles.account} data-recorded-text>
+            {incident.response.immediateAction}
+          </p>
           <p className={styles.byline}>
             Recorded by <strong>{incident.reported.by.displayName}</strong> ·{' '}
             <span data-numeric>{format.dateTime(incident.reported.at)}</span>
@@ -664,7 +673,9 @@ function ReviewField({ label, value }: { label: string; value: Recorded<string> 
       <p className={styles.label}>{label}</p>
       {value.kind === 'recorded' ? (
         <>
-          <p className={styles.account}>{value.value}</p>
+          <p className={styles.account} data-recorded-text>
+            {value.value}
+          </p>
           <p className={styles.byline}>
             <strong>{value.recordedBy.displayName}</strong> ·{' '}
             <span data-numeric>{format.dateTime(value.recordedAt)}</span>
@@ -683,6 +694,7 @@ function ReviewField({ label, value }: { label: string; value: Recorded<string> 
 
 function InjurySummary({ incident }: { incident: Incident }) {
   const format = useSiteFormat()
+  const term = useTerm()
 
   return (
     <section className={styles.section}>
@@ -730,7 +742,7 @@ function InjurySummary({ incident }: { incident: Incident }) {
             <p className={styles.byline}>
               Checked by <strong>{incident.injuries.recorded.by.displayName}</strong> ·{' '}
               <span data-numeric>{format.dateTime(incident.injuries.recorded.at)}</span>
-              . Left and right are the resident’s own.
+              . Left and right are the {term.ones} own.
             </p>
           </div>
         </div>

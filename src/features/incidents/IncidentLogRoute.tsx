@@ -23,6 +23,7 @@ import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount } from '@/lib/format'
 import { elapsedMinutesBetween } from '@/lib/shift'
@@ -309,6 +310,7 @@ function IncidentRow({
   now: IsoDateTime
 }) {
   const format = useSiteFormat()
+  const term = useTerm()
   const residentId = subjectResidentId(incident)
   const resident = residents.find((person) => person.id === residentId)
 
@@ -342,7 +344,7 @@ function IncidentRow({
           </>
         ) : (
           <>
-            <span className={styles.rowNoResident}>No resident involved</span>
+            <span className={styles.rowNoResident}>No {term.one} involved</span>
             <span className={styles.rowMeta}>
               recorded by{' '}
               {incident.subject.kind === 'no_resident_involved'

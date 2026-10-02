@@ -25,12 +25,13 @@ import {
 import { SHIFTS, SHIFT_NAMES } from '@/lib/shift'
 import { formatCount, pluralise, type TimeZone } from '@/lib/format'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { NoteQueueRow } from './NoteQueueRow'
 import { FilterNotice } from './FilterNotice'
 import { PagedNotes } from './PagedNotes'
 import {
-  CARE_NOTES_VIEWS,
+  careNotesViews,
   authorsIn,
   allNotes,
   byAuthor,
@@ -69,6 +70,7 @@ const EMPTY: CareNote[] = []
 
 export function CareNotesRoute() {
   const { activeSite } = useSession()
+  const term = useTerm()
   const [view, setView] = useState<CareNotesView>('flagged')
 
   const load = useCallback(() => getCareNotesForSite(activeSite.id), [activeSite.id])
@@ -124,7 +126,7 @@ export function CareNotesRoute() {
                 )}
               </MetricValue>
             }
-            of={`across ${pluralise(residents.length, 'resident')}`}
+            of={`across ${pluralise(residents.length, term.one, term.many)}`}
           />
           <MetricTile
             label="Flagged for review"
@@ -148,7 +150,7 @@ export function CareNotesRoute() {
                 </span>
               )
             }
-            of={`of ${pluralise(residents.length, 'resident')}`}
+            of={`of ${pluralise(residents.length, term.one, term.many)}`}
           />
           <MetricTile
             label="On the record here"
@@ -159,7 +161,7 @@ export function CareNotesRoute() {
         </MetricTiles>
 
         <div className={styles.viewTabs} role="group" aria-label="What to look at">
-          {CARE_NOTES_VIEWS.map((entry) => (
+          {careNotesViews(term).map((entry) => (
             <button
               key={entry.id}
               type="button"
@@ -279,6 +281,7 @@ type ViewProps = {
 }
 
 function FlaggedView({ notes, residents, siteName, onChanged }: ViewProps) {
+  const term = useTerm()
   const items = flaggedNotReviewed(notes, residents)
 
   return (
@@ -287,7 +290,7 @@ function FlaggedView({ notes, residents, siteName, onChanged }: ViewProps) {
         <AggregateFigure
           emphasis="inline"
           caption="flagged and not yet reviewed"
-          denominatorNoun={`residents at ${siteName}`}
+          denominatorNoun={`${term.many} at ${siteName}`}
           qualifier="oldest first"
           aggregate={{
             kind: 'measured',
@@ -329,6 +332,7 @@ function QuietView({
   now,
 }: ViewProps & { timeZone: string; now: IsoDateTime }) {
   const format = useSiteFormat()
+  const term = useTerm()
   const quiet = withoutNoteToday(residents, notes, timeZone, now)
 
   return (
@@ -337,7 +341,7 @@ function QuietView({
         <AggregateFigure
           emphasis="inline"
           caption="with no note today"
-          denominatorNoun={`residents at ${siteName}`}
+          denominatorNoun={`${term.many} at ${siteName}`}
           qualifier={`${format.time(now)} there now`}
           aggregate={{
             kind: 'measured',
@@ -498,6 +502,7 @@ function ShiftView({
   shift: Shift
   onShift: (shift: Shift) => void
 }) {
+  const term = useTerm()
   const items = byShift(notes, residents, shift, timeZone, now)
   const missed = withoutNoteOnShift(residents, notes, shift, timeZone, now)
   const covered = residents.length - missed.length
@@ -525,7 +530,7 @@ function ShiftView({
         tone="scoped"
         heading={`Filtered to the ${SHIFT_NAMES[shift].toLowerCase()} shift, today`}
       >
-        This shift did not write about these residents today. It does not say nobody
+        This shift did not write about these {term.many} today. It does not say nobody
         did.
       </FilterNotice>
 
@@ -533,7 +538,7 @@ function ShiftView({
         <AggregateFigure
           emphasis="inline"
           caption={`written up on the ${SHIFT_NAMES[shift].toLowerCase()} shift today`}
-          denominatorNoun={`residents at ${siteName}`}
+          denominatorNoun={`${term.many} at ${siteName}`}
           aggregate={{
             kind: 'measured',
             unit: 'count',
@@ -566,7 +571,7 @@ function ShiftView({
               <div>
                 <Unrecorded
                   label={`No note on the ${SHIFT_NAMES[shift].toLowerCase()} shift today`}
-                  detail="this shift did not write about this resident"
+                  detail={`this shift did not write about this ${term.one}`}
                 />
               </div>
             </li>
@@ -620,6 +625,7 @@ function EverythingView({
   now,
 }: ViewProps & { timeZone: string; now: IsoDateTime }) {
   const format = useSiteFormat()
+  const term = useTerm()
   const items = allNotes(notes, residents)
   const today = notesToday(notes, residents, timeZone as TimeZone, now).length
 
@@ -639,7 +645,7 @@ function EverythingView({
         <AggregateFigure
           emphasis="inline"
           caption="notes on the record"
-          denominatorNoun={`residents at ${siteName}`}
+          denominatorNoun={`${term.many} at ${siteName}`}
           aggregate={{
             kind: 'measured',
             unit: 'count',

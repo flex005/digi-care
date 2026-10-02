@@ -23,6 +23,8 @@ export type ReportId =
   | 'activity-participation'
   | 'consent-coverage'
 
+import type { Term } from '@/lib/vocabulary'
+
 export interface Cut {
   id: string
   label: string
@@ -64,106 +66,109 @@ export interface ReportDefinition {
   subject: 'resident' | 'staff' | 'record'
 }
 
-export const REPORTS: ReportDefinition[] = [
-  {
-    id: 'medication-omissions',
-    group: 'Medication',
-    name: 'Omissions over a period',
-    answers:
-      'Which drugs and which rounds go unrecorded, and whether it is getting better or worse.',
-    dimension: 'flow',
-    comparison: true,
-    cuts: [
-      { id: 'drug', label: 'By drug' },
-      { id: 'round', label: 'By round' },
-      { id: 'weekday', label: 'By day of week' },
-      { id: 'resident', label: 'By resident' },
-    ],
-    subject: 'record',
-  },
-  {
-    id: 'controlled-drug-reconciliation',
-    group: 'Medication',
-    name: 'Controlled drug reconciliation',
-    answers: 'Every count in the period, and whether the balances held.',
-    dimension: 'flow',
-    comparison: false,
-    cuts: [{ id: 'drug', label: 'By drug' }],
-    subject: 'record',
-  },
-  {
-    id: 'incidents-by-type',
-    group: 'Safety',
-    name: 'Incidents by type and location',
-    answers:
-      'Where incidents happen, what kind, and how this period compares with the last.',
-    dimension: 'flow',
-    comparison: true,
-    cuts: [
-      { id: 'type', label: 'By type' },
-      { id: 'location', label: 'By location' },
-      { id: 'severity', label: 'By harm caused' },
-    ],
-    subject: 'record',
-  },
-  {
-    id: 'assessment-coverage',
-    group: 'Safety',
-    name: 'Risk assessment and review coverage over time',
-    answers: 'Whether the home is assessing and re-assessing, or falling behind.',
-    dimension: 'flow',
-    comparison: false,
-    cuts: [{ id: 'template', label: 'By assessment' }],
-    subject: 'record',
-  },
-  {
-    id: 'care-note-coverage',
-    group: 'The record itself',
-    name: 'Care note coverage by staff and shift',
-    answers: 'Who is writing residents up, on which shifts, and where the gaps fall.',
-    dimension: 'flow',
-    comparison: false,
-    cuts: [
-      { id: 'staff', label: 'By staff member' },
-      { id: 'shift', label: 'By shift' },
-    ],
-    subject: 'staff',
-  },
-  {
-    id: 'document-expiry-forecast',
-    group: 'The record itself',
-    name: 'Document expiry forecast',
-    answers: 'What lapses in the next 90 days, and what has no expiry decision at all.',
-    dimension: 'state',
-    comparison: false,
-    cuts: [{ id: 'category', label: 'By category' }],
-    subject: 'record',
-  },
-  {
-    id: 'activity-participation',
-    group: 'The person',
-    name: 'Activity participation over a period',
-    answers: 'Who is joining in, who is not, and who nobody has recorded either way.',
-    dimension: 'flow',
-    comparison: false,
-    cuts: [
-      { id: 'resident', label: 'By resident' },
-      { id: 'activity', label: 'By activity' },
-    ],
-    subject: 'resident',
-  },
-  {
-    id: 'consent-coverage',
-    group: 'The person',
-    name: 'Consent and capacity coverage',
-    answers:
-      'Which consents have been sought, by whose authority, and with what capacity assessment behind them.',
-    dimension: 'state',
-    comparison: false,
-    cuts: [{ id: 'type', label: 'By consent type' }],
-    subject: 'resident',
-  },
-]
+export function reports(term: Term): ReportDefinition[] {
+  return [
+    {
+      id: 'medication-omissions',
+      group: 'Medication',
+      name: 'Omissions over a period',
+      answers:
+        'Which drugs and which rounds go unrecorded, and whether it is getting better or worse.',
+      dimension: 'flow',
+      comparison: true,
+      cuts: [
+        { id: 'drug', label: 'By drug' },
+        { id: 'round', label: 'By round' },
+        { id: 'weekday', label: 'By day of week' },
+        { id: 'resident', label: `By ${term.one}` },
+      ],
+      subject: 'record',
+    },
+    {
+      id: 'controlled-drug-reconciliation',
+      group: 'Medication',
+      name: 'Controlled drug reconciliation',
+      answers: 'Every count in the period, and whether the balances held.',
+      dimension: 'flow',
+      comparison: false,
+      cuts: [{ id: 'drug', label: 'By drug' }],
+      subject: 'record',
+    },
+    {
+      id: 'incidents-by-type',
+      group: 'Safety',
+      name: 'Incidents by type and location',
+      answers:
+        'Where incidents happen, what kind, and how this period compares with the last.',
+      dimension: 'flow',
+      comparison: true,
+      cuts: [
+        { id: 'type', label: 'By type' },
+        { id: 'location', label: 'By location' },
+        { id: 'severity', label: 'By harm caused' },
+      ],
+      subject: 'record',
+    },
+    {
+      id: 'assessment-coverage',
+      group: 'Safety',
+      name: 'Risk assessment and review coverage over time',
+      answers: 'Whether the home is assessing and re-assessing, or falling behind.',
+      dimension: 'flow',
+      comparison: false,
+      cuts: [{ id: 'template', label: 'By assessment' }],
+      subject: 'record',
+    },
+    {
+      id: 'care-note-coverage',
+      group: 'The record itself',
+      name: 'Care note coverage by staff and shift',
+      answers: `Who is writing ${term.many} up, on which shifts, and where the gaps fall.`,
+      dimension: 'flow',
+      comparison: false,
+      cuts: [
+        { id: 'staff', label: 'By staff member' },
+        { id: 'shift', label: 'By shift' },
+      ],
+      subject: 'staff',
+    },
+    {
+      id: 'document-expiry-forecast',
+      group: 'The record itself',
+      name: 'Document expiry forecast',
+      answers:
+        'What lapses in the next 90 days, and what has no expiry decision at all.',
+      dimension: 'state',
+      comparison: false,
+      cuts: [{ id: 'category', label: 'By category' }],
+      subject: 'record',
+    },
+    {
+      id: 'activity-participation',
+      group: 'The person',
+      name: 'Activity participation over a period',
+      answers: 'Who is joining in, who is not, and who nobody has recorded either way.',
+      dimension: 'flow',
+      comparison: false,
+      cuts: [
+        { id: 'resident', label: `By ${term.one}` },
+        { id: 'activity', label: 'By activity' },
+      ],
+      subject: 'resident',
+    },
+    {
+      id: 'consent-coverage',
+      group: 'The person',
+      name: 'Consent and capacity coverage',
+      answers:
+        'Which consents have been sought, by whose authority, and with what capacity assessment behind them.',
+      dimension: 'state',
+      comparison: false,
+      cuts: [{ id: 'type', label: 'By consent type' }],
+      subject: 'resident',
+    },
+  ]
+}
 
 /**
  * The seven that are not reports.
@@ -179,40 +184,44 @@ export interface DrillDown {
   where: string
 }
 
-export const DRILL_DOWNS: DrillDown[] = [
-  { question: 'Omission rate by resident', to: '/compliance/safe', where: 'Safe' },
-  { question: 'Consents never sought', to: '/compliance/caring', where: 'Caring' },
-  {
-    question: 'Goals past the date they were set for',
-    to: '/compliance/responsive',
-    where: 'Responsive',
-  },
-  {
-    question: 'Reviews never scheduled',
-    to: '/compliance/effective',
-    where: 'Effective',
-  },
-  {
-    question: 'Documents with no expiry decision',
-    to: '/compliance/well_led',
-    where: 'Well-led',
-  },
-  { question: 'Unacknowledged incidents', to: '/compliance/safe', where: 'Safe' },
-  {
-    question: 'Care plan domains never written',
-    to: '/compliance/effective',
-    where: 'Effective',
-  },
-]
+export function drillDowns(term: Term): DrillDown[] {
+  return [
+    { question: `Omission rate by ${term.one}`, to: '/compliance/safe', where: 'Safe' },
+    { question: 'Consents never sought', to: '/compliance/caring', where: 'Caring' },
+    {
+      question: 'Goals past the date they were set for',
+      to: '/compliance/responsive',
+      where: 'Responsive',
+    },
+    {
+      question: 'Reviews never scheduled',
+      to: '/compliance/effective',
+      where: 'Effective',
+    },
+    {
+      question: 'Documents with no expiry decision',
+      to: '/compliance/well_led',
+      where: 'Well-led',
+    },
+    { question: 'Unacknowledged incidents', to: '/compliance/safe', where: 'Safe' },
+    {
+      question: 'Care plan domains never written',
+      to: '/compliance/effective',
+      where: 'Effective',
+    },
+  ]
+}
 
-export function reportById(id: string): ReportDefinition | undefined {
-  return REPORTS.find((report) => report.id === id)
+export function reportById(id: string, term: Term): ReportDefinition | undefined {
+  return reports(term).find((report) => report.id === id)
 }
 
 /** The groups, in the order the index renders them. */
-export function reportGroups(): { group: string; reports: ReportDefinition[] }[] {
+export function reportGroups(
+  term: Term,
+): { group: string; reports: ReportDefinition[] }[] {
   const groups: { group: string; reports: ReportDefinition[] }[] = []
-  for (const report of REPORTS) {
+  for (const report of reports(term)) {
     const held = groups.find((entry) => entry.group === report.group)
     if (held) held.reports.push(report)
     else groups.push({ group: report.group, reports: [report] })

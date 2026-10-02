@@ -4,6 +4,7 @@ import { careNotes } from '@/data/fixtures/care-notes'
 import { fellDueAt, marRecordsAll } from '@/data/fixtures/medications'
 import { residents } from '@/data/fixtures/residents'
 import { documents } from '@/data/fixtures/documents'
+import type { Term } from '@/lib/vocabulary'
 
 /**
  * What one person has recorded, most recent first. PRD §6.7, Phase 14.
@@ -27,14 +28,14 @@ export interface StaffAct {
   to: string
 }
 
-const nameOf = (residentId: string) =>
+const nameOf = (residentId: string, term: Term) =>
   residents.find((resident) => resident.id === residentId)?.fullLegalName ??
-  'a resident not on file'
+  `a ${term.one} not on file`
 
 /** How many entries a detail screen shows. A list, not an archive. */
 export const RECENT_ACTS = 12
 
-export function staffActivity(staffId: StaffId): StaffAct[] {
+export function staffActivity(staffId: StaffId, term: Term): StaffAct[] {
   const acts: StaffAct[] = []
 
   for (const note of careNotes) {
@@ -43,7 +44,7 @@ export function staffActivity(staffId: StaffId): StaffAct[] {
       id: `note-${note.id}`,
       at: note.recordedAt,
       module: 'Care Notes',
-      what: `Wrote a care note about ${nameOf(note.residentId)}`,
+      what: `Wrote a care note about ${nameOf(note.residentId, term)}`,
       to: `/residents/${note.residentId}/notes/${note.id}`,
     })
   }
@@ -57,7 +58,7 @@ export function staffActivity(staffId: StaffId): StaffAct[] {
       id: `dose-${record.medicationId}-${record.date}-${record.roundTime}`,
       at: record.state.givenAt,
       module: 'Medications',
-      what: `Gave the ${record.roundTime} round for ${nameOf(record.residentId)}`,
+      what: `Gave the ${record.roundTime} round for ${nameOf(record.residentId, term)}`,
       to: `/residents/${record.residentId}/medications`,
     })
   }
@@ -75,7 +76,7 @@ export function staffActivity(staffId: StaffId): StaffAct[] {
       // instant-ok: a filing date ordered against instants, never rendered as a time
       at: `${document.filedOn}T12:00:00.000Z` as IsoDateTime,
       module: 'Documents',
-      what: `Filed ${document.title} for ${nameOf(document.owner.residentId)}`,
+      what: `Filed ${document.title} for ${nameOf(document.owner.residentId, term)}`,
       to: `/residents/${document.owner.residentId}/documents`,
     })
   }

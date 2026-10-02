@@ -24,6 +24,7 @@ import { CancelSession } from './CancelSession'
 import { EditSession } from './EditSession'
 import { now as appNow } from '@/data/fixtures/clock'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerm } from '@/app/session/use-term'
 import styles from './activities.module.css'
 import { staffLabel } from '@/data/access/team-store'
 
@@ -105,6 +106,7 @@ export function AttendanceRoute() {
 function Grid({ data, onChanged }: { data: Loaded; onChanged: () => void }) {
   const format = useSiteFormat()
   const viewer = useViewer()
+  const term = useTerm()
   const [draft, setDraft] = useState<Draft>({})
 
   const { activity, residents } = data
@@ -253,7 +255,11 @@ function Grid({ data, onChanged }: { data: Loaded; onChanged: () => void }) {
               <strong>
                 Every one of{' '}
                 <span data-numeric>
-                  {pluralise(counts.invited, 'invited resident')}
+                  {pluralise(
+                    counts.invited,
+                    `invited ${term.one}`,
+                    `invited ${term.many}`,
+                  )}
                 </span>{' '}
                 has an answer.
               </strong>
@@ -438,12 +444,14 @@ function Who({
   resident: Resident | undefined
   residentId: ResidentId
 }) {
+  const term = useTerm()
+
   if (!resident) {
     return (
       <span className={styles.who}>
         <Unrecorded
           variant="chip"
-          label="Not a resident of this site"
+          label={`Not a ${term.one} at this site`}
           detail={residentId}
         />
       </span>

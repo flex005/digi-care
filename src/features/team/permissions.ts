@@ -1,6 +1,7 @@
 import type { PermissionLevel, StaffRole } from '@/data/types'
 import { STAFF_ROLE_NAMES } from '@/data/types'
 import { navItems } from '@/app/nav-items.icons'
+import type { Term } from '@/lib/vocabulary'
 
 /**
  * What each role can do in each module. PRD §6.7, Phase 14, and Phase 17.
@@ -58,7 +59,12 @@ export const PERMISSION_MEANS: Record<PermissionLevel, string> = {
 /** The modules a permission can be about: the sidebar, minus the dev route. */
 export const PERMISSION_MODULES = navItems
   .filter((item) => item.label !== 'Status states')
-  .map((item) => ({ id: item.path, label: item.label }))
+  /*
+   * `subject` travels with the label, so the matrix can ask the owner for the
+   * same form the sidebar does rather than printing a word the rest of the
+   * product has stopped using.
+   */
+  .map((item) => ({ id: item.path, label: item.label, subject: item.subject }))
 
 export type PermissionModuleId = (typeof PERMISSION_MODULES)[number]['id']
 
@@ -244,14 +250,29 @@ const EXCEPTIONS: Partial<Record<StaffRole, Partial<Record<string, PermissionLev
  * `record` is a write this build actually performs. `approve` is signing off
  * somebody else's work: countersigning, finalising, closing, witnessing.
  */
-const OFFERS: Record<string, { records: string | false; approves: string | false }> = {
+/**
+ * The words for one act, where `false` is the module not offering it at all.
+ *
+ * A function where the sentence names the person the record is about, because
+ * the word for that is the organisation's to choose and this module has no
+ * component to ask the hook from. Everything term-free stays a plain string:
+ * `actsIn` resolves either, so no caller has to know which it was.
+ */
+type ActWords = string | ((term: Term) => string)
+
+interface ModuleActs {
+  records: ActWords | false
+  approves: ActWords | false
+}
+
+const OFFERS: Record<string, ModuleActs> = {
   '/': {
     // Nothing is written on the Dashboard. It reads other modules and that is all.
     records: false,
     approves: false,
   },
   '/residents': {
-    records: 'admitting a resident, and editing their record',
+    records: (term) => `admitting a ${term.one}, and editing their record`,
     approves: false,
   },
   '/care-notes': {
@@ -259,7 +280,7 @@ const OFFERS: Record<string, { records: string | false; approves: string | false
     approves: 'marking a flagged note reviewed',
   },
   '/handover': {
-    records: 'marking a resident on the board',
+    records: (term) => `marking a ${term.one} on the board`,
     approves: 'signing the handover',
   },
   '/medications': {
@@ -302,7 +323,8 @@ const OFFERS: Record<string, { records: string | false; approves: string | false
      * consent, recorded through the capacity gate under `/consent`, and a
      * second act here would be a second record of one fact.
      */
-    records: 'naming somebody who may see a resident’s updates, and removing them',
+    records: (term) =>
+      `naming somebody who may see a ${term.ones} updates, and removing them`,
     approves: false,
   },
   '/documents': {
@@ -344,8 +366,24 @@ export function ceilingFor(moduleId: string): PermissionLevel {
   return 'read'
 }
 
-/** What the module offers, in words, for a screen that wants to say why. */
-export const actsIn = (moduleId: string) => OFFERS[moduleId]
+/**
+ * What the module offers, in words, for a screen that wants to say why.
+ *
+ * The caller hands in the term rather than each sentence agreeing its own
+ * word: three of these name the person the record is about, and a description
+ * that said "resident" on a screen headed "Patients" would be the matrix
+ * describing a product nobody is using.
+ */
+export function actsIn(
+  moduleId: string,
+  term: Term,
+): { records: string | false; approves: string | false } | undefined {
+  const offers = OFFERS[moduleId]
+  if (offers === undefined) return undefined
+  const words = (act: ActWords | false): string | false =>
+    act === false ? false : typeof act === 'string' ? act : act(term)
+  return { records: words(offers.records), approves: words(offers.approves) }
+}
 
 export function levelFor(role: StaffRole, moduleId: string): PermissionLevel {
   const asked = EXCEPTIONS[role]?.[moduleId] ?? BASE[role]

@@ -2,6 +2,7 @@ import type { BodyRegionId } from '@/data/types'
 import { BodyMap } from '@/assets/body-map/BodyMap'
 import { regionLabel } from '@/assets/body-map/regions'
 import { Unrecorded } from '@/components/status'
+import { useTerm } from '@/app/session/use-term'
 import { Button } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { ChoiceMark } from './ChoiceMark'
@@ -70,6 +71,8 @@ export function InjurySection({
   onToggle: (id: BodyRegionId) => void
   level?: HeadingLevel
 }) {
+  const term = useTerm()
+
   return (
     <section className={styles.section} aria-labelledby="injury-heading">
       <SectionHeading level={level} id="injury-heading">
@@ -134,7 +137,7 @@ export function InjurySection({
               The list is the record; the map is a way of entering it.
             </p>
             <p className={styles.mapHint}>
-              Left and right are {"the resident's"}, not yours. Their left arm is on the
+              Left and right are the {term.ones}, not yours. Their left arm is on the
               right of the front view and the left of the back view.
             </p>
           </div>

@@ -7,6 +7,7 @@ import { Avatar, Button, Card } from '@/components/primitives'
 import { Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, pluralise } from '@/lib/format'
 import { currentVersion } from '@/features/care-plan/plan-fields'
@@ -79,6 +80,7 @@ export function PlanDrawerRoute() {
 
 function Plan({ data }: { data: Loaded }) {
   const format = useSiteFormat()
+  const term = useTerm()
   const { activity, residents } = data
   const byId = new Map(residents.map((resident) => [resident.id, resident]))
 
@@ -107,7 +109,7 @@ function Plan({ data }: { data: Loaded }) {
 
       <div className={styles.drawerSection}>
         <p className={styles.drawerHeading}>
-          Invited: {pluralise(invited.length, 'resident')}
+          Invited: {pluralise(invited.length, term.one, term.many)}
         </p>
 
         {neverAsked.length > 0 ? (
@@ -142,7 +144,7 @@ function Plan({ data }: { data: Loaded }) {
             ) : (
               <Unrecorded
                 variant="chip"
-                label="Not a resident of this site"
+                label={`Not a ${term.one} at this site`}
                 detail={residentId}
               />
             )}

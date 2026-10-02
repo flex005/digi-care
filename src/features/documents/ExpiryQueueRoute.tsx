@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { DocumentRecord, Resident } from '@/data/types'
 import { getSiteDocuments } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { Card, SelectedMark } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { formatCount } from '@/lib/format'
@@ -53,6 +54,7 @@ const FILTERS: { id: Filter; label: string; phrase: string }[] = [
 export function ExpiryQueueRoute() {
   const { activeSite } = useSession()
   const today = useSiteToday()
+  const term = useTerm()
   const [loaded, setLoaded] = useState<
     { documents: DocumentRecord[]; residents: Resident[] } | 'loading'
   >('loading')
@@ -80,13 +82,13 @@ export function ExpiryQueueRoute() {
           document.owner.kind === 'site'
             ? activeSite.name
             : (byId.get(document.owner.residentId)?.fullLegalName ??
-              'Resident not found'),
+              `${term.One} not found`),
         residentId:
           document.owner.kind === 'resident' ? document.owner.residentId : undefined,
       }))
       .filter((row) => matches(row.finding, filter))
       .sort((a, b) => order(a.finding) - order(b.finding))
-  }, [loaded, today, filter, activeSite.name])
+  }, [loaded, today, filter, activeSite.name, term])
 
   /*
    * Clamped on render rather than reset in an effect, the same way the note
@@ -176,7 +178,9 @@ export function ExpiryQueueRoute() {
               <li key={row.document.id}>
                 <div className={styles.queueRow} data-queue-row={row.document.id}>
                   <div>
-                    <p className={styles.rowTitle}>{row.document.title}</p>
+                    <p className={styles.rowTitle} data-recorded-text>
+                      {row.document.title}
+                    </p>
                     <p className={styles.rowMeta}>
                       {categoryLabel(row.document.category)} ·{' '}
                       <FileFactsText file={row.document.file} />

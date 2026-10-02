@@ -12,6 +12,7 @@ import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { formatCount, formatLateness, pluralise } from '@/lib/format'
 import { OwedReviews } from './OwedReviews'
@@ -175,6 +176,7 @@ export function CarePlanTab() {
  * rendered together, counted apart, and the heading says which is which.
  */
 function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime }) {
+  const term = useTerm()
   /*
    * Only "am I naming a new one". Writing in an existing one is a route now,
    * exactly as it is for the ten — the modal that used to do it was missing
@@ -230,7 +232,7 @@ function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime
         >
           <span data-numeric>{formatCount(CARE_PLAN_DOMAINS.length)}</span> domains
           above, plus <span data-numeric>{formatCount(domains.length)}</span> written
-          for this resident, counted apart from the ten and not part of a whole plan
+          for this {term.one}, counted apart from the ten and not part of a whole plan
           review
           {domains.length === 0
             ? ', and having none is ordinary rather than a gap.'

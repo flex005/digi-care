@@ -6,6 +6,7 @@ import { Button, Dialog } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerm } from '@/app/session/use-term'
 import { ReadOnlyHere } from '@/components/status'
 import { planSession } from '@/data/access/activity-store'
 import { pluralise } from '@/lib/format'
@@ -42,6 +43,7 @@ export function PlanSession({
 }) {
   const { currentUser } = useSession()
   const viewer = useViewer()
+  const term = useTerm()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [place, setPlace] = useState('')
@@ -69,7 +71,7 @@ export function PlanSession({
     waiting.push('when it starts and ends')
   else if (endsAt <= startsAt) waiting.push('an end after its start')
   else if (startsAt <= now) waiting.push('a start that has not already passed')
-  if (invited.length === 0) waiting.push('at least one resident invited')
+  if (invited.length === 0) waiting.push(`at least one ${term.one} invited`)
 
   const reset = () => {
     setName('')
@@ -129,7 +131,7 @@ export function PlanSession({
             <p className={styles.hint} data-plan-waiting>
               {waiting.length > 0
                 ? `Waiting on: ${waiting.join(' · ')}`
-                : `${pluralise(invited.length, 'resident')} invited`}
+                : `${pluralise(invited.length, term.one, term.many)} invited`}
             </p>
             <Button variant="ghost" onClick={() => setOpen(false)}>
               Close

@@ -6,7 +6,8 @@ import { useSession } from '@/app/session/use-session'
 import { Icon } from '@/components/icon/Icon'
 import { Unrecorded } from '@/components/status'
 import { formatCount, pluralise } from '@/lib/format'
-import { DRILL_DOWNS, reportGroups } from './catalogue'
+import { useTerm } from '@/app/session/use-term'
+import { drillDowns, reportGroups } from './catalogue'
 import { loadReportData, type ReportData } from './data'
 import { REPORT_PERIOD_DAYS } from './period'
 import { reportBars, reportHeadline, runAll, type ReportRun } from './analysis'
@@ -29,6 +30,7 @@ import styles from './reports.module.css'
  */
 export function ReportIndexRoute() {
   const { activeSite } = useSession()
+  const term = useTerm()
   const [data, setData] = useState<ReportData | 'loading'>('loading')
 
   useEffect(() => {
@@ -42,7 +44,10 @@ export function ReportIndexRoute() {
     }
   }, [activeSite])
 
-  const runs = useMemo(() => (data === 'loading' ? [] : runAll(data)), [data])
+  const runs = useMemo(
+    () => (data === 'loading' ? [] : runAll(data, term)),
+    [data, term],
+  )
 
   if (data === 'loading') {
     return (
@@ -162,7 +167,7 @@ export function ReportIndexRoute() {
       </div>
 
       <section className={styles.tableCard}>
-        {reportGroups().map((group) => (
+        {reportGroups(term).map((group) => (
           <div key={group.group} data-report-group={group.group}>
             <h2 className={styles.groupTitle}>{group.group}</h2>
             <div className={styles.tableScroll}>
@@ -224,7 +229,7 @@ export function ReportIndexRoute() {
             Each of these opens from its compliance check.
           </p>
           <ul className={styles.drillList}>
-            {DRILL_DOWNS.map((drill) => (
+            {drillDowns(term).map((drill) => (
               <li key={drill.question}>
                 <Link
                   to={drill.to}

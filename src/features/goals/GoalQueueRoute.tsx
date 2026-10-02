@@ -8,6 +8,8 @@ import { Button, Card, Pager, SelectedMark, usePaged } from '@/components/primit
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, pluralise } from '@/lib/format'
 import { GoalState } from './GoalParts'
@@ -28,11 +30,16 @@ import { NotYourHome } from '@/components/status'
 
 type Filter = 'past_target' | 'open' | 'closed' | 'not_asked' | 'all'
 
-const FILTERS: { id: Filter; label: string }[] = [
+/*
+ * A function of the term rather than a constant: one of these labels names the
+ * person, and a module-level array is evaluated before any component can ask
+ * what this organisation calls them.
+ */
+const filtersFor = (term: Term): { id: Filter; label: string }[] => [
   { id: 'past_target', label: 'Past date, nothing said' },
   { id: 'open', label: 'Open' },
   { id: 'closed', label: 'Closed' },
-  { id: 'not_asked', label: 'Resident not asked' },
+  { id: 'not_asked', label: `${term.One} not asked` },
   { id: 'all', label: 'All' },
 ]
 
@@ -92,6 +99,7 @@ function Found({
   filter: Filter
   onFilter: (value: Filter) => void
 }) {
+  const term = useTerm()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
   const byResident = new Map(data.residents.map((resident) => [resident.id, resident]))
 
@@ -160,7 +168,7 @@ function Found({
 
       <Card>
         <div className={styles.filters}>
-          {FILTERS.map((entry) => (
+          {filtersFor(term).map((entry) => (
             <button
               key={entry.id}
               type="button"

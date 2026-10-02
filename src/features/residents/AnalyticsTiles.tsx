@@ -5,6 +5,7 @@ import { VisuallyHidden } from '@/components/primitives'
 import { buildAnalyticsTiles, type AnalyticsPeriod } from './analytics-tiles'
 import type { ResidentSummary } from '@/data/access/client'
 import { LIST_CLOCK } from './list-clock'
+import { useTerm } from '@/app/session/use-term'
 import styles from './residents.module.css'
 
 /**
@@ -61,7 +62,8 @@ function changeLabel(change: number, phrase: string): string {
 }
 
 export function AnalyticsTiles({ atSite, siteLabel, period }: AnalyticsTilesProps) {
-  const tiles = buildAnalyticsTiles(atSite, LIST_CLOCK, period)
+  const term = useTerm()
+  const tiles = buildAnalyticsTiles(atSite, LIST_CLOCK, term, period)
 
   return (
     <section className={styles.tiles} aria-label={`Figures for ${siteLabel}`}>
@@ -79,7 +81,7 @@ export function AnalyticsTiles({ atSite, siteLabel, period }: AnalyticsTilesProp
             spoken =
               `${source.label}: ${aggregate.value} ${
                 source.kind === 'census'
-                  ? 'residents'
+                  ? term.many
                   : `of ${aggregate.coverage.covered} ${source.denominatorNoun}`
               } at ${siteLabel}.` + (footer ? ` ${footer}.` : '')
             break

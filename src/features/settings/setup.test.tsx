@@ -1,4 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import {
+  organisationTypeAsConfigured,
+  subjectTermIdAsConfigured,
+} from '@/data/access/settings-store'
+import { subjectTerm } from '@/lib/vocabulary'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
@@ -115,7 +120,14 @@ describe('the wizard writes through the owners, never its own copy', () => {
 
   it('turns a template off in the site configuration Settings reads', async () => {
     const user = userEvent.setup()
+    /*
+     * `vocabulary` is a required step now, so `resumeAt` stops there until it
+     * is confirmed. Added rather than the assertion relaxed: the wizard gained
+     * a step, which is a change to what the walk is, not to what these tests
+     * assert about templates and invitations.
+     */
     confirmStep('organisation')
+    confirmStep('vocabulary')
     confirmStep('site')
     const { container } = renderWizard()
     await settled(container)
@@ -133,7 +145,14 @@ describe('the wizard writes through the owners, never its own copy', () => {
 
   it('offers the Team Management drawer itself for the first invitation', async () => {
     const user = userEvent.setup()
+    /*
+     * `vocabulary` is a required step now, so `resumeAt` stops there until it
+     * is confirmed. Added rather than the assertion relaxed: the wizard gained
+     * a step, which is a change to what the walk is, not to what these tests
+     * assert about templates and invitations.
+     */
     confirmStep('organisation')
+    confirmStep('vocabulary')
     confirmStep('site')
     skipStep('templates')
     const before = teamMembers().length
@@ -161,7 +180,14 @@ describe('the wizard writes through the owners, never its own copy', () => {
 
 describe('two states at setup, and what retiring one later means', () => {
   it('renders carried out or not, and says the later act reaches back', async () => {
+    /*
+     * `vocabulary` is a required step now, so `resumeAt` stops there until it
+     * is confirmed. Added rather than the assertion relaxed: the wizard gained
+     * a step, which is a change to what the walk is, not to what these tests
+     * assert about templates and invitations.
+     */
     confirmStep('organisation')
+    confirmStep('vocabulary')
     confirmStep('site')
     const { container } = renderWizard()
     await settled(container)
@@ -381,5 +407,86 @@ describe('the wizard’s way out is true from wherever somebody came', () => {
     const exit = container.querySelector('[data-setup-exit]')!
     expect(exit.textContent).toBe('Go to the dashboard')
     expect(exit.getAttribute('href')).toBe('/')
+  }, 20000)
+})
+
+/**
+ * The step that decides what every screen calls the people this service holds
+ * records about.
+ *
+ * **Required, not optional.** The term reaches every heading in the product,
+ * and a default nobody chose is still a default on all of them — asking makes
+ * it a decision somebody took.
+ */
+describe('what kind of service it is', () => {
+  it('sets the type, and the type picks the word', async () => {
+    const user = userEvent.setup()
+    confirmStep('organisation')
+    const { container } = renderWizard()
+    await settled(container)
+
+    await waitFor(() =>
+      expect(container.querySelector('[data-setup-section="vocabulary"]')).toBeTruthy(),
+    )
+
+    await user.click(container.querySelector('[data-org-type="hospital"] input')!)
+    await user.click(container.querySelector('[data-confirm-step="vocabulary"]')!)
+
+    expect(organisationTypeAsConfigured()).toBe('hospital')
+    // The type picked the default rather than leaving the term unset.
+    expect(
+      subjectTerm(organisationTypeAsConfigured(), subjectTermIdAsConfigured()).one,
+    ).toBe('patient')
+  }, 20000)
+
+  /*
+   * A default is a default, not a lock: a clinic may well say "Service User",
+   * which is also the term whose grammar nothing can derive.
+   */
+  it('lets the word be chosen separately from the type', async () => {
+    const user = userEvent.setup()
+    confirmStep('organisation')
+    const { container } = renderWizard()
+    await settled(container)
+    await waitFor(() =>
+      expect(container.querySelector('[data-setup-section="vocabulary"]')).toBeTruthy(),
+    )
+
+    await user.click(container.querySelector('[data-org-type="clinic"] input')!)
+    await user.click(
+      container.querySelector('[data-setup-section="vocabulary"] [role="combobox"]')!,
+    )
+    await user.click(await screen.findByRole('option', { name: 'Service User' }))
+    await user.click(container.querySelector('[data-confirm-step="vocabulary"]')!)
+
+    const term = subjectTerm(
+      organisationTypeAsConfigured(),
+      subjectTermIdAsConfigured(),
+    )
+    expect(term.One).toBe('Service User')
+    // Declared, not derived: the plural capitalises both words.
+    expect(term.Many).toBe('Service Users')
+  }, 20000)
+
+  it('clears an earlier word when the type changes, so the control does something', async () => {
+    const user = userEvent.setup()
+    confirmStep('organisation')
+    const { container } = renderWizard()
+    await settled(container)
+    await waitFor(() =>
+      expect(container.querySelector('[data-setup-section="vocabulary"]')).toBeTruthy(),
+    )
+
+    await user.click(container.querySelector('[data-org-type="clinic"] input')!)
+    await user.click(
+      container.querySelector('[data-setup-section="vocabulary"] [role="combobox"]')!,
+    )
+    await user.click(await screen.findByRole('option', { name: 'Service User' }))
+    await user.click(container.querySelector('[data-org-type="hospital"] input')!)
+    await user.click(container.querySelector('[data-confirm-step="vocabulary"]')!)
+
+    expect(
+      subjectTerm(organisationTypeAsConfigured(), subjectTermIdAsConfigured()).one,
+    ).toBe('patient')
   }, 20000)
 })

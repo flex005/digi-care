@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { DocumentRecord } from '@/data/types'
 import { getSiteDocuments } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { Card } from '@/components/primitives'
 import { AggregateFigure, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
@@ -26,6 +27,7 @@ import styles from './documents.module.css'
 export function OrganisationLibraryRoute() {
   const { activeSite } = useSession()
   const today = useSiteToday()
+  const term = useTerm()
   const [documents, setDocuments] = useState<DocumentRecord[] | 'loading'>('loading')
   const [added, setAdded] = useState(0)
 
@@ -60,8 +62,8 @@ export function OrganisationLibraryRoute() {
         <div>
           <h1 className={styles.pageTitle}>Documents</h1>
           <p className={styles.pageSubtitle}>
-            Everything on file at {activeSite.name}, the residents&rsquo; documents and
-            the home&rsquo;s own.
+            Everything on file at {activeSite.name}, the documents held for {term.many}{' '}
+            and the home&rsquo;s own.
           </p>
         </div>
         <div className={styles.pageActions}>

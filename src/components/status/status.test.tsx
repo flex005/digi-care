@@ -4,6 +4,11 @@ import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { MarCell, marCellDescription, RiskBadge, Unrecorded } from './index'
 import { staffHalloran, staffNwosu } from '@/data/fixtures/organisation'
 import type { MarCellState, NotGivenReason } from '@/data/types'
+import { subjectTerm } from '@/lib/vocabulary'
+
+/** The term in force with nothing configured — this home calls them
+ *  residents, which is what the sentences below are asserted against. */
+const TERM = subjectTerm('care_home', undefined)
 
 /** Rosewood Court's zone. Every clinical time below renders in it, never
  *  in whatever zone the machine running the tests happens to be in. */
@@ -128,6 +133,7 @@ describe('PRD §6.4: every MAR cell has a full-sentence accessible name', () => 
       state,
       '08:00, 19 August, Amlodipine 5mg',
       SITE_ZONE,
+      TERM,
     )
     expect(sentence).toMatch(pattern)
     expect(sentence).toContain('Amlodipine 5mg')
@@ -143,6 +149,7 @@ describe('PRD §6.4: every MAR cell has a full-sentence accessible name', () => 
       },
       'ctx',
       SITE_ZONE,
+      TERM,
     )
     const notRequired = marCellDescription(
       {
@@ -153,6 +160,7 @@ describe('PRD §6.4: every MAR cell has a full-sentence accessible name', () => 
       },
       'ctx',
       SITE_ZONE,
+      TERM,
     )
     const missing = marCellDescription(
       {
@@ -163,6 +171,7 @@ describe('PRD §6.4: every MAR cell has a full-sentence accessible name', () => 
       },
       'ctx',
       SITE_ZONE,
+      TERM,
     )
     // The whole reason MarWitness is a union: these must not read alike.
     expect(new Set([witnessed, notRequired, missing]).size).toBe(3)
@@ -233,6 +242,7 @@ describe('a closed omission stays a gap, with the closure beside it', () => {
       closed,
       '08:00, 19/08/2026, Amlodipine 5mg',
       SITE_ZONE,
+      TERM,
     )
     expect(sentence).toMatch(/window closed with no record/i)
     expect(sentence).toContain(
@@ -269,6 +279,6 @@ describe('CW PRD MED-02: every not-given reason renders in words', () => {
     const pill = container.querySelector('[data-state="recorded"]')
     expect(pill?.textContent).toMatch(words)
     expect(pill?.textContent).not.toMatch(/undefined/)
-    expect(marCellDescription(state, 'ctx', SITE_ZONE)).toMatch(words)
+    expect(marCellDescription(state, 'ctx', SITE_ZONE, TERM)).toMatch(words)
   })
 })

@@ -6,6 +6,7 @@ import { assertNever } from '@/lib/assert-never'
 import { signHandover } from '@/data/access/client'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerm } from '@/app/session/use-term'
 import { SHIFT_NAMES } from '@/lib/shift'
 import type { Shift } from '@/data/types'
 import { AlertDialog, Button } from '@/components/primitives'
@@ -61,6 +62,7 @@ export function SignaturePanel({
   const { currentUser } = useSession()
   const viewer = useViewer()
   const format = useSiteFormat()
+  const term = useTerm()
   const [confirming, setConfirming] = useState(false)
   /* Cleared whenever the dialog closes: a code left in a field on a device the
      shift shares is the thing this control exists to prevent. */
@@ -110,7 +112,7 @@ export function SignaturePanel({
           {/* What the signature actually covered. Never a bare "signed". */}
           <p className={styles.signatureCounts}>
             {signature.reviewed} of {signature.reviewed + signature.notReviewed}{' '}
-            residents reviewed when this was signed
+            {term.many} reviewed when this was signed
             {signature.notReviewed > 0
               ? `, and ${signature.notReviewed} had not been looked at`
               : ''}
@@ -166,15 +168,15 @@ export function SignaturePanel({
                   <>
                     <p>
                       {notReviewed > 0
-                        ? `${notReviewed} of ${total} residents have not been looked at at all; your signature records that, and does not mean they are well.`
-                        : `All ${total} residents at ${siteName} have been reviewed, and your signature cannot be edited afterwards.`}
+                        ? `${notReviewed} of ${total} ${term.many} have not been looked at at all; your signature records that, and does not mean they are well.`
+                        : `All ${total} ${term.many} at ${siteName} have been reviewed, and your signature cannot be edited afterwards.`}
                     </p>
                     {/* Who signed, not that somebody clicked. */}
                     <SigningIdentity
                       who={currentUser}
                       code={code}
                       onCode={setCode}
-                      what={`Signing the ${SHIFT_NAMES[shift].toLowerCase()} handover at ${siteName}, covering ${reviewed} of ${total} residents.`}
+                      what={`Signing the ${SHIFT_NAMES[shift].toLowerCase()} handover at ${siteName}, covering ${reviewed} of ${total} ${term.many}.`}
                     />
                   </>
                 }

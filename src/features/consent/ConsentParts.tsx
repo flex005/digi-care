@@ -2,6 +2,8 @@ import type { AnyConsent, DecisionAuthority, EffectCount } from '@/data/types'
 import { Unrecorded } from '@/components/status'
 import { assertNever } from '@/lib/assert-never'
 import { formatDate, formatCount } from '@/lib/format'
+import { useTerm } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import styles from './consent.module.css'
 
 /**
@@ -13,6 +15,7 @@ import styles from './consent.module.css'
  * so, because an empty cell there would read as an authority nobody recorded.
  */
 export function ConsentAuthority({ status }: { status: AnyConsent }) {
+  const term = useTerm()
   if (status.kind === 'not_sought' || status.kind === 'pending') {
     return (
       <span className={styles.authority} data-authority="none">
@@ -33,7 +36,7 @@ export function ConsentAuthority({ status }: { status: AnyConsent }) {
   return (
     <span className={styles.authority} data-authority={status.by.kind}>
       <span className={styles.authorityKey}>Decided by</span>
-      <span className={styles.authorityWho}>{who(status.by)}</span>
+      <span className={styles.authorityWho}>{who(status.by, term)}</span>
       <span className={styles.authorityCapacity}>
         <Capacity authority={status.by} />
       </span>
@@ -41,10 +44,10 @@ export function ConsentAuthority({ status }: { status: AnyConsent }) {
   )
 }
 
-function who(authority: DecisionAuthority<never>): string {
+function who(authority: DecisionAuthority<never>, term: Term): string {
   switch (authority.kind) {
     case 'the_resident':
-      return 'The resident'
+      return `The ${term.one}`
     case 'best_interests':
       return 'A best-interests process'
     case 'lpa_holder':

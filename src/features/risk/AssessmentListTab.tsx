@@ -20,6 +20,7 @@ import { StatusPill, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { formatCount, formatLateness } from '@/lib/format'
 import { PlaceholderBanner } from './PlaceholderBanner'
 import {
@@ -227,6 +228,7 @@ function Findings({ status }: { status: RiskStatus | CustomRisk }) {
  * counted apart, and the heading says which is which.
  */
 function CustomRisks({ resident }: { resident: Resident }) {
+  const term = useTerm()
   const risks = withResidentEdits(resident).customRisks
 
   return (
@@ -282,7 +284,7 @@ function CustomRisks({ resident }: { resident: Resident }) {
                 <div className={styles.rowAbout}>
                   <p className={styles.rowName}>{risk.name}</p>
                   <p className={styles.rowInstrument}>
-                    Recorded for this resident, outside the nine
+                    Recorded for this {term.one}, outside the nine
                   </p>
                 </div>
                 {/* A custom risk is always in use: a home that recorded one

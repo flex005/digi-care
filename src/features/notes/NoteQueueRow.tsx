@@ -78,7 +78,9 @@ export function NoteQueueRow({
           className={styles.queueBodyLink}
           onClick={() => setPeeking(true)}
         >
-          <span className={styles.noteBody}>{note.body}</span>
+          <span className={styles.noteBody} data-recorded-text>
+            {note.body}
+          </span>
         </button>
         {/* Mood off this line: a second hatch competes with the flag for the
             one thing this screen is asking the reader to see. */}

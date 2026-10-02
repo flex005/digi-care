@@ -22,10 +22,20 @@ import { held, type SessionHolding } from './session-holding'
  * were done, so the wizard cannot become a second record of any of them.
  */
 
-export type SetupStepId = 'organisation' | 'site' | 'templates' | 'invite'
+export type SetupStepId =
+  'organisation' | 'vocabulary' | 'site' | 'templates' | 'invite'
 
 /** Steps 1 and 2 are required; 3 and 4 can be skipped. */
-export const REQUIRED_STEPS: readonly SetupStepId[] = ['organisation', 'site']
+/**
+ * `vocabulary` is required: the term reaches every screen in the product, and
+ * a default nobody chose is still a default on every heading. Asking makes it
+ * a decision somebody took.
+ */
+export const REQUIRED_STEPS: readonly SetupStepId[] = [
+  'organisation',
+  'vocabulary',
+  'site',
+]
 
 const confirmed = new Set<SetupStepId>()
 const skipped = new Set<SetupStepId>()

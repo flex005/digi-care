@@ -21,6 +21,7 @@ import { AlertDialog, Avatar, Button, Card, Toast } from '@/components/primitive
 import { AllergyBadge, NotYourHome, ReadOnlyHere } from '@/components/status'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatDate, zonedDate } from '@/lib/format'
 import { carersAndSeniors } from '@/data/fixtures/organisation'
@@ -391,6 +392,8 @@ function RoundBar({
   slots: { roundTime: string; done: number; total: number }[]
   onRound: (round: string) => void
 }) {
+  const term = useTerm()
+
   return (
     <div className={styles.roundBar} data-round-bar>
       <div className={styles.roundBlock}>
@@ -438,7 +441,7 @@ function RoundBar({
       <div className={`${styles.roundBlock} ${styles.roundProgressBlock}`}>
         <span className={styles.roundLabel}>Progress</span>
         <span className={styles.roundValue} data-numeric>
-          {done} of {total} residents done
+          {done} of {total} {term.many} done
         </span>
         <span className={styles.progressTrack}>
           <span

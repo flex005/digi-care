@@ -9,6 +9,7 @@ import { ConsentBadge, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount } from '@/lib/format'
 import { CONSENT_MEANS } from './consent-meaning'
@@ -92,6 +93,7 @@ function Found({
   filter: Filter
   onFilter: (value: Filter) => void
 }) {
+  const term = useTerm()
   const all: Row[] = residents.flatMap((resident) =>
     CONSENT_TYPES.map((type) => ({
       resident,
@@ -152,7 +154,7 @@ function Found({
         <span className={styles.leadBody}>
           <span className={styles.leadTitle}>consents have never been sought</span>
           <span className={styles.leadDetail}>
-            Across <span data-numeric>{formatCount(residents.length)}</span> residents
+            Across <span data-numeric>{formatCount(residents.length)}</span> {term.many}{' '}
             and <span data-numeric>{CONSENT_TYPES.length}</span> types at {siteName},{' '}
             <span data-numeric>{formatCount(all.length)}</span> decisions the home is
             expected to hold. Never sought is not refusal and it is not permission.
@@ -189,7 +191,7 @@ function Found({
         </div>
 
         <p className={styles.sortLine}>
-          Every resident against every consent type
+          Every {term.one} against every consent type
           {filter === 'all' ? null : (
             <>
               {' · '}

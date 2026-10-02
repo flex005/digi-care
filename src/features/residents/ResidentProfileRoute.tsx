@@ -7,6 +7,7 @@ import { useResource } from '@/data/access/use-resource'
 import { Button, Tooltip } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
+import { useTerm } from '@/app/session/use-term'
 import { CrossSiteBanner } from '@/features/group/CrossSiteBanner'
 import { ProfileHeader } from './ProfileHeader'
 import styles from './profile.module.css'
@@ -75,6 +76,7 @@ export interface ProfileContext extends ResidentProfile {
 
 export function ResidentProfileRoute() {
   const { residentId } = useParams<{ residentId: string }>()
+  const term = useTerm()
   const [revision, setRevision] = useState(0)
 
   const load = useCallback(
@@ -88,20 +90,20 @@ export function ResidentProfileRoute() {
     <div className={styles.page}>
       <Link to="/residents" className={styles.backLink}>
         <Icon name="arrows-sharp/arrow-left-01-sharp" size={16} />
-        All residents
+        All {term.many}
       </Link>
 
       {resource.kind === 'loading' ? (
         <p className={styles.loadingNote} role="status">
-          Loading resident…
+          Loading {term.one}…
         </p>
       ) : resource.kind === 'refused' ? (
         <NotYourHome refusal={resource} />
       ) : resource.kind === 'error' ? (
         <div className={styles.errorPanel}>
-          <p className={styles.errorTitle}>This resident could not be loaded</p>
+          <p className={styles.errorTitle}>This {term.one} could not be loaded</p>
           <p className={styles.errorBody}>
-            <code>{residentId}</code> did not resolve to a resident.
+            <code>{residentId}</code> did not resolve to a {term.one}.
           </p>
           <Button variant="secondary" onClick={resource.retry}>
             Try again

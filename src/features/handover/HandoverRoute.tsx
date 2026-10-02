@@ -17,6 +17,7 @@ import { Settled, NotYourHome } from '@/components/status'
 import { SHIFT_NAMES } from '@/lib/shift'
 import { formatDate } from '@/lib/format'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { HandoverStatusBadge } from './HandoverStatusBadge'
@@ -62,6 +63,7 @@ import styles from './handover.module.css'
 export function HandoverRoute() {
   const { activeSite } = useSession()
   const viewer = useViewer()
+  const term = useTerm()
   /*
    * Not reviewed leads, and it is the tab that opens. Urgent is information
    * you have already received either way; not reviewed is the only group still
@@ -141,7 +143,7 @@ export function HandoverRoute() {
         {/* ---- 1. the coverage figures ------------------------------------ */}
         <Section
           title="This shift at a glance"
-          note="Every resident at this site, whether or not anybody has got to them yet."
+          note={`Every ${term.one} at this site, whether or not anybody has got to them yet.`}
         >
           {/*
            * The same card the residents list uses, and the lead is the one
@@ -161,7 +163,7 @@ export function HandoverRoute() {
                 emphasis="lead"
                 icon={metricIcons.alert}
                 figure={<MetricValue>{formatCount(board.notReviewed)}</MetricValue>}
-                of={`of ${formatCount(total)} residents living at ${activeSite.name}`}
+                of={`of ${formatCount(total)} ${term.many} living at ${activeSite.name}`}
                 note="The only figure here you can still change before you sign."
               />
               <MetricTile
@@ -169,7 +171,7 @@ export function HandoverRoute() {
                 emphasis="supporting"
                 icon={metricIcons.urgent}
                 figure={<MetricValue>{formatCount(countOf('urgent'))}</MetricValue>}
-                of={`of ${formatCount(board.reviewed)} residents reviewed this shift`}
+                of={`of ${formatCount(board.reviewed)} ${term.many} reviewed this shift`}
               />
               <MetricTile
                 label="Needs attention"
@@ -178,14 +180,14 @@ export function HandoverRoute() {
                 figure={
                   <MetricValue>{formatCount(countOf('needs_attention'))}</MetricValue>
                 }
-                of={`of ${formatCount(board.reviewed)} residents reviewed this shift`}
+                of={`of ${formatCount(board.reviewed)} ${term.many} reviewed this shift`}
               />
               <MetricTile
                 label="All well"
                 emphasis="supporting"
                 icon={metricIcons.settled}
                 figure={<MetricValue>{formatCount(countOf('all_well'))}</MetricValue>}
-                of={`of ${formatCount(board.reviewed)} residents reviewed this shift`}
+                of={`of ${formatCount(board.reviewed)} ${term.many} reviewed this shift`}
               />
             </MetricTiles>
           </div>
@@ -216,7 +218,7 @@ export function HandoverRoute() {
         </Section>
 
         {/* ---- 3. the residents ------------------------------------------- */}
-        <Section title="Residents">
+        <Section title={term.Many}>
           {/*
            * One tab per status, and the count on each.
            *
@@ -226,7 +228,11 @@ export function HandoverRoute() {
            * while every status stays visible even at zero: absence from the
            * strip would be the same bug as a blank cell.
            */}
-          <div className={styles.statusTabs} role="group" aria-label="Resident status">
+          <div
+            className={styles.statusTabs}
+            role="group"
+            aria-label={`${term.One} status`}
+          >
             {groups.map((group) => (
               <button
                 key={group.id}
@@ -268,8 +274,8 @@ export function HandoverRoute() {
                           {group.rows.length} of {denominator}
                         </span>{' '}
                         {group.denominator === 'all_residents'
-                          ? 'residents living here'
-                          : 'residents reviewed'}
+                          ? `${term.many} living here`
+                          : `${term.many} reviewed`}
                       </p>
                     </div>
 

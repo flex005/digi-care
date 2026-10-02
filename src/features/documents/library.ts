@@ -1,3 +1,4 @@
+import type { Term } from '@/lib/vocabulary'
 import type {
   CategoryState,
   DocumentCategoryId,
@@ -23,7 +24,7 @@ export interface ResidentLibrary {
   categories: {
     id: DocumentCategoryId
     label: string
-    holds: string
+    holds: (term: Term) => string
     state: CategoryState
   }[]
   /** Documents actually on file, which is what the three findings count. */

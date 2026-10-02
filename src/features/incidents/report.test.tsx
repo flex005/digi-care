@@ -12,6 +12,7 @@ import {
   regionLabel,
   viewsFor,
 } from '@/assets/body-map/regions'
+import { subjectTerm } from '@/lib/vocabulary'
 import { ReportIncidentRoute, outstanding } from './ReportIncidentRoute'
 
 /**
@@ -299,6 +300,7 @@ describe('a family decision with no reason cannot be reported', () => {
 
 describe('what the form is waiting on', () => {
   const complete = {
+    term: subjectTerm('care_home', undefined),
     subject: 'resident' as const,
     resident: { id: 'res-okafor' } as never,
     type: 'fall_witnessed' as const,

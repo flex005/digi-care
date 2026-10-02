@@ -4,6 +4,7 @@ import { STAFF_ROLE_NAMES } from '@/data/types'
 import { Button, Dialog } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { ReadOnlyHere } from '@/components/status'
 import { addMember, setResidentAssignment, teamMembers } from '@/data/access/team-store'
@@ -36,6 +37,7 @@ import styles from './team.module.css'
 export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
   const { activeSite, sites, currentUser } = useSession()
   const viewer = useViewer()
+  const term = useTerm()
   const [open, setOpen] = useState(false)
   const [fullName, setFullName] = useState('')
   const [role, setRole] = useState<StaffRole>('care_worker')
@@ -185,13 +187,13 @@ export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
 
           {isCareWorker ? (
             <div className={styles.field} data-assignment-field>
-              <span className={styles.fieldLabel}>Which residents?</span>
+              <span className={styles.fieldLabel}>Which {term.many}?</span>
               <div className={styles.roleChoices}>
                 {(
                   [
                     ['never_set', 'Not decided yet'],
                     ['all_residents_at_site', 'Everybody at these homes'],
-                    ['assigned', 'Named residents'],
+                    ['assigned', `Named ${term.many}`],
                   ] as const
                 ).map(([kind, label]) => (
                   <label

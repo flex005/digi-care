@@ -19,6 +19,7 @@ import { formatDate } from '@/lib/format'
 import { NotAPerformanceRecord, Standing } from './TeamParts'
 import { AssignmentSection } from './AssignmentSection'
 import { SitesSection } from './SitesSection'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { RECENT_ACTS, staffActivity } from './staff-activity'
 import styles from './team.module.css'
@@ -58,6 +59,7 @@ export function StaffDetailRoute() {
   const format = useSiteFormat()
   const [version, setVersion] = useState(0)
   const viewer = useViewer()
+  const term = useTerm()
   const [confirming, setConfirming] = useState(false)
   const [removalReason, setRemovalReason] = useState('')
   const [typedConfirm, setTypedConfirm] = useState('')
@@ -69,8 +71,9 @@ export function StaffDetailRoute() {
   const member = staffId === undefined ? undefined : memberById(staffId)
 
   const acts = useMemo(
-    () => (member === undefined ? [] : staffActivity(member.id).slice(0, RECENT_ACTS)),
-    [member, version],
+    () =>
+      member === undefined ? [] : staffActivity(member.id, term).slice(0, RECENT_ACTS),
+    [member, version, term],
   )
 
   if (member === undefined) {

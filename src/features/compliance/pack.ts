@@ -6,7 +6,8 @@ import {
 import { brokenReferences } from '@/features/documents/library'
 import { formatCount } from '@/lib/format'
 import type { ComplianceData } from './data'
-import { KEY_QUESTIONS } from './key-questions'
+import { keyQuestions } from './key-questions'
+import type { Term } from '@/lib/vocabulary'
 
 /**
  * The inspection pack's manifest, derived rather than written.
@@ -41,7 +42,7 @@ export interface PackContents {
   notHeld: PackAbsence[]
 }
 
-export function packContents(data: ComplianceData): PackContents {
+export function packContents(data: ComplianceData, term: Term): PackContents {
   const residents = data.residents.length
 
   let assessed = 0
@@ -172,7 +173,7 @@ export function packContents(data: ComplianceData): PackContents {
    * lists of what this product does not hold would drift, and the one on this
    * screen would be the one nobody noticed had gone stale.
    */
-  const notHeld: PackAbsence[] = KEY_QUESTIONS.flatMap((question) =>
+  const notHeld: PackAbsence[] = keyQuestions(term).flatMap((question) =>
     question.checks
       .filter((check) => check.kind === 'not_held')
       .map((check) => ({

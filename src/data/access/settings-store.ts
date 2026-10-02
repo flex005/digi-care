@@ -1,5 +1,6 @@
 import { held as heldItem, type SessionHolding } from './session-holding'
 import type { Organisation, Site, SiteId } from '../types'
+import type { OrganisationType } from '@/lib/vocabulary'
 import { INSUFFICIENT_EVIDENCE_THRESHOLD, MIN_POPULATION_FOR_A_RATE } from '../types'
 import { sites as fixtureSites } from '../fixtures/organisation'
 import { DUE_SOON_DAYS, REVIEW_INTERVAL_MONTHS } from '@/lib/review-interval'
@@ -273,6 +274,44 @@ export function organisationAsConfigured(organisation: Organisation): Organisati
     : { ...organisation, name: organisationName }
 }
 
+/**
+ * The organisation's type and the word it uses for the people it serves.
+ *
+ * **On the organisation, not the site**, because a multi-site organisation
+ * must not end up with two vocabularies — one home calling them residents
+ * while another calls them patients would make the same screen mean different
+ * things depending on which site was active.
+ *
+ * Session state like the name above, rather than a field on `Organisation`:
+ * that type holds an id and a name, and its own docblock says adding fields
+ * to it is asked rather than done.
+ */
+let organisationType: OrganisationType | undefined
+let subjectTermId: string | undefined
+
+export function organisationTypeAsConfigured(): OrganisationType {
+  return organisationType ?? 'care_home'
+}
+
+export function subjectTermIdAsConfigured(): string | undefined {
+  return subjectTermId
+}
+
+export function setOrganisationType(type: OrganisationType): void {
+  organisationType = type
+  /*
+   * Choosing a type picks that type's default term, and **clears any earlier
+   * override** rather than leaving one standing: somebody who switches from
+   * Care Home to Hospital means patients, and silently keeping "Resident"
+   * because they once chose it would make the type control do nothing.
+   */
+  subjectTermId = undefined
+}
+
+export function setSubjectTerm(id: string): void {
+  subjectTermId = id
+}
+
 export function setOrganisationName(name: string): void {
   organisationName = name.trim() === '' ? undefined : name.trim()
 }
@@ -293,6 +332,14 @@ export function settingsHoldings(): SessionHolding[] {
       'the organisation name you changed',
       organisationName === undefined ? 0 : 1,
     ),
+    ...heldItem(
+      'the organisation type you set',
+      organisationType === undefined ? 0 : 1,
+    ),
+    ...heldItem(
+      `the word this service uses for the people it serves`,
+      subjectTermId === undefined ? 0 : 1,
+    ),
   ]
 }
 
@@ -300,6 +347,8 @@ export function settingsHoldings(): SessionHolding[] {
 export function resetSessionSettings(): void {
   siteOverrides.clear()
   organisationName = undefined
+  organisationType = undefined
+  subjectTermId = undefined
   for (const entry of FIGURES) entry.value = entry.fallback
 }
 
@@ -326,6 +375,8 @@ export const TIME_ZONES = [
  * export of this file.
  */
 export const WRITE_EXPORTS = [
+  'setOrganisationType',
+  'setSubjectTerm',
   'setFigure',
   'setSiteName',
   'setSiteTimeZone',

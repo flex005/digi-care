@@ -21,6 +21,8 @@ import { Avatar, Button, Card, Select } from '@/components/primitives'
 import { AllergyBadge } from '@/components/status'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerm } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import type { TimeZone } from '@/lib/format'
 import { instantFromWallClockField } from '@/lib/format'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
@@ -72,6 +74,7 @@ export function ReportIncidentRoute() {
   const { activeSite, currentUser } = useSession()
   const viewer = useViewer()
   const navigate = useNavigate()
+  const term = useTerm()
 
   const [subjectChoice, setSubjectChoice] = useState<SubjectChoice>(undefined)
   const [residentId, setResidentId] = useState('')
@@ -105,6 +108,7 @@ export function ReportIncidentRoute() {
     subjectChoice === 'no_resident' && !canHaveNoResident ? undefined : subjectChoice
 
   const waiting = outstanding({
+    term,
     subject,
     resident,
     type,
@@ -185,7 +189,7 @@ export function ReportIncidentRoute() {
                 onClick={() => setSubjectChoice('resident')}
               >
                 <ChoiceMark selected={subject === 'resident'} />
-                <span className={styles.choiceTitle}>A resident</span>
+                <span className={styles.choiceTitle}>A {term.one}</span>
                 <span className={styles.choiceNote}>
                   Choose the person this happened to.
                 </span>
@@ -209,7 +213,7 @@ export function ReportIncidentRoute() {
                 }}
               >
                 <ChoiceMark selected={subject === 'no_resident'} />
-                <span className={styles.choiceTitle}>No resident was involved</span>
+                <span className={styles.choiceTitle}>No {term.one} was involved</span>
                 <span className={styles.choiceNote}>
                   {canHaveNoResident
                     ? 'This is a statement that nobody was involved, not a blank.'
@@ -222,8 +226,8 @@ export function ReportIncidentRoute() {
               <div className={styles.field}>
                 <Select
                   labelVisible
-                  label="Resident"
-                  placeholder="Choose a resident"
+                  label={term.One}
+                  placeholder={`Choose a ${term.one}`}
                   value={residentId === '' ? undefined : residentId}
                   onValueChange={setResidentId}
                   options={people.map((person) => ({
@@ -597,6 +601,8 @@ export function assembleReport(
 }
 
 export function outstanding(input: {
+  /** The word this organisation uses, asked for a form rather than derived. */
+  term: Term
   subject: SubjectChoice
   resident: Resident | undefined
   type: IncidentTypeId | ''
@@ -619,7 +625,9 @@ export function outstanding(input: {
 
   if (input.type === '') waiting.push('a type')
   if (input.subject === undefined) waiting.push('who this happened to')
-  else if (input.subject === 'resident' && !input.resident) waiting.push('the resident')
+  else if (input.subject === 'resident' && !input.resident) {
+    waiting.push(`the ${input.term.one}`)
+  }
   if (input.occurredAt === '') waiting.push('when it happened')
   if (input.description.trim() === '') {
     waiting.push('what happened, in your own words')

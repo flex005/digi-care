@@ -8,6 +8,8 @@ import { assertNever } from '@/lib/assert-never'
 import { formatAttributionOn, formatTime } from '@/lib/format'
 import type { TimeZone } from '@/lib/format'
 import { useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import { OmissionClosureFact } from './OmissionClosureFact'
 import { omissionClosureSentence } from './omission-closure-wording'
 import { StatusPill } from './StatusPill'
@@ -36,13 +38,15 @@ import styles from './MarCell.module.css'
  * visually-hidden span while the visible cell stays compact. PRD §7.
  */
 
-const NOT_GIVEN_REASON: Record<NotGivenReason, string> = {
-  resident_refused: 'resident refused',
-  resident_asleep: 'resident asleep',
-  medication_unavailable: 'medication unavailable',
-  resident_in_hospital: 'resident in hospital',
-  resident_vomiting: 'resident vomiting',
-  other: 'other reason',
+function notGivenReasons(term: Term): Record<NotGivenReason, string> {
+  return {
+    resident_refused: `${term.one} refused`,
+    resident_asleep: `${term.one} asleep`,
+    medication_unavailable: 'medication unavailable',
+    resident_in_hospital: `${term.one} in hospital`,
+    resident_vomiting: `${term.one} vomiting`,
+    other: 'other reason',
+  }
 }
 
 /** The second signature on a controlled drug, or its conspicuous absence. */
@@ -71,8 +75,10 @@ export function marCellDescription(
   state: MarCellState,
   context: string,
   timeZone: TimeZone,
+  term: Term,
 ): string {
   const at = (value: IsoDateTime) => formatTime(value, timeZone)
+  const reasons = notGivenReasons(term)
   switch (state.kind) {
     case 'not_due':
       return `${context}: not due.`
@@ -85,7 +91,7 @@ export function marCellDescription(
       }.`
     }
     case 'not_given':
-      return `${context}: not given, ${NOT_GIVEN_REASON[state.reason]}, recorded by ${state.recordedBy.displayName} at ${at(state.recordedAt)}.${
+      return `${context}: not given, ${reasons[state.reason]}, recorded by ${state.recordedBy.displayName} at ${at(state.recordedAt)}.${
         state.note ? ` Note: ${state.note}.` : ''
       }`
     case 'omitted':
@@ -115,6 +121,7 @@ export interface MarCellProps {
 
 function CellBody({ state }: { state: MarCellState }) {
   const format = useSiteFormat()
+  const term = useTerm()
 
   switch (state.kind) {
     case 'not_due':
@@ -166,7 +173,7 @@ function CellBody({ state }: { state: MarCellState }) {
           block
           tone="caution"
           label="Not given"
-          detail={`${NOT_GIVEN_REASON[state.reason]} · ${state.recordedBy.displayName}, ${format.time(state.recordedAt)}`}
+          detail={`${notGivenReasons(term)[state.reason]} · ${state.recordedBy.displayName}, ${format.time(state.recordedAt)}`}
         />
       )
 
@@ -197,6 +204,7 @@ function CellBody({ state }: { state: MarCellState }) {
 
 export function MarCell({ state, context }: MarCellProps) {
   const { timeZone } = useSiteFormat()
+  const term = useTerm()
 
   return (
     <>
@@ -204,7 +212,7 @@ export function MarCell({ state, context }: MarCellProps) {
         <CellBody state={state} />
       </span>
       <span className="visuallyHidden">
-        {marCellDescription(state, context, timeZone)}
+        {marCellDescription(state, context, timeZone, term)}
       </span>
     </>
   )

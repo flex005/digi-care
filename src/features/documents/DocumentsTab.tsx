@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTerm } from '@/app/session/use-term'
 import { Link } from 'react-router-dom'
 import { Icon } from '@/components/icon/Icon'
 import { useOutletContext } from 'react-router-dom'
@@ -32,6 +33,7 @@ import styles from './documents.module.css'
  * the categories it holds tells a reader there are four kinds of document.
  */
 export function DocumentsTab() {
+  const term = useTerm()
   const { resident } = useOutletContext<ResidentProfile>()
   const today = useSiteToday()
 
@@ -95,7 +97,11 @@ export function DocumentsTab() {
                   : 'nothing on file'}
               </p>
             </header>
-            <CategoryBody state={category.state} holds={category.holds} today={today} />
+            <CategoryBody
+              state={category.state}
+              holds={category.holds(term)}
+              today={today}
+            />
           </section>
         ))}
       </Card>
@@ -219,7 +225,9 @@ function Row({ row, today }: { row: LibraryRow; today: IsoDate }) {
     return (
       <div className={styles.row} data-row="referenced_not_on_file">
         <div>
-          <p className={styles.rowTitle}>{row.reference.title}</p>
+          <p className={styles.rowTitle} data-recorded-text>
+            {row.reference.title}
+          </p>
           <p className={styles.rowMeta}>{row.reference.detail}</p>
         </div>
         <BrokenReference reference={row.reference} />
@@ -249,7 +257,9 @@ function DocumentRow({
   return (
     <div className={styles.row} data-row="document" data-document={document.id}>
       <div>
-        <p className={styles.rowTitle}>{document.title}</p>
+        <p className={styles.rowTitle} data-recorded-text>
+          {document.title}
+        </p>
         <p className={styles.rowMeta}>
           <FileFactsText file={document.file} />
         </p>

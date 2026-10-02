@@ -8,13 +8,17 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
-import { Button, Card } from '@/components/primitives'
+import { Button, Card, Select } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
 import {
   TIME_ZONES,
   setOrganisationName,
   setSiteName,
   setSiteTimeZone,
+  setOrganisationType,
+  setSubjectTerm,
+  organisationTypeAsConfigured,
+  subjectTermIdAsConfigured,
 } from '@/data/access/settings-store'
 import { isActive, setActive } from '@/data/access/site-config-store'
 import {
@@ -29,6 +33,11 @@ import {
 import { teamMembers } from '@/data/access/team-store'
 import { InviteDrawer } from '@/features/team/InviteDrawer'
 import { cameFromOrganisation } from './setup-origin'
+import {
+  ORGANISATION_TYPES,
+  SUBJECT_TERMS,
+  type OrganisationType,
+} from '@/lib/vocabulary'
 import styles from './setup.module.css'
 
 /**
@@ -48,8 +57,13 @@ import styles from './setup.module.css'
  * can open, it resumes within a session at the first step nobody confirmed or
  * skipped, and nothing remembers it past a reload.
  */
+/** The id of the term a type defaults to, so the Select shows it selected. */
+const defaultTermIdFor = (type: OrganisationType): string =>
+  type === 'hospital' ? 'patient' : type === 'clinic' ? 'client' : 'resident'
+
 const ORDER: readonly { id: SetupStepId; name: string; required: boolean }[] = [
   { id: 'organisation', name: 'The organisation', required: true },
+  { id: 'vocabulary', name: 'What kind of service it is', required: true },
   { id: 'site', name: 'Its first home', required: true },
   { id: 'templates', name: 'Risk assessments this home carries out', required: false },
   { id: 'invite', name: 'The first person to invite', required: false },
@@ -58,6 +72,10 @@ const ORDER: readonly { id: SetupStepId; name: string; required: boolean }[] = [
 export function SetupWizardRoute() {
   const { organisation, activeSite, reloadSites } = useSession()
   const fromOrganisation = cameFromOrganisation(useLocation().state)
+  const [orgType, setOrgType] = useState<OrganisationType>(
+    organisationTypeAsConfigured(),
+  )
+  const [termId, setTermId] = useState<string | undefined>(subjectTermIdAsConfigured())
   const [step, setStep] = useState<SetupStepId>(
     () => resumeAt(ORDER.map((entry) => entry.id)) ?? 'organisation',
   )
@@ -151,6 +169,76 @@ export function SetupWizardRoute() {
                   setOrganisationName(orgName)
                   reloadSites()
                   confirmStep('organisation')
+                  next()
+                }}
+              >
+                Confirm and continue
+              </Button>
+            </div>
+          </section>
+        ) : null}
+
+        {step === 'vocabulary' ? (
+          <section className={styles.section} data-setup-section="vocabulary">
+            <h2 className={styles.sectionTitle}>What kind of service it is</h2>
+            {/*
+             * **The type picks the word, and the word is separately
+             * changeable.** A clinic may well say "Service User", so the type
+             * sets a default rather than a lock — and choosing a type clears
+             * an earlier override, because otherwise the control would do
+             * nothing for somebody who changed their mind.
+             */}
+            <div className={styles.choices} role="radiogroup" aria-label="Service type">
+              {ORGANISATION_TYPES.map((entry) => (
+                <label
+                  key={entry.id}
+                  className={orgType === entry.id ? styles.choiceOn : styles.choice}
+                  data-org-type={entry.id}
+                >
+                  <input
+                    type="radio"
+                    name="organisation-type"
+                    checked={orgType === entry.id}
+                    onChange={() => {
+                      setOrgType(entry.id)
+                      setTermId(undefined)
+                    }}
+                  />
+                  {entry.name}
+                </label>
+              ))}
+            </div>
+
+            {/*
+              No wrapping `<label>`: `Select` is a Radix combobox rather than a
+              native control, so a label around it associates with nothing —
+              it carries its own `label` prop, which is the association.
+            */}
+            <div className={styles.field}>
+              <Select
+                labelVisible
+                label="What this service calls the people it serves"
+                placeholder="Choose a word"
+                value={termId ?? defaultTermIdFor(orgType)}
+                onValueChange={setTermId}
+                options={SUBJECT_TERMS.map((entry) => ({
+                  value: entry.id,
+                  label: entry.label,
+                }))}
+              />
+              <span className={styles.note}>
+                It appears on every screen: headings, labels and tab names. Words
+                somebody has already written into a record are not changed.
+              </span>
+            </div>
+
+            <div className={styles.actions}>
+              <Button
+                data-confirm-step="vocabulary"
+                onClick={() => {
+                  setOrganisationType(orgType)
+                  if (termId !== undefined) setSubjectTerm(termId)
+                  confirmStep('vocabulary')
                   next()
                 }}
               >

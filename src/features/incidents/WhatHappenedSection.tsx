@@ -1,6 +1,7 @@
 import type { CommunalAreaId, IncidentTypeId } from '@/data/types'
 import { COMMUNAL_AREAS, INCIDENT_TYPES } from '@/data/types'
 import { Select } from '@/components/primitives'
+import { useTerm } from '@/app/session/use-term'
 import { SectionHeading, type HeadingLevel } from './SectionHeading'
 import styles from './incidents.module.css'
 
@@ -48,6 +49,8 @@ export function WhatHappenedSection({
   onDescription: (value: string) => void
   level?: HeadingLevel
 }) {
+  const term = useTerm()
+
   return (
     <section className={styles.section} aria-labelledby="what-heading">
       <SectionHeading level={level} id="what-heading">
@@ -86,7 +89,7 @@ export function WhatHappenedSection({
           value={area === '' ? undefined : area}
           onValueChange={(value) => onArea(value as AreaChoice)}
           options={[
-            { value: 'resident_room', label: "The resident's own room" },
+            { value: 'resident_room', label: `The ${term.ones} own room` },
             ...COMMUNAL_AREAS.map((entry) => ({
               value: entry.id,
               label: entry.name,
@@ -148,7 +151,7 @@ export function WhatHappenedSection({
           className={styles.textarea}
           value={description}
           onChange={(event) => onDescription(event.target.value)}
-          placeholder="What you found, what you saw, what the resident said."
+          placeholder={`What you found, what you saw, what the ${term.one} said.`}
         />
         <span className={styles.hint}>
           Written for whoever reads this next: a manager tonight, an inspector in a

@@ -10,6 +10,7 @@ import {
   PlaceholderBanner,
 } from './ComplianceParts'
 import { keyQuestionById } from './key-questions'
+import { useTerm } from '@/app/session/use-term'
 import { usePanels } from './use-compliance'
 import styles from './compliance.module.css'
 
@@ -37,7 +38,9 @@ export function KeyQuestionRoute() {
   const { activeSite } = useSession()
   const { keyQuestion } = useParams()
   const panels = usePanels()
-  const question = keyQuestion === undefined ? undefined : keyQuestionById(keyQuestion)
+  const term = useTerm()
+  const question =
+    keyQuestion === undefined ? undefined : keyQuestionById(keyQuestion, term)
 
   if (question === undefined) {
     return (

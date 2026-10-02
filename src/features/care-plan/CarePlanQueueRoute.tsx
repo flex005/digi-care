@@ -17,6 +17,7 @@ import { Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, formatLateness } from '@/lib/format'
 import { reviewTiming } from './review-timing'
@@ -113,6 +114,7 @@ function Found({
   onFilter: (value: Filter) => void
   onDomain: (value: CarePlanDomainId | 'all') => void
 }) {
+  const term = useTerm()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
 
   /*
@@ -175,11 +177,11 @@ function Found({
               parts of a care plan have never been written down
             </span>
             <span className={styles.findingDetail}>
-              Across <span data-numeric>{formatCount(residents.length)}</span> residents
-              and <span data-numeric>{CARE_PLAN_DOMAINS.length}</span> domains at{' '}
-              {siteName}, <span data-numeric>{formatCount(all.length)}</span> domains
-              the home is expected to hold. Never written down is not &ldquo;no needs
-              here&rdquo;.
+              Across <span data-numeric>{formatCount(residents.length)}</span>{' '}
+              {term.many} and <span data-numeric>{CARE_PLAN_DOMAINS.length}</span>{' '}
+              domains at {siteName}, <span data-numeric>{formatCount(all.length)}</span>{' '}
+              domains the home is expected to hold. Never written down is not &ldquo;no
+              needs here&rdquo;.
             </span>
           </span>
         </div>

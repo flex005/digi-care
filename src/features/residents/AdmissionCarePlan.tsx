@@ -4,6 +4,7 @@ import { CARE_PLAN_DOMAINS } from '@/data/types'
 import { Button } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
+import { useTerm } from '@/app/session/use-term'
 import {
   CarePlanTextFields,
   emptyText,
@@ -41,6 +42,7 @@ export function AdmissionCarePlan({
   customs: (CarePlanText & { name: string })[]
   onCustoms: (next: (CarePlanText & { name: string })[]) => void
 }) {
+  const term = useTerm()
   const [open, setOpen] = useState<string>('')
   const started = CARE_PLAN_DOMAINS.filter((domain) => {
     const text = drafts[domain.id]
@@ -162,7 +164,7 @@ export function AdmissionCarePlan({
                   </p>
                   <p className={styles.riskInstrument}>
                     {named
-                      ? 'Written for this resident, outside the ten'
+                      ? `Written for this ${term.one}, outside the ten`
                       : 'Name it, and write what is known about it'}
                   </p>
                 </div>

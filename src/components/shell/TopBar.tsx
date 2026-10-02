@@ -12,6 +12,7 @@ import {
   VisuallyHidden,
 } from '@/components/primitives'
 import { shellIcons } from '@/app/nav-items.icons'
+import { useTerm } from '@/app/session/use-term'
 import { accountMenuIcons } from './top-bar.icons'
 import { AppSwitcher } from './AppSwitcher'
 import styles from './TopBar.module.css'
@@ -60,6 +61,7 @@ export function TopBar({
   onSignOut,
 }: TopBarProps) {
   const isMultiSite = sites.length > 1
+  const term = useTerm()
 
   return (
     <header className={styles.topbar}>
@@ -105,8 +107,8 @@ export function TopBar({
         <input
           type="search"
           className={styles.searchInput}
-          placeholder="Search residents, notes, incidents"
-          aria-label="Search residents, notes and incidents"
+          placeholder={`Search ${term.many}, notes, incidents`}
+          aria-label={`Search ${term.many}, notes and incidents`}
         />
       </div>
 

@@ -15,6 +15,8 @@ import {
 import { ReviewBadge, Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import { useViewer } from '@/app/session/use-viewer'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import type { TableColumn } from '@/components/primitives'
@@ -43,7 +45,11 @@ import styles from './residents.module.css'
  * and "oldest" — because they are one column in two directions. Its sortKey
  * tracks whichever is active so the header reads as sorted either way.
  */
-function columnsFor(sortKey: SortKey, showSite: boolean): TableColumn<SortKey>[] {
+function columnsFor(
+  sortKey: SortKey,
+  showSite: boolean,
+  term: Term,
+): TableColumn<SortKey>[] {
   return [
     // Photo sits inside the Resident cell rather than in a column of its own.
     // PRD §6.2 lists both; putting them together keeps every column visible at
@@ -53,7 +59,7 @@ function columnsFor(sortKey: SortKey, showSite: boolean): TableColumn<SortKey>[]
     // column; that only works if the column has the same edges on all 28 rows.
     // Risk flags and Records are the widest because they carry the evidence
     // this screen exists to surface — they are not the columns that give way.
-    { label: 'Resident', sortKey: 'name', width: '19%' },
+    { label: term.One, sortKey: 'name', width: '19%' },
     { label: 'Room', sortKey: 'room', width: '6%' },
     // Only when the list spans sites. §2.4 requires the active site to be
     // permanently visible, and it is — in the top bar, in the filter, and in
@@ -97,6 +103,7 @@ function useSimulation(): Simulation {
 }
 
 export function ResidentsRoute() {
+  const term = useTerm()
   const { sites, activeSite } = useSession()
   const viewer = useViewer()
   const navigate = useNavigate()
@@ -145,13 +152,13 @@ export function ResidentsRoute() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.pageTitle}>Residents</h1>
+          <h1 className={styles.pageTitle}>{term.Many}</h1>
           {/* Short, and still says what the screen is FOR. PRD §6.2: the
               oldest-note sort exists so a manager can find neglected records;
               it is not decoration. The old lede said the same thing in three
               clauses and read like an explanation of itself. */}
           <p className={styles.lede}>
-            Sort by oldest care note to find the residents nobody has written up.
+            Sort by oldest care note to find the {term.many} nobody has written up.
           </p>
         </div>
         {/* Live from Phase 16. Absent rather than disabled for the auditor,
@@ -165,7 +172,7 @@ export function ResidentsRoute() {
             data-admit-link
           >
             <Icon name="add-remove-delete/add-01" size={16} />
-            Add resident
+            Add {term.one}
           </Button>
         ) : null}
       </header>
@@ -195,7 +202,7 @@ export function ResidentsRoute() {
 
         {isError ? (
           <div className={styles.errorPanel}>
-            <p className={styles.errorTitle}>The resident list could not be loaded</p>
+            <p className={styles.errorTitle}>The {term.one} list could not be loaded</p>
             <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button
               variant="secondary"
@@ -208,27 +215,27 @@ export function ResidentsRoute() {
           </div>
         ) : isLoading ? (
           <p className={styles.loadingNote} role="status">
-            Loading residents…
+            Loading {term.many}…
           </p>
         ) : atSite.length === 0 ? (
           // Nobody at this site at all — a different answer from "nobody
           // matches your filters", and collapsing the two would be the
           // Evidence Invariant failing at the level of a result set.
           <EmptyState
-            title={`No residents at ${siteLabel} yet`}
+            title={`No ${term.many} at ${siteLabel} yet`}
             body="Nobody has been admitted here. This is not a filter result. The site is empty."
             actions={
               viewer.canRecordIn('/residents') ? (
                 <Button onClick={() => navigate('/residents/new')} data-admit-link>
-                  Add resident
+                  Add {term.one}
                 </Button>
               ) : undefined
             }
           />
         ) : visible.length === 0 ? (
           <EmptyState
-            title="No residents match these filters"
-            body={`There are ${atSite.length} residents at ${siteLabel}, but none of them match the filters you have set.`}
+            title={`No ${term.many} match these filters`}
+            body={`There are ${atSite.length} ${term.many} at ${siteLabel}, but none of them match the filters you have set.`}
             actions={
               hasNarrowingFilters ? (
                 <Button variant="secondary" onClick={clearFilters}>
@@ -239,8 +246,8 @@ export function ResidentsRoute() {
           />
         ) : (
           <Table
-            caption={`${visible.length} of ${atSite.length} residents at ${siteLabel}, sorted by ${SORT_LABELS[sortKey]}, ${sortDirection}.`}
-            columns={columnsFor(sortKey, showSite)}
+            caption={`${visible.length} of ${atSite.length} ${term.many} at ${siteLabel}, sorted by ${SORT_LABELS[sortKey]}, ${sortDirection}.`}
+            columns={columnsFor(sortKey, showSite, term)}
             sortKey={sortKey}
             sortDirection={sortDirection}
             onSort={toggleSort}

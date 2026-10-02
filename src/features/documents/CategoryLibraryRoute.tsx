@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import type { DocumentRecord, Resident } from '@/data/types'
 import { getSiteDocuments } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { Card } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
@@ -28,6 +29,7 @@ export function CategoryLibraryRoute() {
   const { categoryId } = useParams<{ categoryId: string }>()
   const { activeSite } = useSession()
   const today = useSiteToday()
+  const term = useTerm()
   const [loaded, setLoaded] = useState<
     { documents: DocumentRecord[]; residents: Resident[] } | 'loading'
   >('loading')
@@ -56,12 +58,12 @@ export function CategoryLibraryRoute() {
           document.owner.kind === 'site'
             ? activeSite.name
             : (byId.get(document.owner.residentId)?.fullLegalName ??
-              'Resident not found'),
+              `${term.One} not found`),
         residentId:
           document.owner.kind === 'resident' ? document.owner.residentId : undefined,
       }))
       .sort((a, b) => order(a.finding) - order(b.finding))
-  }, [loaded, category, today, activeSite.name])
+  }, [loaded, category, today, activeSite.name, term])
 
   const back = (
     <Link to="/documents" className={styles.queueLink} data-library-link>
@@ -106,7 +108,7 @@ export function CategoryLibraryRoute() {
         <div>
           <h1 className={styles.pageTitle}>{category.label}</h1>
           <p className={styles.pageSubtitle}>
-            Everything filed here at {activeSite.name}. It holds {category.holds}.
+            Everything filed here at {activeSite.name}. It holds {category.holds(term)}.
           </p>
         </div>
         {back}
@@ -163,7 +165,7 @@ export function CategoryLibraryRoute() {
            * tab's expected-but-empty state is for.
            */
           <p className={styles.categoryEmpty} data-category-empty>
-            Nothing is filed here at {activeSite.name}. It holds {category.holds}.
+            Nothing is filed here at {activeSite.name}. It holds {category.holds(term)}.
           </p>
         ) : (
           <ul className={styles.rows}>
@@ -171,7 +173,9 @@ export function CategoryLibraryRoute() {
               <li key={row.document.id}>
                 <div className={styles.categoryRow} data-queue-row={row.document.id}>
                   <div>
-                    <p className={styles.rowTitle}>{row.document.title}</p>
+                    <p className={styles.rowTitle} data-recorded-text>
+                      {row.document.title}
+                    </p>
                     <p className={styles.rowMeta}>
                       <FileFactsText file={row.document.file} />
                     </p>

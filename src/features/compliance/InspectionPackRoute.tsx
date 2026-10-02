@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { Unrecorded } from '@/components/status'
@@ -26,6 +27,7 @@ import styles from './compliance.module.css'
  */
 export function InspectionPackRoute() {
   const { activeSite } = useSession()
+  const term = useTerm()
   const data = useComplianceData()
 
   if (data === 'loading') {
@@ -36,7 +38,7 @@ export function InspectionPackRoute() {
     )
   }
 
-  const contents = packContents(data)
+  const contents = packContents(data, term)
 
   return (
     <div className={styles.page} data-inspection-pack>

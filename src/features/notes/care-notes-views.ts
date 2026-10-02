@@ -9,6 +9,7 @@ import type {
 import type { TimeZone } from '@/lib/format'
 import { zonedDate } from '@/lib/format'
 import { staffLabel } from '@/data/access/team-store'
+import type { Term } from '@/lib/vocabulary'
 
 /**
  * The cross-resident Care Notes view. PRD §6.3.
@@ -38,39 +39,41 @@ import { staffLabel } from '@/data/access/team-store'
 export type CareNotesView =
   'flagged' | 'quiet_today' | 'by_author' | 'by_shift' | 'everything'
 
-export const CARE_NOTES_VIEWS: {
+export function careNotesViews(term: Term): {
   id: CareNotesView
   label: string
   question: string
-}[] = [
-  {
-    id: 'flagged',
-    label: 'Flagged, not reviewed',
-    question:
-      'Notes a care worker asked a senior to look at, that no senior has looked at yet. Oldest first.',
-  },
-  {
-    id: 'quiet_today',
-    label: 'No note today',
-    question: 'Residents nobody has written about today.',
-  },
-  {
-    id: 'by_author',
-    label: 'By author',
-    question: 'One worker’s records, for supervision or an investigation.',
-  },
-  {
-    id: 'by_shift',
-    label: 'By shift',
-    question: 'Whether a shift wrote anything at all.',
-  },
-  {
-    id: 'everything',
-    label: 'All notes',
-    question:
-      'Every care note at this site, by everybody, newest first, a page at a time.',
-  },
-]
+}[] {
+  return [
+    {
+      id: 'flagged',
+      label: 'Flagged, not reviewed',
+      question:
+        'Notes a care worker asked a senior to look at, that no senior has looked at yet. Oldest first.',
+    },
+    {
+      id: 'quiet_today',
+      label: 'No note today',
+      question: `${term.Many} nobody has written about today.`,
+    },
+    {
+      id: 'by_author',
+      label: 'By author',
+      question: 'One worker’s records, for supervision or an investigation.',
+    },
+    {
+      id: 'by_shift',
+      label: 'By shift',
+      question: 'Whether a shift wrote anything at all.',
+    },
+    {
+      id: 'everything',
+      label: 'All notes',
+      question:
+        'Every care note at this site, by everybody, newest first, a page at a time.',
+    },
+  ]
+}
 
 export interface NoteWithResident {
   note: CareNote

@@ -13,6 +13,7 @@ import {
   type MarRecord,
 } from '@/data/fixtures/medications'
 import { formatTime, zonedDate } from '@/lib/format'
+import type { Term } from '@/lib/vocabulary'
 import { MEDICATION_LOOKAHEAD_HOURS } from '@/lib/shift'
 import { carePlanDomains, consentsSought, riskAssessments } from './populations'
 
@@ -307,6 +308,7 @@ export function unwrittenByDay(
   residents: Resident[],
   notes: CareNote[],
   now: IsoDateTime,
+  term: Term,
 ): DaySeries {
   const dates = lastDays(site, now)
   const written = new Map<IsoDate, Set<string>>()
@@ -323,7 +325,7 @@ export function unwrittenByDay(
       daysBack: dates.length - 1 - index,
       value: residents.length - (written.get(date)?.size ?? 0),
     })),
-    what: 'residents with no care note, each of the last seven days',
+    what: `${term.many} with no care note, each of the last seven days`,
   }
 }
 
@@ -387,6 +389,7 @@ export function moduleBars(input: {
   doses: DoseDay
   acknowledged: number
   incidentsTotal: number
+  term: Term
 }): ModuleBar[] {
   const assessments = riskAssessments(input.residents)
   const domains = carePlanDomains(input.residents)
@@ -398,7 +401,7 @@ export function moduleBars(input: {
       label: 'Care notes, today',
       recorded: input.writtenUpToday,
       expected: input.residents.length,
-      of: 'residents',
+      of: input.term.many,
       remainder: 'never_written',
     },
     {

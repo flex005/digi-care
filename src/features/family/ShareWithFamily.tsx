@@ -2,6 +2,7 @@ import type { CareNoteId, ResidentId } from '@/data/types'
 import { Button } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
 import { useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import {
   currentDisclosure,
@@ -44,6 +45,7 @@ export function ShareWithFamily({
   const { currentUser } = useSession()
   const format = useSiteFormat()
   const viewer = useViewer()
+  const term = useTerm()
 
   if (!viewer.canApproveIn('/care-notes')) return null
 
@@ -56,8 +58,8 @@ export function ShareWithFamily({
   if (named.length === 0) {
     return (
       <p className={styles.noFamily} data-no-family-named>
-        Nobody is named to see this resident&rsquo;s updates, so there is nobody to
-        share a note with.
+        Nobody is named to see this {term.ones} updates, so there is nobody to share a
+        note with.
       </p>
     )
   }

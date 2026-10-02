@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { HandoverId, HandoverStatus, IsoDateTime, Resident } from '@/data/types'
 import { recordHandoverStatus } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { ReadOnlyHere } from '@/components/status'
 import { Button, Dialog, RadioGroup } from '@/components/primitives'
@@ -38,6 +39,7 @@ export function StatusDialog({
   onRecorded: (residentName: string, status: string) => void
 }) {
   const { currentUser } = useSession()
+  const term = useTerm()
   const viewer = useViewer()
   const [open, setOpen] = useState(false)
   const [choice, setChoice] = useState<Choice | undefined>(undefined)
@@ -81,7 +83,7 @@ export function StatusDialog({
       <ReadOnlyHere
         roleName={viewer.roleName}
         subject="the handover board"
-        act="mark a resident on it"
+        act={`mark a ${term.one} on it`}
       />
     )
   }

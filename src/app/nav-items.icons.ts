@@ -15,7 +15,18 @@ import type { IconName } from '@/components/icon/registry.names.generated'
  */
 
 export interface NavItem {
+  /**
+   * What the item is called, for every item whose name is fixed.
+   *
+   * **`subject` is the exception and it names a form, not a word.** The
+   * Residents module is called whatever this organisation calls the people it
+   * serves, and two renderers show that label — the sidebar and the
+   * permission matrix. Having each substitute the word itself would be two
+   * owners of one term; declaring which *form* the label needs leaves the
+   * word with `Term` and the choice of form with the item.
+   */
   label: string
+  subject?: 'One' | 'Many'
   path: string
   icon: IconName
   /** The phase in FRONTEND_PRD.md §8 that builds this module. */
@@ -64,6 +75,7 @@ export const navItems: NavItem[] = [
   },
   {
     label: 'Residents',
+    subject: 'Many',
     path: '/residents',
     icon: 'users/user-multiple',
     phase: 1,

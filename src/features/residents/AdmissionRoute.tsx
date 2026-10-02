@@ -26,6 +26,7 @@ import {
   type DraftRisk,
 } from '@/features/risk/RiskFieldSet'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { Button, Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
@@ -71,6 +72,7 @@ const STEPS = [
 export function AdmissionRoute() {
   const { sites, activeSite, currentUser } = useSession()
   const viewer = useViewer()
+  const term = useTerm()
   const navigate = useNavigate()
 
   const [step, setStep] = useState(0)
@@ -133,7 +135,7 @@ export function AdmissionRoute() {
   })
 
   const site = sites.find((entry) => entry.id === siteId) ?? activeSite
-  const name = preferredName.trim() || fullLegalName.trim() || 'this resident'
+  const name = preferredName.trim() || fullLegalName.trim() || `this ${term.one}`
 
   const waiting: string[] = []
   if (fullLegalName.trim() === '') waiting.push('their full legal name')
@@ -262,7 +264,7 @@ export function AdmissionRoute() {
         <Card padded>
           <ReadOnlyHere
             roleName={viewer.roleName}
-            subject={`the residents at ${activeSite.name}`}
+            subject={`the ${term.many} at ${activeSite.name}`}
             act="admit one"
           />
         </Card>
@@ -274,11 +276,11 @@ export function AdmissionRoute() {
     <div className={styles.page} data-admission>
       <Link to="/residents" className={styles.backLink} data-back-link>
         <Icon name="arrows-sharp/arrow-left-01-sharp" size={16} aria-hidden />
-        All residents
+        All {term.many}
       </Link>
 
       <header>
-        <h1 className={styles.pageTitle}>Admit a resident</h1>
+        <h1 className={styles.pageTitle}>Admit a {term.one}</h1>
         <p className={styles.pageSubtitle}>
           Five steps, and only the first is required; anything left blank shows as not
           recorded.
@@ -889,7 +891,7 @@ export function AdmissionRoute() {
             ) : (
               <>
                 <b>Admitting {name} creates a record that is mostly gaps.</b> Every
-                screen will show them: the residents list, the compliance figures and
+                screen will show them: the {term.many} list, the compliance figures and
                 the group view.
               </>
             )}
@@ -900,7 +902,8 @@ export function AdmissionRoute() {
             onClick={submit}
             data-admit
           >
-            Admit {fullLegalName.trim() === '' ? 'this resident' : fullLegalName.trim()}
+            Admit{' '}
+            {fullLegalName.trim() === '' ? `this ${term.one}` : fullLegalName.trim()}
           </Button>
         </footer>
       </Card>

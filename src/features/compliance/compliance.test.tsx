@@ -19,7 +19,14 @@ import { KeyQuestionRoute } from './KeyQuestionRoute'
 import { InspectionPackRoute } from './InspectionPackRoute'
 import { NotificationsRoute } from './NotificationsRoute'
 import { loadCompliance } from './data'
-import { KEY_QUESTIONS, runPanels } from './key-questions'
+import { keyQuestions, runPanels } from './key-questions'
+import { subjectTerm } from '@/lib/vocabulary'
+
+/** The term in force with nothing configured: this home calls them residents. */
+const TERM = subjectTerm('care_home', undefined)
+
+/** The five, under the configured term — read through the owner, never a copy. */
+const KEY_QUESTIONS = keyQuestions(TERM)
 import { headlineFor } from './analysis'
 import { formatCount } from '@/lib/format'
 import hatch from '@/styles/unrecorded.module.css'
@@ -239,7 +246,7 @@ describe('a figure and the reason there is none', () => {
 describe('the five panels over the real record', () => {
   it('reaches every check state somewhere in the record', async () => {
     const data = await loadCompliance(rosewood, NOW_ISO)
-    const readings = runPanels(data)
+    const readings = runPanels(data, TERM)
       .flatMap((panel) => panel.results)
       .filter((result) => result.kind === 'derived')
 
@@ -254,14 +261,14 @@ describe('the five panels over the real record', () => {
 
   it('renders the thin site as Insufficient Evidence rather than as bad', async () => {
     const data = await loadCompliance(ashgrove, NOW_ISO)
-    const verdicts = runPanels(data).map((panel) => panel.verdict.kind)
+    const verdicts = runPanels(data, TERM).map((panel) => panel.verdict.kind)
     // Ashgrove exists to be thin. A four-resident home is not a failing home.
     expect(verdicts).toContain('insufficient_evidence')
   }, 30000)
 
   it('names the check each rating came from, and they are not all the same', async () => {
     const data = await loadCompliance(rosewood, NOW_ISO)
-    const rated = runPanels(data)
+    const rated = runPanels(data, TERM)
       .map((panel) => panel.verdict)
       .filter((verdict) => verdict.kind === 'rated')
 
@@ -362,7 +369,7 @@ describe('the analytical layout refuses what it was built to refuse', () => {
    * the wrong four.
    */
   const expected = async () =>
-    headlineFor(runPanels(await loadCompliance(rosewood, NOW_ISO)))
+    headlineFor(runPanels(await loadCompliance(rosewood, NOW_ISO), TERM))
 
   it('leads on the checks that cannot support a figure, and nothing green', async () => {
     const { container } = renderAt('/compliance')
@@ -555,7 +562,7 @@ describe('the inspection pack', () => {
 
   it('reads what the product does not hold from the panels, never a second list', async () => {
     const data = await loadCompliance(rosewood, NOW_ISO)
-    const contents = packContents(data)
+    const contents = packContents(data, TERM)
     const fromPanels = KEY_QUESTIONS.flatMap((question) =>
       question.checks
         .filter((check) => check.kind === 'not_held')
@@ -566,7 +573,7 @@ describe('the inspection pack', () => {
 
   it('makes the second section longer than the first', async () => {
     const data = await loadCompliance(rosewood, NOW_ISO)
-    const contents = packContents(data)
+    const contents = packContents(data, TERM)
     // The useful half. A manager gets more from the gaps than from the list.
     expect(contents.gaps.length + contents.notHeld.length).toBeGreaterThan(
       contents.holds.length,

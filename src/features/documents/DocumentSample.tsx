@@ -1,5 +1,7 @@
 import type { DocumentRecord, Resident } from '@/data/types'
 import { formatDate } from '@/lib/format'
+import { useTerm } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import styles from './viewer.module.css'
 
 /**
@@ -23,7 +25,8 @@ export function DocumentSample({
   document: DocumentRecord
   resident: Resident | undefined
 }) {
-  const name = resident?.fullLegalName ?? 'The resident'
+  const term = useTerm()
+  const name = resident?.fullLegalName ?? `The ${term.one}`
   const room = resident?.room.kind === 'recorded' ? resident.room.value : 'not recorded'
 
   return (
@@ -38,13 +41,13 @@ export function DocumentSample({
           <br />
           Page 1 of 1
           <br />
-          Retain in the resident record
+          Retain in the {term.one} record
         </p>
       </header>
 
       <h2 className={styles.docTitle}>{document.title}</h2>
       <p className={styles.strap}>
-        {STRAP[document.category] ??
+        {strapFor(term)[document.category] ??
           'A form of this type, as it renders in the viewer.'}
       </p>
 
@@ -103,15 +106,24 @@ function Field({ label, value }: { label: string; value: string }) {
   )
 }
 
-const STRAP: Partial<Record<DocumentRecord['category'], string>> = {
-  legal_authority:
-    'This form records one decision. It does not affect any other treatment or care.',
-  health_clinical: 'A clinical record issued by the service that made it.',
-  consent_records: 'A record of what was agreed, by whom, and on what date.',
-  assessments_care_planning: 'An assessment carried out on the date shown.',
-  identity_admission: 'Held to establish identity at admission.',
-  correspondence: 'Correspondence held on the resident record.',
-  photographs_media: 'An image held with the resident’s consent.',
+/**
+ * The one-line strap under each sample's title.
+ *
+ * A function rather than a constant because two of these name the person the
+ * record is about, and the word for that is the organisation's to choose. The
+ * caller asks the owner for a form and never derives one.
+ */
+function strapFor(term: Term): Partial<Record<DocumentRecord['category'], string>> {
+  return {
+    legal_authority:
+      'This form records one decision. It does not affect any other treatment or care.',
+    health_clinical: 'A clinical record issued by the service that made it.',
+    consent_records: 'A record of what was agreed, by whom, and on what date.',
+    assessments_care_planning: 'An assessment carried out on the date shown.',
+    identity_admission: 'Held to establish identity at admission.',
+    correspondence: `Correspondence held on the ${term.one} record.`,
+    photographs_media: `An image held with the ${term.ones} consent.`,
+  }
 }
 
 const BLOCK: Partial<

@@ -86,7 +86,9 @@ export function NoteCard({
           </Link>
         ) : null}
 
-        <p className={styles.noteBody}>{note.body}</p>
+        <p className={styles.noteBody} data-recorded-text>
+          {note.body}
+        </p>
 
         <NoteMeta note={note} showTimestamp={!railed} />
 

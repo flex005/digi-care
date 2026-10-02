@@ -1,6 +1,7 @@
 import type { SiteId, StaffMember } from '@/data/types'
 import { Button } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { setSites } from '@/data/access/team-store'
 import styles from './team.module.css'
@@ -32,6 +33,7 @@ export function SitesSection({
 }) {
   const { sites } = useSession()
   const viewer = useViewer()
+  const term = useTerm()
   const mayChange = viewer.may('manage_team')
 
   const toggle = (siteId: SiteId) => {
@@ -54,7 +56,7 @@ export function SitesSection({
       <h2 className={styles.sectionTitle}>Homes</h2>
       <p className={styles.sectionNote}>
         {mayChange
-          ? 'Adding a home gives access to every resident in it, under one role: somebody cannot be a manager at one home and something else at another.'
+          ? `Adding a home gives access to every ${term.one} in it, under one role: somebody cannot be a manager at one home and something else at another.`
           : `Which homes ${member.ref.fullName.split(' ')[0]} works at. Your role is ${viewer.roleName}, which reads this and does not change it.`}
       </p>
 

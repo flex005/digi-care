@@ -24,6 +24,7 @@ import { AlertDialog, Button, Card, Toast } from '@/components/primitives'
 import { NotYourHome, ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { pluralise } from '@/lib/format'
 import { nextReviewFrom } from '@/lib/review-interval'
@@ -116,6 +117,7 @@ function Editor({
   const { currentUser } = useSession()
   const viewer = useViewer()
   const format = useSiteFormat()
+  const term = useTerm()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
 
   /*
@@ -236,7 +238,7 @@ function Editor({
           does not ask for it gets a clinical summary in all three boxes. */}
       <div className={styles.voiceNote} data-voice-note>
         <b>Written in {resident.preferredName}&rsquo;s own words:</b> &ldquo;I like
-        to…&rdquo;, not &ldquo;resident prefers…&rdquo;. What staff will do is written
+        to…&rdquo;, not &ldquo;{term.one} prefers…&rdquo;. What staff will do is written
         to whoever reads it on shift.
       </div>
 

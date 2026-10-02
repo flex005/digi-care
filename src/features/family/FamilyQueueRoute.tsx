@@ -8,6 +8,7 @@ import { Button, Card, Pager, usePaged } from '@/components/primitives'
 import { Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount } from '@/lib/format'
 import { allFamilyMembers } from '@/data/access/family-access-store'
@@ -103,6 +104,7 @@ function Found({
   filter: Filter
   onFilter: (value: Filter) => void
 }) {
+  const term = useTerm()
   const everybody = allFamilyMembers()
   const all: Row[] = residents.map((resident) => ({
     resident,
@@ -148,14 +150,14 @@ function Found({
           </span>
           <span className={styles.findingBody}>
             <span className={styles.findingTitle}>
-              of <span data-numeric>{formatCount(given.length)}</span> residents who
+              of <span data-numeric>{formatCount(given.length)}</span> {term.many} who
               agreed have nobody named
             </span>
             <span className={styles.findingDetail}>
               Family Portal consent is on file at {siteName} and no family member has
               been given access under it. The other{' '}
               <span data-numeric>{formatCount(all.length - given.length)}</span> of{' '}
-              <span data-numeric>{formatCount(all.length)}</span> residents have no
+              <span data-numeric>{formatCount(all.length)}</span> {term.many} have no
               consent on file and are not counted here.
             </span>
           </span>
@@ -175,9 +177,9 @@ function Found({
             <span className={styles.findingDetail}>
               Named while the consent stood, and nothing removed them when it stopped,
               across <span data-numeric>{formatCount(withoutConsent.length)}</span> of{' '}
-              <span data-numeric>{formatCount(all.length)}</span> residents and{' '}
+              <span data-numeric>{formatCount(all.length)}</span> {term.many} and{' '}
               <span data-numeric>{formatCount(namedPeople)}</span> named people at{' '}
-              {siteName}. Open the resident to remove anybody who should not have it.
+              {siteName}. Open the {term.one} to remove anybody who should not have it.
             </span>
           </span>
         </div>
@@ -259,7 +261,7 @@ function Found({
           </ul>
         )}
 
-        <Pager paged={paged} total={visible.length} noun="residents" />
+        <Pager paged={paged} total={visible.length} noun={term.many} />
       </Card>
     </>
   )

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { ResidentId } from '@/data/types'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { Button, Card, Select } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
@@ -53,6 +54,7 @@ const SOURCES: { id: SourceId; label: string; hint: string }[] = [
 
 export function InterimRoute() {
   const { activeSite } = useSession()
+  const term = useTerm()
   const residents = useMemo(() => residentsBySite(activeSite.id), [activeSite.id])
 
   const [source, setSource] = useState<SourceId | 'none'>('none')
@@ -169,8 +171,8 @@ export function InterimRoute() {
             <div className={styles.field}>
               <Select
                 labelVisible
-                label="Resident"
-                placeholder="Choose a resident"
+                label={term.One}
+                placeholder={`Choose a ${term.one}`}
                 value={residentId === 'none' ? undefined : residentId}
                 onValueChange={(value) => setResidentId(value as ResidentId)}
                 options={residents.map((one) => ({
@@ -329,9 +331,10 @@ function Allergies({
 }: {
   resident: ReturnType<typeof residentsBySite>[number] | undefined
 }) {
+  const term = useTerm()
   if (resident === undefined) {
     return (
-      <p className={styles.hint}>Choose a resident and their allergies show here.</p>
+      <p className={styles.hint}>Choose a {term.one} and their allergies show here.</p>
     )
   }
 

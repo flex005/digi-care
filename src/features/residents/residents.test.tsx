@@ -11,7 +11,16 @@ import { ResidentsRoute } from './ResidentsRoute'
 import { RiskFlagsCell, hasNoRiskFlags } from './RiskFlagsCell'
 import { RISK_FLAG_SOURCES } from './risk-flag-sources'
 import { CriticalGapsChip } from './CriticalGapsChip'
-import { ANALYTICS_PERIODS, ANALYTICS_TILE_SOURCES } from './analytics-tiles'
+import { ANALYTICS_PERIODS, analyticsTileSources } from './analytics-tiles'
+import { subjectTerm } from '@/lib/vocabulary'
+
+/**
+ * The configured word for the person a record is about, read from the owner
+ * rather than written out, so these assertions hold for a home that calls them
+ * patients. The default is the care-home term, which is what these fixtures
+ * are.
+ */
+const TERM = subjectTerm('care_home', undefined)
 import { listName } from './list-name'
 
 /**
@@ -363,7 +372,7 @@ describe('analytics figures', () => {
     const figures = screen.getByRole('region', { name: /^Figures for/ })
     const said = figures.textContent ?? ''
 
-    for (const source of ANALYTICS_TILE_SOURCES) {
+    for (const source of analyticsTileSources(TERM)) {
       expect(said, `${source.label} is missing from the figures`).toContain(
         source.label,
       )
@@ -373,7 +382,9 @@ describe('analytics figures', () => {
     // on the record. It is not relaxed in the claim: the accessible sentence
     // still carries figure, denominator and site together, and this fails if a
     // future card states a number nobody can size.
-    expect(said).toMatch(/of \d+ residents|residents at |Insufficient evidence/)
+    expect(said).toMatch(
+      new RegExp(`of \\d+ ${TERM.many}|${TERM.many} at |Insufficient evidence`),
+    )
   })
 
   it('names the site in each claim, even though the card does not print it', async () => {
@@ -403,7 +414,7 @@ describe('analytics figures', () => {
     // At Ashgrove nothing is overdue and three of four residents have never had
     // a review scheduled — an overdue-only figure reads "0 of 4" and looks
     // settled, which is PRD §2.1's named failure.
-    const reviews = ANALYTICS_TILE_SOURCES.find((source) => source.id === 'reviews')
+    const reviews = analyticsTileSources(TERM).find((source) => source.id === 'reviews')
     expect(reviews).toBeDefined()
     const neverScheduled = residents.find(
       (resident) => resident.carePlanReview.kind === 'never_scheduled',
@@ -433,7 +444,7 @@ describe('analytics figures', () => {
   it('gives every card an as-of counterpart, so no movement is invented', () => {
     // `matchesAt` being required is what makes the change a reconstruction. A
     // card cannot be declared that shows a movement it cannot account for.
-    for (const source of ANALYTICS_TILE_SOURCES) {
+    for (const source of analyticsTileSources(TERM)) {
       expect(typeof source.matchesAt, `${source.label} has no as-of rule`).toBe(
         'function',
       )

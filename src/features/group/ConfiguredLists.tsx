@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerm } from '@/app/session/use-term'
 import { ReadOnlyHere } from '@/components/status'
 import {
   CARE_PLAN_DOMAINS,
@@ -40,6 +41,7 @@ export function ConfiguredLists({
   onChanged: () => void
 }) {
   const viewer = useViewer()
+  const term = useTerm()
   const [, setVersion] = useState(0)
   const residents = residentsBySite(siteId).length
 
@@ -90,7 +92,7 @@ export function ConfiguredLists({
        * whole home, which would change what every resident at it is expected
        * to hold — and with it every "of 10" figure in the product.
        */
-      note: 'These ten for every resident here. A domain for one resident is written on their own care plan; adding one for the whole home is not built.',
+      note: `These ten for every ${term.one} here. A domain for one ${term.one} is written on their own care plan; adding one for the whole home is not built.`,
     },
     {
       id: 'consents',
@@ -113,7 +115,7 @@ export function ConfiguredLists({
           <p className={styles.settingsNote}>
             <b>Turning one off clears nothing already recorded</b>, and an unanswered
             one stops counting as a gap. That moves what {siteName} is expected to hold,
-            across {pluralise(residents, 'resident')}.
+            across {pluralise(residents, term.one, term.many)}.
           </p>
 
           <ul className={styles.toggles}>
@@ -126,7 +128,7 @@ export function ConfiguredLists({
                     data-toggle-state={on ? 'on' : 'off'}
                   >
                     {on
-                      ? `asked of every resident at ${siteName}`
+                      ? `asked of every ${term.one} at ${siteName}`
                       : 'not asked here; anything already recorded stays'}
                   </span>
                   <Switch

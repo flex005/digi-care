@@ -10,6 +10,7 @@ import {
 } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { formatDate, ageFrom, pluralise } from '@/lib/format'
 import { MEDICATION_LOOKAHEAD_HOURS } from '@/lib/shift'
 import { telHref } from '@/lib/phone'
@@ -45,7 +46,9 @@ function LastNoteSummary({ note }: { note: CareNote | 'none' }) {
 
   return (
     <div className={styles.noteSummary}>
-      <p className={styles.noteBody}>{note.body}</p>
+      <p className={styles.noteBody} data-recorded-text>
+        {note.body}
+      </p>
       <div className={styles.noteMeta}>
         <span>{category ? category.name : note.category}</span>
         {/* Relative time alongside the absolute timestamp, never instead of
@@ -83,6 +86,7 @@ function LastNoteSummary({ note }: { note: CareNote | 'none' }) {
 
 function DueMedications({ due }: { due: DueMedication[] }) {
   const format = useSiteFormat()
+  const term = useTerm()
 
   if (due.length === 0) {
     // A real answer, stated — an empty space here would be indistinguishable
@@ -93,7 +97,7 @@ function DueMedications({ due }: { due: DueMedication[] }) {
       <>
         <p className={styles.factAnswer}>Nothing due</p>
         <p className={styles.factQuiet}>
-          Checked against this resident's current rounds
+          Checked against this {term.ones} current rounds
         </p>
       </>
     )

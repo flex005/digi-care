@@ -4,6 +4,7 @@ import { subjectResidentId } from '@/data/types'
 import { Button, Toast } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { incidentPdfContent } from './incident-pdf'
 
 /**
@@ -35,6 +36,7 @@ export function DownloadIncident({
 }) {
   const { activeSite } = useSession()
   const format = useSiteFormat()
+  const term = useTerm()
   const [state, setState] = useState<'idle' | 'done' | 'failed'>('idle')
   const [failure, setFailure] = useState('')
 
@@ -42,7 +44,7 @@ export function DownloadIncident({
   const resident = residents.find((person) => person.id === residentId)
   const residentName =
     incident.subject.kind === 'no_resident_involved'
-      ? 'No resident involved'
+      ? `No ${term.one} involved`
       : (resident?.fullLegalName ?? 'Not recorded')
 
   const content = incidentPdfContent(incident, {

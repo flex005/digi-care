@@ -11,6 +11,7 @@ import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, formatDateTime, pluralise } from '@/lib/format'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerm } from '@/app/session/use-term'
 import { PlanSession } from './PlanSession'
 import { zonedDate } from '@/lib/format'
 import { sessionState, unrecordedSessions } from './session-state'
@@ -202,6 +203,7 @@ function Found({
   offset: number
 }) {
   const format = useSiteFormat()
+  const term = useTerm()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
 
   /*
@@ -239,8 +241,16 @@ function Found({
           <span className={styles.leadDetail}>
             Of <span data-numeric>{pluralise(inRange.length, 'session')}</span> at{' '}
             {siteName} this {range}.{' '}
-            <span data-numeric>{formatCount(invitedToThem)}</span> residents were
-            invited to them, and there is no record of whether any of them came.
+            {/*
+              The count and the word agree through `pluralise`, which is the
+              owner of that agreement (§6). They were two adjacent JSX
+              expressions — `{formatCount(n)} {term.many} were` — which reads
+              "1 residents were" at one, and which `check-plurals` does not
+              see, because its subject and its count are separate nodes.
+            */}
+            <span data-numeric>{pluralise(invitedToThem, term.one, term.many)}</span>{' '}
+            {invitedToThem === 1 ? 'was' : 'were'} invited to them, and there is no
+            record of whether any of them came.
           </span>
         </span>
       </div>

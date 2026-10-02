@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import type { Incident, NotificationDecision } from '@/data/types'
 import { INCIDENT_TYPES, subjectResidentId } from '@/data/types'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import { Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { Unrecorded } from '@/components/status'
@@ -59,6 +61,7 @@ const stateOf = (notification: NotificationDecision): Filter => {
 export function NotificationsRoute() {
   const { activeSite } = useSession()
   const format = useSiteFormat()
+  const term = useTerm()
   const data = useComplianceData()
   const [filter, setFilter] = useState<Filter>('undecided')
 
@@ -146,7 +149,7 @@ export function NotificationsRoute() {
                     <p className={styles.rowTitle}>{typeName(incident)}</p>
                     <p className={styles.rowMeta}>
                       {format.dateTime(incident.occurredAt)} ·{' '}
-                      {subjectOf(incident, data.residents)}
+                      {subjectOf(incident, data.residents, term)}
                     </p>
                   </div>
 
@@ -227,11 +230,12 @@ const typeName = (incident: Incident) =>
 function subjectOf(
   incident: Incident,
   residents: { id: string; fullLegalName: string }[],
+  term: Term,
 ) {
   const residentId = subjectResidentId(incident)
-  if (residentId === 'none') return 'No resident involved'
+  if (residentId === 'none') return `No ${term.one} involved`
   return (
     residents.find((resident) => resident.id === residentId)?.fullLegalName ??
-    'Resident not found'
+    `${term.One} not found`
   )
 }

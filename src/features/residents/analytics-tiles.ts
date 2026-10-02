@@ -6,6 +6,7 @@ import { hadCriticalGapAt, recordCompleteness } from '@/data/completeness'
 import { tileIcons, type TileId } from './analytics-tiles.icons'
 import { STALE_NOTE_HOURS, hasNoNoteWithinWindow } from './use-resident-filters'
 import { insufficientEvidenceThreshold } from '@/data/access/settings-store'
+import type { Term } from '@/lib/vocabulary'
 
 /**
  * The analytics tiles above the residents list — declared, not assembled in a
@@ -60,107 +61,118 @@ const everyone = (summaries: ResidentSummary[]) => summaries
 
 const noExclusions = () => ''
 
-export const ANALYTICS_TILE_SOURCES: AnalyticsTileSource[] = [
-  {
-    id: 'residents',
-    icon: tileIcons.residents,
-    label: 'Residents',
-    kind: 'census',
-    assessable: everyone,
-    matches: () => true,
-    // Resident here then, too. The census change is admissions since.
-    matchesAt: (summary, at) => new Date(summary.resident.admittedOn).getTime() <= at,
-    denominatorNoun: 'residents',
-    excludedReason: noExclusions,
-  },
-  {
-    id: 'critical',
-    icon: tileIcons.critical,
-    label: 'Critical gaps',
-    kind: 'subset',
-    assessable: everyone,
-    matches: (summary) => recordCompleteness(summary.resident).hasCriticalGaps,
-    matchesAt: (summary, at) => hadCriticalGapAt(summary.resident, at),
-    denominatorNoun: 'residents',
-    excludedReason: noExclusions,
-  },
-  {
-    /**
-     * **Overdue OR never scheduled**, and the label says both.
-     *
-     * Counting only `overdue` would have hidden a whole category: Ashgrove has
-     * nothing overdue and three of its four residents have never had a review
-     * scheduled. An "overdue" tile reading "0 of 4" there would be untrue by
-     * omission — PRD §2.1 names this exact pair as one that must never both
-     * render as untroubled.
-     */
-    id: 'reviews',
-    icon: tileIcons.reviews,
-    label: 'Reviews overdue or never scheduled',
-    kind: 'subset',
-    assessable: everyone,
-    matches: (summary) =>
-      summary.resident.carePlanReview.kind === 'overdue' ||
-      summary.resident.carePlanReview.kind === 'never_scheduled',
-    // Never scheduled was never scheduled then either. Overdue is a date, so
-    // it can be asked of any instant: it was overdue at `at` if it was already
-    // past its due date by then.
-    matchesAt: (summary, at) => {
-      const review = summary.resident.carePlanReview
-      if (review.kind === 'never_scheduled') return true
-      if (review.kind === 'overdue') return Date.parse(review.dueOn) <= at
-      return false
+/**
+ * The five sources, built against the word this organisation uses.
+ *
+ * A function rather than a constant because a tile's label and its
+ * `denominatorNoun` are both the word for the person the figure is about, and
+ * §6's one-owner rule puts that word in `Term` rather than in each string.
+ * Nothing here derives a form: the heading asks for `Many` and the denominator
+ * for `many`, which is the whole reason both are declared.
+ */
+export function analyticsTileSources(term: Term): AnalyticsTileSource[] {
+  return [
+    {
+      id: 'residents',
+      icon: tileIcons.residents,
+      label: term.Many,
+      kind: 'census',
+      assessable: everyone,
+      matches: () => true,
+      // Resident here then, too. The census change is admissions since.
+      matchesAt: (summary, at) => new Date(summary.resident.admittedOn).getTime() <= at,
+      denominatorNoun: term.many,
+      excludedReason: noExclusions,
     },
-    denominatorNoun: 'residents',
-    excludedReason: noExclusions,
-  },
-  {
-    /**
-     * The one tile with a genuinely partial denominator.
-     *
-     * "No care note in 48 hours" cannot be asserted about somebody who has
-     * been resident for 20 hours — the window has not elapsed, so the answer
-     * is not "no problem", it is not yet knowable. They leave the denominator
-     * and the tile says how many and why. Ismail Sowande at Ashgrove is the
-     * live case: admitted 45 hours ago, PRD §5.3's gap 3.
-     */
-    id: 'notes',
-    icon: tileIcons.notes,
-    label: `No care note in ${STALE_NOTE_HOURS}h`,
-    kind: 'subset',
-    assessable: (summaries, now) =>
-      summaries.filter(
-        (summary) =>
-          now - new Date(summary.resident.admittedOn).getTime() >=
-          STALE_NOTE_HOURS * 3_600_000,
-      ),
-    matches: (summary, now) => hasNoNoteWithinWindow(summary, now),
-    // Care notes carry 90 days of history, so the same question answers for a
-    // past instant — provided the period stays inside that history.
-    matchesAt: (summary, at) => hasNoNoteWithinWindow(summary, at),
-    // Just "residents". The denominator IS restricted to those here long
-    // enough, but saying so in the pill is noise on every site where nobody is
-    // excluded — and `excludedReason` says it in full on the one where somebody
-    // is, which is exactly when it changes the reading.
-    denominatorNoun: 'residents',
-    excludedReason: (excluded) =>
-      `${excluded} admitted under ${STALE_NOTE_HOURS}h ago, so the window has not elapsed for them.`,
-  },
-  {
-    id: 'falls',
-    icon: tileIcons.falls,
-    label: 'Never assessed for falls',
-    kind: 'subset',
-    assessable: everyone,
-    matches: (summary) => summary.resident.risks.falls.kind === 'not_assessed',
-    matchesAt: (summary, at) => {
-      const falls = summary.resident.risks.falls
-      return falls.kind === 'not_assessed' || Date.parse(falls.assessedAt) > at
+    {
+      id: 'critical',
+      icon: tileIcons.critical,
+      label: 'Critical gaps',
+      kind: 'subset',
+      assessable: everyone,
+      matches: (summary) => recordCompleteness(summary.resident).hasCriticalGaps,
+      matchesAt: (summary, at) => hadCriticalGapAt(summary.resident, at),
+      denominatorNoun: term.many,
+      excludedReason: noExclusions,
     },
-    denominatorNoun: 'residents',
-    excludedReason: noExclusions,
-  },
-]
+    {
+      /**
+       * **Overdue OR never scheduled**, and the label says both.
+       *
+       * Counting only `overdue` would have hidden a whole category: Ashgrove has
+       * nothing overdue and three of its four residents have never had a review
+       * scheduled. An "overdue" tile reading "0 of 4" there would be untrue by
+       * omission — PRD §2.1 names this exact pair as one that must never both
+       * render as untroubled.
+       */
+      id: 'reviews',
+      icon: tileIcons.reviews,
+      label: 'Reviews overdue or never scheduled',
+      kind: 'subset',
+      assessable: everyone,
+      matches: (summary) =>
+        summary.resident.carePlanReview.kind === 'overdue' ||
+        summary.resident.carePlanReview.kind === 'never_scheduled',
+      // Never scheduled was never scheduled then either. Overdue is a date, so
+      // it can be asked of any instant: it was overdue at `at` if it was already
+      // past its due date by then.
+      matchesAt: (summary, at) => {
+        const review = summary.resident.carePlanReview
+        if (review.kind === 'never_scheduled') return true
+        if (review.kind === 'overdue') return Date.parse(review.dueOn) <= at
+        return false
+      },
+      denominatorNoun: term.many,
+      excludedReason: noExclusions,
+    },
+    {
+      /**
+       * The one tile with a genuinely partial denominator.
+       *
+       * "No care note in 48 hours" cannot be asserted about somebody who has
+       * been resident for 20 hours — the window has not elapsed, so the answer
+       * is not "no problem", it is not yet knowable. They leave the denominator
+       * and the tile says how many and why. Ismail Sowande at Ashgrove is the
+       * live case: admitted 45 hours ago, PRD §5.3's gap 3.
+       */
+      id: 'notes',
+      icon: tileIcons.notes,
+      label: `No care note in ${STALE_NOTE_HOURS}h`,
+      kind: 'subset',
+      assessable: (summaries, now) =>
+        summaries.filter(
+          (summary) =>
+            now - new Date(summary.resident.admittedOn).getTime() >=
+            STALE_NOTE_HOURS * 3_600_000,
+        ),
+      matches: (summary, now) => hasNoNoteWithinWindow(summary, now),
+      // Care notes carry 90 days of history, so the same question answers for a
+      // past instant — provided the period stays inside that history.
+      matchesAt: (summary, at) => hasNoNoteWithinWindow(summary, at),
+      // Just "residents". The denominator IS restricted to those here long
+      // enough, but saying so in the pill is noise on every site where nobody is
+      // excluded — and `excludedReason` says it in full on the one where somebody
+      // is, which is exactly when it changes the reading.
+      denominatorNoun: term.many,
+      excludedReason: (excluded) =>
+        `${excluded} admitted under ${STALE_NOTE_HOURS}h ago, so the window has not elapsed for them.`,
+    },
+    {
+      id: 'falls',
+      icon: tileIcons.falls,
+      label: 'Never assessed for falls',
+      kind: 'subset',
+      assessable: everyone,
+      matches: (summary) => summary.resident.risks.falls.kind === 'not_assessed',
+      matchesAt: (summary, at) => {
+        const falls = summary.resident.risks.falls
+        return falls.kind === 'not_assessed' || Date.parse(falls.assessedAt) > at
+      },
+      denominatorNoun: term.many,
+      excludedReason: noExclusions,
+    },
+  ]
+}
 
 export interface AnalyticsTile {
   source: AnalyticsTileSource
@@ -186,10 +198,11 @@ export interface AnalyticsTile {
 export function buildAnalyticsTiles(
   summaries: ResidentSummary[],
   now: number,
+  term: Term,
   period: AnalyticsPeriod = DEFAULT_PERIOD,
 ): AnalyticsTile[] {
   const since = now - period.days * 86_400_000
-  return ANALYTICS_TILE_SOURCES.map((source) => {
+  return analyticsTileSources(term).map((source) => {
     const assessable = source.assessable(summaries, now)
     const coverage = { covered: assessable.length, total: summaries.length }
     const excluded = coverage.total - coverage.covered
@@ -220,7 +233,7 @@ export function buildAnalyticsTiles(
           coverage,
           missingDescription:
             coverage.total === 0
-              ? 'There are no residents here to count.'
+              ? `There are no ${term.many} here to count.`
               : 'Too few of them have been here long enough to say.',
         },
         excludedReason: excluded > 0 ? source.excludedReason(excluded) : '',

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTerm } from '@/app/session/use-term'
 import { STAFF_ROLE_NAMES } from '@/data/types'
 import { Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
@@ -22,6 +23,7 @@ import styles from './team.module.css'
  * no authentication in this build.
  */
 export function PermissionMatrixRoute() {
+  const term = useTerm()
   return (
     <div className={styles.page} data-permission-matrix>
       <Link to=".." relative="path" className={styles.backLink} data-back-link>
@@ -81,7 +83,7 @@ export function PermissionMatrixRoute() {
               {PERMISSION_MODULES.map((module) => (
                 <tr key={module.id} data-matrix-row={module.id}>
                   <th scope="row" className={styles.matrixModule}>
-                    {module.label}
+                    {module.subject === undefined ? module.label : term[module.subject]}
                   </th>
                   {PERMISSION_ROLES.map((role) => {
                     const level = levelFor(role, module.id)

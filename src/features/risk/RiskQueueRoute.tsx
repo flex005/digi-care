@@ -15,6 +15,7 @@ import {
 import { StatusPill, Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, formatLateness } from '@/lib/format'
 import { PlaceholderBanner } from './PlaceholderBanner'
@@ -155,6 +156,7 @@ function Found({
   onTemplate: (value: RiskTemplateId | 'all' | 'custom') => void
 }) {
   const format = useSiteFormat()
+  const term = useTerm()
 
   /*
    * Every resident against every template, from the constant.
@@ -242,9 +244,10 @@ function Found({
                 : 'risks have never been assessed'}
             </span>
             <span className={styles.findingDetail}>
-              Across <span data-numeric>{formatCount(residents.length)}</span> residents
-              and <span data-numeric>{RISK_ASSESSMENT_TEMPLATES.length}</span> templates
-              at {siteName}, <span data-numeric>{formatCount(all.length)}</span>{' '}
+              Across <span data-numeric>{formatCount(residents.length)}</span>{' '}
+              {term.many} and{' '}
+              <span data-numeric>{RISK_ASSESSMENT_TEMPLATES.length}</span> templates at{' '}
+              {siteName}, <span data-numeric>{formatCount(all.length)}</span>{' '}
               assessments the home is expected to hold. Never assessed is not low risk.
             </span>
           </span>
@@ -267,9 +270,9 @@ function Found({
                   {' '}
                   <span data-numeric>{formatCount(customOverdue.length)}</span>{' '}
                   {customOverdue.length === 1 ? 'risk' : 'risks'} recorded for
-                  individual residents {customOverdue.length === 1 ? 'is' : 'are'} also
-                  past a review date, below and counted apart: they are not part of the
-                  nine any home is expected to hold.
+                  individual {term.many} {customOverdue.length === 1 ? 'is' : 'are'}{' '}
+                  also past a review date, below and counted apart: they are not part of
+                  the nine any home is expected to hold.
                 </span>
               )}
             </span>
@@ -315,7 +318,7 @@ function Found({
                   label: entry.name,
                 })),
                 // Named as what it is, never as a tenth template.
-                { value: 'custom', label: 'Recorded for one resident' },
+                { value: 'custom', label: `Recorded for one ${term.one}` },
               ]}
             />
           </div>
@@ -372,7 +375,7 @@ function Found({
                       <span className={styles.rowName}>{row.name}</span>
                       {row.expected ? null : (
                         <span className={styles.rowMeta}>
-                          Recorded for this resident, outside the nine
+                          Recorded for this {term.one}, outside the nine
                         </span>
                       )}
                     </span>

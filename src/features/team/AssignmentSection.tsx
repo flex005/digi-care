@@ -1,6 +1,7 @@
 import type { ResidentAssignment, StaffMember } from '@/data/types'
 import { Unrecorded } from '@/components/status'
 import { residentsBySite } from '@/data/fixtures/residents'
+import { useTerm } from '@/app/session/use-term'
 import { formatDate, pluralise } from '@/lib/format'
 import styles from './team.module.css'
 
@@ -26,13 +27,14 @@ import styles from './team.module.css'
  * and the second takes the hatch.
  */
 export function AssignmentSection({ member }: { member: StaffMember }) {
+  const term = useTerm()
   if (member.role !== 'care_worker') return null
 
   const assignment: ResidentAssignment = member.residentAssignment
 
   return (
     <section className={styles.section} data-assignment={assignment.kind}>
-      <h2 className={styles.sectionTitle}>Residents</h2>
+      <h2 className={styles.sectionTitle}>{term.Many}</h2>
       <p className={styles.sectionNote}>
         Who this care worker has been given. It decides what they see in the Care Worker
         app.
@@ -42,11 +44,11 @@ export function AssignmentSection({ member }: { member: StaffMember }) {
         <Unrecorded
           variant="panel"
           label="Nobody has decided"
-          detail={`Nobody has recorded which residents ${member.ref.fullName} covers. That is not the same as covering everybody.`}
+          detail={`Nobody has recorded which ${term.many} ${member.ref.fullName} covers. That is not the same as covering everybody.`}
         />
       ) : assignment.kind === 'all_residents_at_site' ? (
         <div className={styles.assignmentSettled}>
-          <p className={styles.assignmentValue}>Every resident at this home</p>
+          <p className={styles.assignmentValue}>Every {term.one} at this home</p>
           <p className={styles.byline}>
             Decided by <strong>{assignment.decidedBy.fullName}</strong> ·{' '}
             <span data-numeric>{formatDate(assignment.on)}</span>

@@ -5,6 +5,7 @@ import { useResource } from '@/data/access/use-resource'
 import { carePlanDomainName } from '@/data/access/review-flags'
 import { INCIDENT_TYPES } from '@/data/types'
 import { useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import styles from './care-plan.module.css'
 import { NotYourHome } from '@/components/status'
 
@@ -49,6 +50,7 @@ export function OwedReviews({
   const load = useCallback(() => getResidentIncidents(residentId), [residentId])
   const resource = useResource<Incident[]>(load, [residentId, revision])
   const format = useSiteFormat()
+  const term = useTerm()
 
   if (resource.kind === 'loading') {
     return (
@@ -70,7 +72,7 @@ export function OwedReviews({
     return (
       <div className={styles.owed} data-owed-error>
         <p className={styles.owedTitle}>
-          Post-incident reviews could not be read for this resident
+          Post-incident reviews could not be read for this {term.one}
         </p>
         <p className={styles.owedItem}>
           Whether this care plan owes a review is unknown, not settled.

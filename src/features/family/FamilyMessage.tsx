@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Incident } from '@/data/types'
 import { Button } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { ReadOnlyHere } from '@/components/status'
 import { useSiteFormat } from '@/app/session/use-session'
@@ -44,6 +45,7 @@ export function FamilyMessage({
   const { currentUser } = useSession()
   const viewer = useViewer()
   const format = useSiteFormat()
+  const term = useTerm()
   const [message, setMessage] = useState('')
 
   /*
@@ -87,8 +89,8 @@ export function FamilyMessage({
 
       {named.length === 0 ? (
         <p className={styles.noFamily} data-no-family-named>
-          Nobody is named to see this resident&rsquo;s updates; if the family need to
-          know, telephone them.
+          Nobody is named to see this {term.ones} updates; if the family need to know,
+          telephone them.
         </p>
       ) : current !== undefined ? (
         <>

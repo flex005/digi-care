@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { Unrecorded } from '@/components/status'
@@ -7,6 +8,7 @@ import type { IsoDateTime } from '@/data/types'
 import { sessionActs } from '@/data/access/session-log'
 import { staffLabel } from '@/data/access/team-store'
 import { formatCount } from '@/lib/format'
+import type { Term } from '@/lib/vocabulary'
 import styles from './team.module.css'
 
 /**
@@ -30,16 +32,19 @@ import styles from './team.module.css'
  * the call site — the tidying transformation §8 names, which turned "DNAR"
  * into "dnar" in Phase 11.
  */
-const NOT_LOGGED = [
-  'who opened a resident’s record, and when',
-  'sign-ins, sign-outs and failed attempts',
-  'exports and downloads',
-  'permission changes',
-  'anything done before this page was loaded',
-]
+function notLogged(term: Term): string[] {
+  return [
+    `who opened a ${term.ones} record, and when`,
+    'sign-ins, sign-outs and failed attempts',
+    'exports and downloads',
+    'permission changes',
+    'anything done before this page was loaded',
+  ]
+}
 
 export function ActivityLogRoute() {
   const format = useSiteFormat()
+  const term = useTerm()
   const acts = sessionActs()
 
   return (
@@ -101,7 +106,7 @@ export function ActivityLogRoute() {
             variant="panel"
             caption={`${formatCount(acts.length)} ${acts.length === 1 ? 'act' : 'acts'} in this session`}
             label="Not in this log"
-            detail={`${NOT_LOGGED.join('; ')}.`}
+            detail={`${notLogged(term).join('; ')}.`}
           />
         </div>
       </Card>

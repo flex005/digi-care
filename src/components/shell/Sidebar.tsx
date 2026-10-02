@@ -1,4 +1,5 @@
 import { NavLink, useMatch } from 'react-router-dom'
+import { useTerm } from '@/app/session/use-term'
 import { Icon } from '@/components/icon/Icon'
 import { Tooltip } from '@/components/primitives'
 import { navItems, navSections, shellIcons } from '@/app/nav-items.icons'
@@ -35,8 +36,12 @@ export interface SidebarProps {
   counts: Partial<Record<string, NavCount>>
 }
 
-function itemAccessibleName(item: NavItem, count: NavCount | undefined): string {
-  const base = item.enabled ? item.label : `${item.label} (coming in a later phase)`
+function itemAccessibleName(
+  item: NavItem,
+  count: NavCount | undefined,
+  label: string,
+): string {
+  const base = item.enabled ? label : `${label} (coming in a later phase)`
   return count ? `${base}. ${count.description}` : base
 }
 
@@ -74,9 +79,12 @@ function SidebarItem({
    * stayed lit on every screen. A nav item is active when you are looking at
    * it, and only then.
    */
+  /* The item declares the form; the owner supplies the word. */
+  const term = useTerm()
+  const label = item.subject === undefined ? item.label : term[item.subject]
   const match = useMatch({ path: item.path, end: item.path === '/' })
   const isActive = item.enabled && match !== null
-  const name = itemAccessibleName(item, count)
+  const name = itemAccessibleName(item, count, label)
 
   const className = [
     styles.item,
@@ -89,7 +97,7 @@ function SidebarItem({
   const inner = (
     <>
       <Icon name={item.icon} size={20} />
-      <span className={styles.label}>{item.label}</span>
+      <span className={styles.label}>{label}</span>
       {count ? <NavBadge count={count} collapsed={collapsed} /> : null}
       {item.enabled || collapsed ? null : (
         <span className={styles.phaseTag} aria-hidden="true">

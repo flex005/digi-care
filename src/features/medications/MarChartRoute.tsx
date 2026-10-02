@@ -15,6 +15,8 @@ import {
 } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { marCellDescription } from '@/components/status/MarCell'
+import { useTerm } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import { useTimeZone } from '@/app/session/use-session'
 import { formatDate, zonedDate } from '@/lib/format'
 import { MarGridCell } from './MarGridCell'
@@ -44,6 +46,7 @@ export function MarChartRoute() {
   const { resident, site } = useOutletContext<ResidentProfile>()
   const { residentId } = useParams<{ residentId: string }>()
   const timeZone = useTimeZone()
+  const term = useTerm()
 
   const [range, setRange] = useState<MarRange>(DEFAULT_RANGE)
   const [anchor, setAnchor] = useState<IsoDate>(() =>
@@ -297,7 +300,12 @@ export function MarChartRoute() {
                       >
                         <MarGridCell
                           state={cell.state}
-                          description={sentenceFor(row.medication, cell, timeZone)}
+                          description={sentenceFor(
+                            row.medication,
+                            cell,
+                            timeZone,
+                            term,
+                          )}
                           selected={selected === key}
                           onSelect={() => setSelected(key)}
                         />
@@ -335,7 +343,12 @@ export function MarChartRoute() {
           ) : (
             <>
               <p className={styles.detailBody}>
-                {sentenceFor(selectedCell.row.medication, selectedCell.cell, timeZone)}
+                {sentenceFor(
+                  selectedCell.row.medication,
+                  selectedCell.cell,
+                  timeZone,
+                  term,
+                )}
               </p>
               {/* Through Unrecorded, not a local dashed border: the hatch has
                   exactly one definition and the component is what forces the
@@ -388,9 +401,10 @@ function sentenceFor(
   medication: Medication,
   cell: { date: IsoDate; roundTime: string; state: MarCellState },
   timeZone: string,
+  term: Term,
 ): string {
   // DD/MM/YYYY, not the ISO key. The key is how the grid finds a cell; this is
   // what a person hears (CLAUDE.md §6).
   const context = `${cell.roundTime}, ${formatDate(cell.date)}, ${medication.name} ${medication.dose}`
-  return marCellDescription(cell.state, context, timeZone)
+  return marCellDescription(cell.state, context, timeZone, term)
 }

@@ -6,6 +6,7 @@ import { recordPrn, recordPrnOutcomeFor } from '@/data/access/client'
 import { Button } from '@/components/primitives'
 import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { staffLabel } from '@/data/access/team-store'
 import styles from './medications.module.css'
@@ -80,6 +81,7 @@ function PrnRow({
   given: PrnAdministration[]
   onChanged: () => void
 }) {
+  const term = useTerm()
   const { currentUser } = useSession()
   const viewer = useViewer()
   const format = useSiteFormat()
@@ -155,7 +157,7 @@ function PrnRow({
               className={styles.cdInput}
               type="text"
               value={reason}
-              placeholder="Resident asked, last dose over six hours ago"
+              placeholder={`${term.One} asked, last dose over six hours ago`}
               onChange={(event) => setReason(event.target.value)}
             />
           </label>

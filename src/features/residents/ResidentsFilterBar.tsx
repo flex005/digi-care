@@ -7,6 +7,8 @@ import type {
   RiskFilter,
 } from './use-resident-filters'
 import { ANALYTICS_PERIODS, type AnalyticsPeriod } from './analytics-tiles'
+import { useTerm } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import styles from './residents.module.css'
 
 /**
@@ -31,11 +33,13 @@ import styles from './residents.module.css'
  * The list still OPENS on critical gaps; where the default sits and where the
  * options read from are different questions.
  */
-const RECORDS_TABS: { value: RecordsFilter; label: string }[] = [
-  { value: 'all', label: 'All residents' },
-  { value: 'any_incomplete', label: 'Any incomplete record' },
-  { value: 'critical', label: 'Critical gaps' },
-]
+function recordsTabs(term: Term): { value: RecordsFilter; label: string }[] {
+  return [
+    { value: 'all', label: `All ${term.many}` },
+    { value: 'any_incomplete', label: 'Any incomplete record' },
+    { value: 'critical', label: 'Critical gaps' },
+  ]
+}
 
 export interface ResidentsFilterBarProps {
   filters: ResidentFilters
@@ -56,6 +60,7 @@ export function ResidentsFilterBar({
   period,
   onPeriodChange,
 }: ResidentsFilterBarProps) {
+  const term = useTerm()
   return (
     <>
       {/*
@@ -67,8 +72,8 @@ export function ResidentsFilterBar({
        * that without promising tab semantics nothing here implements.
        */}
       <div className={styles.viewRow}>
-        <div className={styles.segmented} role="group" aria-label="Show residents">
-          {RECORDS_TABS.map((tab) => {
+        <div className={styles.segmented} role="group" aria-label={`Show ${term.many}`}>
+          {recordsTabs(term).map((tab) => {
             const active = filters.records === tab.value
             return (
               <button
@@ -96,7 +101,7 @@ export function ResidentsFilterBar({
       {/* Search first, then what narrows the list, then the figures period. */}
       <div className={styles.filterBar}>
         <label className={styles.search}>
-          <span className={styles.searchLabel}>Search residents</span>
+          <span className={styles.searchLabel}>Search {term.many}</span>
           <Icon name="search/search-02" size={16} aria-hidden />
           <input
             type="search"

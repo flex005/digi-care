@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import type { IsoDateTime } from '@/data/types'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { PendingInvitations } from './PendingInvitations'
 import { Card, SelectedMark } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
@@ -49,6 +50,7 @@ import styles from './dashboard.module.css'
 export function DashboardRoute() {
   const { activeSite } = useSession()
   const format = useSiteFormat()
+  const term = useTerm()
   const [today, setToday] = useState<Today | 'loading'>('loading')
 
   useEffect(() => {
@@ -88,6 +90,7 @@ export function DashboardRoute() {
     },
     acknowledged: today.incidentsTotal - today.unacknowledged.length,
     incidentsTotal: today.incidentsTotal,
+    term,
   })
 
   return (
@@ -99,7 +102,7 @@ export function DashboardRoute() {
       <header>
         <h1 className={styles.pageTitle}>{activeSite.name}</h1>
         <p className={styles.pageSubtitle}>
-          {format.dateTime(today.now)} · {pluralise(residents, 'resident')}
+          {format.dateTime(today.now)} · {pluralise(residents, term.one, term.many)}
         </p>
       </header>
 
@@ -120,7 +123,7 @@ export function DashboardRoute() {
           label="Overdue now"
           icon={dashboardIcons.overdue}
           figure={<MetricValue>{formatCount(today.late.length)}</MetricValue>}
-          of={`things, across ${formatCount(residents)} residents`}
+          of={`things, across ${formatCount(residents)} ${term.many}`}
           note={overdueBreakdown(today)}
         />
         <MetricTile
@@ -130,7 +133,7 @@ export function DashboardRoute() {
           figure={<MetricValue>{formatCount(today.dueSoon.length)}</MetricValue>}
           of={`doses, across ${formatCount(
             new Set(today.dueSoon.map((entry) => entry.resident.id)).size,
-          )} of ${formatCount(residents)} residents`}
+          )} of ${formatCount(residents)} ${term.many}`}
         />
         <MetricTile
           emphasis="supporting"
@@ -149,7 +152,7 @@ export function DashboardRoute() {
               </span>
             )
           }
-          of={`of ${pluralise(residents, 'resident')}`}
+          of={`of ${pluralise(residents, term.one, term.many)}`}
         />
         <MetricTile
           emphasis="supporting"
@@ -306,7 +309,7 @@ export function DashboardRoute() {
       <Card>
         <div className={styles.sectionHead}>
           <h2 className={styles.sectionTitle}>
-            Nobody has written these residents up today
+            Nobody has written these {term.many} up today
           </h2>
           <p className={styles.sectionNote}>
             <span data-numeric>{formatCount(today.unwritten.length)}</span> of{' '}

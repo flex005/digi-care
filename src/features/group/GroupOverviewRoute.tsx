@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { IsoDateTime } from '@/data/types'
 import { useSession } from '@/app/session/use-session'
+import { useTerm } from '@/app/session/use-term'
 import { Button, Card } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { formatCount, pluralise } from '@/lib/format'
@@ -28,6 +29,7 @@ import styles from './group.module.css'
  */
 export function GroupOverviewRoute() {
   const { organisation, sites, setActiveSite } = useSession()
+  const term = useTerm()
   const navigate = useNavigate()
   const [data, setData] = useState<GroupData | 'loading'>('loading')
   const totals = useMemo(
@@ -38,7 +40,7 @@ export function GroupOverviewRoute() {
   useEffect(() => {
     let live = true
     const now = appNow().toISOString() as IsoDateTime
-    void loadGroup(sites, now).then((loaded) => {
+    void loadGroup(sites, now, term).then((loaded) => {
       if (live) setData(loaded)
     })
     return () => {
@@ -73,7 +75,7 @@ export function GroupOverviewRoute() {
         </div>
         <div className={styles.metricRow}>
           <Metric
-            label="Residents"
+            label={term.Many}
             value={totals.residents}
             of={pluralise(sites.length, 'home')}
           />
@@ -98,7 +100,7 @@ export function GroupOverviewRoute() {
               <div>
                 <h2 className={styles.siteName}>{card.site.name}</h2>
                 <p className={styles.siteMeta}>
-                  {formatCount(card.residents)} residents · {card.site.timeZone}
+                  {formatCount(card.residents)} {term.many} · {card.site.timeZone}
                 </p>
               </div>
               {card.thin ? (

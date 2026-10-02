@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { useTerm } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import type { Goal, GoalProgressNote, IsoDateTime } from '@/data/types'
 import { CARE_PLAN_DOMAINS } from '@/data/types'
 import { Unrecorded } from '@/components/status'
@@ -83,12 +85,19 @@ export function GoalMeta({ goal, now }: { goal: Goal; now: IsoDateTime }) {
   )
 }
 
-const CLOSED_LABEL = {
-  achieved: 'Achieved',
-  not_achieved: 'Not achieved',
-  withdrawn_by_resident: 'Withdrawn by the resident',
-  stopped_by_service: 'Stopped by the service',
-} as const
+/*
+ * A function of the term: one of these four names the person, and a constant
+ * is evaluated before any component can ask what this organisation calls
+ * them. The key stays `withdrawn_by_resident` — that is the record's own
+ * vocabulary and renaming it would change a stored discriminant.
+ */
+const closedLabel = (term: Term) =>
+  ({
+    achieved: 'Achieved',
+    not_achieved: 'Not achieved',
+    withdrawn_by_resident: `Withdrawn by the ${term.one}`,
+    stopped_by_service: 'Stopped by the service',
+  }) as const
 
 const CLOSED_CLASS = {
   achieved: styles.stateAchieved,
@@ -127,6 +136,7 @@ export function GoalState({
 }
 
 function Chip({ standing }: { standing: GoalStanding }) {
+  const term = useTerm()
   const format = useSiteFormat()
 
   switch (standing.kind) {
@@ -176,7 +186,7 @@ function Chip({ standing }: { standing: GoalStanding }) {
           className={`${styles.state} ${CLOSED_CLASS[standing.outcome]}`}
           data-closed={standing.outcome}
         >
-          {CLOSED_LABEL[standing.outcome]}
+          {closedLabel(term)[standing.outcome]}
           <small>
             <span data-numeric>{format.date(standing.on)}</span> ·{' '}
             {standing.by.displayName} · {standing.note}

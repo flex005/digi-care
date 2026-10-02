@@ -5,6 +5,7 @@ import { Button } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { StatusPill } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
+import { useTerm } from '@/app/session/use-term'
 import { isScored, LEVEL_LABEL } from '@/features/risk/instrument'
 import {
   RiskFields,
@@ -59,6 +60,7 @@ export function AdmissionRisks({
   customs: DraftCustomRisk[]
   onCustoms: (next: DraftCustomRisk[]) => void
 }) {
+  const term = useTerm()
   const [open, setOpen] = useState<string>('')
   const answered = RISK_ASSESSMENT_TEMPLATES.filter((template) => {
     const draft = drafts[template.id]
@@ -187,7 +189,7 @@ export function AdmissionRisks({
                   </p>
                   <p className={styles.riskInstrument}>
                     {named
-                      ? 'Recorded for this resident, outside the nine'
+                      ? `Recorded for this ${term.one}, outside the nine`
                       : 'Name it, and record what is known about it'}
                   </p>
                 </div>
