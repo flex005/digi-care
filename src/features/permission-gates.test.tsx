@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
+import { render, waitFor, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
 import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/primitives'
@@ -19,6 +19,9 @@ import { UploadDrawer } from '@/features/documents/UploadDrawer'
 import { StatusDialog } from '@/features/handover/StatusDialog'
 import { handovers } from '@/data/fixtures/handover'
 import { PlanSession } from '@/features/activities/PlanSession'
+import { NoteComposer } from '@/features/notes/NoteComposer'
+import { CycleRoute } from '@/features/medications/CycleRoute'
+import { sites } from '@/data/fixtures/organisation'
 import { FamilyMessage } from '@/features/family/FamilyMessage'
 import { NotificationDecisionDialog } from '@/features/incidents/NotificationDecisionDialog'
 import { InviteDrawer } from '@/features/team/InviteDrawer'
@@ -66,6 +69,7 @@ const mayApproveIn = (moduleId: string) =>
 
 /* Rosewood Court, the home every signed-in role here is appointed to. */
 const resident = residents.find((one) => one.siteId === 'site-rosewood-court')!
+const site = sites.find((one) => one.id === resident.siteId)!
 
 function renderAt(
   role: StaffRole,
@@ -106,6 +110,7 @@ const refusedFor = async (container: HTMLElement, phrase: string) => {
 const offered = async (container: HTMLElement, selector: string) => {
   await waitFor(
     () => {
+      // selector-ok: every caller passes a data attribute naming one control
       expect(container.querySelector(selector)).toBeTruthy()
     },
     { timeout: 5000 },
@@ -329,6 +334,8 @@ describe('marking a resident on the handover board', () => {
   it.each(mayNotRecordIn('/handover'))('refuses %s, and says why', async (role) => {
     const { container } = at(role)
     await refusedFor(container, 'mark a resident on it')
+    // selector-ok: the claim is that no control of any kind is left, which a
+    // named selector would assert less of than the refusal itself says
     expect(container.querySelector('button')).toBeNull()
   })
 
@@ -336,11 +343,10 @@ describe('marking a resident on the handover board', () => {
     const { container } = at(role)
     await waitFor(
       () => {
-        expect(container.querySelector('button')).toBeTruthy()
+        expect(within(container).getByRole('button', { name: /Review/ })).toBeTruthy()
       },
       { timeout: 5000 },
     )
-    expect(container.textContent).toContain('Review')
     expect(container.querySelector('[data-read-only-here]')).toBeNull()
   })
 })
@@ -380,7 +386,7 @@ describe('planning an activity session', () => {
     const { container } = at(role)
     await waitFor(
       () => {
-        expect(container.querySelector('button')).toBeTruthy()
+        expect(within(container).getAllByRole('button').length).toBeGreaterThan(0)
       },
       { timeout: 5000 },
     )
@@ -401,7 +407,7 @@ describe('sharing an incident update with the family', () => {
     const { container } = at(role)
     await waitFor(
       () => {
-        expect(container.querySelector('button')).toBeTruthy()
+        expect(within(container).getAllByRole('button').length).toBeGreaterThan(0)
       },
       { timeout: 5000 },
     )
@@ -475,11 +481,176 @@ describe('inviting somebody onto the team', () => {
       const { container } = at(role)
       await waitFor(
         () => {
-          expect(container.querySelector('button')).toBeTruthy()
+          expect(within(container).getAllByRole('button').length).toBeGreaterThan(0)
         },
         { timeout: 5000 },
       )
       expect(container.querySelector('[data-read-only-here]')).toBeNull()
     },
   )
+})
+
+/**
+ * **The claim `permissions.ts` has been making on its own since the role
+ * existed**: "Reads everything and writes nothing, which is the point of the
+ * role."
+ *
+ * Every describe above asks about one screen. This asks the thing the comment
+ * actually says — signed in as the auditor, across every module that has a
+ * write, no control that writes is reachable and every refusal says so. A
+ * per-screen test passing is not that claim; it is twenty claims that happen
+ * to sum to it today and would not notice a twenty-first screen.
+ *
+ * Held by the *absence of controls* rather than by matching the sentence,
+ * which is §8's rule about a refusal: a test that finds the words proves the
+ * promise is on screen and says nothing about whether it is kept.
+ */
+describe('the auditor writes nothing, anywhere', () => {
+  const EVERY_WRITE_SURFACE: {
+    module: string
+    name: string
+    render: () => { container: HTMLElement }
+  }[] = [
+    {
+      module: '/medications',
+      name: 'the pharmacy cycle',
+      render: () => bare('auditor', <CycleRoute />),
+    },
+    {
+      module: '/care-notes',
+      name: 'writing a care note',
+      render: () =>
+        bare(
+          'auditor',
+          <NoteComposer resident={resident} site={site} onWritten={() => undefined} />,
+        ),
+    },
+    {
+      module: '/handover',
+      name: 'the handover board',
+      render: () =>
+        bare(
+          'auditor',
+          <StatusDialog
+            handoverId={
+              handovers.find((one) => one.siteId === 'site-rosewood-court')!.id
+            }
+            resident={resident}
+            current={{ kind: 'not_reviewed' }}
+            onRecorded={() => undefined}
+          />,
+        ),
+    },
+    {
+      module: '/activities',
+      name: 'planning a session',
+      render: () =>
+        bare(
+          'auditor',
+          <PlanSession
+            siteId={resident.siteId}
+            timeZone="Europe/London"
+            residents={[resident]}
+            onPlanned={() => undefined}
+          />,
+        ),
+    },
+    {
+      module: '/documents',
+      name: 'filing a document',
+      render: () =>
+        bare(
+          'auditor',
+          <UploadDrawer
+            owner={{ kind: 'resident', residentId: resident.id }}
+            subjectName={resident.preferredName}
+            onFiled={() => undefined}
+          />,
+        ),
+    },
+    {
+      module: '/family',
+      name: 'sharing with the family',
+      render: () =>
+        bare(
+          'auditor',
+          <FamilyMessage
+            incident={incidents.find((one) => one.siteId === 'site-rosewood-court')!}
+            onChanged={() => undefined}
+          />,
+        ),
+    },
+    {
+      module: '/incidents',
+      name: 'deciding a CQC notification',
+      render: () =>
+        bare(
+          'auditor',
+          <NotificationDecisionDialog
+            step="required"
+            incident={incidents.find((one) => one.siteId === 'site-rosewood-court')!}
+            onClose={() => undefined}
+            onDecided={() => undefined}
+          />,
+        ),
+    },
+    {
+      module: 'manage_team',
+      name: 'inviting somebody',
+      render: () => bare('auditor', <InviteDrawer onAdded={() => undefined} />),
+    },
+  ]
+
+  it.each(EVERY_WRITE_SURFACE)(
+    'refuses $name ($module) and says so',
+    async ({ render: renderSurface }) => {
+      const { container } = renderSurface()
+      await waitFor(
+        () => {
+          expect(container.querySelector('[data-read-only-here]')).toBeTruthy()
+        },
+        { timeout: 5000 },
+      )
+      // Named, so a reader knows it is a permission and not a missing feature.
+      expect(container.querySelector('[data-read-only-here]')!.textContent).toContain(
+        'Auditor',
+      )
+      // selector-ok: the broadest claim on purpose, because "writes nothing"
+      // is the thing under test and naming one control would assert less
+      expect(container.querySelector('button')).toBeNull()
+    },
+  )
+
+  /*
+   * The route-shaped surfaces, which need a router rather than props. Kept in
+   * the same block because the claim is about the auditor, not about how a
+   * screen happens to be mounted.
+   */
+  it.each([
+    {
+      name: 'admitting a resident',
+      element: <AdmissionRoute />,
+    },
+  ])('refuses $name and says so', async ({ element }) => {
+    const router = createMemoryRouter([{ path: '/', element }], {
+      initialEntries: ['/'],
+    })
+    const { container } = render(
+      <SessionProvider>
+        <TooltipProvider>
+          <ToastProvider>
+            <SignInAs as="auditor" />
+            <RouterProvider router={router} />
+            <ToastViewport />
+          </ToastProvider>
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+    await waitFor(
+      () => {
+        expect(container.querySelector('[data-read-only-here]')).toBeTruthy()
+      },
+      { timeout: 5000 },
+    )
+  })
 })
