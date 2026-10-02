@@ -22,6 +22,7 @@ import { StatusPill, Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount } from '@/lib/format'
 import { elapsedMinutesBetween } from '@/lib/shift'
@@ -60,6 +61,7 @@ const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
 
 export function IncidentLogRoute() {
   const { activeSite } = useSession()
+  const viewer = useViewer()
 
   /** One instant for the life of the screen, so every wait agrees. */
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
@@ -86,10 +88,14 @@ export function IncidentLogRoute() {
               A link rather than a button, because it navigates — styled to
               match the primary button so the two read alike, which they should:
               it is the screen's one action. */}
-          <Link to="/incidents/new" className={styles.reportAction}>
-            <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
-            Report an incident
-          </Link>
+          {/* Not offered to a role that cannot file one. The route refuses
+              as well, because nothing guards routes by level. */}
+          {viewer.canRecordIn('/incidents') ? (
+            <Link to="/incidents/new" className={styles.reportAction}>
+              <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
+              Report an incident
+            </Link>
+          ) : null}
         </header>
 
         {resource.kind === 'loading' ? (

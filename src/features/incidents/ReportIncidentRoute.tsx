@@ -21,6 +21,7 @@ import { reportIncident, type IncidentReport } from '@/data/access/incident-stor
 import { Avatar, Button, Card, Select } from '@/components/primitives'
 import { AllergyBadge } from '@/components/status'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import type { TimeZone } from '@/lib/format'
 import { instantFromWallClockField } from '@/lib/format'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
@@ -97,6 +98,7 @@ type EmergencyChoice = 'not_called' | 'ambulance_999' | 'nhs_111'
 
 export function ReportIncidentRoute() {
   const { activeSite, currentUser } = useSession()
+  const viewer = useViewer()
   const navigate = useNavigate()
 
   const [subjectChoice, setSubjectChoice] = useState<SubjectChoice>(undefined)
@@ -149,6 +151,34 @@ export function ReportIncidentRoute() {
     tellFamily,
     notTellingReason,
   })
+
+  /*
+   * **Refused here, because there is no route-level permission guard at all.**
+   * Nothing in `routes.tsx` checks a level, so every route in the product is
+   * reachable by typing its URL — the log merely stops linking here. An
+   * auditor filing an incident would be a whole clinical record created by
+   * somebody the product tells, on five screens, that they read.
+   *
+   * The refusal names the role and what it may not do, rather than showing a
+   * form whose submit quietly fails or a blank page that reads as a bug.
+   */
+  if (!viewer.canRecordIn('/incidents')) {
+    return (
+      <SiteTimeZone timeZone={activeSite.timeZone}>
+        <div className={styles.page}>
+          <div>
+            <h1 className={styles.pageTitle}>Report an incident</h1>
+          </div>
+          <Card padded>
+            <p className={styles.byline} data-report-read-only>
+              Your role is {viewer.roleName}, which reads incidents at {activeSite.name}{' '}
+              and does not report them.
+            </p>
+          </Card>
+        </div>
+      </SiteTimeZone>
+    )
+  }
 
   return (
     <SiteTimeZone timeZone={activeSite.timeZone}>

@@ -3,6 +3,7 @@ import type { Incident } from '@/data/types'
 import { raiseUrgency } from '@/data/access/incident-store'
 import { Button } from '@/components/primitives'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import styles from './incidents.module.css'
 
 /**
@@ -27,6 +28,7 @@ export function UrgencySection({
   onChanged: () => void
 }) {
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const format = useSiteFormat()
   const urgency = incident.urgency
   const raised = urgency.kind === 'needs_attention_now'
@@ -50,37 +52,56 @@ export function UrgencySection({
         )}
       </p>
 
-      <label className={styles.field}>
-        <span className={styles.fieldLabel}>
-          {raised ? 'Change what it says' : 'Why it cannot wait'}
-        </span>
-        <input
-          className={styles.input}
-          type="text"
-          value={because}
-          data-urgency-reason
-          placeholder="The family are on their way in and nobody has spoken to them yet."
-          onChange={(event) => {
-            setBecause(event.target.value)
-          }}
-        />
-      </label>
+      {/*
+       * **The state is for everybody; the act is not.** An auditor is a CQC
+       * inspector or an external reviewer, told on five screens that they
+       * read. Letting one raise an urgency is the product breaking a refusal
+       * it states out loud.
+       *
+       * Told, rather than shown nothing: a section with its control silently
+       * missing leaves a reader guessing whether it is a permission or a bug.
+       * Same shape and same reason as ManagerReviewForm above it.
+       */}
+      {!viewer.canRecordIn('/incidents') ? (
+        <p className={styles.byline} data-urgency-read-only>
+          Your role is {viewer.roleName}, which reads this incident and does not say
+          whether it needs attention now.
+        </p>
+      ) : (
+        <>
+          <label className={styles.field}>
+            <span className={styles.fieldLabel}>
+              {raised ? 'Change what it says' : 'Why it cannot wait'}
+            </span>
+            <input
+              className={styles.input}
+              type="text"
+              value={because}
+              data-urgency-reason
+              placeholder="The family are on their way in and nobody has spoken to them yet."
+              onChange={(event) => {
+                setBecause(event.target.value)
+              }}
+            />
+          </label>
 
-      <div className={styles.decisionActions}>
-        <Button
-          variant="secondary"
-          size="small"
-          data-urgency-raise
-          disabled={because.trim() === ''}
-          onClick={() => {
-            raiseUrgency(incident, because, currentUser)
-            setBecause('')
-            onChanged()
-          }}
-        >
-          {raised ? 'Update the reason' : 'This needs attention now'}
-        </Button>
-      </div>
+          <div className={styles.decisionActions}>
+            <Button
+              variant="secondary"
+              size="small"
+              data-urgency-raise
+              disabled={because.trim() === ''}
+              onClick={() => {
+                raiseUrgency(incident, because, currentUser)
+                setBecause('')
+                onChanged()
+              }}
+            >
+              {raised ? 'Update the reason' : 'This needs attention now'}
+            </Button>
+          </div>
+        </>
+      )}
 
       {/*
        * Said where somebody would otherwise look for the control. A missing

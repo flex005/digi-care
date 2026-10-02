@@ -3,6 +3,7 @@ import type { Incident } from '@/data/types'
 import { recordFamilyDecision } from '@/data/access/incident-store'
 import { Button } from '@/components/primitives'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { TELL_THEM } from '@/features/family/family-statement'
 import styles from './incidents.module.css'
 
@@ -32,6 +33,7 @@ export function FamilyDecision({
   onChanged: () => void
 }) {
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const format = useSiteFormat()
   const [reason, setReason] = useState('')
   const told = incident.familyTold
@@ -67,51 +69,69 @@ export function FamilyDecision({
         <b>{TELL_THEM.incident}</b>
       </p>
 
-      {told.kind === 'not_to_be_told' || told.kind === 'not_decided' ? (
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>Why they are not being told</span>
-          <input
-            className={styles.input}
-            type="text"
-            value={reason}
-            data-family-reason
-            placeholder="No injury, and the family asked to be told weekly rather than each time."
-            onChange={(event) => setReason(event.target.value)}
-          />
-        </label>
-      ) : null}
+      {/*
+       * **The decision is for everybody to read; making one is not.** An
+       * auditor is a CQC inspector or an external reviewer, told on five
+       * screens that they read — and deciding whether a family is told about
+       * an incident is about as clinical as this page gets.
+       *
+       * Told rather than shown nothing, so a reader knows it is a permission
+       * and not a missing control. Same shape as ManagerReviewForm.
+       */}
+      {!viewer.canRecordIn('/incidents') ? (
+        <p className={styles.byline} data-family-read-only>
+          Your role is {viewer.roleName}, which reads this incident and does not decide
+          whether the family are told.
+        </p>
+      ) : (
+        <>
+          {told.kind === 'not_to_be_told' || told.kind === 'not_decided' ? (
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Why they are not being told</span>
+              <input
+                className={styles.input}
+                type="text"
+                value={reason}
+                data-family-reason
+                placeholder="No injury, and the family asked to be told weekly rather than each time."
+                onChange={(event) => setReason(event.target.value)}
+              />
+            </label>
+          ) : null}
 
-      <div className={styles.decisionActions}>
-        <Button
-          variant="secondary"
-          size="small"
-          data-family-should
-          disabled={told.kind === 'should_be_told'}
-          onClick={() => {
-            recordFamilyDecision(incident, { kind: 'should' }, currentUser)
-            onChanged()
-          }}
-        >
-          They should be told
-        </Button>
-        <Button
-          variant="secondary"
-          size="small"
-          data-family-not
-          disabled={reason.trim() === ''}
-          onClick={() => {
-            recordFamilyDecision(
-              incident,
-              { kind: 'not', reason: reason.trim() },
-              currentUser,
-            )
-            setReason('')
-            onChanged()
-          }}
-        >
-          They are not to be told
-        </Button>
-      </div>
+          <div className={styles.decisionActions}>
+            <Button
+              variant="secondary"
+              size="small"
+              data-family-should
+              disabled={told.kind === 'should_be_told'}
+              onClick={() => {
+                recordFamilyDecision(incident, { kind: 'should' }, currentUser)
+                onChanged()
+              }}
+            >
+              They should be told
+            </Button>
+            <Button
+              variant="secondary"
+              size="small"
+              data-family-not
+              disabled={reason.trim() === ''}
+              onClick={() => {
+                recordFamilyDecision(
+                  incident,
+                  { kind: 'not', reason: reason.trim() },
+                  currentUser,
+                )
+                setReason('')
+                onChanged()
+              }}
+            >
+              They are not to be told
+            </Button>
+          </div>
+        </>
+      )}
     </section>
   )
 }
