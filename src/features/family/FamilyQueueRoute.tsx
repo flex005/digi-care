@@ -10,7 +10,7 @@ import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
 import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
-import { formatCount } from '@/lib/format'
+import { formatCount, pluralise } from '@/lib/format'
 import { allFamilyMembers } from '@/data/access/family-access-store'
 import styles from './family.module.css'
 
@@ -150,15 +150,16 @@ function Found({
           </span>
           <span className={styles.findingBody}>
             <span className={styles.findingTitle}>
-              of <span data-numeric>{formatCount(given.length)}</span> {term.many} who
-              agreed have nobody named
+              of{' '}
+              <span data-numeric>{pluralise(given.length, term.one, term.many)}</span>{' '}
+              who agreed have nobody named
             </span>
             <span className={styles.findingDetail}>
               Family Portal consent is on file at {siteName} and no family member has
               been given access under it. The other{' '}
               <span data-numeric>{formatCount(all.length - given.length)}</span> of{' '}
-              <span data-numeric>{formatCount(all.length)}</span> {term.many} have no
-              consent on file and are not counted here.
+              <span data-numeric>{pluralise(all.length, term.one, term.many)}</span>{' '}
+              have no consent on file and are not counted here.
             </span>
           </span>
         </div>
@@ -177,7 +178,7 @@ function Found({
             <span className={styles.findingDetail}>
               Named while the consent stood, and nothing removed them when it stopped,
               across <span data-numeric>{formatCount(withoutConsent.length)}</span> of{' '}
-              <span data-numeric>{formatCount(all.length)}</span> {term.many} and{' '}
+              <span data-numeric>{pluralise(all.length, term.one, term.many)}</span> and{' '}
               <span data-numeric>{formatCount(namedPeople)}</span> named people at{' '}
               {siteName}. Open the {term.one} to remove anybody who should not have it.
             </span>

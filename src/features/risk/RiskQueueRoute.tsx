@@ -17,7 +17,7 @@ import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
-import { formatCount, formatLateness } from '@/lib/format'
+import { formatCount, formatLateness, pluralise } from '@/lib/format'
 import { PlaceholderBanner } from './PlaceholderBanner'
 import { isScored, isSourced, needsPlaceholderWarning } from './instrument'
 import { LEVEL_LABEL } from './instrument'
@@ -244,10 +244,12 @@ function Found({
                 : 'risks have never been assessed'}
             </span>
             <span className={styles.findingDetail}>
-              Across <span data-numeric>{formatCount(residents.length)}</span>{' '}
-              {term.many} and{' '}
-              <span data-numeric>{RISK_ASSESSMENT_TEMPLATES.length}</span> templates at{' '}
-              {siteName}, <span data-numeric>{formatCount(all.length)}</span>{' '}
+              Across{' '}
+              <span data-numeric>
+                {pluralise(residents.length, term.one, term.many)}
+              </span>{' '}
+              and <span data-numeric>{RISK_ASSESSMENT_TEMPLATES.length}</span> templates
+              at {siteName}, <span data-numeric>{formatCount(all.length)}</span>{' '}
               assessments the home is expected to hold. Never assessed is not low risk.
             </span>
           </span>

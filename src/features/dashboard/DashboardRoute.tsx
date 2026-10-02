@@ -123,7 +123,7 @@ export function DashboardRoute() {
           label="Overdue now"
           icon={dashboardIcons.overdue}
           figure={<MetricValue>{formatCount(today.late.length)}</MetricValue>}
-          of={`things, across ${formatCount(residents)} ${term.many}`}
+          of={`things, across ${pluralise(residents, term.one, term.many)}`}
           note={overdueBreakdown(today)}
         />
         <MetricTile
@@ -133,7 +133,7 @@ export function DashboardRoute() {
           figure={<MetricValue>{formatCount(today.dueSoon.length)}</MetricValue>}
           of={`doses, across ${formatCount(
             new Set(today.dueSoon.map((entry) => entry.resident.id)).size,
-          )} of ${formatCount(residents)} ${term.many}`}
+          )} of ${pluralise(residents, term.one, term.many)}`}
         />
         <MetricTile
           emphasis="supporting"

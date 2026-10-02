@@ -23,7 +23,7 @@ import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
 import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
-import { formatDate, zonedDate } from '@/lib/format'
+import { formatDate, pluralise, zonedDate } from '@/lib/format'
 import { carersAndSeniors } from '@/data/fixtures/organisation'
 import { DoseRow } from './DoseRow'
 import { PrnSection } from './PrnSection'
@@ -441,7 +441,7 @@ function RoundBar({
       <div className={`${styles.roundBlock} ${styles.roundProgressBlock}`}>
         <span className={styles.roundLabel}>Progress</span>
         <span className={styles.roundValue} data-numeric>
-          {done} of {total} {term.many} done
+          {done} of {pluralise(total, term.one, term.many)} done
         </span>
         <span className={styles.progressTrack}>
           <span

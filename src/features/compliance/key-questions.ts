@@ -418,7 +418,7 @@ function effective(term: Term): Check[] {
         ).length
         return reading({
           coverage: count(assessed, data.residents.length),
-          detail: `${n(data.residents.length - assessed)} of ${n(data.residents.length)} ${term.many} have never been screened`,
+          detail: `${n(data.residents.length - assessed)} of ${pluralise(data.residents.length, term.one, term.many)} have never been screened`,
           missing: `Too few ${term.many} here to support a rate.`,
           caveat:
             'The screening instrument in this build is a placeholder, not MUST as published.',

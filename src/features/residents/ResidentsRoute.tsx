@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { pluralise } from '@/lib/format'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import type { ResidentSummary } from '@/data/access/client'
 import { getResidentSummaries } from '@/data/access/client'
@@ -235,7 +236,7 @@ export function ResidentsRoute() {
         ) : visible.length === 0 ? (
           <EmptyState
             title={`No ${term.many} match these filters`}
-            body={`There are ${atSite.length} ${term.many} at ${siteLabel}, but none of them match the filters you have set.`}
+            body={`There are ${pluralise(atSite.length, term.one, term.many)} at ${siteLabel}, but none of them match the filters you have set.`}
             actions={
               hasNarrowingFilters ? (
                 <Button variant="secondary" onClick={clearFilters}>
@@ -246,7 +247,7 @@ export function ResidentsRoute() {
           />
         ) : (
           <Table
-            caption={`${visible.length} of ${atSite.length} ${term.many} at ${siteLabel}, sorted by ${SORT_LABELS[sortKey]}, ${sortDirection}.`}
+            caption={`${visible.length} of ${pluralise(atSite.length, term.one, term.many)} at ${siteLabel}, sorted by ${SORT_LABELS[sortKey]}, ${sortDirection}.`}
             columns={columnsFor(sortKey, showSite, term)}
             sortKey={sortKey}
             sortDirection={sortDirection}

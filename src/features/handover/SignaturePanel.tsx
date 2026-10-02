@@ -1,4 +1,5 @@
 import { now as appNow } from '@/data/fixtures/clock'
+import { pluralise } from '@/lib/format'
 import { SigningIdentity, canSign } from '@/components/signing/SigningIdentity'
 import { useState } from 'react'
 import type { HandoverId, HandoverSignature, IsoDateTime } from '@/data/types'
@@ -111,8 +112,9 @@ export function SignaturePanel({
           />
           {/* What the signature actually covered. Never a bare "signed". */}
           <p className={styles.signatureCounts}>
-            {signature.reviewed} of {signature.reviewed + signature.notReviewed}{' '}
-            {term.many} reviewed when this was signed
+            {signature.reviewed} of{' '}
+            {pluralise(signature.reviewed + signature.notReviewed, term.one, term.many)}{' '}
+            reviewed when this was signed
             {signature.notReviewed > 0
               ? `, and ${signature.notReviewed} had not been looked at`
               : ''}
@@ -168,15 +170,15 @@ export function SignaturePanel({
                   <>
                     <p>
                       {notReviewed > 0
-                        ? `${notReviewed} of ${total} ${term.many} have not been looked at at all; your signature records that, and does not mean they are well.`
-                        : `All ${total} ${term.many} at ${siteName} have been reviewed, and your signature cannot be edited afterwards.`}
+                        ? `${notReviewed} of ${pluralise(total, term.one, term.many)} have not been looked at at all; your signature records that, and does not mean they are well.`
+                        : `All ${pluralise(total, term.one, term.many)} at ${siteName} have been reviewed, and your signature cannot be edited afterwards.`}
                     </p>
                     {/* Who signed, not that somebody clicked. */}
                     <SigningIdentity
                       who={currentUser}
                       code={code}
                       onCode={setCode}
-                      what={`Signing the ${SHIFT_NAMES[shift].toLowerCase()} handover at ${siteName}, covering ${reviewed} of ${total} ${term.many}.`}
+                      what={`Signing the ${SHIFT_NAMES[shift].toLowerCase()} handover at ${siteName}, covering ${reviewed} of ${pluralise(total, term.one, term.many)}.`}
                     />
                   </>
                 }

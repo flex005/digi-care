@@ -56,6 +56,15 @@ export interface Term {
 }
 
 /**
+ * Which forms are plural, declared so a guard can read it.
+ *
+ * `check-plural-agreement.mjs` needs to know which properties of a `Term` are
+ * plurals, and guessing from the name is the derivation this whole module
+ * refuses. A form added later is plural when this says so.
+ */
+export const PLURAL_FORMS = ['many', 'Many'] as const
+
+/**
  * A curly apostrophe, matching what the rest of the build prints.
  *
  * Added here rather than at each call site for the same reason the forms are:

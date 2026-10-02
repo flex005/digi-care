@@ -11,7 +11,7 @@ import { assertNever } from '@/lib/assert-never'
 import { useSession } from '@/app/session/use-session'
 import { useTerm } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
-import { formatCount } from '@/lib/format'
+import { formatCount, pluralise } from '@/lib/format'
 import { CONSENT_MEANS } from './consent-meaning'
 import styles from './consent.module.css'
 
@@ -154,7 +154,8 @@ function Found({
         <span className={styles.leadBody}>
           <span className={styles.leadTitle}>consents have never been sought</span>
           <span className={styles.leadDetail}>
-            Across <span data-numeric>{formatCount(residents.length)}</span> {term.many}{' '}
+            Across{' '}
+            <span data-numeric>{pluralise(residents.length, term.one, term.many)}</span>{' '}
             and <span data-numeric>{CONSENT_TYPES.length}</span> types at {siteName},{' '}
             <span data-numeric>{formatCount(all.length)}</span> decisions the home is
             expected to hold. Never sought is not refusal and it is not permission.

@@ -1,4 +1,5 @@
 import { STAFF_ROLE_NAMES } from '@/data/types'
+import { pluralise } from '@/lib/format'
 import { useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { ChangedFiguresBanner } from '@/features/group/ChangedFiguresBanner'
@@ -105,7 +106,7 @@ export function AppShell() {
     if (overdue > 0) {
       counts['/reviews'] = {
         value: overdue,
-        description: `${overdue} care plan reviews overdue, of ${residents.length} ${term.many}. Every one is on the review queue, and on the ${term.ones} own profile.`,
+        description: `${overdue} care plan reviews overdue, of ${pluralise(residents.length, term.one, term.many)}. Every one is on the review queue, and on the ${term.ones} own profile.`,
       }
     }
 

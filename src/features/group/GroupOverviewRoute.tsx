@@ -100,7 +100,8 @@ export function GroupOverviewRoute() {
               <div>
                 <h2 className={styles.siteName}>{card.site.name}</h2>
                 <p className={styles.siteMeta}>
-                  {formatCount(card.residents)} {term.many} · {card.site.timeZone}
+                  {pluralise(card.residents, term.one, term.many)} ·{' '}
+                  {card.site.timeZone}
                 </p>
               </div>
               {card.thin ? (

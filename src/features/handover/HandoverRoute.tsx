@@ -15,7 +15,7 @@ import {
 } from '@/components/primitives'
 import { Settled, NotYourHome } from '@/components/status'
 import { SHIFT_NAMES } from '@/lib/shift'
-import { formatDate } from '@/lib/format'
+import { formatDate, pluralise } from '@/lib/format'
 import { useSession } from '@/app/session/use-session'
 import { useTerm } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
@@ -163,7 +163,7 @@ export function HandoverRoute() {
                 emphasis="lead"
                 icon={metricIcons.alert}
                 figure={<MetricValue>{formatCount(board.notReviewed)}</MetricValue>}
-                of={`of ${formatCount(total)} ${term.many} living at ${activeSite.name}`}
+                of={`of ${pluralise(total, term.one, term.many)} living at ${activeSite.name}`}
                 note="The only figure here you can still change before you sign."
               />
               <MetricTile
@@ -171,7 +171,7 @@ export function HandoverRoute() {
                 emphasis="supporting"
                 icon={metricIcons.urgent}
                 figure={<MetricValue>{formatCount(countOf('urgent'))}</MetricValue>}
-                of={`of ${formatCount(board.reviewed)} ${term.many} reviewed this shift`}
+                of={`of ${pluralise(board.reviewed, term.one, term.many)} reviewed this shift`}
               />
               <MetricTile
                 label="Needs attention"
@@ -180,14 +180,14 @@ export function HandoverRoute() {
                 figure={
                   <MetricValue>{formatCount(countOf('needs_attention'))}</MetricValue>
                 }
-                of={`of ${formatCount(board.reviewed)} ${term.many} reviewed this shift`}
+                of={`of ${pluralise(board.reviewed, term.one, term.many)} reviewed this shift`}
               />
               <MetricTile
                 label="All well"
                 emphasis="supporting"
                 icon={metricIcons.settled}
                 figure={<MetricValue>{formatCount(countOf('all_well'))}</MetricValue>}
-                of={`of ${formatCount(board.reviewed)} ${term.many} reviewed this shift`}
+                of={`of ${pluralise(board.reviewed, term.one, term.many)} reviewed this shift`}
               />
             </MetricTiles>
           </div>
