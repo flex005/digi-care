@@ -16866,3 +16866,60 @@ and this is what ignoring that looks like.
 loop left the filename as `NoteComposer nc.tsx`, so nothing was edited. The
 `grep -c` of the injected string printing empty is what caught it — the test
 output was identical to a guard catching nothing.
+
+## Four permission cells corrected against CW_PRD Table 3 (c11be52)
+
+The authority was settled on 17/09/2026 and recorded in
+`docs/AM_PRD_STATUS.md`; this was carrying it into the table.
+
+    care_worker  /risk-assessments  record -> read
+    care_worker  /consent           record -> read
+    care_worker  /family            record -> no_access
+    senior_carer /compliance        read   -> no_access
+    senior_carer /reports           read   -> no_access
+
+Each cites CW_PRD Table 3 beside the cell. Family Portal is `no_access`
+rather than `read` by the PRD's own closing rule — "Anything not listed is
+not accessible to either role" — so absence is a decision rather than a gap.
+
+**Goals and Incidents stay, with the reason beside the cells.** `/goals`
+declares one `record` act covering "setting a goal and recording progress",
+and acknowledge and close are both the `approve` act on `/incidents`. Four
+levels cannot say either, and neither is waiting on a decision.
+
+**The invitation sentence was read, not merely re-rendered.** A care worker's
+now puts Risk Assessments and Consent under Read and Family Portal under No
+access; a senior carer's puts Compliance and Reports under No access. Every
+bucket is still non-empty, so no clause reads as a dangling label.
+
+**One test failed legitimately**: `consent-write-gates` listed `care_worker`
+among the roles that may withdraw a consent. The authority moved, not the
+assertion — §8 says a test edited to make a change pass is usually the test
+that was right, and this is the other case, so the file says so. Its role
+lists now read from `levelFor`, which is what stops the next correction
+needing a test edit at all.
+
+### Three failures that were not this change, and how that was established
+
+Eight tests failed and only one belonged to this work. The other seven were
+attributed by **reverting this change and watching them still fail**, then by
+running them at the last commit with a clean tree — where they also failed,
+although that same commit had passed 1676 a few hours earlier.
+
+**`incidents[0]` is a `now`-dependent subject.** Three incident test files
+took their subject by index, and the list is sorted by a date computed
+relative to `now`. It became `inc-903` once that fixture gained a stood-down
+urgency in the previous phase, and `UrgencySection` correctly offers no raise
+control on one — so those tests passed by day and failed after midnight. §8's
+rule about anything deriving from `now`, with the `now` in the fixture rather
+than in the assertion, which is why pinning the clock in the test would not
+have helped. They now select by the property each needs.
+
+**The family case is the same defect wearing a positive.** The gate test
+asserted "some button exists" for a role that may share, on an incident
+chosen the same way — and no fixture names a family member, so the panel
+legitimately renders `data-no-family-named` and offers nothing to click. It
+now asserts the section rather than a button.
+
+The tell both times was that the failures named roles the change did not
+touch: `registered_manager` cannot be affected by a care worker's cell.
