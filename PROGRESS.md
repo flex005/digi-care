@@ -17046,3 +17046,110 @@ cause: something of mine competing for the machine. Recorded as an
 attribution with its evidence rather than a certainty — what is established is
 that it does not reproduce once the tree is quiet, not that load is proven to
 be the mechanism.
+
+## Organisation customisation, phase 1: the type and one configurable term (81d75aa)
+
+### The owner
+
+`src/lib/vocabulary.ts` declares **six forms per term** — `one`, `many`,
+`One`, `Many`, `ones`, `Ones` — and derives none of them. This is §6's class:
+a word whose correct rendering depends on where it appears cannot be rendered
+by whoever is appending it, so the caller asks for a form and never transforms
+the result.
+
+**Two terms prove derivation is impossible rather than merely risky.**
+"Service User" pluralises to "Service Users", which no capitalise of "service
+users" produces, because the second word has to be capitalised too. "Person
+Supported" pluralises to "People Supported", which no rule produces at all.
+Possessives carry the curly apostrophe from the owner, so no call site writes
+`${term.one}'s` and gets a straight one.
+
+### Why this is safe to configure, stated rather than assumed
+
+§10's test is whether a record already stored says something different
+afterwards. It does not: a care plan is the same care plan whether its heading
+reads Care Plan or Treatment Plan, and **recorded free text is untouched** — a
+care note saying "the resident was unsettled" goes on saying it, because those
+are its author's words and not a label. Presentation, not a term inside a
+claim the record makes.
+
+### The type
+
+A new **required** step in the setup wizard, held on the organisation rather
+than a site — a multi-site organisation must not end up with two
+vocabularies. Session state in `settings-store` rather than a field on
+`Organisation`, whose own docblock says adding fields to it is asked rather
+than done. Choosing a type clears an earlier word override, or the control
+would do nothing for somebody who changed their mind.
+
+### The guard, and what it cannot see
+
+`check-layout.mjs` sets the term **through the wizard** and crawls as Service
+User, asserting the word appears nowhere outside `data-recorded-text`.
+
+A source-level check cannot tell `residentId` from the word in a sentence and
+would need hundreds of escapes — §8 records that costed and thrown away twice.
+The rendered page has no such problem: an identifier does not render, so it
+produces no false positives at all.
+
+**A real term rather than a sentinel.** "Zzpatient" would have proved the
+plumbing and not the English; Service User is a term somebody can choose and
+it is the case the grammar breaks on.
+
+**What it cannot see, in its success line**: a `data-recorded-text` marker put
+on a label by mistake would hide a finding. Unmarked free text fails as a
+finding rather than being missed, which is the safe direction.
+
+### Scale, and how it was done
+
+~180 user-facing strings across 68 files. Identifiers, types, ids, route
+paths, discriminants (`kind: 'resident'`, `withdrawn_by_resident`) and fixture
+data are untouched — renaming those buys nothing and risks everything.
+
+**Several data modules became functions of the term**, because a module-level
+constant is evaluated before anything can ask what this organisation calls
+them: key questions, the report catalogue, MAR cell accessible names, document
+categories, care-note views, goal outcome labels, analytics tiles, the
+residents table columns, group figures.
+
+**The sidebar and the permission matrix both render the Residents module's
+name.** Having each substitute the word would be two owners of one term, so
+the nav item declares which **form** it needs and both renderers ask the
+owner for it.
+
+Three agents worked disjoint feature folders in parallel. Their reports are
+claims, so the crawl was the arbiter: it found four places their reports did
+not mention, including the sidebar label and a group figure's note.
+
+### Mutations
+
+Three, each failing its own case: the word hardcoded on one screen, which the
+crawl names by element and text; the plural form returning the singular; the
+possessive dropped.
+
+**The third silently did not land the first time.** A shell escaping problem
+meant nothing was injected, the run printed "18 passed", and that is identical
+to a guard catching nothing. The `grep -c` of the injected string printing `0`
+is what caught it — the same tell as the `NoteComposer nc.tsx` case recorded
+above, twice in this build now.
+
+### Read in a browser under both two-word terms
+
+"28 service users at Rosewood Court", "Add service user", "Service User not
+asked"; "Every person supported at this site", "28 people supported", "0 of 28
+people supported at Rosewood Court". Singular and plural correct in every
+sentence, which is the thing no derivation could do.
+
+One sentence is clunky rather than wrong: "of 28 people supported living at
+Rosewood Court" reads as a garden path. Left, and recorded.
+
+### Fixed while here
+
+"{count} {term.many} were invited" read **"1 residents were"** at one.
+`check-plurals` does not see it, because the count and the word are separate
+JSX expressions rather than one call — a blind spot in that guard worth
+knowing. It now goes through `pluralise`, which owns that agreement.
+
+### Not started, as instructed
+
+The other nine terms and the brand colour. Both depend on this working.
