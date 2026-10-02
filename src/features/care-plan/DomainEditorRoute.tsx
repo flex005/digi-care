@@ -24,7 +24,7 @@ import { AlertDialog, Button, Card, Toast } from '@/components/primitives'
 import { NotYourHome, ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { pluralise } from '@/lib/format'
 import { nextReviewFrom } from '@/lib/review-interval'
@@ -66,6 +66,7 @@ import type { AsyncResource } from '@/data/access/resource'
 export function DomainEditorRoute() {
   const { resident } = useOutletContext<ResidentProfile>()
   const { domainId } = useParams<{ domainId: string }>()
+  const terms = useTerms()
 
   /*
    * **Either list, one editor.** A domain outside the ten is the same record
@@ -79,7 +80,7 @@ export function DomainEditorRoute() {
     return (
       <div className={styles.tabPanel}>
         <Card padded>
-          <p className={styles.errorTitle}>No such care plan domain</p>
+          <p className={styles.errorTitle}>No such {terms.carePlan.one} domain</p>
           <p className={styles.errorBody}>
             Nothing is missing from {resident.fullLegalName}&rsquo;s plan; this address
             names neither one of the{' '}
@@ -88,7 +89,7 @@ export function DomainEditorRoute() {
           </p>
           <Link to=".." relative="path" className={styles.backLink}>
             <Icon name="arrows-sharp/arrow-left-01-sharp" size={16} />
-            The whole care plan
+            The whole {terms.carePlan.one}
           </Link>
         </Card>
       </div>
@@ -112,12 +113,13 @@ function Editor({
   domain: ResolvedDomain
 }) {
   const { id: domainId, name: domainName, record } = domain
-  const inSentence = domainInSentence(domain)
   const { resident, refresh } = useOutletContext<ProfileContext>()
   const { currentUser } = useSession()
   const viewer = useViewer()
   const format = useSiteFormat()
   const term = useTerm()
+  const terms = useTerms()
+  const inSentence = domainInSentence(domain, terms.carePlan)
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
 
   /*
@@ -211,7 +213,7 @@ function Editor({
     <div className={styles.tabPanel}>
       <Link to=".." relative="path" className={styles.backLink}>
         <Icon name="arrows-sharp/arrow-left-01-sharp" size={16} />
-        The whole care plan
+        The whole {terms.carePlan.one}
       </Link>
 
       <h2 className={styles.screenTitle}>
@@ -238,15 +240,15 @@ function Editor({
           does not ask for it gets a clinical summary in all three boxes. */}
       <div className={styles.voiceNote} data-voice-note>
         <b>Written in {resident.preferredName}&rsquo;s own words:</b> &ldquo;I like
-        to…&rdquo;, not &ldquo;{term.one} prefers…&rdquo;. What staff will do is written
-        to whoever reads it on shift.
+        to…&rdquo;, not &ldquo;{term.one} prefers…&rdquo;. What {terms.staff.many} will
+        do is written to whoever reads it on shift.
       </div>
 
       <Card>
         {PLAN_FIELDS.map((field) => (
           <div className={styles.field} key={field.id} data-field={field.id}>
             <label className={styles.fieldLabel} htmlFor={`field-${field.id}`}>
-              {field.label}
+              {field.label(terms.staff)}
             </label>
             <p className={styles.fieldGuidance}>{field.guidance}</p>
 
@@ -293,8 +295,8 @@ function Editor({
                 <strong>
                   Version <span data-numeric>{versions}</span> is signed.
                 </strong>{' '}
-                It is what staff follow from now, and it is beneath each box as the
-                previous version.
+                It is what {terms.staff.many} follow from now, and it is beneath each
+                box as the previous version.
               </>
             ) : waiting.length === 0 ? (
               <>
@@ -309,7 +311,7 @@ function Editor({
             ) : (
               <>
                 <strong>Waiting on:</strong>{' '}
-                {waiting.map((field) => field.label).join(' · ')}.
+                {waiting.map((field) => field.label(terms.staff)).join(' · ')}.
               </>
             )}
             {signed === 'none' && domain.kind === 'fixed' ? (
@@ -331,7 +333,7 @@ function Editor({
           {viewer.canRecordIn('/care-plans') ? null : (
             <ReadOnlyHere
               roleName={viewer.roleName}
-              subject="this care plan domain"
+              subject={`this ${terms.carePlan.one} domain`}
               act="save a draft of it or sign it off"
             />
           )}
@@ -428,8 +430,8 @@ function Editor({
         description={
           <span className={styles.confirmBody}>
             <span>
-              This becomes the version staff follow; the previous version stays as
-              history.
+              This becomes the version {terms.staff.many} follow; the previous version
+              stays as history.
             </span>
             {/* Named individually, never counted. A figure says how much work
                 vanished; the names say what it was. */}
@@ -498,8 +500,8 @@ function Editor({
         tone="positive"
         title={
           closes.length === 0
-            ? 'Care plan finalised'
-            : `Care plan finalised: ${pluralise(closes.length, 'review')} closed`
+            ? `${terms.carePlan.One} finalised`
+            : `${terms.carePlan.One} finalised: ${pluralise(closes.length, 'review')} closed`
         }
       />
 
@@ -513,7 +515,7 @@ function Editor({
         description={
           notice === 'draft_discarded'
             ? 'The domain reads exactly as it did before.'
-            : 'It is not signed, so it is not what staff follow.'
+            : `It is not signed, so it is not what ${terms.staff.many} follow.`
         }
       />
 

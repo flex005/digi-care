@@ -23,6 +23,15 @@ export const SUGGESTED_PHRASES: Record<CareNoteCategoryId, string[]> = {
     'PRN given for ',
     'GP contacted about ',
   ],
+  /*
+   * **"Family visited: " keeps the word, and this is the one place the term is
+   * refused on purpose.** These are not labels: pressing one puts the text into
+   * a care note, and a care note is immutable after submission. A configured
+   * word inside recorded free text would leave the same home's notes saying
+   * "Family visited" before a term change and "Next of Kin visited" after it,
+   * which is the one thing `vocabulary.ts` says this is safe because it never
+   * does — a claim about presentation, not about what a record says.
+   */
   social_emotional: ['Joined ', 'Talked about ', 'Family visited: ', 'Preferred to '],
   health_observation: [
     'Observations taken: ',

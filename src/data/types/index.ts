@@ -151,7 +151,7 @@ export type {
   SocialWorker,
   StockCount,
 } from './resident'
-export { GENDER_ANSWERS, REVIEW_OUTCOMES } from './resident'
+export { GENDER_ANSWERS, reviewOutcomes } from './resident'
 
 export type {
   CareNoteCategoryId,

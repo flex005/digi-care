@@ -20,13 +20,16 @@ import { InspectionPackRoute } from './InspectionPackRoute'
 import { NotificationsRoute } from './NotificationsRoute'
 import { loadCompliance } from './data'
 import { keyQuestions, runPanels } from './key-questions'
-import { subjectTerm } from '@/lib/vocabulary'
+import { vocabularyFor } from '@/lib/vocabulary'
 
-/** The term in force with nothing configured: this home calls them residents. */
-const TERM = subjectTerm('care_home', undefined)
+/**
+ * The vocabulary in force with nothing configured: this home calls them
+ * residents, their plans care plans, and so on down the nine.
+ */
+const TERMS = vocabularyFor('care_home', {})
 
-/** The five, under the configured term — read through the owner, never a copy. */
-const KEY_QUESTIONS = keyQuestions(TERM)
+/** The five, under those terms — read through the owner, never a copy. */
+const KEY_QUESTIONS = keyQuestions(TERMS)
 import { headlineFor } from './analysis'
 import { formatCount } from '@/lib/format'
 import hatch from '@/styles/unrecorded.module.css'
@@ -246,7 +249,7 @@ describe('a figure and the reason there is none', () => {
 describe('the five panels over the real record', () => {
   it('reaches every check state somewhere in the record', async () => {
     const data = await loadCompliance(rosewood, NOW_ISO)
-    const readings = runPanels(data, TERM)
+    const readings = runPanels(data, TERMS)
       .flatMap((panel) => panel.results)
       .filter((result) => result.kind === 'derived')
 
@@ -261,14 +264,14 @@ describe('the five panels over the real record', () => {
 
   it('renders the thin site as Insufficient Evidence rather than as bad', async () => {
     const data = await loadCompliance(ashgrove, NOW_ISO)
-    const verdicts = runPanels(data, TERM).map((panel) => panel.verdict.kind)
+    const verdicts = runPanels(data, TERMS).map((panel) => panel.verdict.kind)
     // Ashgrove exists to be thin. A four-resident home is not a failing home.
     expect(verdicts).toContain('insufficient_evidence')
   }, 30000)
 
   it('names the check each rating came from, and they are not all the same', async () => {
     const data = await loadCompliance(rosewood, NOW_ISO)
-    const rated = runPanels(data, TERM)
+    const rated = runPanels(data, TERMS)
       .map((panel) => panel.verdict)
       .filter((verdict) => verdict.kind === 'rated')
 
@@ -369,7 +372,7 @@ describe('the analytical layout refuses what it was built to refuse', () => {
    * the wrong four.
    */
   const expected = async () =>
-    headlineFor(runPanels(await loadCompliance(rosewood, NOW_ISO), TERM))
+    headlineFor(runPanels(await loadCompliance(rosewood, NOW_ISO), TERMS))
 
   it('leads on the checks that cannot support a figure, and nothing green', async () => {
     const { container } = renderAt('/compliance')
@@ -503,8 +506,13 @@ describe('a Key Question, every check', () => {
     await settled(container)
 
     const fire = container.querySelector('[data-check="fire-risk-assessment"]')!
+    /*
+     * The word comes from the owner, not retyped: the caveat says the evidence
+     * is a document rather than a record of the thing this service calls an
+     * assessment, and a literal here would pass only for the default term.
+     */
     expect(fire.querySelector('[data-check-caveat]')?.textContent).toContain(
-      'not by an assessment record',
+      `not by ${TERMS.assessment.one} records`,
     )
   }, 30000)
 
@@ -562,7 +570,7 @@ describe('the inspection pack', () => {
 
   it('reads what the product does not hold from the panels, never a second list', async () => {
     const data = await loadCompliance(rosewood, NOW_ISO)
-    const contents = packContents(data, TERM)
+    const contents = packContents(data, TERMS)
     const fromPanels = KEY_QUESTIONS.flatMap((question) =>
       question.checks
         .filter((check) => check.kind === 'not_held')
@@ -573,7 +581,7 @@ describe('the inspection pack', () => {
 
   it('makes the second section longer than the first', async () => {
     const data = await loadCompliance(rosewood, NOW_ISO)
-    const contents = packContents(data, TERM)
+    const contents = packContents(data, TERMS)
     // The useful half. A manager gets more from the gaps than from the list.
     expect(contents.gaps.length + contents.notHeld.length).toBeGreaterThan(
       contents.holds.length,

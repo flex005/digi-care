@@ -7,7 +7,8 @@ import { useResource } from '@/data/access/use-resource'
 import { Button, Tooltip } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
+import type { Vocabulary } from '@/lib/vocabulary'
 import { CrossSiteBanner } from '@/features/group/CrossSiteBanner'
 import { ProfileHeader } from './ProfileHeader'
 import styles from './profile.module.css'
@@ -39,26 +40,71 @@ import { NotYourHome } from '@/components/status'
  * `profile.test.tsx` checks against the router: a screen that is routed but
  * has no tab is unreachable, and a tab pointing at nothing is a dead link.
  * Both are the same defect from opposite ends.
+ *
+ * **`label` asks for a form rather than holding a word.** A tab whose name is
+ * configurable needs the sentence-initial form, and a renderer that took one
+ * string and capitalised it would be the second owner this whole mechanism
+ * exists to refuse. Tabs whose name is fixed ignore the argument.
  */
-export const TABS = [
-  { label: 'General Information', path: '.', end: true, screen: 3, built: true },
-  { label: 'Needs', path: 'needs', end: false, screen: 4, built: true },
-  { label: 'Important People', path: 'people', end: false, screen: 5, built: true },
-  { label: 'Future Plans', path: 'future-plans', end: false, screen: 6, built: true },
-  { label: 'Care Notes', path: 'notes', end: false, screen: 7, built: true },
-  { label: 'Medications', path: 'medications', end: false, screen: 8, built: true },
+export interface ProfileTab {
+  label: (terms: Vocabulary) => string
+  path: string
+  end: boolean
+  screen: number
+  built: boolean
+}
+
+export const TABS: ProfileTab[] = [
+  { label: () => 'General Information', path: '.', end: true, screen: 3, built: true },
+  { label: () => 'Needs', path: 'needs', end: false, screen: 4, built: true },
   {
-    label: 'Risk Assessments',
+    label: () => 'Important People',
+    path: 'people',
+    end: false,
+    screen: 5,
+    built: true,
+  },
+  {
+    label: () => 'Future Plans',
+    path: 'future-plans',
+    end: false,
+    screen: 6,
+    built: true,
+  },
+  { label: () => 'Care Notes', path: 'notes', end: false, screen: 7, built: true },
+  {
+    label: (terms) => terms.medication.Many,
+    path: 'medications',
+    end: false,
+    screen: 8,
+    built: true,
+  },
+  {
+    /*
+     * Left fixed: "Risk Assessments" is a module name declared in
+     * `src/app/nav-items.icons.ts` and keyed by the permission matrix and the
+     * activity log, and the compound does not survive the configurable
+     * adjective — "Risk Clinical Assessments" is not a phrase anybody writes.
+     */
+    label: () => 'Risk Assessments',
     path: 'risk-assessments',
     end: false,
     screen: 9,
     built: true,
   },
-  { label: 'Care Plan', path: 'care-plan', end: false, screen: 10, built: true },
-  { label: 'Goals', path: 'goals', end: false, screen: 11, built: true },
-  { label: 'Consent', path: 'consent', end: false, screen: 12, built: true },
-  { label: 'Family Portal', path: 'family', end: false, screen: 12, built: true },
-  { label: 'Documents', path: 'documents', end: false, screen: 13, built: true },
+  {
+    label: (terms) => terms.carePlan.One,
+    path: 'care-plan',
+    end: false,
+    screen: 10,
+    built: true,
+  },
+  { label: () => 'Goals', path: 'goals', end: false, screen: 11, built: true },
+  { label: () => 'Consent', path: 'consent', end: false, screen: 12, built: true },
+  // "Family Portal" is the name of a separate product, not this service's word
+  // for relatives.
+  { label: () => 'Family Portal', path: 'family', end: false, screen: 12, built: true },
+  { label: () => 'Documents', path: 'documents', end: false, screen: 13, built: true },
 ]
 
 /**
@@ -77,6 +123,7 @@ export interface ProfileContext extends ResidentProfile {
 export function ResidentProfileRoute() {
   const { residentId } = useParams<{ residentId: string }>()
   const term = useTerm()
+  const terms = useTerms()
   const [revision, setRevision] = useState(0)
 
   const load = useCallback(
@@ -122,10 +169,11 @@ export function ResidentProfileRoute() {
           <ProfileHeader profile={resource.data} />
 
           <nav className={styles.tabs} aria-label="Profile sections">
-            {TABS.map((tab) =>
-              tab.built ? (
+            {TABS.map((tab) => {
+              const label = tab.label(terms)
+              return tab.built ? (
                 <NavLink
-                  key={tab.label}
+                  key={tab.path}
                   to={tab.path}
                   end={tab.end}
                   className={({ isActive }) =>
@@ -134,26 +182,23 @@ export function ResidentProfileRoute() {
                       .join(' ')
                   }
                 >
-                  {tab.label}
+                  {label}
                 </NavLink>
               ) : (
-                <Tooltip
-                  key={tab.label}
-                  content={`${tab.label} (coming in a later phase)`}
-                >
+                <Tooltip key={tab.path} content={`${label} (coming in a later phase)`}>
                   <span
                     className={styles.tab}
                     role="link"
                     aria-disabled="true"
-                    aria-label={`${tab.label} (coming in a later phase)`}
+                    aria-label={`${label} (coming in a later phase)`}
                     tabIndex={0}
                   >
-                    {tab.label}
+                    {label}
                     <span className={styles.tabPhase}>S{tab.screen}</span>
                   </span>
                 </Tooltip>
-              ),
-            )}
+              )
+            })}
           </nav>
 
           {/* The header above stays mounted across every tab — that is what

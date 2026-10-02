@@ -4,10 +4,22 @@ import { describe, expect, it } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { TooltipProvider } from '@/components/primitives'
-import { navItems, navSections } from '@/app/nav-items.icons'
+import { navItems, navLabel, navSections } from '@/app/nav-items.icons'
+import type { NavItem } from '@/app/nav-items.icons'
+import { vocabularyFor } from '@/lib/vocabulary'
 import itemStyles from './Sidebar.module.css'
 import { Sidebar } from './Sidebar'
 import type { NavCount } from './NavBadge'
+
+/*
+ * **The name the sidebar actually renders, through the one owner.**
+ * `item.label` is the fixed name and the fallback; an item that declares a
+ * `term` is called whatever this organisation calls that thing, so asserting
+ * `label` asserts a string the screen may legitimately not contain. Four
+ * assertions here went red on the Incidents item for exactly that reason, and
+ * the fix is to read the resolution from `navLabel` rather than to restate it.
+ */
+const nameOf = (item: NavItem) => navLabel(item, vocabularyFor('care_home', {}))
 
 /**
  * The sidebar. PRD §4.7.
@@ -74,8 +86,8 @@ describe('every module stays listed', () => {
     expect(navItems.length).toBeGreaterThan(0)
     for (const item of navItems) {
       expect(
-        within(nav).getByText(item.label, { selector: 'span' }),
-        `${item.label} is missing from the sidebar`,
+        within(nav).getByText(nameOf(item), { selector: 'span' }),
+        `${nameOf(item)} is missing from the sidebar`,
       ).toBeInTheDocument()
     }
   })
@@ -85,7 +97,7 @@ describe('every module stays listed', () => {
     for (const item of navItems) {
       expect(
         sectionIds.has(item.section),
-        `${item.label} is in section "${item.section}", which is not declared`,
+        `${nameOf(item)} is in section "${item.section}", which is not declared`,
       ).toBe(true)
     }
     renderSidebar()
@@ -176,7 +188,7 @@ describe('collapsing never removes an accessible name', () => {
    * visible labels are gone — so every single item must still be named, or the
    * rail becomes seventeen unlabelled buttons.
    */
-  it.each(navItems.map((item) => [item.label, item] as const))(
+  it.each(navItems.map((item) => [nameOf(item), item] as const))(
     '%s keeps its name when collapsed',
     (label) => {
       renderSidebar(true)

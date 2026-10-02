@@ -4,6 +4,7 @@ import { recordFamilyDecision } from '@/data/access/incident-store'
 import { Button } from '@/components/primitives'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerms } from '@/app/session/use-term'
 import { TELL_THEM } from '@/features/family/family-statement'
 import styles from './incidents.module.css'
 
@@ -35,12 +36,13 @@ export function FamilyDecision({
   const { currentUser } = useSession()
   const viewer = useViewer()
   const format = useSiteFormat()
+  const terms = useTerms()
   const [reason, setReason] = useState('')
   const told = incident.familyTold
 
   return (
     <section className={styles.section} data-section="family-told">
-      <h2 className={styles.sectionTitle}>Telling the family</h2>
+      <h2 className={styles.sectionTitle}>Telling the {terms.family.one}</h2>
 
       <p className={styles.decisionState} data-family-state={told.kind}>
         {told.kind === 'not_decided' ? (
@@ -81,7 +83,7 @@ export function FamilyDecision({
       {!viewer.canRecordIn('/incidents') ? (
         <p className={styles.byline} data-family-read-only>
           Your role is {viewer.roleName}, which reads this incident and does not decide
-          whether the family are told.
+          whether the {terms.family.one} is told.
         </p>
       ) : (
         <>
@@ -93,7 +95,7 @@ export function FamilyDecision({
                 type="text"
                 value={reason}
                 data-family-reason
-                placeholder="No injury, and the family asked to be told weekly rather than each time."
+                placeholder={`No injury, and the ${terms.family.one} asked to be told weekly rather than each time.`}
                 onChange={(event) => setReason(event.target.value)}
               />
             </label>

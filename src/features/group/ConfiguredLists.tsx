@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useViewer } from '@/app/session/use-viewer'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { ReadOnlyHere } from '@/components/status'
 import {
   CARE_PLAN_DOMAINS,
@@ -42,6 +42,7 @@ export function ConfiguredLists({
 }) {
   const viewer = useViewer()
   const term = useTerm()
+  const terms = useTerms()
   const [, setVersion] = useState(0)
   const residents = residentsBySite(siteId).length
 
@@ -83,7 +84,7 @@ export function ConfiguredLists({
     },
     {
       id: 'domains',
-      title: 'Care plan domains this home writes',
+      title: `${terms.carePlan.One} domains this home writes`,
       items: CARE_PLAN_DOMAINS.map((d) => ({ id: d.id, name: d.name })),
       /*
        * **Two different things, and only one of them is missing.** A domain
@@ -92,7 +93,7 @@ export function ConfiguredLists({
        * whole home, which would change what every resident at it is expected
        * to hold — and with it every "of 10" figure in the product.
        */
-      note: `These ten for every ${term.one} here. A domain for one ${term.one} is written on their own care plan; adding one for the whole home is not built.`,
+      note: `These ten for every ${term.one} here. A domain for one ${term.one} is written on their own ${terms.carePlan.one}; adding one for the whole home is not built.`,
     },
     {
       id: 'consents',

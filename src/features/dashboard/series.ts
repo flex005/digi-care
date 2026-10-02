@@ -13,7 +13,7 @@ import {
   type MarRecord,
 } from '@/data/fixtures/medications'
 import { formatTime, zonedDate } from '@/lib/format'
-import type { Term } from '@/lib/vocabulary'
+import type { Term, Vocabulary } from '@/lib/vocabulary'
 import { MEDICATION_LOOKAHEAD_HOURS } from '@/lib/shift'
 import { carePlanDomains, consentsSought, riskAssessments } from './populations'
 
@@ -389,7 +389,7 @@ export function moduleBars(input: {
   doses: DoseDay
   acknowledged: number
   incidentsTotal: number
-  term: Term
+  terms: Vocabulary
 }): ModuleBar[] {
   const assessments = riskAssessments(input.residents)
   const domains = carePlanDomains(input.residents)
@@ -401,12 +401,12 @@ export function moduleBars(input: {
       label: 'Care notes, today',
       recorded: input.writtenUpToday,
       expected: input.residents.length,
-      of: input.term.many,
+      of: input.terms.subject.many,
       remainder: 'never_written',
     },
     {
       id: 'medication',
-      label: 'Medication, today',
+      label: `${input.terms.medication.Many}, today`,
       recorded: input.doses.recorded,
       expected: input.doses.due,
       of: 'due so far',
@@ -414,6 +414,7 @@ export function moduleBars(input: {
     },
     {
       id: 'risk-assessments',
+      /* The document name, not the configurable term (nav-items.icons.ts). */
       label: 'Risk assessments',
       recorded: assessments.recorded,
       expected: assessments.expected,
@@ -422,7 +423,7 @@ export function moduleBars(input: {
     },
     {
       id: 'care-plan-domains',
-      label: 'Care plan domains',
+      label: `${input.terms.carePlan.One} domains`,
       recorded: domains.recorded,
       expected: domains.expected,
       of: 'expected',

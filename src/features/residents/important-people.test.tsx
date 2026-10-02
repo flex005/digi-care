@@ -10,10 +10,20 @@ import { residents } from '@/data/fixtures/residents'
 import { ResidentProfileRoute } from './ResidentProfileRoute'
 import { ImportantPeopleTab, PeopleSections } from './ImportantPeopleTab'
 import { PrimaryContactPanel, primaryContactsIn } from './PrimaryContactPanel'
+import { vocabularyFor } from '@/lib/vocabulary'
 import {
-  IMPORTANT_PEOPLE_CATEGORIES,
-  IMPORTANT_PEOPLE_SECTIONS,
+  importantPeopleCategories,
+  importantPeopleSections,
 } from './important-people-sections'
+
+// The sections are named with the vocabulary in force, so the guard asks for
+// the defaults rather than restating any word.
+const IMPORTANT_PEOPLE_SECTIONS = importantPeopleSections(
+  vocabularyFor('care_home', {}),
+)
+const IMPORTANT_PEOPLE_CATEGORIES = importantPeopleCategories(
+  vocabularyFor('care_home', {}),
+)
 
 /**
  * Important People. PRD §6.2, source PRD §16.2.
@@ -220,7 +230,11 @@ describe('who this home rings first', () => {
      * the id was never what this was about (§8).
      */
     const withNobody = residents.filter(
-      (resident) => primaryContactsIn(resident.importantPeople).length === 0,
+      (resident) =>
+        primaryContactsIn(
+          resident.importantPeople,
+          vocabularyFor('care_home', {}).family,
+        ).length === 0,
     )
     expect(
       withNobody.length,
@@ -308,7 +322,7 @@ describe('the tab within the profile', () => {
   it('has no detectable accessibility violations', async () => {
     const { container } = renderPeople('res-sowande')
     await waitFor(() =>
-      expect(screen.getByText('Family and next of kin')).toBeVisible(),
+      expect(screen.getByText(vocabularyFor('care_home', {}).family.One)).toBeVisible(),
     )
     /**
      * Scoped to the panel under test, not the whole rendered page.

@@ -1,6 +1,6 @@
 import type { MarCellState, Medication, StockBalance } from '@/data/types'
 import { Select } from '@/components/primitives'
-import { useTerm } from '@/app/session/use-term'
+import { useTerms } from '@/app/session/use-term'
 import { MarCell, Unrecorded } from '@/components/status'
 import { NOT_GIVEN_REASONS, expectedAfter, isAnswered, type Answer } from './round'
 import { quantityWithUnit } from './units'
@@ -53,7 +53,7 @@ export function DoseRow({
   witnesses: { value: string; label: string }[]
   onChange: (next: Answer) => void
 }) {
-  const term = useTerm()
+  const terms = useTerms()
   const settled = isAnswered(recorded)
   const answered = answer.choice !== undefined
   const counted = answer.stockAfter.trim()
@@ -98,7 +98,7 @@ export function DoseRow({
                 label={
                   balance.kind === 'no_balance_recorded'
                     ? 'Witness: signs the dose and the opening balance'
-                    : 'Witness: must be a different member of staff'
+                    : `Witness: must be a different ${terms.staff.one}`
                 }
                 placeholder="Choose a witness"
                 value={answer.witness === '' ? undefined : answer.witness}
@@ -253,7 +253,7 @@ export function DoseRow({
                   }
                   options={NOT_GIVEN_REASONS.map((entry) => ({
                     value: entry.value,
-                    label: entry.label(term),
+                    label: entry.label(terms),
                   }))}
                 />
                 {answer.reason === 'other' ? (

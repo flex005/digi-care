@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import type { DocumentRecord } from '@/data/types'
 import { getSiteDocuments } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { Card } from '@/components/primitives'
 import { AggregateFigure, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
@@ -28,6 +28,7 @@ export function OrganisationLibraryRoute() {
   const { activeSite } = useSession()
   const today = useSiteToday()
   const term = useTerm()
+  const terms = useTerms()
   const [documents, setDocuments] = useState<DocumentRecord[] | 'loading'>('loading')
   const [added, setAdded] = useState(0)
 
@@ -42,8 +43,8 @@ export function OrganisationLibraryRoute() {
   }, [activeSite.id, added])
 
   const rows = useMemo(
-    () => (documents === 'loading' ? [] : organisationRows(documents, today)),
-    [documents, today],
+    () => (documents === 'loading' ? [] : organisationRows(documents, today, terms)),
+    [documents, today, terms],
   )
 
   if (documents === 'loading') {

@@ -1,7 +1,7 @@
 import { now as appNow } from '@/data/fixtures/clock'
 import { useId, useState } from 'react'
 import type { CareNote, IsoDateTime, Resident, ReviewOutcome } from '@/data/types'
-import { REVIEW_OUTCOMES } from '@/data/types'
+import { reviewOutcomes } from '@/data/types'
 import {
   recordNoteReview,
   reviewRecordedThisSession,
@@ -9,6 +9,7 @@ import {
 } from '@/data/access/client'
 import { AlertDialog, Button, RadioGroup } from '@/components/primitives'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerms } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { assertNever } from '@/lib/assert-never'
 import styles from './notes.module.css'
@@ -73,6 +74,7 @@ export function ReviewNoteControl({
   const { currentUser } = useSession()
   const viewer = useViewer()
   const format = useSiteFormat()
+  const terms = useTerms()
   const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState('')
   // Nothing chosen is a real state, and the one the question opens on.
@@ -176,19 +178,21 @@ export function ReviewNoteControl({
                 legend="Action taken?"
                 value={outcomeKind}
                 onValueChange={(value) => {
-                  const kind = REVIEW_OUTCOMES.find((option) => option.id === value)?.id
+                  const kind = reviewOutcomes(terms).find(
+                    (option) => option.id === value,
+                  )?.id
                   if (kind === undefined) return
                   setOutcomeKind(kind)
                   if (kind !== 'other') setOtherText('')
                 }}
-                options={REVIEW_OUTCOMES.map((option) => ({
+                options={reviewOutcomes(terms).map((option) => ({
                   value: option.id,
                   label: option.label,
                 }))}
               />
               <span className={styles.fieldHint}>
-                This records what you did. It does not update the care plan or raise an
-                incident.
+                This records what you did. It does not update the {terms.carePlan.one}{' '}
+                or raise an incident.
               </span>
             </span>
             {outcomeKind === 'other' ? (

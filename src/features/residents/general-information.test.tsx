@@ -9,9 +9,19 @@ import { residents } from '@/data/fixtures/residents'
 import { ResidentProfileRoute } from './ResidentProfileRoute'
 import { GeneralInformationTab, ProfileSections } from './GeneralInformationTab'
 import {
-  GENERAL_INFORMATION_FIELDS,
-  GENERAL_INFORMATION_SECTIONS,
+  generalInformationFields,
+  generalInformationSections,
 } from './general-information-fields'
+import { vocabularyFor } from '@/lib/vocabulary'
+
+// The fields are named with the vocabulary in force, so the guard asks for the
+// defaults rather than restating any word.
+const GENERAL_INFORMATION_SECTIONS = generalInformationSections(
+  vocabularyFor('care_home', {}),
+)
+const GENERAL_INFORMATION_FIELDS = generalInformationFields(
+  vocabularyFor('care_home', {}),
+)
 
 /**
  * General Information. PRD §6.2, source PRD §16.2.

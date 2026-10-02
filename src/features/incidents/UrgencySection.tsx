@@ -4,6 +4,7 @@ import { raiseUrgency, standDownUrgency } from '@/data/access/incident-store'
 import { Button } from '@/components/primitives'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerms } from '@/app/session/use-term'
 import { NO_RE_RAISE } from './UrgencyQuestion'
 import styles from './incidents.module.css'
 
@@ -36,6 +37,7 @@ export function UrgencySection({
   const { currentUser } = useSession()
   const viewer = useViewer()
   const format = useSiteFormat()
+  const terms = useTerms()
   const urgency = incident.urgency
   const raised = urgency.kind === 'needs_attention_now'
   const settled = urgency.kind === 'stood_down'
@@ -128,7 +130,7 @@ export function UrgencySection({
               type="text"
               value={because}
               data-urgency-reason
-              placeholder="The family are on their way in and nobody has spoken to them yet."
+              placeholder={`We are expecting the ${terms.family.one} and nobody has spoken to them yet.`}
               onChange={(event) => {
                 setBecause(event.target.value)
               }}
@@ -169,7 +171,7 @@ export function UrgencySection({
                     type="text"
                     value={why}
                     data-urgency-why
-                    placeholder="Seen by the GP within the hour and the family have been rung."
+                    placeholder={`Seen by the GP within the hour and somebody has rung the ${terms.family.one}.`}
                     onChange={(event) => {
                       setWhy(event.target.value)
                     }}

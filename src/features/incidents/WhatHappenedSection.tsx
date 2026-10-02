@@ -1,7 +1,7 @@
 import type { CommunalAreaId, IncidentTypeId } from '@/data/types'
 import { COMMUNAL_AREAS, INCIDENT_TYPES } from '@/data/types'
 import { Select } from '@/components/primitives'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { SectionHeading, type HeadingLevel } from './SectionHeading'
 import styles from './incidents.module.css'
 
@@ -50,6 +50,7 @@ export function WhatHappenedSection({
   level?: HeadingLevel
 }) {
   const term = useTerm()
+  const terms = useTerms()
 
   return (
     <section className={styles.section} aria-labelledby="what-heading">
@@ -154,8 +155,8 @@ export function WhatHappenedSection({
           placeholder={`What you found, what you saw, what the ${term.one} said.`}
         />
         <span className={styles.hint}>
-          Written for whoever reads this next: a manager tonight, an inspector in a
-          year.
+          Written for whoever reads this next: a {terms.manager.one} tonight, an
+          inspector in a year.
         </span>
       </label>
     </section>

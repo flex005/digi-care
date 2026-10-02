@@ -2,7 +2,7 @@ import { now as appNow } from '@/data/fixtures/clock'
 import { useEffect, useMemo, useState } from 'react'
 import type { IsoDateTime } from '@/data/types'
 import { useSession } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerms } from '@/app/session/use-term'
 import { loadCompliance, type ComplianceData } from './data'
 import { runPanels, type Panel } from './key-questions'
 
@@ -34,9 +34,9 @@ export function useComplianceData(): ComplianceData | 'loading' {
 
 export function usePanels(): Panel[] | 'loading' {
   const data = useComplianceData()
-  const term = useTerm()
+  const terms = useTerms()
   return useMemo(
-    () => (data === 'loading' ? 'loading' : runPanels(data, term)),
-    [data, term],
+    () => (data === 'loading' ? 'loading' : runPanels(data, terms)),
+    [data, terms],
   )
 }

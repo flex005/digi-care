@@ -2,6 +2,8 @@ import type { AllergyStatus } from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
 import { Icon } from '@/components/icon/Icon'
 import { Unrecorded } from '@/components/status'
+import { useTerms } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import { ClinicalChangeControl } from './ClinicalChangeControl'
 import { Attribution } from './FieldList'
 import styles from './profile.module.css'
@@ -49,29 +51,38 @@ const SEVERITY: Record<'mild' | 'moderate' | 'severe' | 'anaphylaxis', string> =
  * Every one says what the record changes for whoever gives medication; the
  * resident is named in the question (PRD §2.4).
  */
-const CHANGE: Record<
+function changeCopy(
+  staff: Term,
+): Record<
   AllergyStatus['kind'],
   { button: string; action: string; description: string; confirm: string }
-> = {
-  not_recorded: {
-    button: 'Record allergies',
-    action: 'Record allergies',
-    description:
-      'Until it is recorded, medication must not be given on the assumption there are none.',
-    confirm: 'Record allergies',
-  },
-  none_known: {
-    button: 'Change allergy record',
-    action: 'Change the allergy record',
-    description: 'Changing it alters what staff may give {name}.',
-    confirm: 'Change record',
-  },
-  allergies: {
-    button: 'Change allergy record',
-    action: 'Change the allergy record',
-    description: 'Changing a recorded allergy alters what staff may give {name}.',
-    confirm: 'Change record',
-  },
+> {
+  return {
+    not_recorded: {
+      button: 'Record allergies',
+      action: 'Record allergies',
+      /*
+       * Said as a dose rather than as the configurable word for the record: a
+       * "Medication Record" is not something anybody gives a person, and this
+       * sentence is about the act, not the screen.
+       */
+      description:
+        'Until it is recorded, a dose must not be given on the assumption there are none.',
+      confirm: 'Record allergies',
+    },
+    none_known: {
+      button: 'Change allergy record',
+      action: 'Change the allergy record',
+      description: `Changing it alters what ${staff.many} may give {name}.`,
+      confirm: 'Change record',
+    },
+    allergies: {
+      button: 'Change allergy record',
+      action: 'Change the allergy record',
+      description: `Changing a recorded allergy alters what ${staff.many} may give {name}.`,
+      confirm: 'Change record',
+    },
+  }
 }
 
 export function AllergyPanel({
@@ -94,7 +105,8 @@ export function AllergyPanel({
    */
   onRecordNoneKnown?: () => void
 }) {
-  const copy = CHANGE[status.kind]
+  const terms = useTerms()
+  const copy = changeCopy(terms.staff)[status.kind]
   const fill = (text: string) => text.replaceAll('{name}', residentName)
 
   /**
@@ -133,7 +145,7 @@ export function AllergyPanel({
             variant="panel"
             caption={CAPTION}
             label="Not recorded"
-            detail="Nobody has recorded whether this person has allergies, and medication must not be given on the assumption there are none."
+            detail="Nobody has recorded whether this person has allergies, and a dose must not be given on the assumption there are none."
           />
           <div className={styles.bannerActions}>{control}</div>
         </div>

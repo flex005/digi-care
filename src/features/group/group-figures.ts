@@ -1,5 +1,5 @@
 import type { Aggregate, Site } from '@/data/types'
-import type { Term } from '@/lib/vocabulary'
+import type { Vocabulary } from '@/lib/vocabulary'
 import { CARE_PLAN_DOMAINS, RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
 import { minPopulationForARate } from '@/data/access/settings-store'
 import { residentsBySite } from '@/data/fixtures/residents'
@@ -134,8 +134,9 @@ export interface GroupData {
 export async function loadGroup(
   sites: Site[],
   now: IsoDateTime,
-  /* One row's note names the person, so the term comes in rather than a word. */
-  term: Term,
+  /* Two rows name something configurable — one the person, one the care
+     plan — so the whole vocabulary comes in rather than a word. */
+  terms: Vocabulary,
 ): Promise<GroupData> {
   const perSite = await Promise.all(
     sites.map(async (site) => {
@@ -207,7 +208,7 @@ export async function loadGroup(
       {
         id: 'overdue-reviews',
         label: 'Reviews past their date',
-        note: `across ${pluralise(entry.residents.length, term.one, term.many)}`,
+        note: `across ${pluralise(entry.residents.length, terms.subject.one, terms.subject.many)}`,
         value: entry.overdueReviews,
         tone: entry.overdueReviews > 0 ? 'critical' : 'calm',
       },
@@ -261,7 +262,7 @@ export async function loadGroup(
     ),
     row(
       'plans-written',
-      'Care plan domains ever written',
+      `${terms.carePlan.One} domains ever written`,
       'domains',
       perSite,
       (entry) => ({

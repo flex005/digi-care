@@ -8,7 +8,12 @@ import { CARE_PLAN_DOMAINS } from '@/data/types'
 import { residents } from '@/data/fixtures/residents'
 import { ResidentProfileRoute } from './ResidentProfileRoute'
 import { NeedsTab } from './NeedsTab'
-import { NEEDS_SECTIONS, RENDERED_DOMAIN_IDS } from './needs-sections'
+import { needsSections, RENDERED_DOMAIN_IDS } from './needs-sections'
+import { vocabularyFor } from '@/lib/vocabulary'
+
+// The sections are named with the vocabulary in force, so the guard asks for
+// the defaults rather than restating any word.
+const NEEDS_SECTIONS = needsSections(vocabularyFor('care_home', {}))
 
 /**
  * The Needs tab. PRD §6.2, source PRD §16.2.

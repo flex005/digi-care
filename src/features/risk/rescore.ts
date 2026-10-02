@@ -1,5 +1,6 @@
 import type { RiskLevel, RiskTemplateId } from '@/data/types'
 import { riskTemplateName } from '@/data/access/review-flags'
+import type { Term } from '@/lib/vocabulary'
 
 /**
  * What a re-score changes.
@@ -33,7 +34,14 @@ export function badgeStripChange(
 
 /**
  * Nobody is notified of a level rise, so the screen says who has to be told.
+ *
+ * Takes the term rather than holding the word: this is a module function with
+ * no hook to call, so the screen that renders it supplies the form.
  */
-export function notificationNote(residentName: string, level: string): string {
-  return `Tell staff on shift that ${residentName}'s risk has risen to ${level}.`
+export function notificationNote(
+  residentName: string,
+  level: string,
+  staff: Term,
+): string {
+  return `Tell ${staff.many} on shift that ${residentName}'s risk has risen to ${level}.`
 }

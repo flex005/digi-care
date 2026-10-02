@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest'
 import type { Incident, IncidentEvidence, IsoDateTime } from '@/data/types'
 import { incidents } from '@/data/fixtures/incidents'
 import { staffOkonkwo, staffNwosu } from '@/data/fixtures/organisation'
+import { vocabularyFor } from '@/lib/vocabulary'
 import { incidentPdfContent, type PdfFormat } from './incident-pdf'
+
+/** The default vocabulary, as a screen reading no override would see it. */
+const TERMS = vocabularyFor('care_home', {})
 
 /**
  * What the download actually says.
@@ -50,6 +54,7 @@ const linesOf = (incident: Incident, heading: string): string[] => {
   const content = incidentPdfContent(incident, {
     residentName: 'Emmanuel Okafor',
     siteName: 'Rosewood Court',
+    terms: TERMS,
     format,
   })
   const section = content.sections.find((entry) => entry.heading === heading)
@@ -62,6 +67,7 @@ describe('the download carries what the record holds', () => {
     const content = incidentPdfContent(base, {
       residentName: 'Emmanuel Okafor',
       siteName: 'Rosewood Court',
+      terms: TERMS,
       format,
     })
     const text = content.sections.flatMap((section) => section.lines).join('\n')
@@ -115,6 +121,7 @@ describe('the file says what it is leaving out', () => {
       {
         residentName: 'Emmanuel Okafor',
         siteName: 'Rosewood Court',
+        terms: TERMS,
         format,
       },
     )
@@ -211,6 +218,7 @@ describe('an edited account says so in the file too', () => {
     const content = incidentPdfContent(edited, {
       residentName: 'Emmanuel Okafor',
       siteName: 'Rosewood Court',
+      terms: TERMS,
       format,
     })
     const section = content.sections.find((entry) => entry.heading.includes('edited'))
@@ -224,6 +232,7 @@ describe('an edited account says so in the file too', () => {
     const content = incidentPdfContent(base, {
       residentName: 'Emmanuel Okafor',
       siteName: 'Rosewood Court',
+      terms: TERMS,
       format,
     })
     expect(content.sections.some((entry) => entry.heading.includes('edited'))).toBe(

@@ -3,7 +3,8 @@ import type { ResidentProfile } from '@/data/access/client'
 import type { Resident } from '@/data/types'
 import { Card, CardHeader } from '@/components/primitives'
 import { Field, FieldList } from './FieldList'
-import { IMPORTANT_PEOPLE_SECTIONS } from './important-people-sections'
+import { importantPeopleSections } from './important-people-sections'
+import { useTerms } from '@/app/session/use-term'
 import styles from './profile.module.css'
 
 /**
@@ -41,9 +42,11 @@ export function ImportantPeopleTab() {
  * real rendering** rather than a harness that re-implements it.
  */
 export function PeopleSections({ resident }: { resident: Resident }) {
+  const terms = useTerms()
+
   return (
     <>
-      {IMPORTANT_PEOPLE_SECTIONS.map((section) => (
+      {importantPeopleSections(terms).map((section) => (
         <Card key={section.id}>
           <CardHeader title={section.title} subtitle={section.description} />
           {section.banner ? section.banner(resident) : null}

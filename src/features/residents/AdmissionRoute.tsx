@@ -26,7 +26,8 @@ import {
   type DraftRisk,
 } from '@/features/risk/RiskFieldSet'
 import { useSession } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
+import type { Vocabulary } from '@/lib/vocabulary'
 import { useViewer } from '@/app/session/use-viewer'
 import { Button, Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
@@ -61,18 +62,28 @@ type AllergyAnswer = 'unanswered' | 'recorded' | 'none_known' | 'not_known'
  * invented, and an invented diagnosis is indistinguishable from a recorded one
  * for as long as the record lasts.
  */
-const STEPS = [
-  { id: 'who', name: 'Personal details', required: true },
-  { id: 'contact', name: 'Contact and GP', required: false },
-  { id: 'clinical', name: 'Clinical overview', required: false },
-  { id: 'flags', name: 'Risk flags and documents', required: false },
-  { id: 'plan', name: 'Care plan and assessments', required: false },
-] as const
+const STEPS: {
+  id: string
+  /** Asked for the form it needs, never handed a word to transform (§6). */
+  name: (terms: Vocabulary) => string
+  required: boolean
+}[] = [
+  { id: 'who', name: () => 'Personal details', required: true },
+  { id: 'contact', name: () => 'Contact and GP', required: false },
+  { id: 'clinical', name: () => 'Clinical overview', required: false },
+  { id: 'flags', name: () => 'Risk flags and documents', required: false },
+  {
+    id: 'plan',
+    name: (terms) => `${terms.carePlan.One} and ${terms.assessment.many}`,
+    required: false,
+  },
+]
 
 export function AdmissionRoute() {
   const { sites, activeSite, currentUser } = useSession()
   const viewer = useViewer()
   const term = useTerm()
+  const terms = useTerms()
   const navigate = useNavigate()
 
   const [step, setStep] = useState(0)
@@ -308,7 +319,7 @@ export function AdmissionRoute() {
                 disabled={!reachable(index)}
                 onClick={() => setStep(index)}
               >
-                <span className={styles.stepName}>{entry.name}</span>
+                <span className={styles.stepName}>{entry.name(terms)}</span>
                 <span className={styles.stepNeed}>
                   {entry.required ? 'Required' : 'Can wait'}
                 </span>
@@ -343,7 +354,8 @@ export function AdmissionRoute() {
                   />
                   {/* Blank is a real answer, and it stays blank. */}
                   <span className={styles.hint}>
-                    What staff will call them; leave it blank if they have not said yet.
+                    What {terms.staff.many} will call them; leave it blank if they have
+                    not said yet.
                   </span>
                 </label>
               </div>
@@ -359,7 +371,7 @@ export function AdmissionRoute() {
                   />
                 </label>
                 <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Admission date</span>
+                  <span className={styles.fieldLabel}>{terms.admission.One} date</span>
                   <input
                     type="date"
                     value={admittedOn}
@@ -411,7 +423,7 @@ export function AdmissionRoute() {
               <div className={styles.allergyBox} data-allergy-question>
                 <p className={styles.allergyTitle}>Does {name} have any allergies?</p>
                 <p className={styles.allergyBody}>
-                  Their first medication round may happen before anybody asks again.
+                  Their first dose may be given before anybody asks again.
                 </p>
 
                 <div className={styles.choices}>
@@ -424,8 +436,8 @@ export function AdmissionRoute() {
                     />
                     <b>Yes: record them</b>
                     <span className={styles.choiceHint}>
-                      What they are allergic to, and what happens. Both appear on every
-                      medication screen.
+                      What they are allergic to, and what happens. Both appear on every{' '}
+                      {terms.medication.One} screen.
                     </span>
                   </label>
 
@@ -532,8 +544,8 @@ export function AdmissionRoute() {
                       data-not-known-note
                       data-state="unrecorded"
                     >
-                      {name} will show <b>allergies not recorded</b> on every medication
-                      screen.
+                      {name} will show <b>allergies not recorded</b> on every{' '}
+                      {terms.medication.One} screen.
                     </div>
                   ) : null}
                 </div>
@@ -747,8 +759,8 @@ export function AdmissionRoute() {
              */}
             <p className={styles.sectionNote} data-dnar-note>
               <b>
-                A DNAR form can be filed with this admission, and filing it does not
-                record the decision.
+                A DNAR form can be filed with this {terms.admission.one}, and filing it
+                does not record the decision.
               </b>
             </p>
 
@@ -803,7 +815,9 @@ export function AdmissionRoute() {
 
         {step === 4 ? (
           <section className={styles.section} data-section="plan">
-            <h2 className={styles.sectionTitle}>Care plan and assessments</h2>
+            <h2 className={styles.sectionTitle}>
+              {terms.carePlan.One} and {terms.assessment.many}
+            </h2>
             {/*
              * **No target dates, and this is a departure from the PRD.** Its step
              * 5 sets an initial review date for each domain and a target date for
@@ -857,7 +871,9 @@ export function AdmissionRoute() {
             onClick={() => setStep((current) => current + 1)}
             data-step-next
           >
-            {step === STEPS.length - 1 ? 'Last step' : `Next: ${STEPS[step + 1]!.name}`}
+            {step === STEPS.length - 1
+              ? 'Last step'
+              : `Next: ${STEPS[step + 1]!.name(terms)}`}
           </Button>
         </div>
 

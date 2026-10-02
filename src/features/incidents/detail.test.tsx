@@ -8,6 +8,7 @@ import type { IsoDateTime } from '@/data/types'
 import { GAP_INCIDENT_IDS, incidentById, incidents } from '@/data/fixtures/incidents'
 import { NOW, toIsoDateTime } from '@/data/fixtures/generate'
 import { IncidentDetailRoute } from './IncidentDetailRoute'
+import { vocabularyFor } from '@/lib/vocabulary'
 import { outstandingDecisions } from './decisions'
 import {
   clearReviewFlags,
@@ -17,6 +18,9 @@ import {
 import { subjectResidentId } from '@/data/types'
 import { staffOkonkwo } from '@/data/fixtures/organisation'
 import { wasClearedLate } from '@/data/access/review-flags'
+
+/** The default vocabulary, as a screen reading no override would see it. */
+const TERMS = vocabularyFor('care_home', {})
 
 /**
  * One incident. PRD §6.5.
@@ -69,7 +73,7 @@ describe('what is owed comes before what happened', () => {
 
   it('does not render the block at all when nothing is outstanding', async () => {
     const settled = incidents.find(
-      (incident) => outstandingDecisions(incident, NOW_ISO).length === 0,
+      (incident) => outstandingDecisions(incident, NOW_ISO, TERMS).length === 0,
     )
     expect(settled, 'no incident in the set has nothing outstanding').toBeTruthy()
 
@@ -85,7 +89,7 @@ describe('what is owed comes before what happened', () => {
 
   it('counts what is owed in words, and names each one', async () => {
     const incident = incidentById(GAP_INCIDENT_IDS.notificationRequiredNeverMade)!
-    const expected = outstandingDecisions(incident, NOW_ISO)
+    const expected = outstandingDecisions(incident, NOW_ISO, TERMS)
 
     const { container } = renderDetail(incident.id)
     await loaded(container)
@@ -358,7 +362,7 @@ describe('the outstanding block responds to work being done elsewhere', () => {
 
   it('shows one fewer thing owed once a re-score clears a review', async () => {
     const subject = owingReview()!
-    const before = outstandingDecisions(subject.incident, NOW_ISO).length
+    const before = outstandingDecisions(subject.incident, NOW_ISO, TERMS).length
 
     clearReviewFlags({
       residentId: subject.residentId,
@@ -371,7 +375,7 @@ describe('the outstanding block responds to work being done elsewhere', () => {
     // The incident screen was asserting this was owed. It is not any more —
     // an obligation that has been met still rendering as outstanding is the
     // invariant failing in the mirror.
-    expect(outstandingDecisions(after, NOW_ISO).length).toBe(before - 1)
+    expect(outstandingDecisions(after, NOW_ISO, TERMS).length).toBe(before - 1)
   })
 
   it('renders one fewer item on the screen, not only in the derivation', async () => {
@@ -416,7 +420,7 @@ describe('the outstanding block responds to work being done elsewhere', () => {
     })
 
     const after = patchedIncidents().find((entry) => entry.id === subject.incident.id)!
-    const remaining = outstandingDecisions(after, NOW_ISO)
+    const remaining = outstandingDecisions(after, NOW_ISO, TERMS)
     expect(remaining.length).toBeGreaterThan(0)
 
     const { container } = renderDetail(subject.incident.id)

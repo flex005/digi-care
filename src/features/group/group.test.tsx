@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { subjectTerm } from '@/lib/vocabulary'
+import { vocabularyFor } from '@/lib/vocabulary'
 import { render, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
@@ -95,15 +95,16 @@ const settled = (container: HTMLElement) =>
   )
 
 /*
- * The default term, so these assertions read as they always did. The word
- * is configurable now, and `loadGroup` takes it because one row's note
- * names the person.
+ * The default vocabulary, so these assertions read as they always did. The
+ * words are configurable now, and `loadGroup` takes the whole set because two
+ * rows name something a home may call differently — the person, and the care
+ * plan.
  */
-const TERM = subjectTerm('care_home', undefined)
+const TERMS = vocabularyFor('care_home', {})
 
 describe('a group figure never hides a thin home', () => {
   it('keeps each home’s own standing rather than averaging it away', async () => {
-    const data = await loadGroup(configuredSites(), NOW_ISO, TERM)
+    const data = await loadGroup(configuredSites(), NOW_ISO, TERMS)
 
     for (const row of data.rows) {
       expect(row.perSite, row.id).toHaveLength(sites.length)
@@ -130,7 +131,7 @@ describe('a group figure never hides a thin home', () => {
      * arithmetically, and it is the defect this whole screen exists against.
      */
     setFigure('min-population-for-a-rate', 100_000)
-    const data = await loadGroup(configuredSites(), NOW_ISO, TERM)
+    const data = await loadGroup(configuredSites(), NOW_ISO, TERMS)
 
     for (const row of data.rows) {
       expect(row.group, row.id).toBeUndefined()
@@ -139,7 +140,7 @@ describe('a group figure never hides a thin home', () => {
   }, 30000)
 
   it('carries the spread in the same sentence as the number', async () => {
-    const data = await loadGroup(configuredSites(), NOW_ISO, TERM)
+    const data = await loadGroup(configuredSites(), NOW_ISO, TERMS)
     const withFigure = data.rows.filter((row) => row.group !== undefined)
     expect(withFigure.length).toBeGreaterThan(0)
 
@@ -216,7 +217,7 @@ describe('settings change what a screen says, or they are not offered', () => {
     expect(minPopulationForARate()).toBe(before + 1)
 
     // Read at render: the group rows recompute against the new value.
-    const data = await loadGroup(configuredSites(), NOW_ISO, TERM)
+    const data = await loadGroup(configuredSites(), NOW_ISO, TERMS)
     expect(data.cards.some((card) => card.thin)).toBe(true)
   }, 30000)
 

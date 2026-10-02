@@ -7,7 +7,7 @@ import { brokenReferences } from '@/features/documents/library'
 import { formatCount } from '@/lib/format'
 import type { ComplianceData } from './data'
 import { keyQuestions } from './key-questions'
-import type { Term } from '@/lib/vocabulary'
+import type { Vocabulary } from '@/lib/vocabulary'
 
 /**
  * The inspection pack's manifest, derived rather than written.
@@ -42,7 +42,7 @@ export interface PackContents {
   notHeld: PackAbsence[]
 }
 
-export function packContents(data: ComplianceData, term: Term): PackContents {
+export function packContents(data: ComplianceData, terms: Vocabulary): PackContents {
   const residents = data.residents.length
 
   let assessed = 0
@@ -83,6 +83,13 @@ export function packContents(data: ComplianceData, term: Term): PackContents {
   const holds: PackEntry[] = [
     {
       id: 'mar',
+      /*
+       * **Left as written.** "Medicines Administration Record" is real UK
+       * usage, so the MAR is a document name a service could genuinely vary —
+       * but one of the options for this term is "Medication Record", and
+       * "Medication record administration records" is not a sentence. The
+       * compound is the obstacle, not the document.
+       */
       what: 'Medication administration records with every signature',
       count: `${formatCount(data.dosesDue)} doses in the window`,
     },
@@ -93,17 +100,18 @@ export function packContents(data: ComplianceData, term: Term): PackContents {
     },
     {
       id: 'incidents',
-      what: 'Incident reports with manager review and notification decisions',
+      what: `${terms.incidentReport.Many} with ${terms.manager.one} review and notification decisions`,
       count: formatCount(data.incidents.length),
     },
     {
       id: 'risk-assessments',
+      /* The document name, not the configurable term (nav-items.icons.ts). */
       what: 'Risk assessments with scores, bands and interventions',
       count: `${formatCount(assessed)} of ${formatCount(templates)}`,
     },
     {
       id: 'care-plans',
-      what: 'Care plans with version history and signatures',
+      what: `${terms.carePlan.Many} with version history and signatures`,
       count: `${formatCount(finalised)} of ${formatCount(domains)} domains`,
     },
     {
@@ -133,10 +141,10 @@ export function packContents(data: ComplianceData, term: Term): PackContents {
     },
     {
       id: 'plans-never-written',
-      what: 'Care plan domains never written',
+      what: `${terms.carePlan.One} domains never written`,
       count: `${formatCount(domains - finalised)} of ${formatCount(domains)}`,
       to: '/care-plans',
-      where: 'Care Plans',
+      where: terms.carePlan.Many,
     },
     {
       id: 'consents-never-sought',
@@ -173,7 +181,7 @@ export function packContents(data: ComplianceData, term: Term): PackContents {
    * lists of what this product does not hold would drift, and the one on this
    * screen would be the one nobody noticed had gone stale.
    */
-  const notHeld: PackAbsence[] = keyQuestions(term).flatMap((question) =>
+  const notHeld: PackAbsence[] = keyQuestions(terms).flatMap((question) =>
     question.checks
       .filter((check) => check.kind === 'not_held')
       .map((check) => ({

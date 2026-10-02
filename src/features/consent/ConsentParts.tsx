@@ -78,11 +78,17 @@ function Capacity({ authority }: { authority: DecisionAuthority<never> }) {
       {assessment.assessedBy.displayName}
       {covered > 1 ? (
         <>
-          {' '}
-          · one assessment covering <span data-numeric>
-            {formatCount(covered)}
-          </span>{' '}
-          decisions
+          {/*
+           * **"capacity assessment", not "assessment".** The subject here is
+           * the Mental Capacity Act two-stage determination, which is a
+           * statutory test rather than something this service offers under a
+           * name of its own — so the Assessment term must not reach it. The
+           * bare word was ambiguous as well as unqualified: with the term set
+           * to "Care Assessment" everywhere else on the screen, "one
+           * assessment covering four decisions" reads as one of those.
+           */}{' '}
+          · one capacity assessment covering{' '}
+          <span data-numeric>{formatCount(covered)}</span> decisions
         </>
       ) : null}
       {authority.kind === 'best_interests' ? (

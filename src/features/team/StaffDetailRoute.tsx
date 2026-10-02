@@ -19,7 +19,7 @@ import { formatDate } from '@/lib/format'
 import { NotAPerformanceRecord, Standing } from './TeamParts'
 import { AssignmentSection } from './AssignmentSection'
 import { SitesSection } from './SitesSection'
-import { useTerm } from '@/app/session/use-term'
+import { useTerms } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { RECENT_ACTS, staffActivity } from './staff-activity'
 import styles from './team.module.css'
@@ -59,7 +59,7 @@ export function StaffDetailRoute() {
   const format = useSiteFormat()
   const [version, setVersion] = useState(0)
   const viewer = useViewer()
-  const term = useTerm()
+  const terms = useTerms()
   const [confirming, setConfirming] = useState(false)
   const [removalReason, setRemovalReason] = useState('')
   const [typedConfirm, setTypedConfirm] = useState('')
@@ -72,8 +72,8 @@ export function StaffDetailRoute() {
 
   const acts = useMemo(
     () =>
-      member === undefined ? [] : staffActivity(member.id, term).slice(0, RECENT_ACTS),
-    [member, version, term],
+      member === undefined ? [] : staffActivity(member.id, terms).slice(0, RECENT_ACTS),
+    [member, version, terms],
   )
 
   if (member === undefined) {
@@ -116,7 +116,7 @@ export function StaffDetailRoute() {
           <div>
             {/* Says what kind of record this is before it says whose. A person
                 on a care screen is a resident; here they are neither. */}
-            <p className={styles.heroKind}>Team member</p>
+            <p className={styles.heroKind}>{terms.staff.One}</p>
             <h1 className={styles.heroName}>{member.ref.fullName}</h1>
             <p className={styles.heroRole}>
               {STAFF_ROLE_NAMES[member.role]} · {site?.name ?? 'Site not on record'}

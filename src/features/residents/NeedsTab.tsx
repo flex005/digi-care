@@ -6,7 +6,8 @@ import { CARE_PLAN_DOMAINS } from '@/data/types'
 import { Card, CardHeader } from '@/components/primitives'
 import { useSiteFormat } from '@/app/session/use-session'
 import { DomainStatusBadge, SupportLevelBadge, Unrecorded } from '@/components/status'
-import { NEEDS_SECTIONS } from './needs-sections'
+import { needsSections } from './needs-sections'
+import { useTerms } from '@/app/session/use-term'
 import styles from './profile.module.css'
 import { staffLabel } from '@/data/access/team-store'
 
@@ -98,6 +99,7 @@ function DomainRow({
   record: CarePlanDomainRecord | undefined
 }) {
   const name = DOMAIN_NAMES.get(domainId) ?? domainId
+  const terms = useTerms()
 
   // A domain missing from a resident's care plan array entirely — which
   // fixtures.test.ts forbids, but the screen must not assume.
@@ -106,10 +108,10 @@ function DomainRow({
       <li className={styles.domainRow} data-domain={domainId}>
         <h3 className={styles.domainName}>{name}</h3>
         <dl className={styles.domainFacts}>
-          <DomainFact label="Care plan">
+          <DomainFact label={terms.carePlan.One}>
             <Unrecorded
               variant="chip"
-              label={`${name} is not on this care plan`}
+              label={`${name} is not on this ${terms.carePlan.one}`}
               // Was a sentence naming the care plan *template*, repeated on every
               // unwritten domain. The label already says it, and "template" is
               // an implementation word a care worker has no use for.
@@ -129,7 +131,7 @@ function DomainRow({
       <h3 className={styles.domainName}>{name}</h3>
 
       <dl className={styles.domainFacts}>
-        <DomainFact label="Care plan">
+        <DomainFact label={terms.carePlan.One}>
           <DomainStatusBadge status={record.status} />
           <RevisionInProgress record={record} />
         </DomainFact>
@@ -144,12 +146,14 @@ function DomainRow({
           {notStarted || record.summary === '' ? (
             <Unrecorded
               variant="chip"
-              label="No care plan content"
+              label={`No ${terms.carePlan.one} content`}
               detail="nothing written"
             />
           ) : (
             // Written in the resident's own voice, per source PRD §3.3.
-            <p className={styles.domainQuote}>{record.summary}</p>
+            <p className={styles.domainQuote} data-recorded-text>
+              {record.summary}
+            </p>
           )}
         </DomainFact>
       </dl>
@@ -168,7 +172,7 @@ function DomainRow({
           relative="path"
           className={styles.domainActionLink}
           data-domain-editor={domainId}
-          aria-label={`${notStarted ? 'Write' : 'Open'} the ${name} care plan domain`}
+          aria-label={`${notStarted ? 'Write' : 'Open'} the ${name} ${terms.carePlan.one} domain`}
         >
           {notStarted ? 'Write this domain' : 'Open domain'}
         </Link>
@@ -179,18 +183,19 @@ function DomainRow({
 
 export function NeedsTab() {
   const { resident } = useOutletContext<ResidentProfile>()
+  const terms = useTerms()
   const byDomain = new Map(resident.carePlan.map((entry) => [entry.domainId, entry]))
 
   return (
     <div className={styles.tabPanel}>
       <Card padded>
         <p className={styles.tabIntro}>
-          Generated from the care plan and read-only. All ten domains are listed, filled
-          in or not.
+          Generated from the {terms.carePlan.one} and read-only. All ten domains are
+          listed, filled in or not.
         </p>
       </Card>
 
-      {NEEDS_SECTIONS.map((section) => (
+      {needsSections(terms).map((section) => (
         <Card key={section.id}>
           <CardHeader title={section.name} subtitle={section.description} />
           <ul className={styles.domainList}>

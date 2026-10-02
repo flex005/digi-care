@@ -1,4 +1,5 @@
 import type { CarePlanText } from '@/data/types'
+import { useTerms } from '@/app/session/use-term'
 import { EMPTY_PLAN, PLAN_FIELDS } from './plan-fields'
 import styles from './care-plan-fields.module.css'
 
@@ -26,11 +27,13 @@ export function CarePlanTextFields({
   text: CarePlanText
   onChange: (next: CarePlanText) => void
 }) {
+  const terms = useTerms()
+
   return (
     <div className={styles.planFields}>
       {PLAN_FIELDS.map((field) => (
         <label key={field.id} className={styles.field}>
-          <span className={styles.fieldLabel}>{field.label}</span>
+          <span className={styles.fieldLabel}>{field.label(terms.staff)}</span>
           <span className={styles.fieldHint}>{field.guidance}</span>
           <textarea
             rows={3}

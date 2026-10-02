@@ -19,7 +19,7 @@ import { hasAccess } from '@/data/access/team-store'
 import { DOCUMENT_CATEGORIES } from '@/features/documents/categories'
 import { expiryFinding } from '@/features/documents/expiry'
 import { formatCount, formatDate, pluralise, zonedDate } from '@/lib/format'
-import type { Term } from '@/lib/vocabulary'
+import type { Vocabulary } from '@/lib/vocabulary'
 import type { ReportDefinition, ReportId } from './catalogue'
 import { fellDueAt, type ReportData } from './data'
 import { describePeriod, within } from './period'
@@ -37,15 +37,15 @@ export interface RunInput {
   data: ReportData
   definition: ReportDefinition
   /**
-   * What this organisation calls the people it holds records about.
+   * What this organisation calls the people, records and roles it names.
    *
    * On the input rather than read here: these are plain functions, and §5 of
    * the phase's rules is that a hook cannot be called at module level. The
-   * screen asks `useTerm()` and hands the answer down with the rest of the
+   * screen asks `useTerms()` and hands the answer down with the rest of the
    * read, so every sentence a report builds gets the configured word from the
    * one owner.
    */
-  term: Term
+  terms: Vocabulary
   period: Period
   /** Absent where the report is a state rather than a flow. */
   previous: Period | undefined
@@ -203,7 +203,8 @@ interface Tally {
 }
 
 function omissionTally(input: RunInput, period: Period): Map<string, Tally> {
-  const { data, cut, term } = input
+  const { data, cut, terms } = input
+  const term = terms.subject
   const tallies = new Map<string, Tally>()
   const medicationById = new Map(data.medications.map((entry) => [entry.id, entry]))
   const residentById = new Map(data.residents.map((entry) => [entry.id, entry]))
@@ -264,7 +265,8 @@ function omissionTally(input: RunInput, period: Period): Map<string, Tally> {
 }
 
 function medicationOmissions(input: RunInput): ReportResult {
-  const { term } = input
+  const { terms } = input
+  const term = terms.subject
   const now = omissionTally(input, input.period)
   const before =
     input.previous === undefined
@@ -432,7 +434,7 @@ function incidentKey(input: RunInput, incident: (typeof input.data.incidents)[nu
       // one incident each is a list of incidents wearing a table.
       return {
         key: 'resident_room',
-        name: `A ${input.term.ones} room`,
+        name: `A ${input.terms.subject.ones} room`,
         note: 'private rooms',
       }
     }
@@ -551,7 +553,8 @@ function incidentsByType(input: RunInput): ReportResult {
 // ---------------------------------------------------------------------------
 
 function assessmentCoverage(input: RunInput): ReportResult {
-  const { data, period, term } = input
+  const { data, period, terms } = input
+  const term = terms.subject
 
   const rows = RISK_ASSESSMENT_TEMPLATES.map((template) => {
     let assessed = 0
@@ -601,16 +604,16 @@ function assessmentCoverage(input: RunInput): ReportResult {
 
   return {
     finding:
-      thinnessFinding(rows, 'assessments') ??
+      thinnessFinding(rows, terms.assessment.many) ??
       ({
         kind: 'finding',
         figure: formatCount(never),
-        title: `of ${formatCount(expected)} expected assessments have never been done`,
+        title: `of ${formatCount(expected)} expected ${terms.assessment.many} have never been done`,
         detail: `Assessed in the period counts work done between ${describePeriod(period)}; never assessed is the whole record.`,
       } satisfies ReportFinding),
-    restated: restate(input, `assessments, of ${term.many} at this site`),
+    restated: restate(input, `${terms.assessment.many}, of ${term.many} at this site`),
     columns: [
-      { label: 'Assessment', numeric: false },
+      { label: terms.assessment.One, numeric: false },
       { label: term.Many, numeric: true },
       { label: 'Ever assessed', numeric: true },
       { label: 'Assessed in period', numeric: true },
@@ -627,7 +630,8 @@ function assessmentCoverage(input: RunInput): ReportResult {
 // ---------------------------------------------------------------------------
 
 function careNoteCoverage(input: RunInput): ReportResult {
-  const { data, period, cut, term } = input
+  const { data, period, cut, terms } = input
+  const term = terms.subject
 
   const notes = data.notes.filter((note) =>
     within(note.recordedAt, period, data.site.timeZone),
@@ -749,7 +753,7 @@ function careNoteCoverage(input: RunInput): ReportResult {
         ? {
             kind: 'too_thin',
             figure: formatCount(usable),
-            title: `of ${formatCount(rows.length)} staff have enough in the period to say anything about`,
+            title: `of ${pluralise(rows.length, terms.staff.one, terms.staff.many)} have enough in the period to say anything about`,
             detail:
               'The rest recorded too little in the period for a figure about them to mean anything.',
           }
@@ -762,7 +766,7 @@ function careNoteCoverage(input: RunInput): ReportResult {
           },
     restated: `Every figure below is work this person recorded at ${data.site.name}, between ${describePeriod(period)}. Doses recorded is what they signed for; ${term.many} seen is how many different people they wrote up. The last column is out of every ${term.one} here.`,
     columns: [
-      { label: 'Staff member', numeric: false },
+      { label: terms.staff.One, numeric: false },
       { label: 'Doses recorded', numeric: true },
       { label: 'Notes written', numeric: true },
       { label: `${term.Many} seen`, numeric: true },
@@ -797,8 +801,8 @@ function documentExpiry(input: RunInput): ReportResult {
 
     return row({
       id: category.id,
-      name: category.label,
-      note: category.holds(input.term),
+      name: category.label(input.terms),
+      note: category.holds(input.terms),
       thin: mine.length < minPopulationForARate(),
       cells: [
         count(mine.length),
@@ -850,7 +854,8 @@ function documentExpiry(input: RunInput): ReportResult {
 // ---------------------------------------------------------------------------
 
 function activityParticipation(input: RunInput): ReportResult {
-  const { data, period, cut, term } = input
+  const { data, period, cut, terms } = input
+  const term = terms.subject
   const sessions = data.activities.filter(
     (activity) =>
       within(activity.startsAt, period, data.site.timeZone) &&
@@ -965,7 +970,8 @@ function activityParticipation(input: RunInput): ReportResult {
 // ---------------------------------------------------------------------------
 
 function consentCoverage(input: RunInput): ReportResult {
-  const { data, term } = input
+  const { data, terms } = input
+  const term = terms.subject
 
   const rows = CONSENT_TYPES.map((type) => {
     let sought = 0

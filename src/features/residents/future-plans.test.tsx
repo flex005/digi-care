@@ -8,7 +8,13 @@ import { ToastProvider, ToastViewport, TooltipProvider } from '@/components/prim
 import { residents } from '@/data/fixtures/residents'
 import { ResidentProfileRoute } from './ResidentProfileRoute'
 import { FuturePlansTab } from './FuturePlansTab'
-import { FUTURE_PLANS_SECTIONS, FUTURE_PLAN_ENTRIES } from './future-plans-sections'
+import { futurePlanEntries, futurePlansSections } from './future-plans-sections'
+import { vocabularyFor } from '@/lib/vocabulary'
+
+// The sections are named with the vocabulary in force, so the guard asks for
+// the defaults rather than restating any word.
+const FUTURE_PLANS_SECTIONS = futurePlansSections(vocabularyFor('care_home', {}))
+const FUTURE_PLAN_ENTRIES = futurePlanEntries(vocabularyFor('care_home', {}))
 
 /**
  * Future Plans. PRD §6.2.

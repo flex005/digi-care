@@ -7,7 +7,8 @@ import { ConsentBadge } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { formatCount } from '@/lib/format'
 import { ConsentAuthority, EffectCountValue } from './ConsentParts'
-import { CONSENT_MEANS } from './consent-meaning'
+import { consentMeans } from './consent-meaning'
+import { useTerms } from '@/app/session/use-term'
 import styles from './consent.module.css'
 
 /**
@@ -25,6 +26,7 @@ import styles from './consent.module.css'
  */
 export function ConsentTab() {
   const { resident } = useOutletContext<ResidentProfile>()
+  const terms = useTerms()
   const rows = CONSENT_TYPES.map((type) => ({
     type,
     status: resident.consents[type.id] as AnyConsent,
@@ -58,7 +60,7 @@ export function ConsentTab() {
                   <p className={styles.typeName}>{type.name}</p>
                   {/* A consent nobody can explain is not informed. */}
                   <p className={styles.typeMeans} data-means>
-                    {CONSENT_MEANS[type.id as ConsentTypeId]}
+                    {consentMeans(terms)[type.id as ConsentTypeId]}
                   </p>
                   {status.kind === 'withdrawn' && status.remains.length > 0 ? (
                     <Remains status={status} />

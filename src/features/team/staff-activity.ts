@@ -4,7 +4,8 @@ import { careNotes } from '@/data/fixtures/care-notes'
 import { fellDueAt, marRecordsAll } from '@/data/fixtures/medications'
 import { residents } from '@/data/fixtures/residents'
 import { documents } from '@/data/fixtures/documents'
-import type { Term } from '@/lib/vocabulary'
+import type { Term, Vocabulary } from '@/lib/vocabulary'
+import { moduleName } from '@/app/nav-items.icons'
 
 /**
  * What one person has recorded, most recent first. PRD §6.7, Phase 14.
@@ -21,7 +22,16 @@ import type { Term } from '@/lib/vocabulary'
 export interface StaffAct {
   id: string
   at: IsoDateTime
-  /** The module, in the sidebar's words. */
+  /**
+   * The module, in the sidebar's words.
+   *
+   * **Read from `nav-items.icons.ts` through `moduleName`, not restated.**
+   * This field held its own copies of the five names, with a comment saying
+   * the nav declaration owned them — which was true while every label was
+   * fixed. Two of the five now take a configured term, so a copy here would
+   * have gone on saying "Care Plans" beside a sidebar reading "Care & Support
+   * Plans", and nothing would have failed.
+   */
   module: string
   /** What they did, naming the subject. */
   what: string
@@ -35,7 +45,7 @@ const nameOf = (residentId: string, term: Term) =>
 /** How many entries a detail screen shows. A list, not an archive. */
 export const RECENT_ACTS = 12
 
-export function staffActivity(staffId: StaffId, term: Term): StaffAct[] {
+export function staffActivity(staffId: StaffId, terms: Vocabulary): StaffAct[] {
   const acts: StaffAct[] = []
 
   for (const note of careNotes) {
@@ -43,8 +53,8 @@ export function staffActivity(staffId: StaffId, term: Term): StaffAct[] {
     acts.push({
       id: `note-${note.id}`,
       at: note.recordedAt,
-      module: 'Care Notes',
-      what: `Wrote a care note about ${nameOf(note.residentId, term)}`,
+      module: moduleName('/care-notes', terms),
+      what: `Wrote a care note about ${nameOf(note.residentId, terms.subject)}`,
       to: `/residents/${note.residentId}/notes/${note.id}`,
     })
   }
@@ -57,15 +67,15 @@ export function staffActivity(staffId: StaffId, term: Term): StaffAct[] {
     acts.push({
       id: `dose-${record.medicationId}-${record.date}-${record.roundTime}`,
       at: record.state.givenAt,
-      module: 'Medications',
-      what: `Gave the ${record.roundTime} round for ${nameOf(record.residentId, term)}`,
+      module: moduleName('/medications', terms),
+      what: `Gave the ${record.roundTime} round for ${nameOf(record.residentId, terms.subject)}`,
       to: `/residents/${record.residentId}/medications`,
     })
   }
 
   for (const resident of residents) {
-    acts.push(...assessmentActs(resident, staffId))
-    acts.push(...carePlanActs(resident, staffId))
+    acts.push(...assessmentActs(resident, staffId, terms))
+    acts.push(...carePlanActs(resident, staffId, terms))
   }
 
   for (const document of documents) {
@@ -75,8 +85,8 @@ export function staffActivity(staffId: StaffId, term: Term): StaffAct[] {
       id: `document-${document.id}`,
       // instant-ok: a filing date ordered against instants, never rendered as a time
       at: `${document.filedOn}T12:00:00.000Z` as IsoDateTime,
-      module: 'Documents',
-      what: `Filed ${document.title} for ${nameOf(document.owner.residentId, term)}`,
+      module: moduleName('/documents', terms),
+      what: `Filed ${document.title} for ${nameOf(document.owner.residentId, terms.subject)}`,
       to: `/residents/${document.owner.residentId}/documents`,
     })
   }
@@ -84,7 +94,11 @@ export function staffActivity(staffId: StaffId, term: Term): StaffAct[] {
   return acts.sort((a, b) => b.at.localeCompare(a.at))
 }
 
-function assessmentActs(resident: Resident, staffId: StaffId): StaffAct[] {
+function assessmentActs(
+  resident: Resident,
+  staffId: StaffId,
+  terms: Vocabulary,
+): StaffAct[] {
   const acts: StaffAct[] = []
   for (const template of RISK_ASSESSMENT_TEMPLATES) {
     const status = resident.risks[template.id]
@@ -93,7 +107,7 @@ function assessmentActs(resident: Resident, staffId: StaffId): StaffAct[] {
     acts.push({
       id: `risk-${resident.id}-${template.id}`,
       at: status.assessedAt,
-      module: 'Risk Assessments',
+      module: moduleName('/risk-assessments', terms),
       what: `Assessed ${template.name.toLowerCase()} for ${resident.fullLegalName}: ${status.level.replace(/_/g, ' ')}`,
       to: `/residents/${resident.id}/risk-assessments`,
     })
@@ -101,7 +115,11 @@ function assessmentActs(resident: Resident, staffId: StaffId): StaffAct[] {
   return acts
 }
 
-function carePlanActs(resident: Resident, staffId: StaffId): StaffAct[] {
+function carePlanActs(
+  resident: Resident,
+  staffId: StaffId,
+  terms: Vocabulary,
+): StaffAct[] {
   const acts: StaffAct[] = []
   for (const domain of resident.carePlan) {
     if (domain.versions.kind !== 'finalised') continue
@@ -111,8 +129,8 @@ function carePlanActs(resident: Resident, staffId: StaffId): StaffAct[] {
         id: `plan-${resident.id}-${domain.domainId}-${index}`,
         // instant-ok: a finalisation date ordered against instants, never rendered as a time
         at: `${version.finalisedOn}T12:00:00.000Z` as IsoDateTime,
-        module: 'Care Plans',
-        what: `Finalised version ${index + 1} of a care plan domain for ${resident.fullLegalName}`,
+        module: moduleName('/care-plans', terms),
+        what: `Finalised version ${index + 1} of a ${terms.carePlan.one} domain for ${resident.fullLegalName}`,
         to: `/residents/${resident.id}/care-plan/${domain.domainId}`,
       })
     }

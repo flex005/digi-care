@@ -15,10 +15,10 @@ import {
 } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { marCellDescription } from '@/components/status/MarCell'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import type { Term } from '@/lib/vocabulary'
 import { useTimeZone } from '@/app/session/use-session'
-import { formatDate, zonedDate } from '@/lib/format'
+import { formatDate, pluralise, zonedDate } from '@/lib/format'
 import { MarGridCell } from './MarGridCell'
 import { ExportControl } from './ExportControl'
 import { MarLegend } from './MarLegend'
@@ -47,6 +47,7 @@ export function MarChartRoute() {
   const { residentId } = useParams<{ residentId: string }>()
   const timeZone = useTimeZone()
   const term = useTerm()
+  const terms = useTerms()
 
   const [range, setRange] = useState<MarRange>(DEFAULT_RANGE)
   const [anchor, setAnchor] = useState<IsoDate>(() =>
@@ -90,7 +91,7 @@ export function MarChartRoute() {
     return (
       <div className={styles.tabPanel}>
         <p className={styles.loading} role="status">
-          Loading the medication record…
+          Loading the chart…
         </p>
       </div>
     )
@@ -100,9 +101,7 @@ export function MarChartRoute() {
     return (
       <div className={styles.tabPanel}>
         <Card padded>
-          <p className={styles.errorTitle}>
-            This medication record could not be loaded
-          </p>
+          <p className={styles.errorTitle}>This chart could not be loaded</p>
           <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
           {resource.kind === 'refused' ? (
             <NotYourHome refusal={resource} />
@@ -147,7 +146,9 @@ export function MarChartRoute() {
                 onClick={() => setOnlyOmissions((only) => !only)}
                 aria-pressed={onlyOmissions}
               >
-                {onlyOmissions ? 'Show every medication' : 'Show only these'}
+                {onlyOmissions
+                  ? `Show every ${terms.medication.one}`
+                  : 'Show only these'}
               </Button>
             ) : undefined
           }
@@ -170,8 +171,19 @@ export function MarChartRoute() {
                   `profile.site`'s zone, so naming `activeSite` here could put
                   one site's name over another site's clock — a wrong label on
                   a clinical timestamp (§6). */}
-              {grid.rows.length} medications · {grid.rounds.length} rounds a day · times
-              in {site.name}&rsquo;s zone
+              {/*
+               * **"Prescriptions", because this count is of drugs and not of
+               * records.** `grid.rows` is one row per prescribed drug, and
+               * under the Medication Record option the term read "4 medication
+               * records · 2 rounds a day" beside a chart stating 35 doses due
+               * — a count of records that was not one. Two of the three
+               * options for this term name the drug and the third names the
+               * record, so no single form reads correctly in both places; the
+               * term keeps the screens and the modules, and a count of drugs
+               * says what the tab beside it already says.
+               */}
+              {pluralise(grid.rows.length, 'prescription', 'prescriptions')} ·{' '}
+              {grid.rounds.length} rounds a day · times in {site.name}&rsquo;s zone
             </p>
           </div>
           <div className={styles.range}>
@@ -232,12 +244,19 @@ export function MarChartRoute() {
         <div className={styles.gridScroll}>
           <table
             className={styles.grid}
+            /*
+             * The document's own name, left as it stands. The MAR is safe to
+             * vary in principle — "Medicines Administration Record" is real
+             * UK usage — but none of the declared forms composes into it:
+             * under the Medication Record option this would read "Medication
+             * Record administration record".
+             */
             aria-label={`Medication administration record, ${rangeLabel}, ${resident.fullLegalName}`}
           >
             <thead>
               <tr>
                 <th className={styles.medHead} rowSpan={2} scope="col">
-                  Medication
+                  {terms.medication.One}
                 </th>
                 {grid.days.map((day) => (
                   <th

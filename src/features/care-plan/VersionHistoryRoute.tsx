@@ -7,6 +7,7 @@ import { Card } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSiteFormat } from '@/app/session/use-session'
+import { useTerms } from '@/app/session/use-term'
 import { formatCount } from '@/lib/format'
 import { compareVersions, resolveDomain } from './plan-fields'
 import styles from './care-plan.module.css'
@@ -31,6 +32,7 @@ export function VersionHistoryRoute() {
   const { resident } = useOutletContext<ResidentProfile>()
   const { domainId } = useParams<{ domainId: string }>()
   const format = useSiteFormat()
+  const terms = useTerms()
 
   // Either list, one lookup — the editor's, so the two cannot disagree about
   // which addresses name a domain.
@@ -49,7 +51,7 @@ export function VersionHistoryRoute() {
     return (
       <div className={styles.tabPanel}>
         <Card padded>
-          <p className={styles.errorTitle}>No such care plan domain</p>
+          <p className={styles.errorTitle}>No such {terms.carePlan.one} domain</p>
           <p className={styles.errorBody}>
             This address names neither one of the{' '}
             <span data-numeric>{CARE_PLAN_DOMAINS.length}</span> domains nor one written
@@ -154,6 +156,8 @@ export function VersionHistoryRoute() {
  * say anything.
  */
 function Summary({ history, index }: { history: CarePlanVersion[]; index: number }) {
+  const terms = useTerms()
+
   if (index === 0) {
     return (
       <>
@@ -177,7 +181,7 @@ function Summary({ history, index }: { history: CarePlanVersion[]; index: number
    * destroying the one word in the label that matters.
    */
   const label = (entries: typeof comparison) =>
-    formatFields(entries.map((entry) => entry.field.label))
+    formatFields(entries.map((entry) => entry.field.label(terms.staff)))
 
   if (changed.length === 0) {
     return (
@@ -212,6 +216,7 @@ function Summary({ history, index }: { history: CarePlanVersion[]; index: number
  */
 function Diff({ history, index }: { history: CarePlanVersion[]; index: number }) {
   const format = useSiteFormat()
+  const terms = useTerms()
   const version = history[index]!
 
   if (index === 0) {
@@ -245,7 +250,7 @@ function Diff({ history, index }: { history: CarePlanVersion[]; index: number })
             key={entry.field.id}
             data-diff={entry.field.id}
           >
-            <p className={styles.diffFieldLabel}>{entry.field.label}</p>
+            <p className={styles.diffFieldLabel}>{entry.field.label(terms.staff)}</p>
 
             {entry.changed ? (
               <div className={styles.diffColumns}>

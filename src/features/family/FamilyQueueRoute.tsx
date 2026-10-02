@@ -8,7 +8,7 @@ import { Button, Card, Pager, usePaged } from '@/components/primitives'
 import { Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, pluralise } from '@/lib/format'
 import { allFamilyMembers } from '@/data/access/family-access-store'
@@ -56,6 +56,7 @@ interface Row {
 
 export function FamilyQueueRoute() {
   const { activeSite } = useSession()
+  const terms = useTerms()
   const [filter, setFilter] = useState<Filter>('nobody_named')
 
   const load = useCallback(() => getResidentsBySite(activeSite.id), [activeSite.id])
@@ -68,13 +69,15 @@ export function FamilyQueueRoute() {
 
         {resource.kind === 'loading' ? (
           <p className={styles.loading} role="status">
-            Loading family access…
+            Loading {terms.family.one} access…
           </p>
         ) : resource.kind === 'refused' ? (
           <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
-            <p className={styles.errorTitle}>Family access could not be loaded</p>
+            <p className={styles.errorTitle}>
+              {terms.family.One} access could not be loaded
+            </p>
             <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
@@ -105,6 +108,7 @@ function Found({
   onFilter: (value: Filter) => void
 }) {
   const term = useTerm()
+  const terms = useTerms()
   const everybody = allFamilyMembers()
   const all: Row[] = residents.map((resident) => ({
     resident,
@@ -155,8 +159,8 @@ function Found({
               who agreed have nobody named
             </span>
             <span className={styles.findingDetail}>
-              Family Portal consent is on file at {siteName} and no family member has
-              been given access under it. The other{' '}
+              Family Portal consent is on file at {siteName} and no {terms.family.one}{' '}
+              has been given access under it. The other{' '}
               <span data-numeric>{formatCount(all.length - given.length)}</span> of{' '}
               <span data-numeric>{pluralise(all.length, term.one, term.many)}</span>{' '}
               have no consent on file and are not counted here.

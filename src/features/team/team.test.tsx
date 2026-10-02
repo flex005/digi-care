@@ -27,10 +27,10 @@ import {
   levelFor,
 } from './permissions'
 import { staffActivity } from './staff-activity'
-import { subjectTerm } from '@/lib/vocabulary'
+import { vocabularyFor } from '@/lib/vocabulary'
 
-/** The default term, so a change to the configured word cannot move this. */
-const TERM = subjectTerm('care_home', undefined)
+/** The default terms, so a change to a configured word cannot move this. */
+const TERMS = vocabularyFor('care_home', {})
 
 /**
  * Team management. PRD §6.7, Phase 14.
@@ -303,7 +303,7 @@ describe('the staff detail is not a performance record', () => {
   })
 
   it('orders one person’s activity newest first', () => {
-    const acts = staffActivity(staffOkonkwo.id, TERM)
+    const acts = staffActivity(staffOkonkwo.id, TERMS)
     expect(acts.length).toBeGreaterThan(0)
     const times = acts.map((act) => act.at)
     expect([...times].sort().reverse()).toEqual(times)
@@ -373,7 +373,7 @@ describe('the permission matrix', () => {
     const RANK = { no_access: 0, read: 1, record: 2, approve: 3 } as const
     for (const module of PERMISSION_MODULES) {
       const ceiling = ceilingFor(module.id)
-      const acts = actsIn(module.id, TERM)
+      const acts = actsIn(module.id, TERMS)
       expect(acts, module.id).toBeTruthy()
       for (const role of PERMISSION_ROLES) {
         expect(
@@ -387,7 +387,7 @@ describe('the permission matrix', () => {
   it('names the act behind every ceiling, and refuses a module with none declared', () => {
     // A ceiling with no act named would be the same guess one level up.
     for (const module of PERMISSION_MODULES) {
-      const acts = actsIn(module.id, TERM)!
+      const acts = actsIn(module.id, TERMS)!
       if (acts.approves !== false) expect(acts.approves.length).toBeGreaterThan(8)
       if (acts.records !== false) expect(acts.records.length).toBeGreaterThan(8)
     }
@@ -424,7 +424,7 @@ describe('the permission matrix', () => {
       expect(levelFor(role, '/residents'), role).toBe('read')
     }
     // And there is nothing to approve there, for anybody.
-    expect(actsIn('/residents', TERM)!.approves).toBe(false)
+    expect(actsIn('/residents', TERMS)!.approves).toBe(false)
   })
 
   it('has no exception naming a module the sidebar does not have', () => {

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { useTerm } from '@/app/session/use-term'
+import { useTerms } from '@/app/session/use-term'
+import { navLabel } from '@/app/nav-items.icons'
 import { STAFF_ROLE_NAMES } from '@/data/types'
 import { Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
@@ -8,9 +9,26 @@ import {
   PERMISSION_MEANS,
   PERMISSION_MODULES,
   PERMISSION_ROLES,
+  SIGN_IN_ROLES,
   levelFor,
 } from './permissions'
 import styles from './team.module.css'
+
+/**
+ * The sign-in roles as a sentence, from the declaration rather than typed out.
+ *
+ * The list is joined with "and" before the last because a bare comma list
+ * reads as a fragment where this sits mid-sentence. The names themselves are
+ * never this screen's to choose: they are CQC titles the permission system
+ * keys off, and the Manager term must not reach them.
+ */
+function signInRoleNames(): string {
+  const names = SIGN_IN_ROLES.map((role) => STAFF_ROLE_NAMES[role])
+  const last = names[names.length - 1]
+  return names.length < 2
+    ? (last ?? '')
+    : `${names.slice(0, -1).join(', ')} and ${last}`
+}
 
 /**
  * What each role would be able to do. PRD §6.7, Phase 14.
@@ -23,7 +41,7 @@ import styles from './team.module.css'
  * no authentication in this build.
  */
 export function PermissionMatrixRoute() {
-  const term = useTerm()
+  const terms = useTerms()
   return (
     <div className={styles.page} data-permission-matrix>
       <Link to=".." relative="path" className={styles.backLink} data-back-link>
@@ -50,8 +68,20 @@ export function PermissionMatrixRoute() {
             This is what the people you manage can do, not a list of who uses this
             platform.
           </b>{' '}
-          Three of these roles sign in here: the Admin, the Manager and the auditor. The
-          rest work in the Care Worker app and are managed from here.
+          {/*
+           * **Named from SIGN_IN_ROLES, not written out.** This sentence said
+           * "the Admin, the Manager and the auditor", which named no row in
+           * the table underneath it — the rows come from STAFF_ROLE_NAMES and
+           * read "Registered manager", "Deputy manager", "Auditor". Two
+           * spellings of one role is the one-owner defect, and here the second
+           * spelling was also the informal one, so a reader checking the
+           * sentence against the table found neither of the first two.
+           * It is also where the Manager term must not reach: these are CQC
+           * titles naming legal accountability, and the permission system keys
+           * off these roles.
+           */}
+          Three of these roles sign in here: {signInRoleNames()}. The rest work in the
+          Care Worker app and are managed from here.
         </p>
       </div>
 
@@ -83,7 +113,7 @@ export function PermissionMatrixRoute() {
               {PERMISSION_MODULES.map((module) => (
                 <tr key={module.id} data-matrix-row={module.id}>
                   <th scope="row" className={styles.matrixModule}>
-                    {module.subject === undefined ? module.label : term[module.subject]}
+                    {navLabel(module, terms)}
                   </th>
                   {PERMISSION_ROLES.map((role) => {
                     const level = levelFor(role, module.id)

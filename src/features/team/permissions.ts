@@ -1,7 +1,7 @@
 import type { PermissionLevel, StaffRole } from '@/data/types'
 import { STAFF_ROLE_NAMES } from '@/data/types'
 import { navItems } from '@/app/nav-items.icons'
-import type { Term } from '@/lib/vocabulary'
+import type { Vocabulary } from '@/lib/vocabulary'
 
 /**
  * What each role can do in each module. PRD §6.7, Phase 14, and Phase 17.
@@ -64,7 +64,7 @@ export const PERMISSION_MODULES = navItems
    * same form the sidebar does rather than printing a word the rest of the
    * product has stopped using.
    */
-  .map((item) => ({ id: item.path, label: item.label, subject: item.subject }))
+  .map((item) => ({ id: item.path, label: item.label, term: item.term }))
 
 export type PermissionModuleId = (typeof PERMISSION_MODULES)[number]['id']
 
@@ -253,12 +253,12 @@ const EXCEPTIONS: Partial<Record<StaffRole, Partial<Record<string, PermissionLev
 /**
  * The words for one act, where `false` is the module not offering it at all.
  *
- * A function where the sentence names the person the record is about, because
- * the word for that is the organisation's to choose and this module has no
- * component to ask the hook from. Everything term-free stays a plain string:
- * `actsIn` resolves either, so no caller has to know which it was.
+ * A function where the sentence names a word the organisation chooses, because
+ * this module has no component to ask the hook from. Everything term-free
+ * stays a plain string: `actsIn` resolves either, so no caller has to know
+ * which it was.
  */
-type ActWords = string | ((term: Term) => string)
+type ActWords = string | ((terms: Vocabulary) => string)
 
 interface ModuleActs {
   records: ActWords | false
@@ -272,7 +272,7 @@ const OFFERS: Record<string, ModuleActs> = {
     approves: false,
   },
   '/residents': {
-    records: (term) => `admitting a ${term.one}, and editing their record`,
+    records: (terms) => `admitting a ${terms.subject.one}, and editing their record`,
     approves: false,
   },
   '/care-notes': {
@@ -280,7 +280,7 @@ const OFFERS: Record<string, ModuleActs> = {
     approves: 'marking a flagged note reviewed',
   },
   '/handover': {
-    records: (term) => `marking a ${term.one} on the board`,
+    records: (terms) => `marking a ${terms.subject.one} on the board`,
     approves: 'signing the handover',
   },
   '/medications': {
@@ -292,8 +292,8 @@ const OFFERS: Record<string, ModuleActs> = {
     approves: 'deciding whether the CQC must be told',
   },
   '/risk-assessments': {
-    // Completing an assessment is the write; there is no separate sign-off.
-    records: 'completing an assessment',
+    // Completing one is the write; there is no separate sign-off.
+    records: (terms) => `completing ${terms.assessment.many}`,
     approves: false,
   },
   '/care-plans': {
@@ -323,8 +323,8 @@ const OFFERS: Record<string, ModuleActs> = {
      * consent, recorded through the capacity gate under `/consent`, and a
      * second act here would be a second record of one fact.
      */
-    records: (term) =>
-      `naming somebody who may see a ${term.ones} updates, and removing them`,
+    records: (terms) =>
+      `naming somebody who may see a ${terms.subject.ones} updates, and removing them`,
     approves: false,
   },
   '/documents': {
@@ -369,19 +369,19 @@ export function ceilingFor(moduleId: string): PermissionLevel {
 /**
  * What the module offers, in words, for a screen that wants to say why.
  *
- * The caller hands in the term rather than each sentence agreeing its own
- * word: three of these name the person the record is about, and a description
- * that said "resident" on a screen headed "Patients" would be the matrix
- * describing a product nobody is using.
+ * The caller hands in the vocabulary rather than each sentence agreeing its
+ * own word: four of these name something the organisation gets to call what it
+ * likes, and a description that said "resident" on a screen headed "Patients"
+ * would be the matrix describing a product nobody is using.
  */
 export function actsIn(
   moduleId: string,
-  term: Term,
+  terms: Vocabulary,
 ): { records: string | false; approves: string | false } | undefined {
   const offers = OFFERS[moduleId]
   if (offers === undefined) return undefined
   const words = (act: ActWords | false): string | false =>
-    act === false ? false : typeof act === 'string' ? act : act(term)
+    act === false ? false : typeof act === 'string' ? act : act(terms)
   return { records: words(offers.records), approves: words(offers.approves) }
 }
 

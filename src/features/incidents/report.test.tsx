@@ -12,7 +12,7 @@ import {
   regionLabel,
   viewsFor,
 } from '@/assets/body-map/regions'
-import { subjectTerm } from '@/lib/vocabulary'
+import { subjectTerm, vocabularyFor } from '@/lib/vocabulary'
 import { ReportIncidentRoute, outstanding } from './ReportIncidentRoute'
 
 /**
@@ -275,7 +275,7 @@ describe('a family decision with no reason cannot be reported', () => {
 
     await user.click(container.querySelector('[data-family-choice="not"]')!)
     expect(submit().disabled).toBe(true)
-    expect(container.textContent).toContain('why the family are not being told')
+    expect(container.textContent).toContain('why the family is not to be told')
 
     await user.type(
       container.querySelector('[data-not-telling-reason]')!,
@@ -283,7 +283,7 @@ describe('a family decision with no reason cannot be reported', () => {
     )
     // Still refused, but no longer for this reason: the rest of the form is
     // empty, and what matters here is that this one left the list.
-    expect(container.textContent).not.toContain('why the family are not being told')
+    expect(container.textContent).not.toContain('why the family is not to be told')
   })
 
   it('asks nothing extra where they should be told, or where nobody has decided', async () => {
@@ -291,16 +291,17 @@ describe('a family decision with no reason cannot be reported', () => {
     const { container } = renderForm()
 
     await user.click(container.querySelector('[data-family-choice="should"]')!)
-    expect(container.textContent).not.toContain('why the family are not being told')
+    expect(container.textContent).not.toContain('why the family is not to be told')
 
     await user.click(container.querySelector('[data-family-choice="undecided"]')!)
-    expect(container.textContent).not.toContain('why the family are not being told')
+    expect(container.textContent).not.toContain('why the family is not to be told')
   })
 })
 
 describe('what the form is waiting on', () => {
   const complete = {
     term: subjectTerm('care_home', undefined),
+    familyTerm: vocabularyFor('care_home', {}).family,
     subject: 'resident' as const,
     resident: { id: 'res-okafor' } as never,
     type: 'fall_witnessed' as const,
@@ -372,13 +373,13 @@ describe('what the form is waiting on', () => {
    * as a decision nobody made — but the form is the place that writes the
    * record, and it was the one place not checking.
    */
-  it('asks why the family are not being told, before it will take the report', () => {
+  it('asks why the family is not to be told, before it will take the report', () => {
     expect(outstanding({ ...complete, tellFamily: 'not' })).toEqual([
-      'why the family are not being told',
+      'why the family is not to be told',
     ])
     expect(
       outstanding({ ...complete, tellFamily: 'not', notTellingReason: '   ' }),
-    ).toEqual(['why the family are not being told'])
+    ).toEqual(['why the family is not to be told'])
     expect(
       outstanding({
         ...complete,

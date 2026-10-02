@@ -6,6 +6,7 @@ import { assertNever } from '@/lib/assert-never'
 import { SHIFT_NAMES, elapsedMinutesBetween } from '@/lib/shift'
 import { MoodBadge, Settled, StatusPill, Unrecorded } from '@/components/status'
 import { useSiteFormat } from '@/app/session/use-session'
+import { useTerms } from '@/app/session/use-term'
 import styles from './notes.module.css'
 import { staffLabel } from '@/data/access/team-store'
 
@@ -145,7 +146,7 @@ export function ReviewState({ note }: { note: CareNote }) {
 export function FlagReasonWords({ reason }: { reason: FlagReason }) {
   switch (reason.kind) {
     case 'given':
-      return <q>{reason.text}</q>
+      return <q data-recorded-text>{reason.text}</q>
     case 'not_given':
       return <>No reason given</>
     default:
@@ -165,10 +166,24 @@ export function FlagReasonLine({ reason }: { reason: FlagReason }) {
 
 /** The review's outcome, on its own line beside who and when rather than inside them. */
 export function ReviewOutcomeLine({ outcome }: { outcome: ReviewOutcome }) {
+  const terms = useTerms()
   return (
-    <p className={styles.reviewFact} data-review-outcome>
+    /*
+     * **Marked as recorded text only under `other`.** Three of the four
+     * outcomes are labels this product wrote and must ask the owner for the
+     * care plan's name; `other` is the label plus the reviewer's own words,
+     * which nothing may vary. The owner returns them as one string, so the
+     * marker goes on the line rather than on a wrapper — the "Action taken"
+     * label is exempted along with it in that one case, which costs nothing
+     * because it holds no configurable noun.
+     */
+    <p
+      className={styles.reviewFact}
+      data-review-outcome
+      data-recorded-text={outcome.kind === 'other' || undefined}
+    >
       <span className={styles.reviewFactLabel}>Action taken</span>
-      {reviewOutcomeText(outcome)}
+      {reviewOutcomeText(outcome, terms)}
     </p>
   )
 }
@@ -235,7 +250,7 @@ export function ShiftOverride({ note }: { note: CareNote }) {
       The clock said {SHIFT_NAMES[note.shift.clockSaid].toLowerCase()}, recorded as{' '}
       {SHIFT_NAMES[note.shift.value].toLowerCase()}
       {': '}
-      <q>{note.shift.reason}</q>
+      <q data-recorded-text>{note.shift.reason}</q>
     </p>
   )
 }

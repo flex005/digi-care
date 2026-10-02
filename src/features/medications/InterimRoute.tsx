@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { ResidentId } from '@/data/types'
 import { useSession } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
+import type { Vocabulary } from '@/lib/vocabulary'
 import { Button, Card, Select } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
@@ -29,11 +30,20 @@ import styles from './interim.module.css'
  */
 type SourceId = 'discharge' | 'gp_written' | 'verbal' | 'pharmacy_interim'
 
-const SOURCES: { id: SourceId; label: string; hint: string }[] = [
+/**
+ * Where an interim prescription came from, and what each source obliges.
+ *
+ * A function rather than a constant, because two hints name the words this
+ * organisation uses and a module-level constant cannot call the hook. The
+ * component reads it at render, like every other configured value here.
+ */
+const sourcesFor = (
+  terms: Vocabulary,
+): { id: SourceId; label: string; hint: string }[] => [
   {
     id: 'discharge',
     label: 'Hospital discharge letter',
-    hint: 'The letter is filed in Health and clinical, and this medication links to it.',
+    hint: `The letter is filed in Health and clinical, and this ${terms.medication.one} links to it.`,
   },
   {
     id: 'gp_written',
@@ -43,7 +53,7 @@ const SOURCES: { id: SourceId; label: string; hint: string }[] = [
   {
     id: 'verbal',
     label: 'Verbal order from a prescriber',
-    hint: 'Requires a second member of staff to witness the call, and written confirmation within 24 hours.',
+    hint: `Requires a second ${terms.staff.one} to witness the call, and written confirmation within 24 hours.`,
   },
   {
     id: 'pharmacy_interim',
@@ -55,6 +65,8 @@ const SOURCES: { id: SourceId; label: string; hint: string }[] = [
 export function InterimRoute() {
   const { activeSite } = useSession()
   const term = useTerm()
+  const terms = useTerms()
+  const sources = sourcesFor(terms)
   const residents = useMemo(() => residentsBySite(activeSite.id), [activeSite.id])
 
   const [source, setSource] = useState<SourceId | 'none'>('none')
@@ -78,7 +90,7 @@ export function InterimRoute() {
     residentId === 'none' ? 'who it is for' : '',
     prescriber.trim() === '' ? 'the prescriber' : '',
     verbal && witness.trim() === '' ? 'the witness to the call' : '',
-    name.trim() === '' ? 'the medication' : '',
+    name.trim() === '' ? `the ${terms.medication.one}` : '',
     /*
      * A dose with no strength is half a record: "one tablet" is a different
      * prescription at 250mg and at 500mg, and whoever gives it cannot tell
@@ -92,7 +104,7 @@ export function InterimRoute() {
   return (
     <div className={styles.page} data-interim>
       <header>
-        <h2 className={styles.title}>Add an interim medication</h2>
+        <h2 className={styles.title}>Add an interim {terms.medication.one}</h2>
         <p className={styles.subtitle}>
           For what arrives between cycles, such as a hospital discharge or a GP visit:
           it records a prescription made somewhere else.
@@ -112,7 +124,7 @@ export function InterimRoute() {
             </p>
 
             <div className={styles.options}>
-              {SOURCES.map((entry) => {
+              {sources.map((entry) => {
                 const chosen = source === entry.id
                 return (
                   <label
@@ -148,8 +160,8 @@ export function InterimRoute() {
             <div className={styles.verbal} data-verbal-obligation>
               <p className={styles.verbalTitle}>A verbal order carries a follow-up</p>
               <p className={styles.verbalBody}>
-                A second member of staff witnesses the call, and it must be confirmed in
-                writing within 24 hours.
+                A second {terms.staff.one} witnesses the call, and it must be confirmed
+                in writing within 24 hours.
               </p>
               <label className={styles.field}>
                 <span className={styles.label}>Who witnessed the call</span>
@@ -229,15 +241,15 @@ export function InterimRoute() {
                 ]}
               />
               <p className={styles.hint}>
-                If it is not filed yet, file it first: the medication and the document
-                go on the record together.
+                If it is not filed yet, file it first: the {terms.medication.one} and
+                the document go on the record together.
               </p>
             </div>
           </div>
         </section>
 
         <section className={styles.section} data-section="medication">
-          <h3 className={styles.sectionTitle}>The medication</h3>
+          <h3 className={styles.sectionTitle}>The {terms.medication.one}</h3>
           <div className={styles.two}>
             <label className={styles.field}>
               <span className={styles.label}>Name</span>
@@ -284,6 +296,9 @@ export function InterimRoute() {
               autoComplete="off"
             />
             <p className={styles.hint}>
+              {/* "MAR" is left as it stands: the abbreviation is the same under
+              Medication and Medicines Administration Record, so there is
+              nothing in it for a term to vary. */}
               Copied from the source document, not paraphrased: the MAR chart shows this
               wording to whoever gives the dose.
             </p>
@@ -313,7 +328,7 @@ export function InterimRoute() {
 
       <Link to=".." relative="path" className={styles.backLink}>
         <Icon name="arrows-sharp/arrow-left-01-sharp" size={16} aria-hidden />
-        Back to medications
+        Back to {terms.medication.many}
       </Link>
     </div>
   )

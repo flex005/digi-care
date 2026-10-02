@@ -12,14 +12,17 @@ import { router as appRouter } from '@/app/routes'
 import { ReportIndexRoute } from './ReportIndexRoute'
 import { ReportViewRoute } from './ReportViewRoute'
 import { drillDowns, reports, reportById } from './catalogue'
-import { subjectTerm } from '@/lib/vocabulary'
+import { vocabularyFor } from '@/lib/vocabulary'
 
-/** The term in force with nothing configured: this home calls them residents. */
-const TERM = subjectTerm('care_home', undefined)
+/**
+ * The vocabulary in force with nothing configured: this home calls them
+ * residents, their plans care plans, and so on down the nine.
+ */
+const TERMS = vocabularyFor('care_home', {})
 
 /** The catalogue under that term — read through the owner, never a copy. */
-const REPORTS = reports(TERM)
-const DRILL_DOWNS = drillDowns(TERM)
+const REPORTS = reports(TERMS)
+const DRILL_DOWNS = drillDowns(TERMS)
 import { loadReportData } from './data'
 import {
   REPORT_PERIOD_DAYS,
@@ -84,7 +87,7 @@ const runAll = async (site = rosewood) => {
       result: runReport({
         data,
         definition,
-        term: TERM,
+        terms: TERMS,
         period,
         previous: definition.comparison ? previousPeriod(period) : undefined,
         cut: definition.cuts[0]?.id ?? '',
@@ -156,7 +159,7 @@ describe('the period', () => {
 
   it('names the period it counted in the restated line', async () => {
     const data = await loadReportData(rosewood, NOW_ISO)
-    const definition = reportById('medication-omissions', TERM)!
+    const definition = reportById('medication-omissions', TERMS)!
     const period: Period = {
       from: '2026-07-27' as IsoDate,
       to: '2026-08-25' as IsoDate,
@@ -165,7 +168,7 @@ describe('the period', () => {
     const result = runReport({
       data,
       definition,
-      term: TERM,
+      terms: TERMS,
       period,
       previous: previousPeriod(period),
       cut: 'drug',
@@ -207,12 +210,12 @@ describe('a row that cannot support a rate', () => {
      * somebody who did not work is the accusation the constraint forbids.
      */
     const data = await loadReportData(rosewood, NOW_ISO)
-    const definition = reportById('care-note-coverage', TERM)!
+    const definition = reportById('care-note-coverage', TERMS)!
     const period = periodEndingToday(NOW_ISO, rosewood.timeZone, REPORT_PERIOD_DAYS)
     const result = runReport({
       data,
       definition,
-      term: TERM,
+      terms: TERMS,
       period,
       previous: undefined,
       cut: 'staff',
@@ -361,12 +364,12 @@ describe('a report view', () => {
 describe('the staff report is workload, never a ranking', () => {
   it('orders by name and by nothing else', async () => {
     const data = await loadReportData(rosewood, NOW_ISO)
-    const definition = reportById('care-note-coverage', TERM)!
+    const definition = reportById('care-note-coverage', TERMS)!
     const period = periodEndingToday(NOW_ISO, rosewood.timeZone, REPORT_PERIOD_DAYS)
     const result = runReport({
       data,
       definition,
-      term: TERM,
+      terms: TERMS,
       period,
       previous: undefined,
       cut: 'staff',
@@ -377,13 +380,13 @@ describe('the staff report is workload, never a ranking', () => {
   }, 40000)
 
   it('attributes no omission to anybody', async () => {
-    const definition = reportById('care-note-coverage', TERM)!
+    const definition = reportById('care-note-coverage', TERMS)!
     const data = await loadReportData(rosewood, NOW_ISO)
     const period = periodEndingToday(NOW_ISO, rosewood.timeZone, REPORT_PERIOD_DAYS)
     const result = runReport({
       data,
       definition,
-      term: TERM,
+      terms: TERMS,
       period,
       previous: undefined,
       cut: 'staff',
@@ -449,7 +452,7 @@ describe('the analytical layout carries the same refusals as compliance', () => 
     await settled(container)
 
     const data = await loadReportData(rosewood, NOW_ISO)
-    const headline = reportHeadline(runEverything(data, TERM))
+    const headline = reportHeadline(runEverything(data, TERMS))
 
     const hero = container.querySelector('[data-hero]') as HTMLElement
     expect(hero.querySelector('[data-numeric]')!.textContent).toBe(

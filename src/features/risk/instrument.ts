@@ -47,6 +47,15 @@ import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
  * The banner is the export stub's treatment for the export stub's reason: a
  * control or a figure that does not do what it appears to must say so where
  * it appears, not in a release note.
+ *
+ * **Nothing in this file takes a configurable term, and that is the rule
+ * rather than an omission.** Every `question`, `guidance` and `label` below
+ * is an instrument's own wording — "Medication" is a Waterlow item, "A fall
+ * on this admission" is how Morse defines its first item, and the
+ * stand-in's "Assessment factor 1" is wording of the same kind. A service
+ * that calls its assessments Care Assessments has not renamed the Waterlow
+ * Score, and a term reaching in here would put a home's word inside a
+ * published scale.
  */
 
 export const PLACEHOLDER_NOTICE =

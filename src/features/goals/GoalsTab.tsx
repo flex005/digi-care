@@ -15,6 +15,7 @@ import {
   goalStanding,
   longEnoughToExpectAGoal,
 } from './goal-timing'
+import { useTerms } from '@/app/session/use-term'
 import styles from './goals.module.css'
 import { NotYourHome } from '@/components/status'
 
@@ -159,6 +160,7 @@ function NobodyHasSetOne({
 }) {
   const here = daysSinceAdmission(resident.admittedOn, now)
   const expected = longEnoughToExpectAGoal(resident.admittedOn, now)
+  const terms = useTerms()
 
   return (
     <div
@@ -173,8 +175,9 @@ function NobodyHasSetOne({
         {expected ? (
           <>
             They have been here <span data-numeric>{formatDuration(here)}</span>. A goal
-            is this person&rsquo;s own statement of something they want, not a care plan
-            action, and not something decided for them. Setting one starts with asking.
+            is this person&rsquo;s own statement of something they want, not a{' '}
+            {terms.carePlan.one} action, and not something decided for them. Setting one
+            starts with asking.
           </>
         ) : (
           <>

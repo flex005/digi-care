@@ -1,6 +1,7 @@
 import { held as heldItem, type SessionHolding } from './session-holding'
+import type { Vocabulary } from '@/lib/vocabulary'
 import type { Organisation, Site, SiteId } from '../types'
-import type { OrganisationType } from '@/lib/vocabulary'
+import type { OrganisationType, TermId } from '@/lib/vocabulary'
 import { INSUFFICIENT_EVIDENCE_THRESHOLD, MIN_POPULATION_FOR_A_RATE } from '../types'
 import { sites as fixtureSites } from '../fixtures/organisation'
 import { DUE_SOON_DAYS, REVIEW_INTERVAL_MONTHS } from '@/lib/review-interval'
@@ -40,8 +41,18 @@ export interface AdjustableFigure {
    * Rendered read-only with its value and the reason, never as a control.
    */
   fixedAtGeneration: boolean
-  /** Where the reader can see the change take effect. */
-  seenOn: string
+  /**
+   * Where the reader can see the change take effect.
+   *
+   * **A function of the vocabulary**, because three of these name the Care
+   * Plans module and a module-level string is evaluated before anything can
+   * ask what this service calls it. Composed from the term rather than from
+   * `navLabel`, which owns the sidebar's spelling, because nothing else in
+   * `src/data` reaches into `src/app` — so `settings.test.tsx` holds the two
+   * against each other instead, and a nav item that stops taking the term
+   * fails there rather than drifting quietly.
+   */
+  seenOn: (terms: Vocabulary) => string
 }
 
 const FIGURES: AdjustableFigure[] = [
@@ -67,7 +78,7 @@ const FIGURES: AdjustableFigure[] = [
     value: 480,
     fallback: 480,
     fixedAtGeneration: false,
-    seenOn: 'Every screen, in the bar above the content',
+    seenOn: () => 'Every screen, in the bar above the content',
   },
   {
     id: 'min-population-for-a-rate',
@@ -78,7 +89,7 @@ const FIGURES: AdjustableFigure[] = [
     value: MIN_POPULATION_FOR_A_RATE,
     fallback: MIN_POPULATION_FOR_A_RATE,
     fixedAtGeneration: false,
-    seenOn: 'Compliance, Reports, Documents, Reviews',
+    seenOn: () => 'Compliance, Reports, Documents, Reviews',
   },
   {
     id: 'insufficient-evidence-threshold',
@@ -89,7 +100,7 @@ const FIGURES: AdjustableFigure[] = [
     value: Math.round(INSUFFICIENT_EVIDENCE_THRESHOLD * 100),
     fallback: Math.round(INSUFFICIENT_EVIDENCE_THRESHOLD * 100),
     fixedAtGeneration: false,
-    seenOn: 'Compliance',
+    seenOn: () => 'Compliance',
   },
   {
     id: 'due-soon-days',
@@ -100,7 +111,7 @@ const FIGURES: AdjustableFigure[] = [
     value: DUE_SOON_DAYS,
     fallback: DUE_SOON_DAYS,
     fixedAtGeneration: false,
-    seenOn: 'Reviews, Care Plans, Documents',
+    seenOn: (terms) => `Reviews, ${terms.carePlan.Many}, Documents`,
   },
   {
     id: 'gap-threshold-waking-minutes',
@@ -110,7 +121,7 @@ const FIGURES: AdjustableFigure[] = [
     value: GAP_THRESHOLD_WAKING_MINUTES,
     fallback: GAP_THRESHOLD_WAKING_MINUTES,
     fixedAtGeneration: false,
-    seenOn: 'Care Notes',
+    seenOn: () => 'Care Notes',
   },
   {
     id: 'review-interval-months',
@@ -121,7 +132,7 @@ const FIGURES: AdjustableFigure[] = [
     value: REVIEW_INTERVAL_MONTHS,
     fallback: REVIEW_INTERVAL_MONTHS,
     fixedAtGeneration: false,
-    seenOn: 'Reviews, Care Plans, Risk Assessments',
+    seenOn: (terms) => `Reviews, ${terms.carePlan.Many}, Risk Assessments`,
   },
   {
     /*
@@ -144,7 +155,7 @@ const FIGURES: AdjustableFigure[] = [
     value: ROUND_TIMES.length,
     fallback: ROUND_TIMES.length,
     fixedAtGeneration: true,
-    seenOn: 'The MAR chart, the round, the Dashboard',
+    seenOn: () => 'The MAR chart, the round, the Dashboard',
   },
   {
     id: 'round-window-minutes',
@@ -154,7 +165,7 @@ const FIGURES: AdjustableFigure[] = [
     value: ROUND_WINDOW_MINUTES,
     fallback: ROUND_WINDOW_MINUTES,
     fixedAtGeneration: true,
-    seenOn: 'The round, the Dashboard',
+    seenOn: () => 'The round, the Dashboard',
   },
   {
     id: 'medication-lookahead-hours',
@@ -164,7 +175,7 @@ const FIGURES: AdjustableFigure[] = [
     value: MEDICATION_LOOKAHEAD_HOURS,
     fallback: MEDICATION_LOOKAHEAD_HOURS,
     fixedAtGeneration: true,
-    seenOn: 'Dashboard, the profile header',
+    seenOn: () => 'Dashboard, the profile header',
   },
 ]
 
@@ -288,6 +299,8 @@ export function organisationAsConfigured(organisation: Organisation): Organisati
  */
 let organisationType: OrganisationType | undefined
 let subjectTermId: string | undefined
+/** One chosen option per term. Absent means that term's default. */
+const chosenTerms = new Map<TermId, string>()
 
 export function organisationTypeAsConfigured(): OrganisationType {
   return organisationType ?? 'care_home'
@@ -310,6 +323,16 @@ export function setOrganisationType(type: OrganisationType): void {
 
 export function setSubjectTerm(id: string): void {
   subjectTermId = id
+  chosenTerms.set('subject', id)
+}
+
+export function chosenTermsAsConfigured(): Partial<Record<TermId, string>> {
+  return { ...Object.fromEntries(chosenTerms), subject: subjectTermId }
+}
+
+export function setTermChoice(id: TermId, choice: string): void {
+  chosenTerms.set(id, choice)
+  if (id === 'subject') subjectTermId = choice
 }
 
 export function setOrganisationName(name: string): void {
@@ -340,6 +363,7 @@ export function settingsHoldings(): SessionHolding[] {
       `the word this service uses for the people it serves`,
       subjectTermId === undefined ? 0 : 1,
     ),
+    ...heldItem('words this service uses for its own things', chosenTerms.size),
   ]
 }
 
@@ -349,6 +373,7 @@ export function resetSessionSettings(): void {
   organisationName = undefined
   organisationType = undefined
   subjectTermId = undefined
+  chosenTerms.clear()
   for (const entry of FIGURES) entry.value = entry.fallback
 }
 
@@ -377,6 +402,7 @@ export const TIME_ZONES = [
 export const WRITE_EXPORTS = [
   'setOrganisationType',
   'setSubjectTerm',
+  'setTermChoice',
   'setFigure',
   'setSiteName',
   'setSiteTimeZone',

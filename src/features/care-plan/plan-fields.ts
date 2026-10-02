@@ -8,6 +8,7 @@ import type {
   CustomDomainId,
 } from '@/data/types'
 import { CARE_PLAN_DOMAINS } from '@/data/types'
+import type { Term } from '@/lib/vocabulary'
 
 /**
  * The three fields a care plan domain is made of, and whose voice each is
@@ -24,7 +25,16 @@ export type PlanFieldId = keyof CarePlanText
 
 export interface PlanField {
   id: PlanFieldId
-  label: string
+  /**
+   * The box's label.
+   *
+   * **Takes the term rather than holding a word**, for the reason
+   * `NOT_GIVEN_REASONS` does: one of the four names the people who will act on
+   * the plan, this list is module-level so it cannot call the hook, and the
+   * rendering component supplies the form. The other three are the person's
+   * own voice and name nobody, so they ignore the argument.
+   */
+  label: (staff: Term) => string
   /** Whose sentence this is. Drives the placeholder and the guidance. */
   voice: 'resident' | 'staff'
   guidance: string
@@ -43,7 +53,7 @@ export interface PlanField {
  */
 const FIELDS: Record<PlanFieldId, Omit<PlanField, 'id'>> = {
   currentNeeds: {
-    label: 'What I need help with',
+    label: () => 'What I need help with',
     voice: 'resident',
     guidance:
       'In their own words. What they can do, what they find hard, what they want help with.',
@@ -52,7 +62,7 @@ const FIELDS: Record<PlanFieldId, Omit<PlanField, 'id'>> = {
       'Not written: a plan that does not say what this person needs cannot be signed',
   },
   preferences: {
-    label: 'How I like it done',
+    label: () => 'How I like it done',
     voice: 'resident',
     guidance: 'Their preferences: timing, who, how, and what they would rather avoid.',
     placeholder: '“I would rather you…”',
@@ -60,7 +70,7 @@ const FIELDS: Record<PlanFieldId, Omit<PlanField, 'id'>> = {
       'Not written: a plan that does not say how they want it done cannot be signed',
   },
   agreedActions: {
-    label: 'What staff will do',
+    label: (staff) => `What ${staff.many} will do`,
     voice: 'staff',
     guidance:
       'Written to whoever reads this on shift. What you will actually do, specifically enough to follow.',
@@ -76,7 +86,7 @@ const FIELDS: Record<PlanFieldId, Omit<PlanField, 'id'>> = {
    * right one. Nothing closes it.
    */
   expectedOutcome: {
-    label: 'Expected outcome',
+    label: () => 'Expected outcome',
     voice: 'staff',
     guidance:
       'What good looks like if this works. Specific enough that somebody could tell whether it is happening.',
@@ -235,5 +245,7 @@ export function resolveDomain(
  * So the phrase has one owner and the call sites ask for it, rather than each
  * agreeing an article and a case for itself.
  */
-export const domainInSentence = (domain: ResolvedDomain): string =>
-  domain.kind === 'fixed' ? `the ${domain.name.toLowerCase()} care plan` : domain.name
+export const domainInSentence = (domain: ResolvedDomain, carePlan: Term): string =>
+  domain.kind === 'fixed'
+    ? `the ${domain.name.toLowerCase()} ${carePlan.one}`
+    : domain.name

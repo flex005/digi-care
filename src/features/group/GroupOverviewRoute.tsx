@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { IsoDateTime } from '@/data/types'
 import { useSession } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { Button, Card } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { formatCount, pluralise } from '@/lib/format'
@@ -30,6 +30,7 @@ import styles from './group.module.css'
 export function GroupOverviewRoute() {
   const { organisation, sites, setActiveSite } = useSession()
   const term = useTerm()
+  const terms = useTerms()
   const navigate = useNavigate()
   const [data, setData] = useState<GroupData | 'loading'>('loading')
   const totals = useMemo(
@@ -40,7 +41,7 @@ export function GroupOverviewRoute() {
   useEffect(() => {
     let live = true
     const now = appNow().toISOString() as IsoDateTime
-    void loadGroup(sites, now, term).then((loaded) => {
+    void loadGroup(sites, now, terms).then((loaded) => {
       if (live) setData(loaded)
     })
     return () => {

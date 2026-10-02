@@ -23,7 +23,7 @@ export type ReportId =
   | 'activity-participation'
   | 'consent-coverage'
 
-import type { Term } from '@/lib/vocabulary'
+import type { Vocabulary } from '@/lib/vocabulary'
 
 export interface Cut {
   id: string
@@ -66,11 +66,11 @@ export interface ReportDefinition {
   subject: 'resident' | 'staff' | 'record'
 }
 
-export function reports(term: Term): ReportDefinition[] {
+export function reports(terms: Vocabulary): ReportDefinition[] {
   return [
     {
       id: 'medication-omissions',
-      group: 'Medication',
+      group: terms.medication.One,
       name: 'Omissions over a period',
       answers:
         'Which drugs and which rounds go unrecorded, and whether it is getting better or worse.',
@@ -80,13 +80,13 @@ export function reports(term: Term): ReportDefinition[] {
         { id: 'drug', label: 'By drug' },
         { id: 'round', label: 'By round' },
         { id: 'weekday', label: 'By day of week' },
-        { id: 'resident', label: `By ${term.one}` },
+        { id: 'resident', label: `By ${terms.subject.one}` },
       ],
       subject: 'record',
     },
     {
       id: 'controlled-drug-reconciliation',
-      group: 'Medication',
+      group: terms.medication.One,
       name: 'Controlled drug reconciliation',
       answers: 'Every count in the period, and whether the balances held.',
       dimension: 'flow',
@@ -112,22 +112,23 @@ export function reports(term: Term): ReportDefinition[] {
     {
       id: 'assessment-coverage',
       group: 'Safety',
+      /* The document name, not the configurable term (nav-items.icons.ts). */
       name: 'Risk assessment and review coverage over time',
       answers: 'Whether the home is assessing and re-assessing, or falling behind.',
       dimension: 'flow',
       comparison: false,
-      cuts: [{ id: 'template', label: 'By assessment' }],
+      cuts: [{ id: 'template', label: `By ${terms.assessment.one}` }],
       subject: 'record',
     },
     {
       id: 'care-note-coverage',
       group: 'The record itself',
-      name: 'Care note coverage by staff and shift',
-      answers: `Who is writing ${term.many} up, on which shifts, and where the gaps fall.`,
+      name: `Care note coverage by ${terms.staff.many} and shift`,
+      answers: `Who is writing ${terms.subject.many} up, on which shifts, and where the gaps fall.`,
       dimension: 'flow',
       comparison: false,
       cuts: [
-        { id: 'staff', label: 'By staff member' },
+        { id: 'staff', label: `By ${terms.staff.one}` },
         { id: 'shift', label: 'By shift' },
       ],
       subject: 'staff',
@@ -151,7 +152,7 @@ export function reports(term: Term): ReportDefinition[] {
       dimension: 'flow',
       comparison: false,
       cuts: [
-        { id: 'resident', label: `By ${term.one}` },
+        { id: 'resident', label: `By ${terms.subject.one}` },
         { id: 'activity', label: 'By activity' },
       ],
       subject: 'resident',
@@ -184,9 +185,13 @@ export interface DrillDown {
   where: string
 }
 
-export function drillDowns(term: Term): DrillDown[] {
+export function drillDowns(terms: Vocabulary): DrillDown[] {
   return [
-    { question: `Omission rate by ${term.one}`, to: '/compliance/safe', where: 'Safe' },
+    {
+      question: `Omission rate by ${terms.subject.one}`,
+      to: '/compliance/safe',
+      where: 'Safe',
+    },
     { question: 'Consents never sought', to: '/compliance/caring', where: 'Caring' },
     {
       question: 'Goals past the date they were set for',
@@ -205,23 +210,26 @@ export function drillDowns(term: Term): DrillDown[] {
     },
     { question: 'Unacknowledged incidents', to: '/compliance/safe', where: 'Safe' },
     {
-      question: 'Care plan domains never written',
+      question: `${terms.carePlan.One} domains never written`,
       to: '/compliance/effective',
       where: 'Effective',
     },
   ]
 }
 
-export function reportById(id: string, term: Term): ReportDefinition | undefined {
-  return reports(term).find((report) => report.id === id)
+export function reportById(
+  id: string,
+  terms: Vocabulary,
+): ReportDefinition | undefined {
+  return reports(terms).find((report) => report.id === id)
 }
 
 /** The groups, in the order the index renders them. */
 export function reportGroups(
-  term: Term,
+  terms: Vocabulary,
 ): { group: string; reports: ReportDefinition[] }[] {
   const groups: { group: string; reports: ReportDefinition[] }[] = []
-  for (const report of reports(term)) {
+  for (const report of reports(terms)) {
     const held = groups.find((entry) => entry.group === report.group)
     if (held) held.reports.push(report)
     else groups.push({ group: report.group, reports: [report] })

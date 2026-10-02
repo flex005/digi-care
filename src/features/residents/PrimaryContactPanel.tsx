@@ -1,5 +1,7 @@
 import type { ImportantPerson, ImportantPeople } from '@/data/types'
 import { Unrecorded } from '@/components/status'
+import { useTerms } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import styles from './profile.module.css'
 
 /**
@@ -30,8 +32,13 @@ interface Held {
   category: string
 }
 
-/** Exported so a test can find a resident with none, rather than naming one. */
-export function primaryContactsIn(people: ImportantPeople): Held[] {
+/**
+ * Exported so a test can find a resident with none, rather than naming one.
+ *
+ * It takes the term rather than reading one: a plain helper cannot call a
+ * hook, and naming the category is the one thing in here that is configurable.
+ */
+export function primaryContactsIn(people: ImportantPeople, family: Term): Held[] {
   const held: Held[] = []
 
   const consider = (person: ImportantPerson, category: string) => {
@@ -52,7 +59,7 @@ export function primaryContactsIn(people: ImportantPeople): Held[] {
   }
   if (people.familyWithVisitingRights.kind === 'recorded') {
     for (const person of people.familyWithVisitingRights.items) {
-      consider(person, 'Family with visiting rights')
+      consider(person, `${family.One} with visiting rights`)
     }
   }
 
@@ -66,7 +73,8 @@ export function PrimaryContactPanel({
   people: ImportantPeople
   residentName: string
 }) {
-  const held = primaryContactsIn(people)
+  const terms = useTerms()
+  const held = primaryContactsIn(people, terms.family)
 
   if (held.length === 0) {
     return (

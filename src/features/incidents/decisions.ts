@@ -1,5 +1,6 @@
 import type { Incident, IsoDateTime, PostIncidentReviewFlag } from '@/data/types'
 import { CARE_PLAN_DOMAINS, RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
+import type { Vocabulary } from '@/lib/vocabulary'
 
 /**
  * What nobody has decided about an incident yet.
@@ -30,6 +31,8 @@ export interface OutstandingDecision {
   availableInPhase: number | 'now'
 }
 
+// The scale's own name, never varied: Morse, Waterlow and MUST are published
+// instruments and the name belongs to the instrument, not to this service.
 const templateName = (id: string) =>
   RISK_ASSESSMENT_TEMPLATES.find((entry) => entry.id === id)?.name ?? id
 
@@ -43,7 +46,10 @@ export function flagName(flag: PostIncidentReviewFlag): string {
 }
 
 /** What would clear a flag, and the phase that builds it. */
-export function flagClearedBy(flag: PostIncidentReviewFlag): {
+export function flagClearedBy(
+  flag: PostIncidentReviewFlag,
+  terms: Vocabulary,
+): {
   action: string
   phase: number
   sentence: string
@@ -52,12 +58,12 @@ export function flagClearedBy(flag: PostIncidentReviewFlag): {
     ? {
         action: 'Re-score',
         phase: 5,
-        sentence: 'Cleared by re-scoring the assessment, which arrives in Phase 5.',
+        sentence: `Cleared by re-scoring the ${terms.assessment.one}, which arrives in Phase 5.`,
       }
     : {
         action: 'Review',
         phase: 6,
-        sentence: 'Cleared by a care plan review, which arrives in Phase 6.',
+        sentence: `Cleared by a ${terms.carePlan.one} review, which arrives in Phase 6.`,
       }
 }
 
@@ -68,6 +74,7 @@ export function isOverdue(flag: PostIncidentReviewFlag, now: IsoDateTime): boole
 export function outstandingDecisions(
   incident: Incident,
   now: IsoDateTime,
+  terms: Vocabulary,
 ): OutstandingDecision[] {
   const decisions: OutstandingDecision[] = []
 
@@ -100,9 +107,8 @@ export function outstandingDecisions(
   if (incident.familyTold.kind === 'not_decided') {
     decisions.push({
       id: 'family',
-      name: 'Nobody has decided whether to tell the family',
-      detail:
-        'This product cannot reach a family member, so what is owed is a decision and, if they should be told, a telephone call somebody makes.',
+      name: `Nobody has decided whether to tell the ${terms.family.one}`,
+      detail: `This product cannot reach the ${terms.family.one}, so what is owed is a decision and, if they should be told, a telephone call somebody makes.`,
       action: 'Decide',
       availableInPhase: 'now',
     })
@@ -139,7 +145,7 @@ export function outstandingDecisions(
 
   for (const flag of incident.reviewFlags) {
     if (flag.state.kind !== 'awaiting') continue
-    const cleared = flagClearedBy(flag)
+    const cleared = flagClearedBy(flag, terms)
     decisions.push({
       id: `flag-${flag.target.kind}-${flagName(flag)}`,
       name: `${flagName(flag)} has not been reviewed`,

@@ -25,7 +25,7 @@ import { BodyMap } from '@/assets/body-map/BodyMap'
 import { regionLabel } from '@/assets/body-map/regions'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { CorrectReportForm, CorrectReportTrigger } from './CorrectReportForm'
 import { DownloadIncident } from './DownloadIncident'
@@ -122,6 +122,7 @@ function Found({
 }) {
   const format = useSiteFormat()
   const term = useTerm()
+  const terms = useTerms()
   /** Which decision the reader is taking, if any. */
   const [deciding, setDeciding] = useState<DecideStep>('none')
   /*
@@ -181,7 +182,7 @@ function Found({
   const typeName =
     INCIDENT_TYPES.find((entry) => entry.id === incident.type)?.name ?? incident.type
   const severity = INCIDENT_SEVERITIES.find((entry) => entry.id === incident.severity)
-  const decisions = outstandingDecisions(incident, now)
+  const decisions = outstandingDecisions(incident, now, terms)
 
   return (
     <>
@@ -449,7 +450,7 @@ function Found({
             <Field label="GP">
               <ContactValue state={incident.response.gp} />
             </Field>
-            <Field label="Family">
+            <Field label={terms.family.One}>
               <ContactValue state={incident.response.family} />
             </Field>
             <Field label="Emergency services">
@@ -472,7 +473,7 @@ function Found({
 
       <Card>
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Manager review</h2>
+          <h2 className={styles.sectionTitle}>{terms.manager.One} review</h2>
           <ReviewField label="Root cause" value={incident.review.rootCause} />
           <ReviewField label="Actions taken" value={incident.review.actionsTaken} />
           <ReviewField
@@ -922,7 +923,8 @@ const decided = (at: IsoDateTime) => at
  */
 function ReviewFlag({ flag, now }: { flag: PostIncidentReviewFlag; now: IsoDateTime }) {
   const format = useSiteFormat()
-  const cleared = flagClearedBy(flag)
+  const terms = useTerms()
+  const cleared = flagClearedBy(flag, terms)
   const late = isOverdue(flag, now)
 
   const state =

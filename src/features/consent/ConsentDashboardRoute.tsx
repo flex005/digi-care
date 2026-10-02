@@ -9,10 +9,10 @@ import { ConsentBadge, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, pluralise } from '@/lib/format'
-import { CONSENT_MEANS } from './consent-meaning'
+import { consentMeans } from './consent-meaning'
 import styles from './consent.module.css'
 
 /**
@@ -94,6 +94,7 @@ function Found({
   onFilter: (value: Filter) => void
 }) {
   const term = useTerm()
+  const terms = useTerms()
   const all: Row[] = residents.flatMap((resident) =>
     CONSENT_TYPES.map((type) => ({
       resident,
@@ -233,7 +234,7 @@ function Found({
                     <span>
                       <span className={styles.rowName}>{row.typeName}</span>
                       <span className={styles.typeMeans}>
-                        {CONSENT_MEANS[row.typeId]}
+                        {consentMeans(terms)[row.typeId]}
                       </span>
                     </span>
 

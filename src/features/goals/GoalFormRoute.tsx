@@ -8,6 +8,7 @@ import { AlertDialog, Button, Card, Select, Toast } from '@/components/primitive
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerms } from '@/app/session/use-term'
 import { EMPTY_GOAL, GOAL_FIELDS, outstandingGoalFields } from './goal-fields'
 import type { GoalText } from './goal-fields'
 import styles from './goals.module.css'
@@ -32,6 +33,7 @@ export function GoalFormRoute() {
   const { resident } = useOutletContext<ResidentProfile>()
   const { currentUser } = useSession()
   const format = useSiteFormat()
+  const terms = useTerms()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
 
   const [text, setText] = useState<GoalText>(EMPTY_GOAL)
@@ -87,7 +89,7 @@ export function GoalFormRoute() {
         <div className={styles.twoUp}>
           <Select
             labelVisible
-            label="Which part of the care plan"
+            label={`Which part of the ${terms.carePlan.one}`}
             placeholder="Not filed under a domain"
             value={domain === 'none' ? undefined : domain}
             onValueChange={(value) => setDomain(value as CarePlanDomainId | 'none')}

@@ -17222,3 +17222,130 @@ As Service User, with the count forced to one by a throwaway patch: **"of 1
 service user reviewed this shift"** on all four handover tiles, and "of 1
 service user living at Rosewood Court". The patch was reverted and the revert
 confirmed by `grep -c` rather than assumed.
+
+## Phase 2 of organisation customisation — the remaining eight terms
+
+Nine terms are now configurable. Every form is declared; nothing is derived.
+`npm run verify` green: 93 test files, 1731 tests, every guard's own summary
+line read rather than the chain's tail.
+
+### What the crawl cost, and what that says about the guard
+
+The extended crawl's first run reported **97 places still printing a default
+word**. Most were the guard's own `was` patterns, and the shape of the error is
+worth keeping: a term's new word usually *contains* its old one, so "Care
+Assessment" matched `/\bassessments?\b/` and the term's own successful
+application was reported as a failure to apply it. The rest were proper nouns —
+"Family Portal", "capacity assessment", the Morse Fall Scale's "A fall on this
+admission".
+
+The repair is not a lookbehind. Each term declares a `proper` pattern beside
+it with the reason, and both `proper` and `shows` are removed from the text
+*before* the old word is looked for. **The exclusion is where the reason is**,
+which is the §8 rule about a warning attached to one instance not protecting
+the class. 97 → 40 → 3 → 0, and the 40 and the 3 were real.
+
+Two markers in the DOM, deliberately not one. `data-recorded-text` is
+somebody's own words. `data-published-wording` is a validated instrument's
+question — the Morse Fall Scale asks about "a fall on this admission" and that
+belongs to the scale. Calling the second one recorded text would be a marker
+claiming more than it covers.
+
+### Mutations, each run before anything was written down
+
+- **A statutory title routed through the vocabulary.** `registered_manager`
+  set to `'Registered ' + 'administrator'`, confirmed landed with `grep -c`,
+  and `leaves the statutory role titles alone under any vocabulary` failed with
+  `expected 'Registered administrator' to be 'Registered manager'`.
+- **A term's plural returning its singular.** `care_assessment`'s plural set to
+  its singular — and **34 tests passed**. `every term declares every form`
+  asserts each form is *present*, which a wrong plural satisfies completely.
+  So `INVARIANT_PLURALS` now declares the terms whose plural really is their
+  singular, because nothing else can tell "Next of Kin" from a plural somebody
+  forgot. The guard reads it **bidirectionally**: a term invariant without
+  being named fails, and a name that has since gained a real plural fails too,
+  so the entry cannot go stale and keep excusing something. Both directions
+  were mutated and both fire.
+- **A term's owner bypassed with its literal word.** `{terms.carePlan.Many}`
+  replaced with `Care Plans` in the care plan queue's `<h1>`; the crawl
+  reported `/care-plans [carePlan] h1._pageTitle "Care Plans"`.
+- **A new term's count pairing**, for `check-plural-agreement` — and it
+  **passed**, which is the finding. It cleared any hit with `pluralise(` in the
+  preceding 240 characters, and an unrelated correct call four lines above an
+  incorrect `{formatCount(n)} {terms.assessment.many}` was enough to excuse it.
+  The window was wider than the statement it meant: the §8 proxy defect, inside
+  a guard written to catch another one. It now asks whether the hit is inside a
+  `pluralise(` argument list, which is a question about brackets rather than
+  about distance. Same counts on the clean tree (45 agreed, 2 suspect, 2
+  deliberate), so the narrowing cleared nothing legitimate.
+
+### One owner for a module's name, which three places were restating
+
+`navLabel(item, terms)` now owns the choice between a fixed label and a
+configured one. The rule was written out in the sidebar and again in the
+permission matrix, and was about to be written a third time in the tests. The
+activity log and the document library each held their own copies of five
+sidebar labels, each under a docblock saying `nav-items.icons.ts` owned the
+wording — **true while every label was fixed, and silently false the moment
+Care Plans took a term.** Both now call `moduleName(path, terms)`, which throws
+on a path no item declares rather than rendering plausibly.
+
+`settings-store` is the one place that cannot call it: nothing else in
+`src/data` reaches into `src/app`. It composes from the term instead, and
+`configuration.test.tsx` holds the two against each other — mutated by removing
+the term from the Care Plans nav item, which fails with `expected 'Care Plans'
+to be 'Care & Support Plans'`. A guard rather than a comment, because the
+comment is exactly what did not hold.
+
+### Decisions where no form composed
+
+- **"Incidents" stays fixed on the nav item.** Declaring the term there renamed
+  the sidebar to "Incident Reports" for every home on the *default* vocabulary
+  — a copy change wearing a configuration change's clothes. The module is named
+  for the events; every option of that term names the record of one. Two other
+  sweeps reached the same reading independently, in `permissions.ts`
+  ("reporting an incident" is the act) and in the review outcomes ("Incident
+  raised"). The term reaches the log's heading and its "New …" control, which
+  are about the records.
+- **"Risk assessments" keeps its words.** No option composes behind the
+  qualifier — "Risk Care Assessments" is not a phrase — and dropping the
+  qualifier would read as every assessment in the product, including the
+  capacity assessment behind a consent, which is a different statutory thing.
+- **The MAR's "medication administration record"** has no composition: no
+  declared form produces it. Left, with the reason at the site. The brief
+  assumed MAR was safe to vary because "Medicines Administration Record" is
+  real UK usage; that is true of the *document name* and not of this string,
+  which is a sentence the term cannot enter.
+- **"the Admin, the Manager and the auditor"** named no row in the table
+  underneath it. The rows come from `STAFF_ROLE_NAMES` and read "Registered
+  manager", "Deputy manager", "Auditor" — so a reader checking the sentence
+  against the table found neither of the first two. Now derived from
+  `SIGN_IN_ROLES`, which fixes a naming defect and puts the sentence out of the
+  Manager term's reach at the same time.
+
+### Read in a browser, at every term set to its least default
+
+Eight screens, full-page, at 1440. The long terms fit: "Care & Support Plans"
+and "Medication Records" in the rail, "CARE & SUPPORT PLAN REVIEW" in the
+profile strip, "Care & Support Plan" as a profile tab. The permission matrix's
+module column now agrees with the sidebar word for word.
+
+One real finding, and only a picture could have produced it. The MAR week read
+**"4 medication records · 2 rounds a day"** above a chart stating 35 doses due
+— a count of *drugs* wearing the word for *records*. Two of that term's three
+options name the drug and the third names the record, so no single form reads
+correctly in both places. The count now says "4 prescriptions", which is what
+the tab beside it already says.
+
+### Known and recorded rather than fixed
+
+- `incidentReport` reaches **one** screen. Not zero, so not a finding by the
+  rule — but thin, and the reason is the decision above. Worth Frank's eye.
+- Under the default vocabulary two strings moved: "Report an incident" → "New
+  incident report" (the old wording cannot take the term), and "Care plan
+  updated" → "Care Plan updated" (`One` is title case by this build's own
+  convention, the same shape as "Resident not recorded").
+- **Discharge stays deferred**, recorded in `DEFERRED_TERMS` with its reason:
+  no discharge feature exists, the word appears only in clinical question prose
+  and recorded free text, and a control that changes nothing visible is a dead
+  control.

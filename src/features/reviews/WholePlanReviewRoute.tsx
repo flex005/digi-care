@@ -16,6 +16,8 @@ import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerms } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import { useViewer } from '@/app/session/use-viewer'
 import { formatLateness, pluralise } from '@/lib/format'
 import { nextReviewFrom } from '@/lib/review-interval'
@@ -47,6 +49,7 @@ export function WholePlanReviewRoute() {
   const { currentUser } = useSession()
   const viewer = useViewer()
   const format = useSiteFormat()
+  const terms = useTerms()
 
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
   const [discussion, setDiscussion] = useState('')
@@ -87,7 +90,7 @@ export function WholePlanReviewRoute() {
         <Card padded>
           <ReadOnlyHere
             roleName={viewer.roleName}
-            subject="this care plan review"
+            subject={`this ${terms.carePlan.one} review`}
             act="complete one"
           />
         </Card>
@@ -99,11 +102,11 @@ export function WholePlanReviewRoute() {
     <div className={styles.page}>
       <Link to=".." relative="path" className={styles.backLink}>
         <Icon name="arrows-sharp/arrow-left-01-sharp" size={16} />
-        The whole care plan
+        The whole {terms.carePlan.one}
       </Link>
 
       <h2 className={styles.sessionTitle}>
-        Whole care plan review: {resident.fullLegalName}
+        Whole {terms.carePlan.one} review: {resident.fullLegalName}
       </h2>
 
       <Card>
@@ -122,8 +125,8 @@ export function WholePlanReviewRoute() {
             {resident.preferredName} outside the ten{' '}
             {resident.customCarePlan.length === 1 ? 'is' : 'are'} not part of this
             review and {resident.customCarePlan.length === 1 ? 'is' : 'are'} not counted
-            in what it records as outstanding. Each is reviewed on its own, from the
-            care plan.
+            in what it records as outstanding. Each is reviewed on its own, from the{' '}
+            {terms.carePlan.one}.
           </p>
         ) : null}
         {rows.map(({ domain, record }) => (
@@ -137,7 +140,7 @@ export function WholePlanReviewRoute() {
               relative="path"
               className={styles.rowAction}
               data-open-domain={domain.id}
-              aria-label={`Open the ${domain.name} care plan domain`}
+              aria-label={`Open the ${domain.name} ${terms.carePlan.one} domain`}
             >
               Open
             </Link>
@@ -172,7 +175,7 @@ export function WholePlanReviewRoute() {
           <ul className={styles.willStoreList}>
             {outstanding.map(({ domain, record }) => (
               <li key={domain.id} data-outstanding={domain.id}>
-                {domain.name}, {gapDescription(record)}
+                {domain.name}, {gapDescription(record, terms.carePlan)}
               </li>
             ))}
           </ul>
@@ -185,7 +188,7 @@ export function WholePlanReviewRoute() {
             {recorded === 'none' ? (
               <>
                 <strong>
-                  Completing records a whole care plan review for{' '}
+                  Completing records a whole {terms.carePlan.one} review for{' '}
                   {resident.fullLegalName} on{' '}
                   <span data-numeric>{format.date(today)}</span>
                   {outstanding.length === 0
@@ -234,7 +237,7 @@ export function WholePlanReviewRoute() {
           name: resident.fullLegalName,
           ...(resident.room.kind === 'recorded' ? { room: resident.room.value } : {}),
         }}
-        action="Complete the whole care plan review"
+        action={`Complete the whole ${terms.carePlan.one} review`}
         confirmLabel="Complete review"
         description={
           <span className={styles.confirmBody}>
@@ -271,8 +274,8 @@ export function WholePlanReviewRoute() {
         tone="positive"
         title={
           outstanding.length === 0
-            ? 'Care plan review recorded'
-            : `Care plan review recorded: ${pluralise(outstanding.length, 'domain')} outstanding`
+            ? `${terms.carePlan.One} review recorded`
+            : `${terms.carePlan.One} review recorded: ${pluralise(outstanding.length, 'domain')} outstanding`
         }
       />
 
@@ -313,8 +316,11 @@ function isGap(record: CarePlanDomainRecord | undefined): boolean {
   return record.status.kind !== 'complete'
 }
 
-function gapDescription(record: CarePlanDomainRecord | undefined): string {
-  if (!record) return 'not on this care plan'
+function gapDescription(
+  record: CarePlanDomainRecord | undefined,
+  carePlan: Term,
+): string {
+  if (!record) return `not on this ${carePlan.one}`
   switch (record.status.kind) {
     case 'not_started':
       return 'never written'
@@ -344,12 +350,13 @@ function DomainState({
   now: IsoDateTime
 }) {
   const format = useSiteFormat()
+  const terms = useTerms()
 
   if (!record) {
     return (
       <Unrecorded
         variant="chip"
-        label="Not on this care plan"
+        label={`Not on this ${terms.carePlan.one}`}
         detail="the plan does not hold this domain at all"
       />
     )

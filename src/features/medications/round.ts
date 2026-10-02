@@ -9,7 +9,7 @@ import type {
   StockBalance,
 } from '@/data/types'
 import type { MarRecord } from '@/data/fixtures/medications'
-import type { Term } from '@/lib/vocabulary'
+import type { Vocabulary } from '@/lib/vocabulary'
 
 /**
  * A medication round, worked out before anything renders it.
@@ -302,21 +302,28 @@ export function outstanding(
  * cannot invent a seventh, and "Other" is the one that carries free text — which
  * is why it is the only one where the note is required.
  *
- * **The label asks the term for a form rather than holding a word.** Four of
- * the six name the person, and this list is module-level so it cannot call the
- * hook — so each label takes the `Term` and the rendering component supplies
- * it. The values stay here, in one list, because the membership check in
- * `stateFor` reads them and a second list of the same six would drift.
+ * **The label asks the terms for a form rather than holding a word.** Four of
+ * the six name the person and a fifth names the drug, and this list is
+ * module-level so it cannot call the hook — so each label takes the
+ * `Vocabulary` and the rendering component supplies it. The values stay here,
+ * in one list, because the membership check in `stateFor` reads them and a
+ * second list of the same six would drift.
  */
 export const NOT_GIVEN_REASONS: {
   value: NotGivenReason
-  label: (term: Term) => string
+  label: (terms: Vocabulary) => string
 }[] = [
-  { value: 'resident_refused', label: (term) => `${term.One} refused` },
-  { value: 'resident_asleep', label: (term) => `${term.One} asleep` },
-  { value: 'medication_unavailable', label: () => 'Medication unavailable' },
-  { value: 'resident_in_hospital', label: (term) => `${term.One} in hospital` },
-  { value: 'resident_vomiting', label: (term) => `${term.One} vomiting` },
+  { value: 'resident_refused', label: (terms) => `${terms.subject.One} refused` },
+  { value: 'resident_asleep', label: (terms) => `${terms.subject.One} asleep` },
+  {
+    value: 'medication_unavailable',
+    label: (terms) => `${terms.medication.One} unavailable`,
+  },
+  {
+    value: 'resident_in_hospital',
+    label: (terms) => `${terms.subject.One} in hospital`,
+  },
+  { value: 'resident_vomiting', label: (terms) => `${terms.subject.One} vomiting` },
   { value: 'other', label: () => 'Other: say why' },
 ]
 

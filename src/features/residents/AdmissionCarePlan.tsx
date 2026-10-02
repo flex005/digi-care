@@ -4,7 +4,7 @@ import { CARE_PLAN_DOMAINS } from '@/data/types'
 import { Button } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import {
   CarePlanTextFields,
   emptyText,
@@ -43,6 +43,7 @@ export function AdmissionCarePlan({
   onCustoms: (next: (CarePlanText & { name: string })[]) => void
 }) {
   const term = useTerm()
+  const terms = useTerms()
   const [open, setOpen] = useState<string>('')
   const started = CARE_PLAN_DOMAINS.filter((domain) => {
     const text = drafts[domain.id]
@@ -54,8 +55,8 @@ export function AdmissionCarePlan({
       <p className={styles.sectionNote} data-plan-claim>
         <span data-numeric>{started}</span> of{' '}
         <span data-numeric>{CARE_PLAN_DOMAINS.length}</span> started. What you write
-        here is a draft, signed later from {name}&rsquo;s care plan. A domain left alone
-        stays never written, which is not &ldquo;no needs here&rdquo;.
+        here is a draft, signed later from {name}&rsquo;s {terms.carePlan.one}. A domain
+        left alone stays never written, which is not &ldquo;no needs here&rdquo;.
       </p>
 
       <ul className={styles.riskList}>

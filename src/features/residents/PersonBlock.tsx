@@ -28,7 +28,10 @@ export function ContactLines({ contact }: { contact: ContactDetails }) {
       <a className={styles.contactLink} href={telHref(contact.phone)}>
         {contact.phone}
       </a>
-      <span className={styles.contactMeta}> · {contact.email}</span>
+      <span className={styles.contactMeta} data-recorded-text>
+        {' · '}
+        {contact.email}
+      </span>
     </p>
   )
 }

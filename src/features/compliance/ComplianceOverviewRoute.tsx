@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerms } from '@/app/session/use-term'
 import { Icon } from '@/components/icon/Icon'
 import { Unrecorded } from '@/components/status'
 import { formatCount, pluralise } from '@/lib/format'
@@ -36,6 +37,7 @@ export function ComplianceOverviewRoute() {
   const viewer = useViewer()
   const panels = usePanels()
   const data = useComplianceData()
+  const terms = useTerms()
 
   if (panels === 'loading' || data === 'loading') {
     return (
@@ -46,7 +48,7 @@ export function ComplianceOverviewRoute() {
   }
 
   const headline = headlineFor(panels)
-  const bars = evidenceBars(data)
+  const bars = evidenceBars(data, terms.carePlan)
   const missing = missingEvidence(bars)
   const tallest = Math.max(...bars.map((bar) => bar.expected), 1)
 

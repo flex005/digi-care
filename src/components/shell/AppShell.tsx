@@ -7,7 +7,7 @@ import { MovedClockBanner } from '@/features/group/MovedClockBanner'
 import { TooltipProvider, ToastProvider, ToastViewport } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { ADMIN_ACTS, moduleForPath } from '@/features/team/permissions'
 import { NoAccess } from '@/app/NoAccess'
 import { SessionExpiry } from '@/features/auth/SessionExpiry'
@@ -42,6 +42,7 @@ export function AppShell() {
   const { sites, activeSite, setActiveSite, currentUser } = useSession()
   const viewer = useViewer()
   const term = useTerm()
+  const terms = useTerms()
   const { pathname } = useLocation()
 
   /**
@@ -106,7 +107,7 @@ export function AppShell() {
     if (overdue > 0) {
       counts['/reviews'] = {
         value: overdue,
-        description: `${overdue} care plan reviews overdue, of ${pluralise(residents.length, term.one, term.many)}. Every one is on the review queue, and on the ${term.ones} own profile.`,
+        description: `${overdue} ${terms.carePlan.one} reviews overdue, of ${pluralise(residents.length, term.one, term.many)}. Every one is on the review queue, and on the ${term.ones} own profile.`,
       }
     }
 
@@ -123,7 +124,7 @@ export function AppShell() {
     }
 
     return counts
-  }, [activeSite, term])
+  }, [activeSite, term, terms])
 
   return (
     <ShellLayoutContext.Provider value={layout}>

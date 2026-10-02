@@ -18,7 +18,7 @@ import { AlertDialog, Button, Card, Select, Toast } from '@/components/primitive
 import { ReadOnlyHere, StatusPill, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import {
   recordAssessment,
@@ -95,6 +95,7 @@ function asActions(interventions: Intervention[]): RiskAction[] {
 export function AssessmentFormRoute() {
   const { resident } = useOutletContext<ResidentProfile>()
   const { templateId } = useParams<{ templateId: string }>()
+  const terms = useTerms()
 
   const resolved = resolveRisk(resident, templateId)
 
@@ -281,8 +282,22 @@ export function AssessmentFormRoute() {
             {items.map((item) => (
               <li key={item.id} className={styles.itemRow} data-item={item.id}>
                 <div className={styles.itemAbout}>
-                  <p className={styles.itemQuestion}>{item.question}</p>
-                  <p className={styles.itemGuidance}>{item.guidance}</p>
+                  {/*
+                   * **The scale's words, not ours.** These two come from a
+                   * published instrument — the Morse Fall Scale asks about "a
+                   * fall on this admission" — and varying them would be
+                   * varying the instrument rather than this service's
+                   * vocabulary, which is the one thing the configurable terms
+                   * must never reach. The marker says so where the words are,
+                   * so the terminology crawl skips them and anybody editing
+                   * this line reads the reason.
+                   */}
+                  <p className={styles.itemQuestion} data-published-wording>
+                    {item.question}
+                  </p>
+                  <p className={styles.itemGuidance} data-published-wording>
+                    {item.guidance}
+                  </p>
                   {answers[item.id] === undefined ? (
                     <Unrecorded
                       variant="chip"
@@ -379,14 +394,22 @@ export function AssessmentFormRoute() {
            * because there was nowhere on the record to put it — so the level
            * arrived on every screen with nothing underneath it.
            */}
-          <h3 className={styles.sectionTitle}>What this assessment found</h3>
+          <h3 className={styles.sectionTitle}>
+            What this {terms.assessment.one} found
+          </h3>
+          {/*
+           * `data-recorded-text`: the assessor's own account of what they saw.
+           * A finding typed last month goes on saying what it said whatever the
+           * labels around it are called, so the terminology crawl skips it.
+           */}
           <textarea
             className={styles.input}
             rows={3}
             value={description}
             placeholder="What you saw, in enough detail for the next person"
-            aria-label="What this assessment found"
+            aria-label={`What this ${terms.assessment.one} found`}
             data-assessment-description
+            data-recorded-text
             onChange={(event) => setDescription(event.target.value)}
           />
         </section>
@@ -575,7 +598,7 @@ export function AssessmentFormRoute() {
             void written.then(() => setFirstRecorded(true))
           }}
         >
-          Record assessment
+          Record {terms.assessment.one}
         </Button>
       </div>
 
@@ -585,7 +608,7 @@ export function AssessmentFormRoute() {
           if (!open) setFirstRecorded(false)
         }}
         tone="positive"
-        title="Assessment recorded"
+        title={`${terms.assessment.One} recorded`}
         description={`${name} for ${resident.fullLegalName}.`}
       />
     </div>
@@ -689,6 +712,7 @@ function CompareBlock({
   const inSentence = riskInSentence({ kind: resolved.kind, name: named })
   const format = useSiteFormat()
   const term = useTerm()
+  const terms = useTerms()
   const { currentUser } = useSession()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
   const [confirming, setConfirming] = useState(false)
@@ -828,7 +852,11 @@ function CompareBlock({
             <Unrecorded
               variant="panel"
               label="Nobody on shift is notified"
-              detail={notificationNote(resident.preferredName, LEVEL_LABEL[nextLevel])}
+              detail={notificationNote(
+                resident.preferredName,
+                LEVEL_LABEL[nextLevel],
+                terms.staff,
+              )}
             />
           </div>
         </>
@@ -849,7 +877,7 @@ function CompareBlock({
             onClick={() => levelChanged && setConfirming(true)}
           >
             {closes.length === 0
-              ? 'Record assessment'
+              ? `Record ${terms.assessment.one}`
               : `Record and close ${pluralise(closes.length, 'review')}`}
           </Button>
         ) : (
@@ -887,7 +915,7 @@ function CompareBlock({
           action={`Record ${inSentence} as ${LEVEL_LABEL[nextLevel]}`}
           confirmLabel={
             closes.length === 0
-              ? 'Record assessment'
+              ? `Record ${terms.assessment.one}`
               : `Record and close ${pluralise(closes.length, 'review')}`
           }
           description={
@@ -928,8 +956,8 @@ function CompareBlock({
         tone="positive"
         title={
           closes.length === 0
-            ? 'Assessment recorded'
-            : `Assessment recorded: ${pluralise(closes.length, 'review')} closed`
+            ? `${terms.assessment.One} recorded`
+            : `${terms.assessment.One} recorded: ${pluralise(closes.length, 'review')} closed`
         }
         description={`Recorded against this ${term.one}.`}
       />

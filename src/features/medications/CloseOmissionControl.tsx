@@ -5,6 +5,7 @@ import { closeOmission, type Omission } from '@/data/access/client'
 import { AlertDialog, Button } from '@/components/primitives'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerms } from '@/app/session/use-term'
 import styles from './medications.module.css'
 
 /**
@@ -53,6 +54,7 @@ export function CloseOmissionControl({
   const { currentUser } = useSession()
   const viewer = useViewer()
   const format = useSiteFormat()
+  const terms = useTerms()
   const [confirming, setConfirming] = useState(false)
   const [reason, setReason] = useState('')
   const [error, setError] = useState('')
@@ -131,7 +133,8 @@ export function CloseOmissionControl({
               />
             </span>
             <span className={styles.closeNotice} data-not-performed>
-              Nobody is notified. If the GP, pharmacy or family need to know, tell them.
+              Nobody is notified. If the GP, pharmacy or {terms.family.one} need to
+              know, tell them.
             </span>
           </span>
         }

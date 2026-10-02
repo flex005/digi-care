@@ -42,6 +42,12 @@ function notGivenReasons(term: Term): Record<NotGivenReason, string> {
   return {
     resident_refused: `${term.one} refused`,
     resident_asleep: `${term.one} asleep`,
+    /*
+     * **Not the configurable word.** "Medication Record" is one of the options
+     * for that term, and "medication record unavailable" says the record could
+     * not be found rather than the drug — a reason that means something else.
+     * The compound is what blocks it, so the word stays as written.
+     */
     medication_unavailable: 'medication unavailable',
     resident_in_hospital: `${term.one} in hospital`,
     resident_vomiting: `${term.one} vomiting`,

@@ -25,7 +25,7 @@ import {
 import { SHIFTS, SHIFT_NAMES } from '@/lib/shift'
 import { formatCount, pluralise, type TimeZone } from '@/lib/format'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { NoteQueueRow } from './NoteQueueRow'
 import { FilterNotice } from './FilterNotice'
@@ -411,6 +411,7 @@ function AuthorView({
   author: StaffId | 'none'
   onAuthor: (id: StaffId | 'none') => void
 }) {
+  const terms = useTerms()
   /*
    * Staff as tabs, with All staff among them.
    *
@@ -439,7 +440,7 @@ function AuthorView({
           data-author-tab="all"
         >
           <SelectedMark selected={everyone} />
-          All staff
+          All {terms.staff.many}
         </button>
 
         {authors.map(([id, label]) => {

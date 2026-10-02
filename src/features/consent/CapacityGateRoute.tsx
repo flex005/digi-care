@@ -18,7 +18,8 @@ import { Button, Card, SelectedMark, Toast } from '@/components/primitives'
 import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { formatCount, pluralise } from '@/lib/format'
-import { CONSENT_MEANS } from './consent-meaning'
+import { consentMeans } from './consent-meaning'
+import { useTerms } from '@/app/session/use-term'
 import styles from './consent.module.css'
 
 /**
@@ -53,6 +54,7 @@ type Answer = 'has_capacity' | 'lacks_capacity'
 
 export function CapacityGateRoute() {
   const { resident } = useOutletContext<ResidentProfile>()
+  const terms = useTerms()
   const { consentType } = useParams<{ consentType: string }>()
 
   const type = CONSENT_TYPES.find((entry) => entry.id === consentType)
@@ -177,7 +179,7 @@ export function CapacityGateRoute() {
             is still theirs to make.
           </p>
           <p className={styles.questionHint}>
-            This consent covers: {CONSENT_MEANS[type.id as ConsentTypeId]}
+            This consent covers: {consentMeans(terms)[type.id as ConsentTypeId]}
           </p>
 
           <div className={styles.options} role="radiogroup" aria-label="Capacity">
@@ -246,6 +248,13 @@ export function CapacityGateRoute() {
           ) : null}
         </div>
 
+        {/*
+         * **"Assessment" stays fixed everywhere on this screen.** This is the
+         * Mental Capacity Act's two-stage capacity assessment — a statutory
+         * determination with its own name — and not the configurable word for
+         * what this service assesses. "Capacity care assessment" is not a
+         * thing, and the Act's term is not ours to rename.
+         */}
         {answer === 'unanswered' ? null : (
           <div className={styles.section} data-scope-section>
             <p className={styles.stageNumber}>Which decisions this assessment covers</p>

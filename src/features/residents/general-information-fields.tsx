@@ -7,6 +7,7 @@ import { formatDate, ageFrom } from '@/lib/format'
 import type { FieldWidth } from './FieldList'
 import { PlainValue, RecordedListField, RecordedValueField } from './FieldList'
 import { AllergyPanel } from './AllergyPanel'
+import type { Vocabulary } from '@/lib/vocabulary'
 import styles from './profile.module.css'
 
 /**
@@ -108,389 +109,407 @@ export interface ProfileSection {
 
 const always = () => false
 
-export const GENERAL_INFORMATION_SECTIONS: ProfileSection[] = [
-  {
-    id: 'identity',
-    title: 'Identity',
-    fields: [
-      {
-        id: 'legal-name',
-        label: 'Full legal name',
-        whenMissing: 'hatch',
-        isUnrecorded: always,
-        render: (resident) => <PlainValue>{resident.fullLegalName}</PlainValue>,
-      },
-      {
-        id: 'preferred-name',
-        label: 'Preferred name',
-        whenMissing: 'hatch',
-        isUnrecorded: always,
-        render: (resident) => <PlainValue>{resident.preferredName}</PlainValue>,
-      },
-      {
-        id: 'pronouns',
-        label: 'Preferred pronouns',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.pronouns.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.pronouns}
-            label="Preferred pronouns"
-            attributed={false}
-            render={(value) => value}
-          />
-        ),
-      },
-      {
-        id: 'dob',
-        label: 'Date of birth and age',
-        whenMissing: 'hatch',
-        isUnrecorded: always,
-        render: (resident) => (
-          <PlainValue>
-            <span data-numeric>
-              {formatDate(resident.dateOfBirth)} · {ageFrom(resident.dateOfBirth)} years
-              old
-            </span>
-          </PlainValue>
-        ),
-      },
-      {
-        id: 'photo',
-        label: 'Photograph',
-        // The one exception to the hatch. See ProfileField.whenMissing.
-        whenMissing: 'plain',
-        isUnrecorded: (resident) => resident.photo.kind === 'not_on_file',
-        render: (resident) => (
-          <div className={styles.photoField}>
-            <Avatar photo={resident.photo} name={resident.fullLegalName} size="large" />
-            <p className={styles.photoNote}>
-              {resident.photo.kind === 'on_file'
-                ? 'Photograph on file.'
-                : 'No photograph on file; initials shown.'}
-            </p>
-          </div>
-        ),
-      },
-      {
-        id: 'nhs-number',
-        label: 'NHS number',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.nhsNumber.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.nhsNumber}
-            label="NHS number"
-            attributed
-            render={(value) => <span data-numeric>{value}</span>}
-          />
-        ),
-      },
-    ],
-  },
-  {
-    id: 'placement',
-    title: 'Placement',
-    fields: [
-      {
-        id: 'admitted',
-        label: 'Admission date',
-        whenMissing: 'hatch',
-        isUnrecorded: always,
-        render: (resident) => (
-          <PlainValue>
-            <span data-numeric>{formatDate(resident.admittedOn)}</span>
-          </PlainValue>
-        ),
-      },
-      {
-        id: 'length-of-stay',
-        label: 'Anticipated length of stay',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) =>
-          resident.anticipatedLengthOfStay.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.anticipatedLengthOfStay}
-            label="Anticipated length of stay"
-            attributed={false}
-            render={(value) => value}
-          />
-        ),
-      },
-      {
-        id: 'funding',
-        label: 'Funding source',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.fundingSource.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.fundingSource}
-            label="Funding source"
-            attributed
-            render={(value) =>
-              FUNDING_SOURCES.find((source) => source.id === value)?.name ?? value
-            }
-          />
-        ),
-      },
-      {
-        id: 'room',
-        label: 'Room',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.room.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.room}
-            label="Room"
-            attributed={false}
-            render={(value) => <span data-numeric>Room {value}</span>}
-          />
-        ),
-      },
-    ],
-  },
-  {
-    id: 'clinical',
-    title: 'Clinical',
-    banner: (resident, site, onWrite) => (
-      <AllergyPanel
-        status={resident.allergies}
-        residentName={resident.preferredName}
-        siteName={site}
-        onRecordNoneKnown={onWrite}
-      />
-    ),
-    fields: [
-      {
-        id: 'primary-diagnosis',
-        label: 'Primary diagnosis',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.primaryDiagnosis.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.primaryDiagnosis}
-            label="Primary diagnosis"
-            attributed
-            render={(value) => value}
-          />
-        ),
-      },
-      {
-        id: 'secondary-diagnoses',
-        label: 'Secondary diagnoses',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.secondaryDiagnoses.kind === 'not_recorded',
-        render: (resident) => (
-          <RecordedListField
-            list={resident.secondaryDiagnoses}
-            label="Secondary diagnoses"
-            noneLabel="No secondary diagnoses"
-            attributed
-            render={(values) => (
-              <ul className={styles.inlineList}>
-                {values.map((value) => (
-                  <li key={value}>{value}</li>
-                ))}
-              </ul>
-            )}
-          />
-        ),
-      },
-      {
-        id: 'medical-history',
-        label: 'Medical history',
-        whenMissing: 'hatch',
-        width: 'full',
-        isUnrecorded: (resident) => resident.medicalHistory.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.medicalHistory}
-            label="Medical history"
-            attributed
-            render={(value) => value}
-          />
-        ),
-      },
-    ],
-  },
-  {
-    id: 'care-team',
-    title: 'Care team',
-    description: "Who to contact outside the home about this person's health.",
-    fields: [
-      {
-        id: 'gp',
-        label: 'GP',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.gp.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.gp}
-            label="GP"
-            attributed
-            render={(gp) => (
-              <>
-                <span>
-                  {gp.name} · {gp.practice}
-                </span>
-                <br />
-                <a className={styles.contactLink} href={telHref(gp.contact.phone)}>
-                  {gp.contact.phone}
-                </a>
-              </>
-            )}
-          />
-        ),
-      },
-      {
-        id: 'consultants',
-        label: 'Consultants and specialists',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.consultants.kind === 'not_recorded',
-        render: (resident) => (
-          <RecordedListField
-            list={resident.consultants}
-            label="Consultants and specialists"
-            // A recorded negative, not a gap: somebody asked and there are
-            // none under this resident's care.
-            noneLabel="No consultants or specialists involved"
-            attributed
-            render={(contacts) => (
-              <ul className={styles.contactList}>
-                {contacts.map((contact) => (
-                  <li key={`${contact.name}-${contact.role}`}>
-                    <span>
-                      {contact.name} · {contact.role}
-                    </span>
-                    <br />
-                    <span className={styles.contactMeta}>{contact.organisation}</span>
-                    <br />
-                    <a
-                      className={styles.contactLink}
-                      href={telHref(contact.contact.phone)}
-                    >
-                      {contact.contact.phone}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
-          />
-        ),
-      },
-      {
-        id: 'pharmacy',
-        label: 'Pharmacy',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.pharmacy.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.pharmacy}
-            label="Pharmacy"
-            attributed
-            render={(pharmacy) => (
-              <>
-                <span>{pharmacy.name}</span>
-                <br />
-                <a
-                  className={styles.contactLink}
-                  href={telHref(pharmacy.contact.phone)}
-                >
-                  {pharmacy.contact.phone}
-                </a>
-              </>
-            )}
-          />
-        ),
-      },
-    ],
-  },
-  {
-    id: 'person',
-    title: 'The person',
-    description:
-      'How this person communicates, what matters to them, and how they eat.',
-    fields: [
-      {
-        id: 'language',
-        label: 'Primary language',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.primaryLanguage.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.primaryLanguage}
-            label="Primary language"
-            attributed={false}
-            render={(value) => value}
-          />
-        ),
-      },
-      {
-        id: 'communication',
-        label: 'Communication needs and preferences',
-        whenMissing: 'hatch',
-        width: 'full',
-        isUnrecorded: (resident) => resident.communicationNeeds.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.communicationNeeds}
-            label="Communication needs"
-            attributed={false}
-            render={(value) => value}
-          />
-        ),
-      },
-      {
-        id: 'religion',
-        label: 'Religion',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.religion.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.religion}
-            label="Religion"
-            attributed={false}
-            render={(value) => value}
-          />
-        ),
-      },
-      {
-        id: 'culture',
-        label: 'Cultural background',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.culturalBackground.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.culturalBackground}
-            label="Cultural background"
-            attributed={false}
-            render={(value) => value}
-          />
-        ),
-      },
-      {
-        id: 'diet',
-        label: 'Dietary requirements and preferences',
-        whenMissing: 'hatch',
-        isUnrecorded: (resident) => resident.dietaryRequirements.kind === 'unrecorded',
-        render: (resident) => (
-          <RecordedValueField
-            record={resident.dietaryRequirements}
-            label="Dietary requirements"
-            // Attributed, despite reading like a preference. Texture-modified
-            // and allergy-adjacent needs are clinical instructions that reach
-            // a plate; a field mixing "no pork" with "IDDSI level 4" needs a
-            // source.
-            attributed
-            render={(value) => value}
-          />
-        ),
-      },
-    ],
-  },
-]
+/**
+ * The sections, named with the vocabulary in force.
+ *
+ * A function rather than a constant because one field label names the
+ * configurable word for somebody joining this service, and a module-level
+ * constant cannot read a term that is only known at render.
+ */
+export function generalInformationSections(terms: Vocabulary): ProfileSection[] {
+  return [
+    {
+      id: 'identity',
+      title: 'Identity',
+      fields: [
+        {
+          id: 'legal-name',
+          label: 'Full legal name',
+          whenMissing: 'hatch',
+          isUnrecorded: always,
+          render: (resident) => <PlainValue>{resident.fullLegalName}</PlainValue>,
+        },
+        {
+          id: 'preferred-name',
+          label: 'Preferred name',
+          whenMissing: 'hatch',
+          isUnrecorded: always,
+          render: (resident) => <PlainValue>{resident.preferredName}</PlainValue>,
+        },
+        {
+          id: 'pronouns',
+          label: 'Preferred pronouns',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) => resident.pronouns.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.pronouns}
+              label="Preferred pronouns"
+              attributed={false}
+              render={(value) => value}
+            />
+          ),
+        },
+        {
+          id: 'dob',
+          label: 'Date of birth and age',
+          whenMissing: 'hatch',
+          isUnrecorded: always,
+          render: (resident) => (
+            <PlainValue>
+              <span data-numeric>
+                {formatDate(resident.dateOfBirth)} · {ageFrom(resident.dateOfBirth)}{' '}
+                years old
+              </span>
+            </PlainValue>
+          ),
+        },
+        {
+          id: 'photo',
+          label: 'Photograph',
+          // The one exception to the hatch. See ProfileField.whenMissing.
+          whenMissing: 'plain',
+          isUnrecorded: (resident) => resident.photo.kind === 'not_on_file',
+          render: (resident) => (
+            <div className={styles.photoField}>
+              <Avatar
+                photo={resident.photo}
+                name={resident.fullLegalName}
+                size="large"
+              />
+              <p className={styles.photoNote}>
+                {resident.photo.kind === 'on_file'
+                  ? 'Photograph on file.'
+                  : 'No photograph on file; initials shown.'}
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'nhs-number',
+          label: 'NHS number',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) => resident.nhsNumber.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.nhsNumber}
+              label="NHS number"
+              attributed
+              render={(value) => <span data-numeric>{value}</span>}
+            />
+          ),
+        },
+      ],
+    },
+    {
+      id: 'placement',
+      title: 'Placement',
+      fields: [
+        {
+          id: 'admitted',
+          label: `${terms.admission.One} date`,
+          whenMissing: 'hatch',
+          isUnrecorded: always,
+          render: (resident) => (
+            <PlainValue>
+              <span data-numeric>{formatDate(resident.admittedOn)}</span>
+            </PlainValue>
+          ),
+        },
+        {
+          id: 'length-of-stay',
+          label: 'Anticipated length of stay',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) =>
+            resident.anticipatedLengthOfStay.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.anticipatedLengthOfStay}
+              label="Anticipated length of stay"
+              attributed={false}
+              render={(value) => value}
+            />
+          ),
+        },
+        {
+          id: 'funding',
+          label: 'Funding source',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) => resident.fundingSource.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.fundingSource}
+              label="Funding source"
+              attributed
+              render={(value) =>
+                FUNDING_SOURCES.find((source) => source.id === value)?.name ?? value
+              }
+            />
+          ),
+        },
+        {
+          id: 'room',
+          label: 'Room',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) => resident.room.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.room}
+              label="Room"
+              attributed={false}
+              render={(value) => <span data-numeric>Room {value}</span>}
+            />
+          ),
+        },
+      ],
+    },
+    {
+      id: 'clinical',
+      title: 'Clinical',
+      banner: (resident, site, onWrite) => (
+        <AllergyPanel
+          status={resident.allergies}
+          residentName={resident.preferredName}
+          siteName={site}
+          onRecordNoneKnown={onWrite}
+        />
+      ),
+      fields: [
+        {
+          id: 'primary-diagnosis',
+          label: 'Primary diagnosis',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) => resident.primaryDiagnosis.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.primaryDiagnosis}
+              label="Primary diagnosis"
+              attributed
+              render={(value) => value}
+            />
+          ),
+        },
+        {
+          id: 'secondary-diagnoses',
+          label: 'Secondary diagnoses',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) =>
+            resident.secondaryDiagnoses.kind === 'not_recorded',
+          render: (resident) => (
+            <RecordedListField
+              list={resident.secondaryDiagnoses}
+              label="Secondary diagnoses"
+              noneLabel="No secondary diagnoses"
+              attributed
+              render={(values) => (
+                <ul className={styles.inlineList}>
+                  {values.map((value) => (
+                    <li key={value}>{value}</li>
+                  ))}
+                </ul>
+              )}
+            />
+          ),
+        },
+        {
+          id: 'medical-history',
+          label: 'Medical history',
+          whenMissing: 'hatch',
+          width: 'full',
+          isUnrecorded: (resident) => resident.medicalHistory.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.medicalHistory}
+              label="Medical history"
+              attributed
+              render={(value) => value}
+            />
+          ),
+        },
+      ],
+    },
+    {
+      id: 'care-team',
+      title: 'Care team',
+      description: "Who to contact outside the home about this person's health.",
+      fields: [
+        {
+          id: 'gp',
+          label: 'GP',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) => resident.gp.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.gp}
+              label="GP"
+              attributed
+              render={(gp) => (
+                <>
+                  <span>
+                    {gp.name} · {gp.practice}
+                  </span>
+                  <br />
+                  <a className={styles.contactLink} href={telHref(gp.contact.phone)}>
+                    {gp.contact.phone}
+                  </a>
+                </>
+              )}
+            />
+          ),
+        },
+        {
+          id: 'consultants',
+          label: 'Consultants and specialists',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) => resident.consultants.kind === 'not_recorded',
+          render: (resident) => (
+            <RecordedListField
+              list={resident.consultants}
+              label="Consultants and specialists"
+              // A recorded negative, not a gap: somebody asked and there are
+              // none under this resident's care.
+              noneLabel="No consultants or specialists involved"
+              attributed
+              render={(contacts) => (
+                <ul className={styles.contactList}>
+                  {contacts.map((contact) => (
+                    <li key={`${contact.name}-${contact.role}`}>
+                      <span>
+                        {contact.name} · {contact.role}
+                      </span>
+                      <br />
+                      <span className={styles.contactMeta} data-recorded-text>
+                        {contact.organisation}
+                      </span>
+                      <br />
+                      <a
+                        className={styles.contactLink}
+                        href={telHref(contact.contact.phone)}
+                      >
+                        {contact.contact.phone}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            />
+          ),
+        },
+        {
+          id: 'pharmacy',
+          label: 'Pharmacy',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) => resident.pharmacy.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.pharmacy}
+              label="Pharmacy"
+              attributed
+              render={(pharmacy) => (
+                <>
+                  <span>{pharmacy.name}</span>
+                  <br />
+                  <a
+                    className={styles.contactLink}
+                    href={telHref(pharmacy.contact.phone)}
+                  >
+                    {pharmacy.contact.phone}
+                  </a>
+                </>
+              )}
+            />
+          ),
+        },
+      ],
+    },
+    {
+      id: 'person',
+      title: 'The person',
+      description:
+        'How this person communicates, what matters to them, and how they eat.',
+      fields: [
+        {
+          id: 'language',
+          label: 'Primary language',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) => resident.primaryLanguage.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.primaryLanguage}
+              label="Primary language"
+              attributed={false}
+              render={(value) => value}
+            />
+          ),
+        },
+        {
+          id: 'communication',
+          label: 'Communication needs and preferences',
+          whenMissing: 'hatch',
+          width: 'full',
+          isUnrecorded: (resident) => resident.communicationNeeds.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.communicationNeeds}
+              label="Communication needs"
+              attributed={false}
+              render={(value) => value}
+            />
+          ),
+        },
+        {
+          id: 'religion',
+          label: 'Religion',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) => resident.religion.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.religion}
+              label="Religion"
+              attributed={false}
+              render={(value) => value}
+            />
+          ),
+        },
+        {
+          id: 'culture',
+          label: 'Cultural background',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) => resident.culturalBackground.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.culturalBackground}
+              label="Cultural background"
+              attributed={false}
+              render={(value) => value}
+            />
+          ),
+        },
+        {
+          id: 'diet',
+          label: 'Dietary requirements and preferences',
+          whenMissing: 'hatch',
+          isUnrecorded: (resident) =>
+            resident.dietaryRequirements.kind === 'unrecorded',
+          render: (resident) => (
+            <RecordedValueField
+              record={resident.dietaryRequirements}
+              label="Dietary requirements"
+              // Attributed, despite reading like a preference. Texture-modified
+              // and allergy-adjacent needs are clinical instructions that reach
+              // a plate; a field mixing "no pork" with "IDDSI level 4" needs a
+              // source.
+              attributed
+              render={(value) => value}
+            />
+          ),
+        },
+      ],
+    },
+  ]
+}
 
 /** Every field, flattened — what the guard iterates. */
-export const GENERAL_INFORMATION_FIELDS: ProfileField[] =
-  GENERAL_INFORMATION_SECTIONS.flatMap((section) => section.fields)
+export function generalInformationFields(terms: Vocabulary): ProfileField[] {
+  return generalInformationSections(terms).flatMap((section) => section.fields)
+}

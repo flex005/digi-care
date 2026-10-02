@@ -11,6 +11,7 @@ import { metricIcons } from '@/components/metric/metric-tiles.icons'
 import { MetricTile, MetricTiles, MetricValue } from '@/components/metric/MetricTile'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
+import { useTerms } from '@/app/session/use-term'
 import { assertNever } from '@/lib/assert-never'
 import { formatCount } from '@/lib/format'
 import { elapsedMinutesBetween } from '@/lib/shift'
@@ -98,6 +99,7 @@ function matches(entry: Omission, filter: Filter): boolean {
 
 export function OmissionsRoute() {
   const { activeSite } = useSession()
+  const terms = useTerms()
   const [filter, setFilter] = useState<Filter>('all')
   /*
    * Closures written from this screen. Counted so the read runs again and the
@@ -133,7 +135,7 @@ export function OmissionsRoute() {
       <div className={styles.page}>
         {resource.kind === 'loading' ? (
           <p className={styles.loading} role="status">
-            Loading medication omissions…
+            Loading {terms.medication.one} omissions…
           </p>
         ) : resource.kind === 'refused' ? (
           <NotYourHome refusal={resource} />

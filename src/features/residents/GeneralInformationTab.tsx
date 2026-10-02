@@ -5,7 +5,8 @@ import type { Resident } from '@/data/types'
 import { Card, CardHeader } from '@/components/primitives'
 import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Field, FieldList } from './FieldList'
-import { GENERAL_INFORMATION_SECTIONS } from './general-information-fields'
+import { generalInformationSections } from './general-information-fields'
+import { useTerms } from '@/app/session/use-term'
 import styles from './profile.module.css'
 import { useState } from 'react'
 import type { IsoDateTime } from '@/data/types'
@@ -109,9 +110,11 @@ export function ProfileSections({
   /** What a banner's write affordance calls. Absent in the structural guard. */
   onRecordNoneKnown?: () => void
 }) {
+  const terms = useTerms()
+
   return (
     <>
-      {GENERAL_INFORMATION_SECTIONS.map((section) => (
+      {generalInformationSections(terms).map((section) => (
         <Card key={section.id}>
           <CardHeader title={section.title} subtitle={section.description} />
           {section.banner

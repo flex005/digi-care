@@ -21,7 +21,7 @@ import { Avatar, Button, Card, Select } from '@/components/primitives'
 import { AllergyBadge } from '@/components/status'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import type { Term } from '@/lib/vocabulary'
 import type { TimeZone } from '@/lib/format'
 import { instantFromWallClockField } from '@/lib/format'
@@ -75,6 +75,7 @@ export function ReportIncidentRoute() {
   const viewer = useViewer()
   const navigate = useNavigate()
   const term = useTerm()
+  const terms = useTerms()
 
   const [subjectChoice, setSubjectChoice] = useState<SubjectChoice>(undefined)
   const [residentId, setResidentId] = useState('')
@@ -109,6 +110,7 @@ export function ReportIncidentRoute() {
 
   const waiting = outstanding({
     term,
+    familyTerm: terms.family,
     subject,
     resident,
     type,
@@ -340,7 +342,7 @@ export function ReportIncidentRoute() {
               {waiting.length === 0 ? (
                 <>
                   <strong>Everything needed is here.</strong> It will be reported as
-                  unacknowledged until a manager picks it up.
+                  unacknowledged until a {terms.manager.one} picks it up.
                 </>
               ) : (
                 <>
@@ -603,6 +605,14 @@ export function assembleReport(
 export function outstanding(input: {
   /** The word this organisation uses, asked for a form rather than derived. */
   term: Term
+  /**
+   * The word for the people this service tells, asked for the same way.
+   *
+   * Separate from `term` rather than a whole `Vocabulary`, because this
+   * function names exactly two of the nine and a parameter that says which is
+   * a parameter somebody can check.
+   */
+  familyTerm: Term
   subject: SubjectChoice
   resident: Resident | undefined
   type: IncidentTypeId | ''
@@ -648,7 +658,9 @@ export function outstanding(input: {
   // Required and non-empty, so there is no blank to interpret.
   if (input.immediateAction.trim() === '') waiting.push('what you did about it')
   if (input.gp === '') waiting.push('whether the GP was contacted')
-  if (input.family === '') waiting.push('whether the family were contacted')
+  if (input.family === '') {
+    waiting.push(`whether anybody contacted the ${input.familyTerm.one}`)
+  }
   if (input.emergency === '') waiting.push('whether emergency services were called')
   if (
     (input.gp === 'not_required' || input.family === 'not_required') &&
@@ -666,7 +678,7 @@ export function outstanding(input: {
    * actually writes the decision down.
    */
   if (input.tellFamily === 'not' && input.notTellingReason.trim() === '') {
-    waiting.push('why the family are not being told')
+    waiting.push(`why the ${input.familyTerm.one} is not to be told`)
   }
 
   return waiting

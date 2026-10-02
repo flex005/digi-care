@@ -1,3 +1,4 @@
+import { useTerms } from '@/app/session/use-term'
 import { TELL_THEM } from '@/features/family/family-statement'
 import { SectionHeading, type HeadingLevel } from './SectionHeading'
 import styles from './incidents.module.css'
@@ -26,9 +27,13 @@ export function FamilyQuestion({
   onNotTellingReason: (value: string) => void
   level?: HeadingLevel
 }) {
+  const terms = useTerms()
+
   return (
     <section className={styles.section} data-section="family">
-      <SectionHeading level={level}>Should the family be told?</SectionHeading>
+      <SectionHeading level={level}>
+        Should the {terms.family.one} be told?
+      </SectionHeading>
 
       <p className={styles.instruction} data-nothing-sent>
         <b>{TELL_THEM.incident}</b>
@@ -67,7 +72,7 @@ export function FamilyQuestion({
             value={notTellingReason}
             data-not-telling-reason
             onChange={(event) => onNotTellingReason(event.target.value)}
-            placeholder="No injury, and the family asked to be told weekly rather than each time."
+            placeholder={`No injury, and the ${terms.family.one} asked to be told weekly rather than each time.`}
           />
           <span className={styles.hint}>
             A decision without a reason reads the same as one nobody made.

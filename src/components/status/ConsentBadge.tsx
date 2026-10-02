@@ -55,7 +55,12 @@ export function ConsentBadge({ status }: { status: AnyConsent }) {
       return (
         <span className={styles.settled} data-refused>
           Refused
-          <small>
+          {/* `status.note` is the reason the person gave, in their words — the
+              field §8 records as having been drawn from a shared pool and
+              landed on the wrong consent. Nothing may vary it, so the line
+              carries the recorded-text marker and the terminology crawl
+              leaves it alone. */}
+          <small data-recorded-text>
             {formatDate(status.on)}, {status.note}
           </small>
         </span>

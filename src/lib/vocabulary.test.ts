@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { SUBJECT_TERMS, subjectTerm, type OrganisationType } from './vocabulary'
+import {
+  DEFERRED_TERMS,
+  INVARIANT_PLURALS,
+  SUBJECT_TERMS,
+  TERM_IDS,
+  TERM_OPTIONS,
+  subjectTerm,
+  vocabularyFor,
+  type OrganisationType,
+} from './vocabulary'
+import { RISK_ASSESSMENT_TEMPLATES, STAFF_ROLE_NAMES } from '@/data/types'
 
 /**
  * The term owner, and the derivations it exists to refuse.
@@ -84,5 +94,146 @@ describe('every offered term declares every form', () => {
   it('never offers two terms under one id', () => {
     const ids = SUBJECT_TERMS.map((entry) => entry.id)
     expect(new Set(ids).size).toBe(ids.length)
+  })
+})
+
+/**
+ * **A configurable word must never reach a proper noun.**
+ *
+ * Three kinds, each for its own reason, and each tempting because the generic
+ * word is right there in the term list.
+ */
+describe('proper nouns stay out of reach of the vocabulary', () => {
+  /*
+   * "Registered manager" is a CQC term naming who is legally accountable for
+   * the service, and the permission system keys off these roles. Routing it
+   * through the Manager term would make the product misstate who carries
+   * legal responsibility — and would do it silently, because the sentence
+   * still reads like English.
+   */
+  it('leaves the statutory role titles alone under any vocabulary', () => {
+    for (const choice of TERM_OPTIONS.manager) {
+      void choice
+      expect(STAFF_ROLE_NAMES.registered_manager).toBe('Registered manager')
+      expect(STAFF_ROLE_NAMES.deputy_manager).toBe('Deputy manager')
+    }
+  })
+
+  it('offers no manager option that could be mistaken for the statutory title', () => {
+    const labels = TERM_OPTIONS.manager.map((entry) => entry.label)
+    expect(labels).not.toContain('Registered Manager')
+    expect(labels).not.toContain('Deputy Manager')
+  })
+
+  /*
+   * The Morse Fall Scale and the Waterlow Score are published instruments.
+   * "Assessment" as a label is this service's word; the name of a validated
+   * scale is not, and neither is its question wording.
+   */
+  it('names published instruments from the templates, not from a term', () => {
+    const named = RISK_ASSESSMENT_TEMPLATES.map((entry) => entry.name).join(' ')
+    expect(named).toContain('Falls')
+    for (const choice of TERM_OPTIONS.assessment) {
+      // No assessment term's word appears inside an instrument's own name.
+      expect(named.toLowerCase()).not.toContain(choice.term.one)
+    }
+  })
+})
+
+/**
+ * The two terms that prove the forms are declared rather than derived, for a
+ * second time — the subject's "Service User" was the first.
+ */
+describe('the awkward terms in the rest of the vocabulary', () => {
+  const nextOfKin = TERM_OPTIONS.family.find(
+    (entry) => entry.id === 'next_of_kin',
+  )!.term
+
+  it('keeps "Next of Kin" invariant in the plural', () => {
+    expect(nextOfKin.one).toBe('next of kin')
+    expect(nextOfKin.many).toBe('next of kin')
+    expect(nextOfKin.Many).toBe('Next of Kin')
+    // Appending an s is what a derivation would do, and it is wrong.
+    expect(nextOfKin.many).not.toBe('next of kins')
+  })
+
+  const andSupport = TERM_OPTIONS.carePlan.find(
+    (entry) => entry.id === 'care_and_support_plan',
+  )!.term
+
+  it('carries the ampersand through every form of "Care & Support Plan"', () => {
+    for (const form of [
+      andSupport.one,
+      andSupport.many,
+      andSupport.One,
+      andSupport.Many,
+    ]) {
+      expect(form).toContain('&')
+      // Never an entity: this is text, and React escapes it on the way out.
+      expect(form).not.toContain('&amp;')
+    }
+    expect(andSupport.Many).toBe('Care & Support Plans')
+  })
+})
+
+describe('every term declares every form', () => {
+  it.each(TERM_IDS)('%s is complete in all of its options', (id) => {
+    for (const choice of TERM_OPTIONS[id]) {
+      for (const form of ['one', 'many', 'One', 'Many', 'ones', 'Ones'] as const) {
+        expect(choice.term[form], `${id}/${choice.id}/${form}`).toBeTruthy()
+      }
+    }
+  })
+
+  it('defaults every term when nothing has been chosen', () => {
+    const all = vocabularyFor('care_home', {})
+    expect(all.subject.one).toBe('resident')
+    expect(all.carePlan.One).toBe('Care Plan')
+    expect(all.family.Many).toBe('Families')
+  })
+
+  it('defers discharge, and says so rather than omitting it', () => {
+    // A term whose control changes nothing visible is a dead control.
+    expect(DEFERRED_TERMS).toContain('discharge')
+    expect(TERM_IDS).not.toContain('discharge')
+  })
+})
+
+/**
+ * A plural that is present and wrong, which truthiness cannot see.
+ *
+ * `every term declares every form` above asserts each form exists. A plural
+ * set to its own singular satisfies that completely — `care_assessment` was
+ * mutated that way and all 34 tests passed, which is the §8 class of an
+ * assertion that cannot fail arriving through a check that was looking at
+ * presence where the question was correctness.
+ */
+describe('a plural is a different word unless it is declared not to be', () => {
+  const invariant = new Set<string>(INVARIANT_PLURALS)
+
+  it.each(TERM_IDS)('%s has a distinct plural in every option', (id) => {
+    for (const choice of TERM_OPTIONS[id]) {
+      if (invariant.has(choice.id)) continue
+      expect(choice.term.many, `${id}/${choice.id}`).not.toBe(choice.term.one)
+      expect(choice.term.Many, `${id}/${choice.id}`).not.toBe(choice.term.One)
+    }
+  })
+
+  /*
+   * The other direction, so an entry cannot go stale and keep excusing a term
+   * that has since been given a real plural — an exception list nobody checks
+   * is how the §8 escape-comment failures start.
+   */
+  it('names only terms that are genuinely invariant', () => {
+    for (const id of INVARIANT_PLURALS) {
+      const choice = TERM_IDS.flatMap((term) => TERM_OPTIONS[term]).find(
+        (entry) => entry.id === id,
+      )
+      expect(
+        choice,
+        `${id} is declared invariant and is not an offered term`,
+      ).toBeTruthy()
+      expect(choice!.term.many, id).toBe(choice!.term.one)
+    }
   })
 })

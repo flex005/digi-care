@@ -17,7 +17,7 @@ import { Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, formatLateness, pluralise } from '@/lib/format'
 import { reviewTiming } from './review-timing'
@@ -59,6 +59,7 @@ interface Row {
 
 export function CarePlanQueueRoute() {
   const { activeSite } = useSession()
+  const terms = useTerms()
   const [filter, setFilter] = useState<Filter>('never_written')
   const [domain, setDomain] = useState<CarePlanDomainId | 'all'>('all')
 
@@ -68,17 +69,19 @@ export function CarePlanQueueRoute() {
   return (
     <SiteTimeZone timeZone={activeSite.timeZone}>
       <div className={styles.page}>
-        <h1 className={styles.pageTitle}>Care plans</h1>
+        <h1 className={styles.pageTitle}>{terms.carePlan.Many}</h1>
 
         {resource.kind === 'loading' ? (
           <p className={styles.loading} role="status">
-            Loading care plans…
+            Loading {terms.carePlan.many}…
           </p>
         ) : resource.kind === 'refused' ? (
           <NotYourHome refusal={resource} />
         ) : resource.kind === 'error' ? (
           <Card padded>
-            <p className={styles.errorTitle}>Care plans could not be loaded</p>
+            <p className={styles.errorTitle}>
+              {terms.carePlan.Many} could not be loaded
+            </p>
             <p className={styles.errorBody}>Nothing has been lost; this is a read.</p>
             <Button variant="secondary" onClick={resource.retry}>
               Try again
@@ -115,6 +118,7 @@ function Found({
   onDomain: (value: CarePlanDomainId | 'all') => void
 }) {
   const term = useTerm()
+  const terms = useTerms()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
 
   /*
@@ -174,7 +178,7 @@ function Found({
           </span>
           <span className={styles.findingBody}>
             <span className={styles.findingTitle}>
-              parts of a care plan have never been written down
+              parts of a {terms.carePlan.one} have never been written down
             </span>
             <span className={styles.findingDetail}>
               Across{' '}
@@ -217,7 +221,7 @@ function Found({
           <span className={styles.findingBody}>
             <span className={styles.findingTitle}>started and never signed</span>
             <span className={styles.findingDetail}>
-              A draft exists and staff have nothing to follow. Of{' '}
+              A draft exists and {terms.staff.many} have nothing to follow. Of{' '}
               <span data-numeric>{formatCount(all.length)}</span>.
             </span>
           </span>
@@ -281,7 +285,7 @@ function Found({
         {visible.length === 0 ? (
           <p className={styles.settledNote}>
             {filter === 'never_written' && domain === 'all'
-              ? `Every care plan domain at ${siteName} has been written at least once.`
+              ? `Every ${terms.carePlan.one} domain at ${siteName} has been written at least once.`
               : 'Nothing matches these filters.'}
           </p>
         ) : (
@@ -307,7 +311,9 @@ function Found({
                     </span>
 
                     <span className={styles.rowWhat}>
-                      <span className={styles.rowKind}>Care plan domain</span>
+                      <span className={styles.rowKind}>
+                        {terms.carePlan.One} domain
+                      </span>
                       <span className={styles.rowName}>{row.domainName}</span>
                     </span>
 
@@ -325,7 +331,7 @@ function Found({
                       data-action={row.timing.kind === 'not_started' ? 'write' : 'open'}
                       aria-label={`${
                         row.timing.kind === 'not_started' ? 'Write' : 'Open'
-                      } the ${row.domainName} care plan domain for ${row.resident.fullLegalName}`}
+                      } the ${row.domainName} ${terms.carePlan.one} domain for ${row.resident.fullLegalName}`}
                     >
                       {row.timing.kind === 'not_started'
                         ? 'Write this domain'
@@ -340,7 +346,11 @@ function Found({
                 </li>
               ))}
             </ul>
-            <Pager paged={paged} total={visible.length} noun="care plan domains" />
+            <Pager
+              paged={paged}
+              total={visible.length}
+              noun={`${terms.carePlan.one} domains`}
+            />
           </>
         )}
       </Card>

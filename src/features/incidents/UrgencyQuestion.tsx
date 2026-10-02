@@ -1,3 +1,4 @@
+import { useTerms } from '@/app/session/use-term'
 import { SectionHeading, type HeadingLevel } from './SectionHeading'
 import styles from './incidents.module.css'
 
@@ -33,6 +34,8 @@ export function UrgencyQuestion({
   refusedReason?: string
   level?: HeadingLevel
 }) {
+  const terms = useTerms()
+
   if (refusedReason !== undefined) {
     return (
       <section className={styles.section} data-section="urgency">
@@ -48,8 +51,8 @@ export function UrgencyQuestion({
     <section className={styles.section} data-section="urgency">
       <SectionHeading level={level}>Does this need attention now?</SectionHeading>
       <p className={styles.sectionNote}>
-        Every incident goes to a manager unacknowledged. This says yours should not wait
-        its turn, and it shows up on the incident as something owed.
+        Every incident goes to a {terms.manager.one} unacknowledged. This says yours
+        should not wait its turn, and it shows up on the incident as something owed.
       </p>
       <label className={styles.field}>
         <span className={styles.fieldLabel}>Why it cannot wait</span>
@@ -63,7 +66,7 @@ export function UrgencyQuestion({
         />
         <span className={styles.hint}>
           A reason, not a tick: &ldquo;needs attention now&rdquo; with nothing behind it
-          tells a manager to hurry and not what about.
+          tells a {terms.manager.one} to hurry and not what about.
         </span>
       </label>
     </section>

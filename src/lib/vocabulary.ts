@@ -112,6 +112,328 @@ export const SUBJECT_TERMS: { id: string; label: string; term: Term }[] = [
 ]
 
 /**
+ * The other eight terms a service may name differently.
+ *
+ * **Declared exactly as the subject is**, four forms each, because the two
+ * cases that prove derivation impossible are both here: "Next of Kin" is
+ * invariant — it is "Next of Kin" in the plural too — and "Care & Support
+ * Plan" carries an ampersand no transform should ever touch.
+ *
+ * **A configurable word must never reach a proper noun**, and three kinds are
+ * deliberately out of reach. **Statutory titles**: `STAFF_ROLE_NAMES` holds
+ * 'Registered manager' and 'Deputy manager', CQC terms naming who is legally
+ * accountable, and the permission system keys off those roles — the generic
+ * word "manager" in prose is configurable, those names are not. **Published
+ * instruments**: the Morse Fall Scale, the Waterlow Score and their question
+ * wording belong to the scales. **Standard document names**: checked one at a
+ * time rather than assumed — the MAR is safe to vary because "Medicines
+ * Administration Record" is also real UK usage, which had to be established
+ * rather than generalised from.
+ */
+export const TERM_IDS = [
+  'subject',
+  'carePlan',
+  'staff',
+  'manager',
+  'admission',
+  'incidentReport',
+  'medication',
+  'assessment',
+  'family',
+] as const
+
+export type TermId = (typeof TERM_IDS)[number]
+
+/** Every term in force at once. */
+export type Vocabulary = Record<TermId, Term>
+
+interface TermChoice {
+  id: string
+  label: string
+  term: Term
+}
+
+/** The options offered per term. The first is that term's default. */
+export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
+  subject: SUBJECT_TERMS,
+  carePlan: [
+    {
+      id: 'care_plan',
+      label: 'Care Plan',
+      term: withForms('care plan', 'care plans', 'Care Plan', 'Care Plans'),
+    },
+    {
+      id: 'support_plan',
+      label: 'Support Plan',
+      term: withForms('support plan', 'support plans', 'Support Plan', 'Support Plans'),
+    },
+    {
+      id: 'treatment_plan',
+      label: 'Treatment Plan',
+      term: withForms(
+        'treatment plan',
+        'treatment plans',
+        'Treatment Plan',
+        'Treatment Plans',
+      ),
+    },
+    {
+      id: 'care_and_support_plan',
+      label: 'Care & Support Plan',
+      term: withForms(
+        'care & support plan',
+        'care & support plans',
+        'Care & Support Plan',
+        'Care & Support Plans',
+      ),
+    },
+  ],
+  staff: [
+    {
+      id: 'staff',
+      label: 'Staff',
+      term: withForms('staff member', 'staff', 'Staff Member', 'Staff'),
+    },
+    {
+      id: 'care_staff',
+      label: 'Care Staff',
+      term: withForms(
+        'care staff member',
+        'care staff',
+        'Care Staff Member',
+        'Care Staff',
+      ),
+    },
+    {
+      id: 'team_member',
+      label: 'Team Member',
+      term: withForms('team member', 'team members', 'Team Member', 'Team Members'),
+    },
+    {
+      id: 'healthcare_professional',
+      label: 'Healthcare Professional',
+      term: withForms(
+        'healthcare professional',
+        'healthcare professionals',
+        'Healthcare Professional',
+        'Healthcare Professionals',
+      ),
+    },
+  ],
+  manager: [
+    {
+      id: 'manager',
+      label: 'Manager',
+      term: withForms('manager', 'managers', 'Manager', 'Managers'),
+    },
+    {
+      id: 'care_manager',
+      label: 'Care Manager',
+      term: withForms('care manager', 'care managers', 'Care Manager', 'Care Managers'),
+    },
+    {
+      id: 'clinical_manager',
+      label: 'Clinical Manager',
+      term: withForms(
+        'clinical manager',
+        'clinical managers',
+        'Clinical Manager',
+        'Clinical Managers',
+      ),
+    },
+    {
+      id: 'administrator',
+      label: 'Administrator',
+      term: withForms(
+        'administrator',
+        'administrators',
+        'Administrator',
+        'Administrators',
+      ),
+    },
+  ],
+  admission: [
+    {
+      id: 'admission',
+      label: 'Admission',
+      term: withForms('admission', 'admissions', 'Admission', 'Admissions'),
+    },
+    {
+      id: 'intake',
+      label: 'Intake',
+      term: withForms('intake', 'intakes', 'Intake', 'Intakes'),
+    },
+    {
+      id: 'placement',
+      label: 'Placement',
+      term: withForms('placement', 'placements', 'Placement', 'Placements'),
+    },
+    {
+      id: 'registration',
+      label: 'Registration',
+      term: withForms('registration', 'registrations', 'Registration', 'Registrations'),
+    },
+  ],
+  incidentReport: [
+    {
+      id: 'incident_report',
+      label: 'Incident Report',
+      term: withForms(
+        'incident report',
+        'incident reports',
+        'Incident Report',
+        'Incident Reports',
+      ),
+    },
+    {
+      id: 'incident_record',
+      label: 'Incident Record',
+      term: withForms(
+        'incident record',
+        'incident records',
+        'Incident Record',
+        'Incident Records',
+      ),
+    },
+    {
+      id: 'clinical_incident',
+      label: 'Clinical Incident',
+      term: withForms(
+        'clinical incident',
+        'clinical incidents',
+        'Clinical Incident',
+        'Clinical Incidents',
+      ),
+    },
+  ],
+  medication: [
+    {
+      id: 'medication',
+      label: 'Medication',
+      term: withForms('medication', 'medications', 'Medication', 'Medications'),
+    },
+    {
+      id: 'medicines',
+      label: 'Medicines',
+      term: withForms('medicine', 'medicines', 'Medicine', 'Medicines'),
+    },
+    {
+      id: 'medication_record',
+      label: 'Medication Record',
+      term: withForms(
+        'medication record',
+        'medication records',
+        'Medication Record',
+        'Medication Records',
+      ),
+    },
+  ],
+  assessment: [
+    {
+      id: 'assessment',
+      label: 'Assessment',
+      term: withForms('assessment', 'assessments', 'Assessment', 'Assessments'),
+    },
+    {
+      id: 'clinical_assessment',
+      label: 'Clinical Assessment',
+      term: withForms(
+        'clinical assessment',
+        'clinical assessments',
+        'Clinical Assessment',
+        'Clinical Assessments',
+      ),
+    },
+    {
+      id: 'care_assessment',
+      label: 'Care Assessment',
+      term: withForms(
+        'care assessment',
+        'care assessments',
+        'Care Assessment',
+        'Care Assessments',
+      ),
+    },
+  ],
+  family: [
+    {
+      id: 'family',
+      label: 'Family',
+      term: withForms('family', 'families', 'Family', 'Families'),
+    },
+    /*
+     * **Invariant in the plural.** "Next of Kin" is "Next of Kin" both ways,
+     * and appending an s gives "Next of Kins", which nobody writes. The second
+     * case proving these forms cannot be derived.
+     */
+    {
+      id: 'next_of_kin',
+      label: 'Next of Kin',
+      term: withForms('next of kin', 'next of kin', 'Next of Kin', 'Next of Kin'),
+    },
+    {
+      id: 'contact',
+      label: 'Contact',
+      term: withForms('contact', 'contacts', 'Contact', 'Contacts'),
+    },
+    {
+      id: 'relative',
+      label: 'Relative',
+      term: withForms('relative', 'relatives', 'Relative', 'Relatives'),
+    },
+  ],
+}
+
+/**
+ * The terms whose plural really is the same word as their singular.
+ *
+ * **Declared, because nothing else can tell a correct invariant from a plural
+ * somebody forgot.** "Next of Kin" is "Next of Kin" in the plural, and that is
+ * a fact about English rather than about this list — so a check asking only
+ * "does any plural equal its singular" cannot fire without a way to say which
+ * ones are meant to.
+ *
+ * It exists because of a mutation: `care_assessment`'s plural was set to its
+ * singular and **34 tests passed**, including the one asserting every term
+ * declares every form. A form that is present and wrong is exactly what the
+ * truthiness check cannot see, and this build would then have printed "252
+ * care assessment" on the risk queue.
+ *
+ * Read bidirectionally by `vocabulary.test.ts`: a term invariant without being
+ * named here fails, and a term named here that has a distinct plural fails
+ * too, so an entry cannot go stale and keep excusing something.
+ */
+export const INVARIANT_PLURALS = ['next_of_kin'] as const
+
+/**
+ * **Discharge is deferred, and this is the reason rather than an oversight.**
+ *
+ * There is no discharge feature in this build. The word appears about 35
+ * times and every one is prose inside a clinical question or recorded free
+ * text — nothing a label change would reach. A term whose control changes
+ * nothing visible is a dead control, so it waits for the feature. The crawl
+ * treats a term reaching zero screens as a finding for the same reason.
+ */
+export const DEFERRED_TERMS = ['discharge'] as const
+
+/** The vocabulary in force: each chosen option, or that term's default. */
+export function vocabularyFor(
+  type: OrganisationType,
+  chosen: Partial<Record<TermId, string>>,
+): Vocabulary {
+  const out = {} as Vocabulary
+  for (const id of TERM_IDS) {
+    if (id === 'subject') {
+      out.subject = subjectTerm(type, chosen.subject)
+      continue
+    }
+    const options = TERM_OPTIONS[id]
+    out[id] = options.find((entry) => entry.id === chosen[id])?.term ?? options[0]!.term
+  }
+  return out
+}
+
+/**
  * The term in force: the chosen one, or this type's default.
  *
  * `subjectTermId` being unset is not a gap — it means nobody has overridden

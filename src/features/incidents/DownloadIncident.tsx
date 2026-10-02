@@ -4,7 +4,7 @@ import { subjectResidentId } from '@/data/types'
 import { Button, Toast } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { incidentPdfContent } from './incident-pdf'
 
 /**
@@ -37,6 +37,7 @@ export function DownloadIncident({
   const { activeSite } = useSession()
   const format = useSiteFormat()
   const term = useTerm()
+  const terms = useTerms()
   const [state, setState] = useState<'idle' | 'done' | 'failed'>('idle')
   const [failure, setFailure] = useState('')
 
@@ -51,6 +52,7 @@ export function DownloadIncident({
     residentName,
     siteName: activeSite.name,
     format: { dateTime: format.dateTime, date: format.date },
+    terms,
   })
 
   return (

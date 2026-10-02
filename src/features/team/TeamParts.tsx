@@ -1,4 +1,5 @@
 import type { StaffStanding } from '@/data/types'
+import { useTerms } from '@/app/session/use-term'
 import { Unrecorded } from '@/components/status'
 import { formatDate } from '@/lib/format'
 import { InvitationState } from './InvitationState'
@@ -79,12 +80,14 @@ const NOT_HELD = [
 ]
 
 export function NotAPerformanceRecord() {
+  const terms = useTerms()
+
   return (
     <div className={styles.notHeld} data-not-held>
       <p className={styles.notHeldTitle}>This is not a performance record</p>
       <p className={styles.notHeldBody}>
         diGi-Care does not hold supervision, appraisal, training or induction. They live
-        in whatever the home uses for staff records.
+        in whatever the home uses to hold records about {terms.staff.many}.
       </p>
       <ul className={styles.notHeldList}>
         {NOT_HELD.map((item) => (

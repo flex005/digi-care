@@ -14,6 +14,7 @@ import { Icon } from '@/components/icon/Icon'
 import { toIsoDate } from '@/data/fixtures/generate'
 import { DOCUMENT_CATEGORIES } from './categories'
 import styles from './documents.module.css'
+import { useTerms } from '@/app/session/use-term'
 
 /**
  * Filing a document. PRD §6.7, Phase 11.
@@ -93,6 +94,7 @@ function UploadForm({
   onFiled: () => void
 }) {
   const { currentUser } = useSession()
+  const terms = useTerms()
   const [category, setCategory] = useState<DocumentCategoryId | ''>('')
   const [title, setTitle] = useState('')
   const [answer, setAnswer] = useState<ExpiryAnswer>('unanswered')
@@ -167,7 +169,7 @@ function UploadForm({
               <option value="">Choose a category</option>
               {DOCUMENT_CATEGORIES.map((option) => (
                 <option key={option.id} value={option.id}>
-                  {option.label}
+                  {option.label(terms)}
                 </option>
               ))}
             </select>

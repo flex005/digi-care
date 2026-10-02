@@ -11,6 +11,7 @@
  * screen has to say "not recorded" rather than render an empty row.
  */
 
+import type { Vocabulary } from '@/lib/vocabulary'
 import type {
   ConsentMethod,
   IsoDate,
@@ -270,17 +271,32 @@ export type ReviewOutcome =
  * **Keyed by outcome first, so a fifth outcome without a label is a compile
  * error.** A list checked only with `satisfies` confirms each entry is a real
  * outcome and says nothing about an outcome with no entry.
+ *
+ * **A function of the vocabulary rather than a constant**, because one of the
+ * four names the care plan and a module-level constant is evaluated before
+ * anything can ask what this service calls it. The other three stay fixed, and
+ * each for its own reason: "Incident raised" is the *event* rather than the
+ * record, which is what every option of the Incident Report term names, and
+ * "Other" and "No further action needed" hold no configurable noun at all.
  */
-const REVIEW_OUTCOME_LABELS = {
-  no_further_action: 'No further action needed',
-  care_plan_updated: 'Care plan updated',
-  incident_raised: 'Incident raised',
-  other: 'Other',
-} as const satisfies Record<ReviewOutcome['kind'], string>
+function reviewOutcomeLabels(terms: Vocabulary) {
+  return {
+    no_further_action: 'No further action needed',
+    care_plan_updated: `${terms.carePlan.One} updated`,
+    incident_raised: 'Incident raised',
+    other: 'Other',
+  } as const satisfies Record<ReviewOutcome['kind'], string>
+}
 
-export const REVIEW_OUTCOMES = (
-  Object.keys(REVIEW_OUTCOME_LABELS) as ReviewOutcome['kind'][]
-).map((id) => ({ id, label: REVIEW_OUTCOME_LABELS[id] }))
+export function reviewOutcomes(
+  terms: Vocabulary,
+): { id: ReviewOutcome['kind']; label: string }[] {
+  const labels = reviewOutcomeLabels(terms)
+  return (Object.keys(labels) as ReviewOutcome['kind'][]).map((id) => ({
+    id,
+    label: labels[id],
+  }))
+}
 
 export type MedicationId = `med-${string}`
 

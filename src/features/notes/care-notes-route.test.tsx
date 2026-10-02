@@ -16,7 +16,14 @@ import { NOW, atTime, daysAgo } from '@/data/fixtures/generate'
 import { CareNotesRoute } from './CareNotesRoute'
 import { NoteQueueRow } from './NoteQueueRow'
 import { GAP_NOTE_IDS, careNotes } from '@/data/fixtures/care-notes'
-import { REVIEW_OUTCOMES } from '@/data/types'
+import { reviewOutcomes } from '@/data/types'
+import { vocabularyFor } from '@/lib/vocabulary'
+
+/* The labels read from the owner rather than retyped: three of the four name
+   nothing configurable and one names the care plan, and a test that restates
+   the string asserts the literal rather than the rule. */
+const TERMS = vocabularyFor('care_home', {})
+const REVIEW_OUTCOMES = reviewOutcomes(TERMS)
 
 /**
  * `/care-notes`, the cross-resident view. PRD §6.3.
@@ -623,11 +630,13 @@ describe('the queue says why a note was flagged, and what a review did', () => {
       </SessionProvider>,
     )
 
+    const label = (id: (typeof REVIEW_OUTCOMES)[number]['id']) =>
+      REVIEW_OUTCOMES.find((option) => option.id === id)!.label
     const expected: Record<(typeof REVIEW_OUTCOMES)[number]['id'], RegExp> = {
-      no_further_action: /^Action taken\s*No further action needed$/,
-      care_plan_updated: /^Action taken\s*Care plan updated$/,
-      incident_raised: /^Action taken\s*Incident raised$/,
-      other: /^Action taken\s*Other: \S/,
+      no_further_action: new RegExp(`^Action taken\\s*${label('no_further_action')}$`),
+      care_plan_updated: new RegExp(`^Action taken\\s*${label('care_plan_updated')}$`),
+      incident_raised: new RegExp(`^Action taken\\s*${label('incident_raised')}$`),
+      other: new RegExp(`^Action taken\\s*${label('other')}: \\S`),
     }
     for (const note of rows) {
       if (note.review.kind !== 'reviewed') throw new Error('expected a reviewed note')

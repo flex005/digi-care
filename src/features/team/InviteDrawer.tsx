@@ -4,7 +4,7 @@ import { STAFF_ROLE_NAMES } from '@/data/types'
 import { Button, Dialog } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { ReadOnlyHere } from '@/components/status'
 import { addMember, setResidentAssignment, teamMembers } from '@/data/access/team-store'
@@ -38,6 +38,7 @@ export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
   const { activeSite, sites, currentUser } = useSession()
   const viewer = useViewer()
   const term = useTerm()
+  const terms = useTerms()
   const [open, setOpen] = useState(false)
   const [fullName, setFullName] = useState('')
   const [role, setRole] = useState<StaffRole>('care_worker')
@@ -109,7 +110,7 @@ export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
     <>
       <Button onClick={() => setOpen(true)} data-invite-open>
         <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
-        Invite staff member
+        Invite {terms.staff.one}
       </Button>
 
       <Dialog

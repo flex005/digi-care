@@ -23,7 +23,7 @@ import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount } from '@/lib/format'
 import { elapsedMinutesBetween } from '@/lib/shift'
@@ -61,6 +61,7 @@ const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
 ]
 
 export function IncidentLogRoute() {
+  const logTerms = useTerms()
   const { activeSite } = useSession()
   const viewer = useViewer()
 
@@ -82,7 +83,7 @@ export function IncidentLogRoute() {
     <SiteTimeZone timeZone={activeSite.timeZone}>
       <div className={styles.page}>
         <header className={styles.logHead}>
-          <h1 className={styles.pageTitle}>Incidents</h1>
+          <h1 className={styles.pageTitle}>{logTerms.incidentReport.Many}</h1>
           {/* The only thing on this screen that is not about triage, which is
               why it lives here rather than in the filter row.
 
@@ -94,7 +95,13 @@ export function IncidentLogRoute() {
           {viewer.canRecordIn('/incidents') ? (
             <Link to="/incidents/new" className={styles.reportAction}>
               <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
-              Report an incident
+              {/*
+                "New …" rather than "Report an …": the term's own words are
+                Incident Report, Incident Record and Clinical Incident, and
+                "Report an incident report" is the composition that breaks.
+                "New incident report" and "New clinical incident" both read.
+              */}
+              New {logTerms.incidentReport.one}
             </Link>
           ) : null}
         </header>
@@ -311,6 +318,7 @@ function IncidentRow({
 }) {
   const format = useSiteFormat()
   const term = useTerm()
+  const terms = useTerms()
   const residentId = subjectResidentId(incident)
   const resident = residents.find((person) => person.id === residentId)
 
@@ -320,7 +328,7 @@ function IncidentRow({
     INCIDENT_SEVERITIES.find((entry) => entry.id === incident.severity)?.name ??
     incident.severity
 
-  const owed = outstandingDecisions(incident, now)
+  const owed = outstandingDecisions(incident, now, terms)
 
   return (
     <Link

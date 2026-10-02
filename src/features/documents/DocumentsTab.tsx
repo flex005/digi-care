@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useTerm } from '@/app/session/use-term'
+import { useTerms } from '@/app/session/use-term'
 import { Link } from 'react-router-dom'
 import { Icon } from '@/components/icon/Icon'
 import { useOutletContext } from 'react-router-dom'
@@ -33,7 +33,7 @@ import styles from './documents.module.css'
  * the categories it holds tells a reader there are four kinds of document.
  */
 export function DocumentsTab() {
-  const term = useTerm()
+  const terms = useTerms()
   const { resident } = useOutletContext<ResidentProfile>()
   const today = useSiteToday()
 
@@ -57,8 +57,8 @@ export function DocumentsTab() {
   const onFile = filed.onFile
 
   const library = useMemo(
-    () => residentLibrary(resident, onFile, today),
-    [resident, onFile, today],
+    () => residentLibrary(resident, onFile, today, terms),
+    [resident, onFile, today, terms],
   )
 
   return (
@@ -97,11 +97,7 @@ export function DocumentsTab() {
                   : 'nothing on file'}
               </p>
             </header>
-            <CategoryBody
-              state={category.state}
-              holds={category.holds(term)}
-              today={today}
-            />
+            <CategoryBody state={category.state} holds={category.holds} today={today} />
           </section>
         ))}
       </Card>

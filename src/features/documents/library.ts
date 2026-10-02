@@ -1,4 +1,4 @@
-import type { Term } from '@/lib/vocabulary'
+import type { Vocabulary } from '@/lib/vocabulary'
 import type {
   CategoryState,
   DocumentCategoryId,
@@ -24,7 +24,9 @@ export interface ResidentLibrary {
   categories: {
     id: DocumentCategoryId
     label: string
-    holds: (term: Term) => string
+    /* Already resolved: the category's own `holds` is a function of the
+       vocabulary, and this is what the screen prints. */
+    holds: string
     state: CategoryState
   }[]
   /** Documents actually on file, which is what the three findings count. */
@@ -92,6 +94,8 @@ function originOf(resident: Resident, id: string): { origin: string; detail: str
     const scan = medication.prescriptionDocument
     if (scan.kind !== 'on_file' || scan.documentId !== id) continue
     return {
+      // The module, in the sidebar's words: `src/app/nav-items.icons.ts` owns
+      // that name, and a second spelling here would be a second owner of it.
       origin: 'Medications',
       detail: `recorded as scanned by ${scan.scannedBy.displayName} on ${formatDate(scan.scannedOn)}`,
     }
@@ -113,11 +117,17 @@ function originOf(resident: Resident, id: string): { origin: string; detail: str
 export function expectationFor(
   resident: Resident,
   category: DocumentCategoryId,
+  terms: Vocabulary,
 ): { missing: string; because: string } | undefined {
   if (category === 'identity_admission') {
     return {
       missing: `${resident.preferredName} was admitted on ${formatDate(resident.admittedOn)} and nothing is filed here.`,
-      because: 'An admission agreement is signed on the day somebody moves in.',
+      /*
+       * Led with "The" rather than "An": the article would have to agree with
+       * a word nobody here chooses, and agreeing it at the call site is the
+       * defect this whole mechanism exists to prevent.
+       */
+      because: `The ${terms.admission.one} agreement is signed on the day somebody moves in.`,
     }
   }
 
@@ -140,7 +150,7 @@ export function expectationFor(
       const current = domain.versions.history[domain.versions.history.length - 1]
       if (current === undefined) continue
       return {
-        missing: `A care plan was finalised on ${formatDate(current.finalisedOn)} and nothing is filed here.`,
+        missing: `A ${terms.carePlan.one} was finalised on ${formatDate(current.finalisedOn)} and nothing is filed here.`,
         because: 'The care record says this version exists, and it is not filed here.',
       }
     }
@@ -168,6 +178,7 @@ export function residentLibrary(
   resident: Resident,
   onFile: DocumentRecord[],
   today: IsoDate,
+  terms: Vocabulary,
 ): ResidentLibrary {
   const broken = brokenReferences(resident, onFile)
 
@@ -194,13 +205,18 @@ export function residentLibrary(
       first !== undefined
         ? { kind: 'filled', rows: [first, ...rest] }
         : (() => {
-            const expectation = expectationFor(resident, category.id)
+            const expectation = expectationFor(resident, category.id, terms)
             return expectation === undefined
               ? { kind: 'empty' }
               : { kind: 'expected_but_empty', ...expectation }
           })()
 
-    return { id: category.id, label: category.label, holds: category.holds, state }
+    return {
+      id: category.id,
+      label: category.label(terms),
+      holds: category.holds(terms),
+      state,
+    }
   })
 
   return { categories, onFile, counts: countExpiry(onFile, today) }
@@ -225,13 +241,14 @@ export interface OrganisationCategoryRow {
 export function organisationRows(
   documents: DocumentRecord[],
   today: IsoDate,
+  terms: Vocabulary,
 ): OrganisationCategoryRow[] {
   const rows = DOCUMENT_CATEGORIES.map((category) => {
     const mine = documents.filter((document) => document.category === category.id)
     const counts = countExpiry(mine, today)
     return {
       id: category.id,
-      label: categoryLabel(category.id),
+      label: categoryLabel(category.id, terms),
       total: counts.total,
       expiring: counts.expiring,
       expired: counts.expired,

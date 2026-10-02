@@ -16,10 +16,11 @@ import { AggregateFigure, Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useTerms } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, formatLateness, pluralise } from '@/lib/format'
 import { COVERAGE_WINDOW_DAYS, coverageOver } from './coverage'
-import { KIND_LABEL, byMostRecent, byUrgency, projectReviews } from './projection'
+import { kindLabels, byMostRecent, byUrgency, projectReviews } from './projection'
 import type { Reviewable, ReviewableKind, ReviewStanding } from './projection'
 import styles from './reviews.module.css'
 
@@ -112,6 +113,7 @@ function Found({
   onFilter: (value: Filter) => void
   onKind: (value: ReviewableKind | 'all') => void
 }) {
+  const terms = useTerms()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
   const projection = projectReviews(residents, now)
   const all = projection.items
@@ -153,7 +155,7 @@ function Found({
       <span data-numeric>{formatCount(counted(isKind('risk_assessment')))}</span>{' '}
       assessed risks,{' '}
       <span data-numeric>{formatCount(counted(isKind('care_plan_domain')))}</span>{' '}
-      written care plan domains and{' '}
+      written {terms.carePlan.one} domains and{' '}
       <span data-numeric>{formatCount(counted(isKind('whole_care_plan')))}</span>{' '}
       whole-plan reviews.
     </>
@@ -223,10 +225,12 @@ function Found({
         Not counted here:{' '}
         <span data-numeric>{formatCount(projection.neverAssessed)}</span> risk
         assessments nobody has done, on the{' '}
+        {/* The document name, not the configurable term — see
+            nav-items.icons.ts. */}
         <Link to="/risk-assessments">risk assessment queue</Link>, and{' '}
-        <span data-numeric>{formatCount(projection.neverWritten)}</span> care plan
-        domains with nothing signed, on the{' '}
-        <Link to="/care-plans">care plan queue</Link>.
+        <span data-numeric>{formatCount(projection.neverWritten)}</span>{' '}
+        {terms.carePlan.one} domains with nothing signed, on the{' '}
+        <Link to="/care-plans">{terms.carePlan.one} queue</Link>.
       </p>
 
       <Card>
@@ -258,9 +262,16 @@ function Found({
               onValueChange={(value) => onKind(value as ReviewableKind | 'all')}
               options={[
                 { value: 'all', label: 'All record types' },
+                /* The document name, not the term (nav-items.icons.ts). */
                 { value: 'risk_assessment', label: 'Risk assessments' },
-                { value: 'care_plan_domain', label: 'Care plan domains' },
-                { value: 'whole_care_plan', label: 'Whole care plan reviews' },
+                {
+                  value: 'care_plan_domain',
+                  label: `${terms.carePlan.One} domains`,
+                },
+                {
+                  value: 'whole_care_plan',
+                  label: `Whole ${terms.carePlan.one} reviews`,
+                },
               ]}
             />
           </div>
@@ -308,7 +319,9 @@ function Found({
                     <span className={styles.rowWhat}>
                       {/* The kind is what stops three populations reading as
                         one list. */}
-                      <span className={styles.rowKind}>{KIND_LABEL[item.kind]}</span>
+                      <span className={styles.rowKind}>
+                        {kindLabels(terms.carePlan)[item.kind]}
+                      </span>
                       <span className={styles.rowName}>{item.label}</span>
                     </span>
 

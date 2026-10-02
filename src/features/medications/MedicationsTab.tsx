@@ -1,6 +1,7 @@
 import { Outlet, useOutletContext } from 'react-router-dom'
 import type { ResidentProfile } from '@/data/access/client'
 import { ScreenTabs, type ScreenTab } from '@/components/shell/ScreenTabs'
+import { useTerms } from '@/app/session/use-term'
 import styles from './medications.module.css'
 
 /**
@@ -35,10 +36,11 @@ export function MedicationsTab() {
   // from the route rather than from here would be a second source of identity
   // on a screen where there must only ever be one (§2.4).
   const profile = useOutletContext<ResidentProfile>()
+  const terms = useTerms()
 
   return (
     <div className={styles.subTabPanel}>
-      <ScreenTabs label="Medications" tabs={MEDICATION_SUBTABS} />
+      <ScreenTabs label={terms.medication.Many} tabs={MEDICATION_SUBTABS} />
       <Outlet context={profile} />
     </div>
   )

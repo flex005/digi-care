@@ -1,4 +1,5 @@
 import type { IconName } from '@/components/icon/registry.names.generated'
+import type { TermId, Vocabulary } from '@/lib/vocabulary'
 
 /**
  * The left sidebar. PRD §4.7.
@@ -26,7 +27,14 @@ export interface NavItem {
    * word with `Term` and the choice of form with the item.
    */
   label: string
-  subject?: 'One' | 'Many'
+  /**
+   * Which term and which form this item's name comes from, where it is not
+   * fixed. Two renderers show these labels — the sidebar and the permission
+   * matrix — so declaring the form here keeps the word with the vocabulary
+   * and the choice of form with the item, rather than each renderer
+   * substituting and the two drifting.
+   */
+  term?: { id: TermId; form: 'One' | 'Many' }
   path: string
   icon: IconName
   /** The phase in FRONTEND_PRD.md §8 that builds this module. */
@@ -75,7 +83,7 @@ export const navItems: NavItem[] = [
   },
   {
     label: 'Residents',
-    subject: 'Many',
+    term: { id: 'subject', form: 'Many' },
     path: '/residents',
     icon: 'users/user-multiple',
     phase: 1,
@@ -100,6 +108,7 @@ export const navItems: NavItem[] = [
   },
   {
     label: 'Medications',
+    term: { id: 'medication', form: 'Many' },
     path: '/medications',
     icon: 'medical/medicine-01',
     phase: 3,
@@ -107,6 +116,21 @@ export const navItems: NavItem[] = [
     section: 'delivery',
   },
   {
+    /*
+     * **"Incidents" is fixed, and the Incident Report term reaches the records
+     * inside it.** The module is named for the events — a fall, a medication
+     * error — and every option of that term names the *record* of one. The
+     * difference showed up as a default the product never chose: declaring
+     * `term: { id: 'incidentReport', form: 'Many' }` here renamed the sidebar
+     * item to "Incident Reports" for every home on the default vocabulary,
+     * which is a copy change wearing a configuration change's clothes. Two
+     * other sweeps of this phase reached the same reading independently, in
+     * `permissions.ts` ("reporting an incident" is the act) and in the review
+     * outcomes ("Incident raised" is the event).
+     *
+     * The term reaches the log's heading and its "New …" control instead,
+     * which are about the records.
+     */
     label: 'Incidents',
     path: '/incidents',
     icon: 'alert-notification/alert-02',
@@ -115,6 +139,15 @@ export const navItems: NavItem[] = [
     section: 'planning',
   },
   {
+    /*
+     * **No declared form, and the reason is the qualifier.** "Assessment" is
+     * configurable, and the options are Assessment, Clinical Assessment and
+     * Care Assessment — none of which composes behind "Risk": "Risk Care
+     * Assessments" is not a phrase. Dropping the qualifier instead would read
+     * as every assessment in the product, and this module is not the capacity
+     * assessment behind a consent. So the module keeps its name, and the term
+     * reaches the sentences inside it.
+     */
     label: 'Risk Assessments',
     path: '/risk-assessments',
     icon: 'alert-notification/alert-diamond',
@@ -124,6 +157,7 @@ export const navItems: NavItem[] = [
   },
   {
     label: 'Care Plans',
+    term: { id: 'carePlan', form: 'Many' },
     path: '/care-plans',
     icon: 'education/clipboard',
     phase: 7,
@@ -163,6 +197,12 @@ export const navItems: NavItem[] = [
     section: 'governance',
   },
   {
+    /*
+     * **A product's name, not this service's word for relatives.** The `family`
+     * term renames the people; the Family Portal is a separate product with its
+     * own PRD and its own UI, and it is called that whatever this home calls
+     * next of kin.
+     */
     label: 'Family Portal',
     path: '/family',
     icon: 'users/user-sharing',
@@ -245,4 +285,55 @@ export const devStatesItem: NavItem = {
   phase: 0,
   enabled: true,
   section: 'overview',
+}
+
+/**
+ * What a nav item is called, with the vocabulary in force.
+ *
+ * **One owner of the resolution, not just of the word.** `label` and `term`
+ * are two ways of naming the same thing and something has to choose between
+ * them. That choice was written out in the sidebar and again in the permission
+ * matrix — the two renderers the `term` field's own docblock names as the
+ * reason it exists — and it was about to be written a third time in the tests
+ * and a fourth in the activity log. A rule stated in four places is the §6
+ * defect the `term` field was introduced to prevent, one level up: the word has
+ * an owner and the choice of word did not.
+ *
+ * It is also what the activity log and the document library have to call: both
+ * restate module names ("Care Plans", "Medications") as their own string
+ * constants, and a second spelling of one module's name is two owners of it.
+ */
+export function navLabel(item: NamedByTerm, terms: Vocabulary): string {
+  return item.term === undefined ? item.label : terms[item.term.id][item.term.form]
+}
+
+/**
+ * The two fields a label is resolved from, and nothing else.
+ *
+ * Named structurally rather than as `NavItem` because the permission matrix
+ * does not hold nav items: `PERMISSION_MODULES` projects each one down to an
+ * id, a label and a term. Asking for the whole item would make the narrower
+ * caller restate the rule, which is the thing this function exists to stop.
+ */
+export interface NamedByTerm {
+  label: string
+  term?: { id: TermId; form: 'One' | 'Many' } | undefined
+}
+
+/**
+ * A module's name, resolved from the item that declares it.
+ *
+ * **Keyed by path, so a wrong key throws rather than rendering plausibly.**
+ * Two modules outside the sidebar restate these names as their own string
+ * constants — the staff activity log's `module` and the document library's
+ * `origin` — and both say in their own docblocks that the nav declaration owns
+ * the wording. That was true while every label was fixed. Now that Medications
+ * and Care Plans take a configured term, a restated copy is a second owner
+ * that silently stops agreeing: the sidebar would say "Care & Support Plans"
+ * and the activity log beside it "Care Plans", with nothing failing.
+ */
+export function moduleName(path: string, terms: Vocabulary): string {
+  const item = navItems.find((entry) => entry.path === path)
+  if (item === undefined) throw new Error(`No nav item declares the module ${path}`)
+  return navLabel(item, terms)
 }

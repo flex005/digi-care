@@ -5,7 +5,7 @@ import { useResource } from '@/data/access/use-resource'
 import { carePlanDomainName } from '@/data/access/review-flags'
 import { INCIDENT_TYPES } from '@/data/types'
 import { useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import styles from './care-plan.module.css'
 import { NotYourHome } from '@/components/status'
 
@@ -51,6 +51,7 @@ export function OwedReviews({
   const resource = useResource<Incident[]>(load, [residentId, revision])
   const format = useSiteFormat()
   const term = useTerm()
+  const terms = useTerms()
 
   if (resource.kind === 'loading') {
     return (
@@ -75,7 +76,7 @@ export function OwedReviews({
           Post-incident reviews could not be read for this {term.one}
         </p>
         <p className={styles.owedItem}>
-          Whether this care plan owes a review is unknown, not settled.
+          Whether this {terms.carePlan.one} owes a review is unknown, not settled.
         </p>
       </div>
     )
@@ -100,8 +101,8 @@ export function OwedReviews({
     <div className={styles.owed} data-owed={owed.length}>
       <p className={styles.owedTitle}>
         {owed.length === 1
-          ? 'This care plan owes a post-incident review'
-          : 'This care plan owes post-incident reviews'}
+          ? `This ${terms.carePlan.one} owes a post-incident review`
+          : `This ${terms.carePlan.one} owes post-incident reviews`}
       </p>
       {owed.map(({ incident, flag }) => {
         const domain =

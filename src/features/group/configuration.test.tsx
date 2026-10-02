@@ -17,6 +17,8 @@ import { AssessmentListTab } from '@/features/risk/AssessmentListTab'
 import { ResidentProfileRoute } from '@/features/residents/ResidentProfileRoute'
 import { residents } from '@/data/fixtures/residents'
 import type { IsoDate } from '@/data/types'
+import { navItems, navLabel } from '@/app/nav-items.icons'
+import { vocabularyFor } from '@/lib/vocabulary'
 
 /**
  * The configuration model. AM v2.0 SETT-01, Phase 22.
@@ -166,5 +168,47 @@ describe('turning something off changes no record', () => {
     expect(
       countsTowardsExpected(configuredState('site-rosewood-court', 'falls', true)),
     ).toBe(false)
+  })
+})
+
+/**
+ * The module names this screen restates, held against the one that owns them.
+ *
+ * **A guard rather than a comment, because a comment did not hold.** The
+ * staff activity log and the document library each carried their own copies of
+ * five sidebar labels, each with a docblock saying `nav-items.icons.ts` owned
+ * the wording — true while every label was fixed, and silently false the
+ * moment Care Plans started taking a configured term. Both were found by the
+ * terminology crawl rather than by reading those comments.
+ *
+ * `settings-store` is the one place that cannot read `navLabel`: nothing else
+ * in `src/data` reaches into `src/app`, so it composes from the term instead.
+ * That is a second producer of one name, and this is what stops the two
+ * disagreeing — a nav item that drops its term, or changes form, fails here.
+ */
+describe('a figure says where it shows in the words the sidebar uses', () => {
+  const carePlans = navItems.find((item) => item.path === '/care-plans')!
+
+  it.each([
+    ['care_plan', 'Care Plans'],
+    ['care_and_support_plan', 'Care & Support Plans'],
+  ])('names the Care Plans module as %s renders it', (choice, expected) => {
+    const terms = vocabularyFor('care_home', { carePlan: choice })
+    // The sidebar's own label, through the owner of that resolution.
+    expect(navLabel(carePlans, terms)).toBe(expected)
+
+    /*
+     * The two figures held by id, not by a pattern over their text. Selecting
+     * on `includes('Reviews')` picked up a third figure that lists Reviews and
+     * not the plan — the §8 specificity defect, in a guard written to catch a
+     * naming one. A figure that stops naming the module fails the first
+     * assertion rather than quietly dropping out of the set.
+     */
+    const named = ['due-soon-days', 'review-interval-months']
+    for (const id of named) {
+      const figure = figures().find((entry) => entry.id === id)
+      expect(figure, id).toBeTruthy()
+      expect(figure!.seenOn(terms), id).toContain(navLabel(carePlans, terms))
+    }
   })
 })

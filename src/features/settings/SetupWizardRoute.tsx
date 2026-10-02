@@ -17,6 +17,8 @@ import {
   setSiteTimeZone,
   setOrganisationType,
   setSubjectTerm,
+  setTermChoice,
+  chosenTermsAsConfigured,
   organisationTypeAsConfigured,
   subjectTermIdAsConfigured,
 } from '@/data/access/settings-store'
@@ -35,9 +37,24 @@ import { InviteDrawer } from '@/features/team/InviteDrawer'
 import { cameFromOrganisation } from './setup-origin'
 import {
   ORGANISATION_TYPES,
-  SUBJECT_TERMS,
+  TERM_IDS,
+  TERM_OPTIONS,
   type OrganisationType,
+  type TermId,
 } from '@/lib/vocabulary'
+
+/** What each term is called on the form that chooses it. */
+const TERM_LABELS: Record<TermId, string> = {
+  subject: 'The people this service holds records about',
+  carePlan: 'The plan of their care',
+  staff: 'The people who work here',
+  manager: 'The person who runs the service',
+  admission: 'Somebody joining the service',
+  incidentReport: 'A record of something that went wrong',
+  medication: 'What is given and signed for',
+  assessment: 'A judgement recorded about somebody',
+  family: 'The people close to them',
+}
 import styles from './setup.module.css'
 
 /**
@@ -76,6 +93,9 @@ export function SetupWizardRoute() {
     organisationTypeAsConfigured(),
   )
   const [termId, setTermId] = useState<string | undefined>(subjectTermIdAsConfigured())
+  const [termChoices, setTermChoices] = useState<Partial<Record<TermId, string>>>(
+    chosenTermsAsConfigured,
+  )
   const [step, setStep] = useState<SetupStepId>(
     () => resumeAt(ORDER.map((entry) => entry.id)) ?? 'organisation',
   )
@@ -201,7 +221,19 @@ export function SetupWizardRoute() {
                     checked={orgType === entry.id}
                     onChange={() => {
                       setOrgType(entry.id)
+                      /*
+                       * The type picks the subject's default, so an earlier
+                       * override of THAT term goes — otherwise the control
+                       * does nothing for somebody who changed their mind. The
+                       * other eight are untouched: they have nothing to do
+                       * with the type.
+                       */
                       setTermId(undefined)
+                      setTermChoices((current) => {
+                        const next = { ...current }
+                        delete next.subject
+                        return next
+                      })
                     }}
                   />
                   {entry.name}
@@ -211,26 +243,41 @@ export function SetupWizardRoute() {
 
             {/*
               No wrapping `<label>`: `Select` is a Radix combobox rather than a
-              native control, so a label around it associates with nothing —
-              it carries its own `label` prop, which is the association.
+              native control, so a label around it associates with nothing — it
+              carries its own `label` prop, which is the association.
+
+              One Select per term. The subject comes first because the type
+              above picks its default; the rest default to their own first
+              option and are changed only by somebody who wants to.
             */}
-            <div className={styles.field}>
-              <Select
-                labelVisible
-                label="What this service calls the people it serves"
-                placeholder="Choose a word"
-                value={termId ?? defaultTermIdFor(orgType)}
-                onValueChange={setTermId}
-                options={SUBJECT_TERMS.map((entry) => ({
-                  value: entry.id,
-                  label: entry.label,
-                }))}
-              />
-              <span className={styles.note}>
-                It appears on every screen: headings, labels and tab names. Words
-                somebody has already written into a record are not changed.
-              </span>
-            </div>
+            {TERM_IDS.map((id) => (
+              <div className={styles.field} key={id} data-term-choice={id}>
+                <Select
+                  labelVisible
+                  label={TERM_LABELS[id]}
+                  placeholder="Choose a word"
+                  value={
+                    id === 'subject'
+                      ? (termId ?? defaultTermIdFor(orgType))
+                      : (termChoices[id] ?? TERM_OPTIONS[id][0]!.id)
+                  }
+                  onValueChange={(value) => {
+                    if (id === 'subject') setTermId(value)
+                    setTermChoices((current) => ({ ...current, [id]: value }))
+                  }}
+                  options={TERM_OPTIONS[id].map((entry) => ({
+                    value: entry.id,
+                    label: entry.label,
+                  }))}
+                />
+              </div>
+            ))}
+
+            <p className={styles.note}>
+              These appear on every screen: headings, labels and tab names. Words
+              somebody has already written into a record are not changed, and neither
+              are statutory titles like Registered manager.
+            </p>
 
             <div className={styles.actions}>
               <Button
@@ -238,6 +285,9 @@ export function SetupWizardRoute() {
                 onClick={() => {
                   setOrganisationType(orgType)
                   if (termId !== undefined) setSubjectTerm(termId)
+                  for (const [id, choice] of Object.entries(termChoices)) {
+                    setTermChoice(id as TermId, choice)
+                  }
                   confirmStep('vocabulary')
                   next()
                 }}

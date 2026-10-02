@@ -6,6 +6,8 @@ import { useSiteFormat } from '@/app/session/use-session'
 import { ClinicalChangeControl } from './ClinicalChangeControl'
 import styles from './profile.module.css'
 import { staffLabel } from '@/data/access/team-store'
+import { useTerms } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 
 /**
  * The resuscitation decision, as a full-width panel rather than one row of
@@ -40,6 +42,7 @@ export function ResuscitationPanel({
   siteName: string
 }) {
   const format = useSiteFormat()
+  const terms = useTerms()
 
   const control = (
     <ClinicalChangeControl
@@ -55,7 +58,7 @@ export function ResuscitationPanel({
           ? 'Record a resuscitation decision'
           : 'Change the resuscitation decision'
       }
-      description={DESCRIPTIONS[status.kind]}
+      description={descriptions(terms.staff)[status.kind]}
       confirmLabel={
         status.kind === 'no_decision_recorded' ? 'Record decision' : 'Change decision'
       }
@@ -117,9 +120,11 @@ export function ResuscitationPanel({
   }
 }
 
-const DESCRIPTIONS: Record<ResuscitationStatus['kind'], string> = {
-  dnar_in_place:
-    'Changing it overrides a signed clinical decision about whether CPR is attempted.',
-  for_resuscitation: 'Changing it alters whether CPR is attempted.',
-  no_decision_recorded: 'Recording one changes what staff do in an emergency.',
+function descriptions(staff: Term): Record<ResuscitationStatus['kind'], string> {
+  return {
+    dnar_in_place:
+      'Changing it overrides a signed clinical decision about whether CPR is attempted.',
+    for_resuscitation: 'Changing it alters whether CPR is attempted.',
+    no_decision_recorded: `Recording one changes what ${staff.many} do in an emergency.`,
+  }
 }

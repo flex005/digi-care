@@ -27,7 +27,13 @@ export function NotYourHome({
       </p>
       <p className={styles.body}>
         {refusal.yours.length > 0
-          ? 'Which homes you are appointed to is on your staff record, and an admin changes it on the team screen.'
+          ? /*
+             * "your staff record" lost the word rather than taking the term: no
+             * form of it reads here. `one` is "staff member", and "your staff
+             * member record" is not a phrase — the possessive already says whose
+             * record it is, so the word was doing nothing the sentence needed.
+             */
+            'Which homes you are appointed to is on your own record, and an admin changes it on the team screen.'
           : 'Nobody has recorded which home you work in.'}
       </p>
     </div>

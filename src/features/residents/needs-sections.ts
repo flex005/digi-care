@@ -1,5 +1,6 @@
 import type { CarePlanDomainId } from '@/data/types'
 import { CARE_PLAN_DOMAINS, NEED_GROUPS } from '@/data/types'
+import type { Vocabulary } from '@/lib/vocabulary'
 
 /**
  * The Needs tab's sections. Source PRD §16.2.
@@ -58,21 +59,34 @@ const UNCLAIMED: CarePlanDomainId[] = CARE_PLAN_DOMAINS.map(
   (domain) => domain.id,
 ).filter((id) => !claimed.has(id))
 
-export const NEEDS_SECTIONS: NeedsSection[] =
-  UNCLAIMED.length === 0
-    ? GROUPED
-    : [
-        ...GROUPED,
-        {
-          id: 'other',
-          name: 'Other care plan domains',
-          description:
-            'Part of the care plan; end of life wishes are recorded on the Future Plans tab.',
-          domainIds: UNCLAIMED,
-        },
-      ]
+/**
+ * The sections, named with the vocabulary in force.
+ *
+ * A function rather than a constant because the catch-all section names the
+ * configurable term, and a module-level constant cannot read a term that is
+ * only known at render (§5 of the vocabulary rules).
+ */
+export function needsSections(terms: Vocabulary): NeedsSection[] {
+  if (UNCLAIMED.length === 0) return GROUPED
+  return [
+    ...GROUPED,
+    {
+      id: 'other',
+      name: `Other ${terms.carePlan.one} domains`,
+      description: `Part of the ${terms.carePlan.one}; end of life wishes are recorded on the Future Plans tab.`,
+      domainIds: UNCLAIMED,
+    },
+  ]
+}
 
-/** Every domain the tab renders. Used by the guard. */
-export const RENDERED_DOMAIN_IDS: CarePlanDomainId[] = NEEDS_SECTIONS.flatMap(
-  (section) => section.domainIds,
-)
+/**
+ * Every domain the tab renders. Used by the guard.
+ *
+ * Independent of the vocabulary: a section's name may change, the domains it
+ * claims may not, so this stays a constant rather than becoming a figure that
+ * moves with a label.
+ */
+export const RENDERED_DOMAIN_IDS: CarePlanDomainId[] = [
+  ...GROUPED.flatMap((section) => section.domainIds),
+  ...UNCLAIMED,
+]

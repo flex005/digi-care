@@ -3,7 +3,19 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { AppShell } from './AppShell'
 import { SessionProvider } from '@/app/session/SessionProvider'
-import { navItems } from '@/app/nav-items.icons'
+import { navItems, navLabel } from '@/app/nav-items.icons'
+import type { NavItem } from '@/app/nav-items.icons'
+import { vocabularyFor } from '@/lib/vocabulary'
+
+/*
+ * **The name the sidebar actually renders, through the one owner.**
+ * `item.label` is the fixed name and the fallback; an item that declares a
+ * `term` is called whatever this organisation calls that thing, so asserting
+ * `label` asserts a string the screen may legitimately not contain. Four
+ * assertions here went red on the Incidents item for exactly that reason, and
+ * the fix is to read the resolution from `navLabel` rather than to restate it.
+ */
+const nameOf = (item: NavItem) => navLabel(item, vocabularyFor('care_home', {}))
 
 /**
  * PRD §4.7 — the shell does not change shape as phases land, and §2.4 — the
@@ -45,7 +57,7 @@ describe('AppShell', () => {
     for (const item of navItems) {
       // Absence from a list is the same bug as a blank cell. CLAUDE.md §1.
       expect(
-        within(nav).getByText(item.label, { selector: 'span' }),
+        within(nav).getByText(nameOf(item), { selector: 'span' }),
       ).toBeInTheDocument()
     }
   })

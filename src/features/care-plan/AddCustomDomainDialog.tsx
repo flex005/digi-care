@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import type { Resident } from '@/data/types'
 import { recordCustomCarePlanDomain } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
+import { useTerms } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { ReadOnlyHere } from '@/components/status'
 import type { ProfileContext } from '@/features/residents/ResidentProfileRoute'
@@ -39,6 +40,7 @@ export function AddCustomDomainDialog({
 }) {
   const { currentUser } = useSession()
   const viewer = useViewer()
+  const terms = useTerms()
   const { refresh } = useOutletContext<ProfileContext>()
   const navigate = useNavigate()
   const [name, setName] = useState('')
@@ -53,7 +55,7 @@ export function AddCustomDomainDialog({
     return (
       <ReadOnlyHere
         roleName={viewer.roleName}
-        subject="this care plan"
+        subject={`this ${terms.carePlan.one}`}
         act="add a domain to it"
       />
     )
@@ -88,7 +90,7 @@ export function AddCustomDomainDialog({
     <Dialog
       open
       onOpenChange={(next) => (next ? undefined : onClose())}
-      title={`Add a care plan domain for ${resident.preferredName}, outside the ten`}
+      title={`Add a ${terms.carePlan.one} domain for ${resident.preferredName}, outside the ten`}
       description={`${resident.fullLegalName}. Naming it opens it, ready to write.`}
       actions={
         <>

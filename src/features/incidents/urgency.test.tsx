@@ -15,11 +15,15 @@ import {
   resetSessionIncidents,
   withIncidentEdits,
 } from '@/data/access/incident-store'
+import { vocabularyFor } from '@/lib/vocabulary'
 import { outstandingDecisions } from './decisions'
 import { incidentPdfContent, type PdfFormat } from './incident-pdf'
 import { UNACKNOWLEDGED_INCIDENT } from '@/data/fixtures/incidents'
 import { staffHalloran } from '@/data/fixtures/organisation'
 import { IncidentDetailRoute } from './IncidentDetailRoute'
+
+/** The default vocabulary, as a screen reading no override would see it. */
+const TERMS = vocabularyFor('care_home', {})
 
 /**
  * Saying an incident needs attention now, after it was filed.
@@ -290,10 +294,12 @@ describe('what the rest of the product does with a stood-down urgency', () => {
    * predicate refusing everything cannot pass as one that works.
    */
   it('does not report it as something that cannot wait', () => {
-    const ids = outstandingDecisions(stoodDown, appNowIso()).map((entry) => entry.id)
+    const ids = outstandingDecisions(stoodDown, appNowIso(), TERMS).map(
+      (entry) => entry.id,
+    )
     expect(ids).not.toContain('urgent')
 
-    const raisedIds = outstandingDecisions(raisedOne, appNowIso()).map(
+    const raisedIds = outstandingDecisions(raisedOne, appNowIso(), TERMS).map(
       (entry) => entry.id,
     )
     expect(raisedIds).toContain('urgent')
@@ -309,6 +315,7 @@ describe('what the rest of the product does with a stood-down urgency', () => {
     const text = incidentPdfContent(stoodDown, {
       residentName: 'Emmanuel Okafor',
       siteName: 'Rosewood Court',
+      terms: TERMS,
       format,
     })
       .sections.flatMap((section) => section.lines)
@@ -335,6 +342,7 @@ describe('what the rest of the product does with a stood-down urgency', () => {
     const text = incidentPdfContent(firstRaise, {
       residentName: 'Emmanuel Okafor',
       siteName: 'Rosewood Court',
+      terms: TERMS,
       format,
     })
       .sections.flatMap((section) => section.lines)

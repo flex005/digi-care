@@ -9,6 +9,7 @@ import { changedFigures, figures, setFigure } from '@/data/access/settings-store
 import { CLOCK_IS_OVERRIDDEN, clockHref } from '@/data/fixtures/clock'
 import { SETUP_FROM_ORGANISATION } from '@/features/settings/setup-origin'
 import styles from './group.module.css'
+import { useTerms } from '@/app/session/use-term'
 
 /**
  * Organisation settings. PRD §6.7, Phase 15; split from the home's own
@@ -57,6 +58,7 @@ const CLOCK_CHOICES: { value: string; label: string; what: string }[] = [
 export function SettingsRoute() {
   const { organisation } = useSession()
   const viewer = useViewer()
+  const terms = useTerms()
   /*
    * **Read-only rather than absent, and that is AM v2.0 asking for the right
    * thing.** A manager who cannot see the round times or the timezone cannot
@@ -125,7 +127,7 @@ export function SettingsRoute() {
                   <div>
                     <p className={styles.figureLabel}>{figure.label}</p>
                     <p className={styles.figureEffect}>{figure.effect}</p>
-                    <p className={styles.figureSeen}>Seen on: {figure.seenOn}</p>
+                    <p className={styles.figureSeen}>Seen on: {figure.seenOn(terms)}</p>
                   </div>
                   <label className={styles.figureField}>
                     <span className={styles.fieldLabel}>{figure.unit}</span>

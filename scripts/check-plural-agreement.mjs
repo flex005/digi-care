@@ -70,6 +70,29 @@ const files = walk(ROOT).filter(
   (file) => /\.(ts|tsx)$/.test(file) && !/\.test\./.test(file),
 )
 
+/**
+ * Whether `index` sits inside the argument list of a `pluralise(` call.
+ *
+ * `pluralise(n, term.one, term.many)` contains a count and a declared plural
+ * by construction, so it would report itself — it is the correct shape rather
+ * than a finding. What has to be established is that this hit is *that* call's
+ * arguments, which is a question about brackets rather than about distance:
+ * scan back for the nearest open paren this position is not already inside,
+ * and ask what identifier precedes it.
+ */
+function insidePluraliseCall(source, index) {
+  let depth = 0
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const ch = source[i]
+    if (ch === ')') depth += 1
+    else if (ch === '(') {
+      if (depth === 0) return /pluralise\s*$/.test(source.slice(Math.max(0, i - 24), i))
+      depth -= 1
+    }
+  }
+  return false
+}
+
 const findings = []
 let optedOut = 0
 let suspect = 0
@@ -97,13 +120,17 @@ for (const file of files) {
     while ((hit = pattern.exec(source)) !== null) {
       suspect += 1
       /*
-       * The surrounding statement, not the match: `pluralise(n, term.one,
-       * term.many)` contains a count and a plural form by construction, and is
-       * the correct shape rather than a finding.
+       * **Is this match an argument of a `pluralise(` call?** Not "is the word
+       * pluralise nearby", which is what this was and which made the guard
+       * pass a real violation: it cleared any hit with `pluralise(` in the
+       * preceding 240 characters, and a correct `pluralise(residents.length,
+       * …)` four lines above an incorrect `{formatCount(n)} {terms.x.many}`
+       * was enough to excuse it. The exclusion window was much wider than the
+       * statement it meant, which is the §8 proxy defect — an approximation of
+       * a rule drifting from the rule — in a guard written to catch another
+       * one. It was found by mutation, not by reading.
        */
-      const from = source.lastIndexOf('\n', Math.max(0, hit.index - 240))
-      const around = source.slice(Math.max(0, from), hit.index + hit[0].length + 40)
-      if (/pluralise\(/.test(around)) continue
+      if (insidePluraliseCall(source, hit.index)) continue
 
       const line = source.slice(0, hit.index).split('\n').length
       if (/plural-ok:/.test(raw.split('\n')[line - 2] ?? '')) {

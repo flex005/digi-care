@@ -21,7 +21,7 @@ import { AlertDialog, Avatar, Button, Card, Toast } from '@/components/primitive
 import { AllergyBadge, NotYourHome, ReadOnlyHere } from '@/components/status'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatDate, pluralise, zonedDate } from '@/lib/format'
 import { carersAndSeniors } from '@/data/fixtures/organisation'
@@ -62,6 +62,7 @@ import styles from './medications.module.css'
 export function RoundRoute() {
   const { activeSite, currentUser } = useSession()
   const viewer = useViewer()
+  const terms = useTerms()
 
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
   const [written, setWritten] = useState(0)
@@ -129,7 +130,7 @@ export function RoundRoute() {
         <Card padded>
           <ReadOnlyHere
             roleName={viewer.roleName}
-            subject="medication records"
+            subject={terms.medication.many}
             act="sign for a dose"
           />
         </Card>
@@ -279,7 +280,8 @@ export function RoundRoute() {
                 ? { room: current.resident.room.value }
                 : {}),
             }}
-            action={`Record ${roundTime} medications`}
+            // plural-ok: `roundTime` is a clock time such as 08:00, not a count.
+            action={`Record ${roundTime} ${terms.medication.many}`}
             description={
               <ConfirmBody
                 entry={current}
@@ -304,7 +306,9 @@ export function RoundRoute() {
             if (!open) setRecorded('none')
           }}
           tone="positive"
-          title={recorded === 'none' ? '' : `${recorded}'s medications recorded`}
+          title={
+            recorded === 'none' ? '' : `${recorded}'s ${terms.medication.many} recorded`
+          }
           description="In this build it is held in memory and will be gone on reload."
         />
       </div>
@@ -472,6 +476,7 @@ function ResidentPanel({
   onPrnChanged: () => void
 }) {
   const { resident } = entry
+  const terms = useTerms()
 
   // Was `counts[counts.length - 1]?.counted ?? 0`, which reported a balance of
   // zero for every controlled drug nobody had counted — a clinical figure
@@ -507,7 +512,7 @@ function ResidentPanel({
       <div className={styles.doseHead}>
         <h2 className={styles.doseHeadTitle}>Due at {roundTime}</h2>
         <p className={styles.doseHeadCount}>
-          {entry.due.length} {entry.due.length === 1 ? 'medication' : 'medications'} ·{' '}
+          {pluralise(entry.due.length, terms.medication.one, terms.medication.many)} ·{' '}
           {queueStatus(entry) === 'Recorded'
             ? 'all recorded'
             : `${progressOf(entry).answered} of ${entry.due.length} on the record`}
@@ -564,7 +569,8 @@ function ResidentPanel({
         </p>
         {error === '' ? null : <p className={styles.required}>{error}</p>}
         <Button size="large" disabled={!ready} onClick={onSubmit}>
-          Record {roundTime} medications
+          {/* plural-ok: `roundTime` is a clock time such as 08:00, not a count. */}
+          Record {roundTime} {terms.medication.many}
         </Button>
       </div>
     </>

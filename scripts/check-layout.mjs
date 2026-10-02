@@ -80,22 +80,127 @@ function serve() {
 }
 
 /**
- * Choose "Service User" in the setup wizard, so the crawl reads a product
- * configured with a term that is not the default.
+ * Every term, set to its LEAST default option at once.
  *
- * Through the wizard rather than a back door: a query parameter or a test-only
- * global would be a way in that ships, and it would also prove less — this way
- * the control somebody actually uses is the thing under test.
+ * **All of them together rather than one at a time**, because a collision
+ * between two terms only shows when both are non-default — a sentence naming
+ * a service user and their care & support plan reads differently from either
+ * change alone, and so does a heading that has to hold both.
+ *
+ * The old word of each is what the crawl then looks for, and each term's
+ * reach is counted: a term appearing on **no** screen is a finding rather
+ * than a pass, because it means either the sweep missed it or the term has no
+ * call sites and should be deferred the way Discharge is.
+ *
+ * **`proper` is the rule that matters most in this phase, made mechanical.**
+ * A configurable word must never reach a proper noun, and the first run of
+ * this crawl proved why that has to be declared rather than reasoned about:
+ * it reported 97 findings, and most were its own `was` patterns matching the
+ * names the vocabulary is forbidden to touch. A phrase matching `proper` is
+ * removed from the text before the old word is looked for, so the exclusion
+ * is stated once, beside the term, with its reason — rather than becoming a
+ * lookbehind nobody can read. `shows` is removed the same way and for a
+ * blunter reason: **the new word often contains the old one.** "Care
+ * Assessment" contains "assessment", so a naive `was` flags the term's own
+ * successful application as a failure to apply it.
  */
-async function setSubjectTermToServiceUser(page) {
+const VOCABULARY = [
+  {
+    id: 'subject',
+    chosen: 'Person Supported',
+    shows: /people supported|person supported/i,
+    was: /\bresidents?\b/i,
+  },
+  {
+    id: 'carePlan',
+    chosen: 'Care & Support Plan',
+    shows: /care & support plans?/i,
+    was: /\bcare plans?\b/i,
+    /* The standard end-of-life document named in PRD §6.2 beside the DNAR and
+       the ADRT. Not this service's plan of care, and not its word to choose. */
+    proper: /advance care plans?/i,
+  },
+  {
+    id: 'staff',
+    chosen: 'Healthcare Professional',
+    shows: /healthcare professionals?/i,
+    was: /\bstaff\b/i,
+  },
+  {
+    id: 'manager',
+    chosen: 'Administrator',
+    shows: /administrators?/i,
+    was: /\bmanagers?\b/i,
+    /* CQC titles naming who is legally accountable for the service, and the
+       permission system keys off these roles. Renaming one would make the
+       product misstate who carries legal responsibility. */
+    proper: /registered manager|deputy manager/i,
+  },
+  {
+    id: 'admission',
+    chosen: 'Registration',
+    shows: /registrations?/i,
+    was: /\badmissions?\b/i,
+  },
+  {
+    id: 'incidentReport',
+    chosen: 'Clinical Incident',
+    shows: /clinical incidents?/i,
+    was: /\bincident reports?\b/i,
+  },
+  {
+    id: 'medication',
+    chosen: 'Medication Record',
+    shows: /medication records?/i,
+    was: /\bmedicines\b/i,
+  },
+  {
+    id: 'assessment',
+    chosen: 'Care Assessment',
+    shows: /care assessments?/i,
+    was: /\bassessments?\b/i,
+    /* Two names, not one exclusion. "Risk Assessments" is a module declared in
+       nav-items and keyed by the permission matrix and the activity log — and
+       the compound does not survive the adjective either ("Risk Clinical
+       Assessments" is not a phrase). A capacity assessment is the Mental
+       Capacity Act two-stage determination, which is a statutory test rather
+       than an assessment this service offers. */
+    proper: /risk assessments?|capacity assessments?/i,
+  },
+  {
+    id: 'family',
+    chosen: 'Next of Kin',
+    shows: /next of kin/i,
+    was: /\bfamil(y|ies)\b/i,
+    /* A separate product with its own PRD and its own UI (CLAUDE.md, Scope).
+       Its name is a name, and this product only ever refers to it. */
+    proper: /family portal/i,
+  },
+]
+
+async function setEveryTermToItsLeastDefault(page) {
   await go(page, '/settings/setup')
   const organisation = await page.$('[data-confirm-step="organisation"]')
   if (organisation) await organisation.click()
   await page.waitForSelector('[data-setup-section="vocabulary"]', { timeout: 15000 })
-  await page.click('[data-setup-section="vocabulary"] [role="combobox"]')
-  await page.click('[role="option"]:has-text("Service User")')
+
+  for (const term of VOCABULARY) {
+    const field = `[data-term-choice="${term.id}"] [role="combobox"]`
+    const control = await page.$(field)
+    if (control === null) {
+      console.error(
+        `✖ layout: the vocabulary step offers no control for "${term.id}", so the` +
+          `\n  crawl cannot set it and would check the default under its own name.`,
+      )
+      process.exit(1)
+    }
+    await control.click()
+    await page.click(`[role="option"]:has-text("${term.chosen}")`)
+    await page.waitForTimeout(120)
+  }
+
   await page.click('[data-confirm-step="vocabulary"]')
-  await page.waitForTimeout(300)
+  await page.waitForTimeout(400)
 }
 
 /** Client-side navigation, so the crawl keeps one signed-in session. */
@@ -111,9 +216,10 @@ const server = await serve()
 const browser = await chromium.launch()
 const findings = []
 let visited = 0
-/** Screens still printing the literal word, outside recorded free text. */
+/** Screens still printing an old word, outside recorded free text. */
 const staleTerm = []
-let screensShowingTerm = 0
+/** How many screens each configured term actually reached. */
+const reach = new Map()
 let weeksFit = 0
 let weeksTotal
 
@@ -228,7 +334,7 @@ try {
    * words, a plural that is not the singular plus an s, and a possessive.
    * A sentinel would have proved the plumbing and not the English.
    */
-  await setSubjectTermToServiceUser(page)
+  await setEveryTermToItsLeastDefault(page)
 
   const queue = ['/']
 
@@ -239,110 +345,139 @@ try {
     await go(page, route)
     visited += 1
 
-    const found = await page.evaluate(() => {
-      const main = document.querySelector('main')
-      const lost = []
-
-      /*
-       * The contract: content fits its own box, or says how it does not.
-       *
-       * Three ways of not fitting are legitimate and declared — a scroller, an
-       * ellipsis, a line clamp. Everything else overflows silently, and where
-       * it ends up is not something a rule can predict: the dashboard tiles
-       * kept their border boxes inside the viewport and it was `main`'s
-       * `overflow: auto` that cut "of 40 on record at Rosewood Court" nine
-       * pixels in. Chasing which ancestor does the cutting was tried and it
-       * missed that case; asking whether the content fits at all does not.
-       */
-      for (const el of main?.querySelectorAll('*') ?? []) {
-        const over = el.scrollWidth - el.clientWidth
-        if (over <= 1) continue
+    const found = await page.evaluate(
+      (terms) => {
+        const main = document.querySelector('main')
+        const lost = []
 
         /*
-         * Inside an `<svg>`, `clientWidth` is not a CSS box and the comparison
-         * is meaningless: at 2560 the chart's axis labels reported 4–10px of
-         * "overflow" while rendering complete and legible. An `<svg>` root is
-         * a replaced element that is measured normally and stays in scope.
+         * The contract: content fits its own box, or says how it does not.
+         *
+         * Three ways of not fitting are legitimate and declared — a scroller, an
+         * ellipsis, a line clamp. Everything else overflows silently, and where
+         * it ends up is not something a rule can predict: the dashboard tiles
+         * kept their border boxes inside the viewport and it was `main`'s
+         * `overflow: auto` that cut "of 40 on record at Rosewood Court" nine
+         * pixels in. Chasing which ancestor does the cutting was tried and it
+         * missed that case; asking whether the content fits at all does not.
          */
-        if (el.ownerSVGElement) continue
+        for (const el of main?.querySelectorAll('*') ?? []) {
+          const over = el.scrollWidth - el.clientWidth
+          if (over <= 1) continue
 
-        const style = getComputedStyle(el)
-        if (/auto|scroll/.test(style.overflowX)) continue // reachable
-        if (style.textOverflow === 'ellipsis') continue // truncation you can see
-        if (style.webkitLineClamp && style.webkitLineClamp !== 'none') continue
-        // Deliberately clipped, and deliberately unreadable: the whole point.
-        if (style.position === 'absolute' && el.clientWidth <= 1) continue
-        // The deepest box only. An overflowing parent is the symptom of this.
-        if ([...el.children].some((c) => c.scrollWidth - c.clientWidth > 1)) continue
+          /*
+           * Inside an `<svg>`, `clientWidth` is not a CSS box and the comparison
+           * is meaningless: at 2560 the chart's axis labels reported 4–10px of
+           * "overflow" while rendering complete and legible. An `<svg>` root is
+           * a replaced element that is measured normally and stays in scope.
+           */
+          if (el.ownerSVGElement) continue
 
-        lost.push({
-          why: `overflows its own box by ${over}px, with nothing declared to handle it`,
-          label: `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 30)}`,
-          text: (el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 52),
-        })
-      }
+          const style = getComputedStyle(el)
+          if (/auto|scroll/.test(style.overflowX)) continue // reachable
+          if (style.textOverflow === 'ellipsis') continue // truncation you can see
+          if (style.webkitLineClamp && style.webkitLineClamp !== 'none') continue
+          // Deliberately clipped, and deliberately unreadable: the whole point.
+          if (style.position === 'absolute' && el.clientWidth <= 1) continue
+          // The deepest box only. An overflowing parent is the symptom of this.
+          if ([...el.children].some((c) => c.scrollWidth - c.clientWidth > 1)) continue
 
-      // And the page itself never scrolls sideways at the supported minimum.
-      const de = document.documentElement
-      if (de.scrollWidth > de.clientWidth + 1) {
-        lost.push({
-          why: `the page scrolls sideways by ${de.scrollWidth - de.clientWidth}px`,
-          label: 'the document',
-          text: '',
-        })
-      }
+          lost.push({
+            why: `overflows its own box by ${over}px, with nothing declared to handle it`,
+            label: `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 30)}`,
+            text: (el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 52),
+          })
+        }
 
-      const links = [...(main?.querySelectorAll('a[href^="/"]') ?? [])]
-        .concat([...document.querySelectorAll('nav a[href^="/"]')])
-        .map((a) => a.getAttribute('href'))
-        .filter((h) => h && !h.startsWith('//'))
+        // And the page itself never scrolls sideways at the supported minimum.
+        const de = document.documentElement
+        if (de.scrollWidth > de.clientWidth + 1) {
+          lost.push({
+            why: `the page scrolls sideways by ${de.scrollWidth - de.clientWidth}px`,
+            label: 'the document',
+            text: '',
+          })
+        }
 
-      /*
-       * **The old word, anywhere a person can read it.**
-       *
-       * Recorded free text is excluded by `data-recorded-text`, because a care
-       * note that says "the resident was unsettled" is its author's words and
-       * goes on saying them — labels change, what somebody typed does not.
-       * Anything NOT carrying that marker is chrome, and chrome must ask the
-       * owner.
-       */
-      const stale = []
-      const walker = document.createTreeWalker(
-        main ?? document.body,
-        NodeFilter.SHOW_TEXT,
-      )
-      let node = walker.nextNode()
-      while (node) {
-        const text = (node.textContent ?? '').trim()
-        if (/\bresidents?\b/i.test(text)) {
+        const links = [...(main?.querySelectorAll('a[href^="/"]') ?? [])]
+          .concat([...document.querySelectorAll('nav a[href^="/"]')])
+          .map((a) => a.getAttribute('href'))
+          .filter((h) => h && !h.startsWith('//'))
+
+        /*
+         * **The old word, anywhere a person can read it.**
+         *
+         * Two markers are excluded, and they are **not** the same exemption.
+         * `data-recorded-text` is somebody's own words — a care note saying "the
+         * resident was unsettled" goes on saying them, because labels change and
+         * what somebody typed does not. `data-published-wording` is a validated
+         * instrument's question: the Morse Fall Scale's "A fall on this
+         * admission" belongs to the scale, and varying it would be varying the
+         * instrument rather than this service's vocabulary. Calling the second
+         * one recorded text would be a marker claiming more than it covers.
+         * Anything carrying neither is chrome, and chrome must ask the owner.
+         */
+        const stale = []
+        const seenTerms = []
+        const walker = document.createTreeWalker(
+          main ?? document.body,
+          NodeFilter.SHOW_TEXT,
+        )
+        const texts = []
+        let node = walker.nextNode()
+        while (node) {
           const el = node.parentElement
-          const recorded =
-            el?.closest('[data-recorded-text]') !== null &&
-            el?.closest('[data-recorded-text]') !== undefined
-          if (!recorded) {
-            stale.push({
+          if (el?.closest('[data-recorded-text], [data-published-wording]') == null) {
+            texts.push({
+              text: (node.textContent ?? '').trim(),
               label: `${el?.tagName.toLowerCase() ?? '?'}.${String(el?.className ?? '').slice(0, 24)}`,
-              text: text.replace(/\s+/g, ' ').slice(0, 72),
             })
           }
+          node = walker.nextNode()
         }
-        node = walker.nextNode()
-      }
 
-      // And the configured term is actually reaching the screen.
-      const sawTerm = /service users?/i.test(main?.textContent ?? '')
+        for (const term of terms) {
+          const was = new RegExp(term.was, 'i')
+          const shows = new RegExp(term.shows, 'i')
+          /*
+           * Removed before the old word is looked for, never after: the new word
+           * usually contains the old one, and a proper noun always does. What is
+           * left is prose that could have asked the owner and did not.
+           */
+          const notOurs = [new RegExp(term.shows, 'gi')]
+          if (term.proper !== null) notOurs.push(new RegExp(term.proper, 'gi'))
+          for (const entry of texts) {
+            let rest = entry.text
+            for (const pattern of notOurs) rest = rest.replace(pattern, ' ')
+            if (was.test(rest)) {
+              stale.push({
+                term: term.id,
+                label: entry.label,
+                text: entry.text.replace(/\s+/g, ' ').slice(0, 72),
+              })
+            }
+          }
+          if (texts.some((entry) => shows.test(entry.text))) seenTerms.push(term.id)
+        }
 
-      return {
-        lost: lost.slice(0, 4),
-        links: [...new Set(links)],
-        stale: stale.slice(0, 4),
-        sawTerm,
-      }
-    })
+        return {
+          lost: lost.slice(0, 4),
+          links: [...new Set(links)],
+          stale: stale.slice(0, 6),
+          seenTerms,
+        }
+      },
+      VOCABULARY.map((t) => ({
+        id: t.id,
+        was: t.was.source,
+        shows: t.shows.source,
+        proper: t.proper?.source ?? null,
+      })),
+    )
 
     for (const l of found.lost) findings.push({ route, ...l })
     for (const t of found.stale) staleTerm.push({ route, ...t })
-    if (found.sawTerm) screensShowingTerm += 1
+    for (const id of found.seenTerms) reach.set(id, (reach.get(id) ?? 0) + 1)
     for (const link of found.links) if (!seen.has(link)) queue.push(link)
   }
 
@@ -602,17 +737,43 @@ if (visited < MIN_SCREENS) {
 
 if (staleTerm.length > 0) {
   console.error(
-    `✖ layout: ${staleTerm.length} place(s) still print the word "resident" with the` +
-      `\n  organisation configured to say Service User:\n`,
+    `✖ terminology: ${staleTerm.length} place(s) still print a default word with` +
+      `\n  every term configured to something else:\n`,
   )
-  for (const f of staleTerm) {
-    console.error(`  ${f.route}`)
+  for (const f of staleTerm.slice(0, 40)) {
+    console.error(`  ${f.route}  [${f.term}]`)
     console.error(`    ${f.label}  "${f.text}"\n`)
   }
   console.error(
-    `  A label asks the owner — useTerm() in a component, or a Term parameter` +
-      `\n  threaded into a module that has no component. Recorded free text is` +
-      `\n  exempt and is excluded by data-recorded-text on the element holding it.\n`,
+    `  A label asks the owner — useTerms() in a component, or a Term threaded` +
+      `\n  into a module that has no component. Two things are exempt and each has` +
+      `\n  its own marker on the element holding it: data-recorded-text for` +
+      `\n  somebody's own words, data-published-wording for a validated` +
+      `\n  instrument's question. A proper noun is not marked in the DOM at all —` +
+      `\n  it is declared as "proper" beside its term in this file, with the reason.\n`,
+  )
+  process.exit(1)
+}
+
+/*
+ * **A term reaching nothing is a finding, not a pass.** It means either the
+ * sweep missed that term or it has no call sites at all — in which case it is
+ * a dead control and belongs with Discharge, deferred until the feature it
+ * names exists. Either way it is not something to find out later.
+ */
+const unreached = VOCABULARY.filter((term) => (reach.get(term.id) ?? 0) === 0)
+if (unreached.length > 0) {
+  console.error(
+    `✖ terminology: ${unreached.length} configured term(s) appear on no screen at` +
+      `\n  all, so nothing proves they are wired up:\n`,
+  )
+  for (const term of unreached) {
+    console.error(`  ${term.id} — set to "${term.chosen}" and never rendered`)
+  }
+  console.error(
+    `\n  Either the sweep missed it, or it has no call sites and is a control that` +
+      `\n  changes nothing — which is the reason Discharge is deferred rather than` +
+      `\n  shipped. DEFERRED_TERMS in vocabulary.ts records that decision.\n`,
   )
   process.exit(1)
 }
@@ -655,8 +816,16 @@ console.log(
  * marker put on a LABEL by mistake would hide one. That is the limit.
  */
 console.log(
-  `✓ terminology — crawled as Service User across ${visited} screens; the word` +
-    ` "resident" appears nowhere outside recorded free text, and the configured` +
-    ` term reaches ${screensShowingTerm} of them. Free text is exempt by` +
-    ` data-recorded-text; a marker on a label would hide a finding.\n`,
+  `✓ terminology — ${VOCABULARY.length} terms, each set to its least default, across` +
+    ` ${visited} screens. No default word survives outside the three exemptions:` +
+    ` recorded free text, published instrument wording, and ` +
+    `${String(VOCABULARY.filter((t) => t.proper !== undefined).length)} declared proper nouns.`,
+)
+console.log(
+  `  reach: ` +
+    VOCABULARY.map((t) => `${t.id} ${String(reach.get(t.id) ?? 0)}`).join(' · '),
+)
+console.log(
+  `  Free text is exempt by data-recorded-text; a marker on a label would hide a` +
+    ` finding. Discharge is deferred and not crawled: no feature names it.\n`,
 )

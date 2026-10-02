@@ -2,7 +2,7 @@ import type { CareNoteId, ResidentId } from '@/data/types'
 import { Button } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
 import { useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import {
   currentDisclosure,
@@ -46,6 +46,7 @@ export function ShareWithFamily({
   const format = useSiteFormat()
   const viewer = useViewer()
   const term = useTerm()
+  const terms = useTerms()
 
   if (!viewer.canApproveIn('/care-notes')) return null
 
@@ -68,7 +69,7 @@ export function ShareWithFamily({
     <div className={styles.share} data-share-note={noteId}>
       <p className={styles.shareState} data-shared={shared ? 'yes' : 'no'}>
         {current === undefined
-          ? 'Not shared with the family. Nobody has decided either way.'
+          ? `Not shared with the ${terms.family.one}. Nobody has decided either way.`
           : shared
             ? `Shared by ${current.by.displayName} · `
             : `Sharing stopped by ${current.by.displayName} · `}
@@ -108,7 +109,9 @@ export function ShareWithFamily({
           onChanged()
         }}
       >
-        {shared ? 'Stop sharing with the family' : 'Share with the family'}
+        {shared
+          ? `Stop sharing with the ${terms.family.one}`
+          : `Share with the ${terms.family.one}`}
       </Button>
     </div>
   )

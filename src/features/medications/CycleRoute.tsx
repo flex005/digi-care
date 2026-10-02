@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerms } from '@/app/session/use-term'
 import { ReadOnlyHere } from '@/components/status'
 import { Button, Card, Dialog } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
@@ -36,6 +37,7 @@ import styles from './cycle.module.css'
 export function CycleRoute() {
   const { activeSite, currentUser } = useSession()
   const viewer = useViewer()
+  const terms = useTerms()
   /*
    * The cycle itself reads as a record — what the pharmacy sent, what is
    * missing, who accepted what — and stays readable. Accepting a row,
@@ -272,7 +274,7 @@ export function CycleRoute() {
         onOpenChange={(next) => (next ? undefined : closeDialog())}
         title={
           asking?.kind === 'stop'
-            ? 'Stop this medication here?'
+            ? `Stop this ${terms.medication.one} here?`
             : 'What are you asking the pharmacy?'
         }
         description={

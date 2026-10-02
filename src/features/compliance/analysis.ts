@@ -6,6 +6,7 @@ import {
 } from '@/features/dashboard/populations'
 import type { ComplianceData } from './data'
 import type { Panel } from './key-questions'
+import type { Term } from '@/lib/vocabulary'
 
 /**
  * The figures the analytical layout leads on. Phase 12, restyled.
@@ -138,7 +139,7 @@ export interface EvidenceBar {
   expected: number
 }
 
-export function evidenceBars(data: ComplianceData): EvidenceBar[] {
+export function evidenceBars(data: ComplianceData, carePlan: Term): EvidenceBar[] {
   /*
    * Counted by the shared owner, because the Dashboard's module bars ask the
    * same three questions and a second copy of the arithmetic is a second rule.
@@ -159,6 +160,8 @@ export function evidenceBars(data: ComplianceData): EvidenceBar[] {
     {
       id: 'safe',
       label: 'Safe',
+      /* The document name, not the configurable term — see
+         nav-items.icons.ts for why no form composes behind "Risk". */
       population: 'risk assessments',
       missingPhrase: 'risk assessments never done',
       recorded: assessments.recorded,
@@ -167,8 +170,8 @@ export function evidenceBars(data: ComplianceData): EvidenceBar[] {
     {
       id: 'effective',
       label: 'Effective',
-      population: 'care plan domains finalised',
-      missingPhrase: 'care plan domains never finalised',
+      population: `${carePlan.one} domains finalised`,
+      missingPhrase: `${carePlan.one} domains never finalised`,
       recorded: domains.recorded,
       expected: domains.expected,
     },

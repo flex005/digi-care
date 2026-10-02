@@ -9,6 +9,7 @@ import type {
 import { COMMUNAL_AREAS, INCIDENT_SEVERITIES, INCIDENT_TYPES } from '@/data/types'
 import { regionLabel } from '@/assets/body-map/regions'
 import { pluralise } from '@/lib/format'
+import type { Vocabulary } from '@/lib/vocabulary'
 import { flagName } from './decisions'
 
 /**
@@ -98,9 +99,15 @@ function urgencyLines(urgency: IncidentUrgency, format: PdfFormat): string[] {
 
 export function incidentPdfContent(
   incident: Incident,
-  about: { residentName: string; siteName: string; format: PdfFormat },
+  about: {
+    residentName: string
+    siteName: string
+    format: PdfFormat
+    /** The words this organisation uses, asked for a form rather than derived. */
+    terms: Vocabulary
+  },
 ): IncidentPdfContent {
-  const { format } = about
+  const { format, terms } = about
   const sections: PdfSection[] = []
 
   sections.push({
@@ -169,7 +176,7 @@ export function incidentPdfContent(
   })
 
   sections.push({
-    heading: 'Manager review',
+    heading: `${terms.manager.One} review`,
     lines:
       incident.review.rootCause.kind === 'unrecorded' &&
       incident.review.actionsTaken.kind === 'unrecorded' &&
@@ -200,14 +207,14 @@ export function incidentPdfContent(
   })
 
   sections.push({
-    heading: 'Telling the family',
+    heading: `Telling the ${terms.family.one}`,
     lines: [
       incident.familyTold.kind === 'not_decided'
-        ? 'Nobody has decided whether to tell the family.'
+        ? `Nobody has decided whether to tell the ${terms.family.one}.`
         : incident.familyTold.kind === 'should_be_told'
           ? `They should be told. Decided by ${incident.familyTold.decided.by.displayName}, ${format.dateTime(incident.familyTold.decided.at)}.`
           : `They are not to be told: ${incident.familyTold.reason} Decided by ${incident.familyTold.decided.by.displayName}.`,
-      'This system cannot contact a family member. Telling them is a telephone call somebody makes.',
+      `This system cannot contact the ${terms.family.one}. Telling them is a telephone call somebody makes.`,
     ],
   })
 

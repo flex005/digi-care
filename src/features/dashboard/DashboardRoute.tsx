@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import type { IsoDateTime } from '@/data/types'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
+import type { Term } from '@/lib/vocabulary'
 import { PendingInvitations } from './PendingInvitations'
 import { Card, SelectedMark } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
@@ -51,6 +52,7 @@ export function DashboardRoute() {
   const { activeSite } = useSession()
   const format = useSiteFormat()
   const term = useTerm()
+  const terms = useTerms()
   const [today, setToday] = useState<Today | 'loading'>('loading')
 
   useEffect(() => {
@@ -90,7 +92,7 @@ export function DashboardRoute() {
     },
     acknowledged: today.incidentsTotal - today.unacknowledged.length,
     incidentsTotal: today.incidentsTotal,
-    term,
+    terms,
   })
 
   return (
@@ -275,7 +277,7 @@ export function DashboardRoute() {
           </div>
           {rounds.length === 0 ? (
             <p className={styles.calmEmpty} data-empty="rounds">
-              No medication is scheduled today.
+              No {terms.medication.one} is scheduled today.
             </p>
           ) : (
             <ul className={styles.roundRows}>
@@ -338,9 +340,18 @@ export function DashboardRoute() {
 /** How many late things fit on a page before the list stops being readable. */
 const PAGE_SIZE = 8
 
-const LATE_FILTERS: { id: LateKind | 'all'; label: string; claim: string }[] = [
+/**
+ * The pills over the late list.
+ *
+ * A function rather than a constant because one of the four names a module
+ * whose word the organisation chooses, and module level has no hook to call —
+ * the same shape `NOT_GIVEN_REASONS` and `PlanField.label` use.
+ */
+const lateFilters = (
+  medication: Term,
+): { id: LateKind | 'all'; label: string; claim: string }[] => [
   { id: 'all', label: 'Everything late', claim: 'things past their time' },
-  { id: 'dose', label: 'Medication', claim: 'doses with no record' },
+  { id: 'dose', label: medication.Many, claim: 'doses with no record' },
   { id: 'review', label: 'Reviews', claim: 'reviews past their date' },
   { id: 'handover', label: 'Handovers', claim: 'handovers left unsigned' },
 ]
@@ -363,6 +374,8 @@ const LATE_FILTERS: { id: LateKind | 'all'; label: string; claim: string }[] = [
  * who sees eight rows and no total has been told the home has eight problems.
  */
 function LateList({ items }: { items: LateItem[] }) {
+  const terms = useTerms()
+  const LATE_FILTERS = lateFilters(terms.medication)
   const [filter, setFilter] = useState<LateKind | 'all'>('all')
   const [page, setPage] = useState(0)
 
@@ -537,6 +550,7 @@ function LateRow({ item }: { item: LateItem }) {
 
 function UnwrittenRow({ entry }: { entry: UnwrittenResident }) {
   const format = useSiteFormat()
+  const terms = useTerms()
   const { resident, last } = entry
 
   return (
@@ -547,7 +561,7 @@ function UnwrittenRow({ entry }: { entry: UnwrittenResident }) {
         </span>
         <span className={styles.whenDetail}>
           {last.kind === 'never'
-            ? 'since admission'
+            ? `since ${terms.admission.one}`
             : `last ${format.instantDate(last.note.recordedAt)}`}
         </span>
       </div>
@@ -660,13 +674,15 @@ function ModuleBarRow({ bar }: { bar: ModuleBar }) {
 }
 
 function RoundRow({ round }: { round: RoundToday }) {
+  const terms = useTerms()
+
   return (
     <div className={styles.roundRow} data-round={round.at}>
       <RoundRing round={round} />
       <div>
         <p className={styles.roundName}>{round.at}</p>
         <p className={styles.roundNote} data-round-state>
-          {roundState(round)}
+          {roundState(round, terms.staff)}
         </p>
       </div>
       <p className={styles.roundFigure}>
@@ -689,17 +705,17 @@ function RoundRow({ round }: { round: RoundToday }) {
  * the one thing neither of them gets is a reassurance: a round nobody has
  * reached has not been succeeded at.
  */
-function roundState(round: RoundToday): string {
+function roundState(round: RoundToday, staff: Term): string {
   if (round.notDueYet === round.expected) return 'not due yet'
   if (round.dueNow > 0)
     return `due now · ${pluralise(round.dueNow, 'dose')} in its window`
   if (round.noRecord > 0) {
-    return `${pluralise(round.noRecord, 'dose')} with no record · ${signedBy(round)}`
+    return `${pluralise(round.noRecord, 'dose')} with no record · ${signedBy(round, staff)}`
   }
   if (round.notDueYet > 0) {
-    return `${pluralise(round.notDueYet, 'dose')} still to come · ${signedBy(round)}`
+    return `${pluralise(round.notDueYet, 'dose')} still to come · ${signedBy(round, staff)}`
   }
-  return `all recorded · ${signedBy(round)}`
+  return `all recorded · ${signedBy(round, staff)}`
 }
 
 /**
@@ -709,10 +725,10 @@ function roundState(round: RoundToday): string {
  * home is most of the shift. One name would say a single person did it, so
  * past one the row states the count instead.
  */
-function signedBy(round: RoundToday): string {
+function signedBy(round: RoundToday, staff: Term): string {
   if (round.by.length === 0) return 'nobody has recorded any of it'
   if (round.by.length === 1) return round.by[0]!
-  return `${pluralise(round.by.length, 'member')} of staff`
+  return pluralise(round.by.length, staff.one, staff.many)
 }
 
 /** What the overdue figure is made of, so the tile is not a bare number. */

@@ -15,7 +15,7 @@ import {
 import { StatusPill, Unrecorded, NotYourHome } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatCount, formatLateness, pluralise } from '@/lib/format'
 import { PlaceholderBanner } from './PlaceholderBanner'
@@ -98,6 +98,9 @@ export function RiskQueueRoute() {
   return (
     <SiteTimeZone timeZone={activeSite.timeZone}>
       <div className={styles.page}>
+        {/* "Risk assessments" keeps its words: no form of the configurable
+            term composes behind the qualifier, and dropping the qualifier would
+            read as every assessment in the product. See nav-items.icons.ts. */}
         <h1 className={styles.pageTitle}>Risk assessments</h1>
 
         {/*
@@ -157,6 +160,7 @@ function Found({
 }) {
   const format = useSiteFormat()
   const term = useTerm()
+  const terms = useTerms()
 
   /*
    * Every resident against every template, from the constant.
@@ -249,8 +253,11 @@ function Found({
                 {pluralise(residents.length, term.one, term.many)}
               </span>{' '}
               and <span data-numeric>{RISK_ASSESSMENT_TEMPLATES.length}</span> templates
-              at {siteName}, <span data-numeric>{formatCount(all.length)}</span>{' '}
-              assessments the home is expected to hold. Never assessed is not low risk.
+              at {siteName},{' '}
+              <span data-numeric>
+                {pluralise(all.length, terms.assessment.one, terms.assessment.many)}
+              </span>{' '}
+              the home is expected to hold. Never assessed is not low risk.
             </span>
           </span>
         </div>
@@ -265,8 +272,10 @@ function Found({
             <span className={styles.findingTitle}>past their review date</span>
             <span className={styles.findingDetail}>
               Assessed once and not since. Of{' '}
-              <span data-numeric>{formatCount(all.length)}</span> expected assessments
-              at {siteName}.
+              <span data-numeric>
+                {pluralise(all.length, terms.assessment.one, terms.assessment.many)}
+              </span>{' '}
+              expected at {siteName}.
               {customOverdue.length === 0 ? null : (
                 <span data-custom-overdue>
                   {' '}
@@ -396,7 +405,7 @@ function Found({
                 </li>
               ))}
             </ul>
-            <Pager paged={paged} total={visible.length} noun="assessments" />
+            <Pager paged={paged} total={visible.length} noun={terms.assessment.many} />
           </>
         )}
       </Card>

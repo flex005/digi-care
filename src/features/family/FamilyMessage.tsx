@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Incident } from '@/data/types'
 import { Button } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { ReadOnlyHere } from '@/components/status'
 import { useSiteFormat } from '@/app/session/use-session'
@@ -46,6 +46,7 @@ export function FamilyMessage({
   const viewer = useViewer()
   const format = useSiteFormat()
   const term = useTerm()
+  const terms = useTerms()
   const [message, setMessage] = useState('')
 
   /*
@@ -77,7 +78,7 @@ export function FamilyMessage({
     return (
       <ReadOnlyHere
         roleName={viewer.roleName}
-        subject="what has been shared with the family"
+        subject={`what has been shared with the ${terms.family.one}`}
         act="share an update or withdraw one"
       />
     )
@@ -85,12 +86,12 @@ export function FamilyMessage({
 
   return (
     <section className={styles.share} data-family-message={incident.id}>
-      <p className={styles.shareState}>Telling the family</p>
+      <p className={styles.shareState}>Telling the {terms.family.one}</p>
 
       {named.length === 0 ? (
         <p className={styles.noFamily} data-no-family-named>
-          Nobody is named to see this {term.ones} updates; if the family need to know,
-          telephone them.
+          Nobody is named to see this {term.ones} updates; if the {terms.family.one}{' '}
+          needs to know, telephone them.
         </p>
       ) : current !== undefined ? (
         <>
@@ -126,7 +127,7 @@ export function FamilyMessage({
         <>
           <label className={styles.field}>
             <span className={styles.fieldLabel}>
-              In plain language, for the family to read
+              In plain language, for the {terms.family.one} to read
             </span>
             <textarea
               rows={3}
@@ -135,8 +136,8 @@ export function FamilyMessage({
               data-field="family-message"
             />
             <span className={styles.levelMeans}>
-              They see this and never the incident record, so say what happened and how
-              their relative is.
+              They see this and never the {terms.incidentReport.one}, so say what
+              happened and how their relative is.
             </span>
           </label>
 

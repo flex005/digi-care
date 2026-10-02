@@ -13,7 +13,12 @@ import { ConsentTab } from './ConsentTab'
 import { CapacityGateRoute } from './CapacityGateRoute'
 import { WithdrawalRoute } from './WithdrawalRoute'
 import { ConsentDashboardRoute } from './ConsentDashboardRoute'
-import { CONSENT_MEANS } from './consent-meaning'
+import { consentMeans } from './consent-meaning'
+import { vocabularyFor } from '@/lib/vocabulary'
+
+// The explanations are written with the vocabulary in force, so the guard asks
+// for the defaults rather than restating any word.
+const CONSENT_MEANS = consentMeans(vocabularyFor('care_home', {}))
 
 /**
  * Consent. PRD §6.7, Phase 10.

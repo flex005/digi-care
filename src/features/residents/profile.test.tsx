@@ -10,6 +10,10 @@ import { BadgeStrip } from './BadgeStrip'
 import { BADGE_STRIP_SOURCES } from './badge-strip-sources'
 import { pluralise } from '@/lib/format'
 import { MEDICATION_LOOKAHEAD_HOURS } from '@/lib/shift'
+import { vocabularyFor } from '@/lib/vocabulary'
+
+/** The default terms, so a change to a configured word cannot move this. */
+const TERMS = vocabularyFor('care_home', {})
 
 /**
  * The profile header. PRD §2.4, §6.2, §16.3.
@@ -141,7 +145,7 @@ describe('the subject header', () => {
     // Derived from the constant, not retyped: an assertion that has to be
     // edited when a figure moves is measuring the figure, not the rule.
     const panel = await screen.findByLabelText(
-      `Medication due in the next ${pluralise(MEDICATION_LOOKAHEAD_HOURS, 'hour')}`,
+      `${TERMS.medication.Many} due in the next ${pluralise(MEDICATION_LOOKAHEAD_HOURS, 'hour')}`,
     )
     expect(panel.textContent?.trim()).not.toBe('')
   })

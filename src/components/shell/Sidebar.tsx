@@ -1,8 +1,8 @@
 import { NavLink, useMatch } from 'react-router-dom'
-import { useTerm } from '@/app/session/use-term'
+import { useTerms } from '@/app/session/use-term'
 import { Icon } from '@/components/icon/Icon'
 import { Tooltip } from '@/components/primitives'
-import { navItems, navSections, shellIcons } from '@/app/nav-items.icons'
+import { navItems, navLabel, navSections, shellIcons } from '@/app/nav-items.icons'
 import { useViewer } from '@/app/session/use-viewer'
 import { Logo } from '@/components/brand/Logo'
 import type { NavItem } from '@/app/nav-items.icons'
@@ -79,9 +79,10 @@ function SidebarItem({
    * stayed lit on every screen. A nav item is active when you are looking at
    * it, and only then.
    */
-  /* The item declares the form; the owner supplies the word. */
-  const term = useTerm()
-  const label = item.subject === undefined ? item.label : term[item.subject]
+  /* The item declares the form; the owner supplies the word, and `navLabel`
+     owns the choice between a fixed label and a configured one. */
+  const terms = useTerms()
+  const label = navLabel(item, terms)
   const match = useMatch({ path: item.path, end: item.path === '/' })
   const isActive = item.enabled && match !== null
   const name = itemAccessibleName(item, count, label)

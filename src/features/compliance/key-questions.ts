@@ -19,7 +19,7 @@ import { expiryFinding, type ExpiryFinding } from '@/features/documents/expiry'
 import { brokenReferences } from '@/features/documents/library'
 import { OMISSION_WINDOW_DAYS, type ComplianceData } from './data'
 import { reading, verdictFor } from './rating'
-import type { Term } from '@/lib/vocabulary'
+import type { Term, Vocabulary } from '@/lib/vocabulary'
 
 /**
  * What each Key Question is made of. PRD §6.7, Phase 12.
@@ -127,7 +127,11 @@ function contactsOf(resident: Resident) {
  * Evidence. That is the correct answer rather than a defect: one document
  * cannot support a rate, and the row still says whether it is there.
  */
-function siteDocumentCheck(data: ComplianceData, title: string): CheckReading {
+function siteDocumentCheck(
+  data: ComplianceData,
+  title: string,
+  assessment: Term,
+): CheckReading {
   const record = data.documents.find(
     (candidate) => candidate.owner.kind === 'site' && candidate.title === title,
   )
@@ -140,7 +144,7 @@ function siteDocumentCheck(data: ComplianceData, title: string): CheckReading {
       : 'No document is on file at this site.',
     missing:
       'One document at one site cannot support a rate; the row says whether it is there.',
-    caveat: 'Evidenced by a document existing, not by an assessment record.',
+    caveat: `Evidenced by a document existing, not by ${assessment.one} records.`,
   })
 }
 
@@ -164,13 +168,14 @@ function describeExpiry(finding: ExpiryFinding | undefined): string {
 // Safe
 // ---------------------------------------------------------------------------
 
-function safe(term: Term): Check[] {
+function safe(terms: Vocabulary): Check[] {
+  const term = terms.subject
   return [
     {
       kind: 'derived',
       id: 'doses-recorded',
       name: 'Doses with a record against them',
-      from: `Medications · last ${pluralise(OMISSION_WINDOW_DAYS, 'day')}`,
+      from: `${terms.medication.Many} · last ${pluralise(OMISSION_WINDOW_DAYS, 'day')}`,
       run: (data) => {
         const missed = data.omissions.length
         const due = data.dosesDue
@@ -184,6 +189,13 @@ function safe(term: Term): Check[] {
     {
       kind: 'derived',
       id: 'risks-assessed',
+      /*
+       * **The three "Risk assessment" names below keep their words.** No form
+       * of the configurable term composes behind the qualifier, and dropping it
+       * would read as every assessment here — including the capacity assessment
+       * behind a consent, which is a different statutory thing. The term does
+       * reach the sentences inside these checks.
+       */
       name: 'Risk assessments completed',
       from: `Risk assessments · ${RISK_ASSESSMENT_TEMPLATES.length} templates, every ${term.one}`,
       run: (data) => {
@@ -205,7 +217,7 @@ function safe(term: Term): Check[] {
       kind: 'derived',
       id: 'reviews-in-date',
       name: 'Risk assessments re-scored on time',
-      from: 'Reviews · every assessment with a review date',
+      from: `Reviews · every ${terms.assessment.one} with a review date`,
       run: (data) => {
         const items = data.reviews.items.filter(
           (item) => item.kind === 'risk_assessment',
@@ -214,14 +226,14 @@ function safe(term: Term): Check[] {
         return reading({
           coverage: count(items.length - overdue, items.length),
           detail: `${n(overdue)} of ${n(items.length)} past their review date`,
-          missing: 'Too few assessments carry a review date to support a rate.',
+          missing: `Too few ${terms.assessment.many} carry a review date to support a rate.`,
         })
       },
     },
     {
       kind: 'derived',
       id: 'incidents-acknowledged',
-      name: 'Incidents acknowledged by a manager',
+      name: `Incidents acknowledged by ${terms.manager.many}`,
       from: 'Incidents · every incident at this site',
       run: (data) => {
         const waiting = data.incidents.filter(
@@ -256,7 +268,7 @@ function safe(term: Term): Check[] {
       kind: 'derived',
       id: 'cd-balances',
       name: 'Controlled drug counts reconcile',
-      from: 'Medications · controlled drug register',
+      from: `${terms.medication.Many} · controlled drug register`,
       run: (data) => {
         const routine = data.stockCounts.filter(
           (stock) => stock.entry.kind === 'routine',
@@ -275,8 +287,8 @@ function safe(term: Term): Check[] {
     {
       kind: 'derived',
       id: 'prn-maximums',
-      name: 'PRN medicines with a 24-hour maximum recorded',
-      from: 'Medications · every PRN prescription',
+      name: `PRN ${terms.medication.many} with a 24-hour maximum recorded`,
+      from: `${terms.medication.Many} · every PRN prescription`,
       run: (data) => {
         const prn = data.residents
           .flatMap((resident) => medicationsOf(resident.id))
@@ -296,20 +308,21 @@ function safe(term: Term): Check[] {
       id: 'fire-risk-assessment',
       name: 'Fire risk assessment',
       from: 'Documents · site level',
-      run: (data) => siteDocumentCheck(data, 'Fire risk assessment'),
+      run: (data) => siteDocumentCheck(data, 'Fire risk assessment', terms.assessment),
     },
     {
       kind: 'derived',
       id: 'legionella-risk-assessment',
       name: 'Legionella risk assessment',
       from: 'Documents · site level',
-      run: (data) => siteDocumentCheck(data, 'Legionella risk assessment'),
+      run: (data) =>
+        siteDocumentCheck(data, 'Legionella risk assessment', terms.assessment),
     },
     {
       kind: 'not_held',
       id: 'staff-training',
-      name: 'Staff training and competency',
-      statement: 'Staff training is not recorded in diGi-Care.',
+      name: `Training and competency for ${terms.staff.many}`,
+      statement: `Training for ${terms.staff.many} is not recorded in diGi-Care.`,
     },
   ]
 }
@@ -318,13 +331,14 @@ function safe(term: Term): Check[] {
 // Effective
 // ---------------------------------------------------------------------------
 
-function effective(term: Term): Check[] {
+function effective(terms: Vocabulary): Check[] {
+  const term = terms.subject
   return [
     {
       kind: 'derived',
       id: 'care-plans-written',
-      name: 'Care plan domains ever written',
-      from: `Care planning · ${CARE_PLAN_DOMAINS.length} domains, every ${term.one}`,
+      name: `${terms.carePlan.One} domains ever written`,
+      from: `${terms.carePlan.Many} · ${CARE_PLAN_DOMAINS.length} domains, every ${term.one}`,
       run: (data) => {
         const total = domainTotal(data)
         let finalised = 0
@@ -343,7 +357,7 @@ function effective(term: Term): Check[] {
     {
       kind: 'derived',
       id: 'care-plan-reviews',
-      name: 'Care plan domains reviewed on time',
+      name: `${terms.carePlan.One} domains reviewed on time`,
       from: 'Reviews · every domain with a review date',
       run: (data) => {
         const items = data.reviews.items.filter(
@@ -360,7 +374,7 @@ function effective(term: Term): Check[] {
     {
       kind: 'derived',
       id: 'whole-plan-reviews',
-      name: 'Whole care plans reviewed on time',
+      name: `Whole ${terms.carePlan.many} reviewed on time`,
       from: `Reviews · one review per ${term.one}`,
       run: (data) => {
         const items = data.reviews.items.filter(
@@ -428,7 +442,7 @@ function effective(term: Term): Check[] {
     {
       kind: 'not_held',
       id: 'staff-supervision',
-      name: 'Staff supervision and appraisal',
+      name: `Supervision and appraisal for ${terms.staff.many}`,
       statement: 'Supervision and appraisal are not recorded in diGi-Care.',
     },
     {
@@ -444,7 +458,8 @@ function effective(term: Term): Check[] {
 // Caring
 // ---------------------------------------------------------------------------
 
-function caring(term: Term): Check[] {
+function caring(terms: Vocabulary): Check[] {
+  const term = terms.subject
   return [
     {
       kind: 'derived',
@@ -549,7 +564,7 @@ function caring(term: Term): Check[] {
     {
       kind: 'not_held',
       id: 'resident-surveys',
-      name: `${term.One} and family surveys`,
+      name: `${term.One} and ${terms.family.one} surveys`,
       statement: 'Surveys are not recorded in diGi-Care.',
     },
   ]
@@ -559,7 +574,8 @@ function caring(term: Term): Check[] {
 // Responsive
 // ---------------------------------------------------------------------------
 
-function responsive(term: Term): Check[] {
+function responsive(terms: Vocabulary): Check[] {
+  const term = terms.subject
   return [
     {
       kind: 'derived',
@@ -799,31 +815,31 @@ function wellLed(): Check[] {
   ]
 }
 
-export function keyQuestions(term: Term): KeyQuestion[] {
+export function keyQuestions(terms: Vocabulary): KeyQuestion[] {
   return [
     {
       id: 'safe',
       name: 'Safe',
       asks: 'Are people protected from abuse and avoidable harm?',
-      checks: safe(term),
+      checks: safe(terms),
     },
     {
       id: 'effective',
       name: 'Effective',
       asks: 'Does their care achieve good outcomes?',
-      checks: effective(term),
+      checks: effective(terms),
     },
     {
       id: 'caring',
       name: 'Caring',
-      asks: 'Do staff treat people with compassion and respect?',
-      checks: caring(term),
+      asks: `Do ${terms.staff.many} treat people with compassion and respect?`,
+      checks: caring(terms),
     },
     {
       id: 'responsive',
       name: 'Responsive',
       asks: 'Is their care organised around their needs?',
-      checks: responsive(term),
+      checks: responsive(terms),
     },
     {
       id: 'well_led',
@@ -834,8 +850,11 @@ export function keyQuestions(term: Term): KeyQuestion[] {
   ]
 }
 
-export function keyQuestionById(id: string, term: Term): KeyQuestion | undefined {
-  return keyQuestions(term).find((question) => question.id === id)
+export function keyQuestionById(
+  id: string,
+  terms: Vocabulary,
+): KeyQuestion | undefined {
+  return keyQuestions(terms).find((question) => question.id === id)
 }
 
 /** One panel: every check run, findings first, with the verdict over them. */
@@ -864,6 +883,6 @@ export function runPanel(question: KeyQuestion, data: ComplianceData): Panel {
   }
 }
 
-export function runPanels(data: ComplianceData, term: Term): Panel[] {
-  return keyQuestions(term).map((question) => runPanel(question, data))
+export function runPanels(data: ComplianceData, terms: Vocabulary): Panel[] {
+  return keyQuestions(terms).map((question) => runPanel(question, data))
 }

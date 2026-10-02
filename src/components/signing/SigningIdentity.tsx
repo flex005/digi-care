@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { StaffRef } from '@/data/types'
 import { signingCodeFor, signingCodeMatches } from '@/data/access/team-store'
 import { useSession } from '@/app/session/use-session'
+import { useTerms } from '@/app/session/use-term'
 import styles from './SigningIdentity.module.css'
 
 /**
@@ -42,6 +43,7 @@ export function SigningIdentity({
   what: string
 }) {
   const { currentUser } = useSession()
+  const terms = useTerms()
   const [shown, setShown] = useState(false)
   const matches = signingCodeMatches(who.id, code)
   const entered = code.trim() !== ''
@@ -125,7 +127,7 @@ export function SigningIdentity({
        * is the same sentence that lets the disclosure above exist.
        */}
       <p className={styles.caveat}>
-        An identifier, not a password: it establishes which member of staff signed, so
+        An identifier, not a password: it establishes which {terms.staff.one} signed, so
         yours is not kept from you.
       </p>
     </div>

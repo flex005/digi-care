@@ -86,7 +86,12 @@ function FamilyAccess({
             onClick={() => onOpenDialog({ kind: 'add' })}
           >
             <Icon name="add-remove-delete/add-01" size={16} aria-hidden />
-            Add a family member
+            {/*
+             * Was "Add a family member", which needs the configurable word to
+             * take an article and a head noun — "a next of kin member" is not
+             * a phrase. The act is what the dialog's own title calls it.
+             */}
+            Give somebody access
           </Button>
         ) : null}
       </div>

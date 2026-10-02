@@ -2,7 +2,8 @@ import { useOutletContext } from 'react-router-dom'
 import type { ResidentProfile } from '@/data/access/client'
 import { Card, CardHeader } from '@/components/primitives'
 import { Field, FieldList } from './FieldList'
-import { FUTURE_PLANS_SECTIONS } from './future-plans-sections'
+import { futurePlansSections } from './future-plans-sections'
+import { useTerms } from '@/app/session/use-term'
 import styles from './profile.module.css'
 
 /**
@@ -29,6 +30,7 @@ import styles from './profile.module.css'
  */
 export function FuturePlansTab() {
   const profile = useOutletContext<ResidentProfile>()
+  const terms = useTerms()
 
   return (
     <div className={styles.tabPanel}>
@@ -38,7 +40,7 @@ export function FuturePlansTab() {
         </p>
       </Card>
 
-      {FUTURE_PLANS_SECTIONS.map((section) => (
+      {futurePlansSections(terms).map((section) => (
         <Card key={section.id}>
           <CardHeader title={section.title} subtitle={section.description} />
           {section.banner ? section.banner(profile) : null}

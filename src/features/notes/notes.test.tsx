@@ -17,6 +17,8 @@ import { staffOkonkwo } from '@/data/fixtures/organisation'
 import { NotesTab } from './NotesTab'
 import { NoteDetail } from './NoteDetail'
 import { reviewOutcomeText } from './review-wording'
+import { vocabularyFor } from '@/lib/vocabulary'
+import { reviewOutcomes } from '@/data/types'
 
 /**
  * Care notes. PRD §6.3.
@@ -629,7 +631,9 @@ describe('a flag says why, and a review says what was done', () => {
       typeof reviewed.review,
       { kind: 'reviewed' }
     >
-    expect(outcome?.textContent).toContain(reviewOutcomeText(review.outcome))
+    expect(outcome?.textContent).toContain(
+      reviewOutcomeText(review.outcome, vocabularyFor('care_home', {})),
+    )
     // Never merged with who reviewed it: the name has a row of its own.
     expect(outcome?.textContent).not.toContain(review.reviewedBy.displayName)
   }, 20000)
@@ -809,7 +813,15 @@ describe('marking reviewed asks what was done', () => {
     const user = userEvent.setup()
     const { container, dialog, confirmButton } = await openConfirmation(user)
 
-    await user.click(within(dialog).getByRole('radio', { name: 'Care plan updated' }))
+    /*
+     * The option's label from the owner, not retyped. One of the four names
+     * the care plan, so its wording moves with the configured term — a literal
+     * here asserts the default's spelling rather than the rule.
+     */
+    const planUpdated = reviewOutcomes(vocabularyFor('care_home', {})).find(
+      (option) => option.id === 'care_plan_updated',
+    )!
+    await user.click(within(dialog).getByRole('radio', { name: planUpdated.label }))
     await user.click(confirmButton())
 
     await waitFor(() => expect(record).toHaveBeenCalledTimes(1))
@@ -820,7 +832,7 @@ describe('marking reviewed asks what was done', () => {
     const outcome = container.querySelector(
       '[data-supervision="reviewed"] [data-review-outcome]',
     )
-    expect(outcome?.textContent).toContain('Care plan updated')
+    expect(outcome?.textContent).toContain(planUpdated.label)
     // The flag's reason is carried forward beside it, not replaced by it.
     expect(
       container.querySelector('[data-supervision="reviewed"] [data-flag-reason]')

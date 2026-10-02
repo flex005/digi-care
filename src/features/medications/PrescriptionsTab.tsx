@@ -7,6 +7,7 @@ import { Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { useTerms } from '@/app/session/use-term'
 import { formatCount, formatRelative, pluralise } from '@/lib/format'
 import { hasUnenforceable, requirementsFor } from './requirements'
 import { joinTimes, quantityWithUnit } from './units'
@@ -34,6 +35,7 @@ import styles from './medications.module.css'
 export function PrescriptionsTab() {
   const { resident } = useOutletContext<ResidentProfile>()
   const viewer = useViewer()
+  const terms = useTerms()
 
   const prescriptions = medicationsFor(resident.id)
   const controlled = prescriptions.filter((med) => med.isControlledDrug).length
@@ -44,10 +46,13 @@ export function PrescriptionsTab() {
       <div className={styles.prescriptionCount}>
         <p className={styles.countLine}>
           <strong className={styles.countFigure} data-numeric>
-            {formatCount(prescriptions.length)}
+            {pluralise(
+              prescriptions.length,
+              terms.medication.one,
+              terms.medication.many,
+            )}
           </strong>{' '}
-          {prescriptions.length === 1 ? 'medication' : 'medications'} prescribed ·{' '}
-          <span data-numeric>{formatCount(controlled)}</span> controlled{' '}
+          prescribed · <span data-numeric>{formatCount(controlled)}</span> controlled{' '}
           {controlled === 1 ? 'drug' : 'drugs'} ·{' '}
           <span data-numeric>{formatCount(asRequired)}</span> as required
         </p>
@@ -81,7 +86,7 @@ export function PrescriptionsTab() {
                 data-add-medication
               >
                 <Icon name="add-remove-delete/add-01" size={16} />
-                Add medication
+                Add {terms.medication.one}
               </Button>
             </span>
           </Tooltip>

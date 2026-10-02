@@ -12,6 +12,7 @@ import { DocumentSample } from './DocumentSample'
 import { expiryFinding } from './expiry'
 import { documentReferrers } from './referrers'
 import styles from './viewer.module.css'
+import { useTerms } from '@/app/session/use-term'
 
 /**
  * Opening a document. PRD §6.6f.
@@ -36,6 +37,7 @@ import styles from './viewer.module.css'
 export function DocumentViewerRoute() {
   const { documentId } = useParams<{ documentId: string }>()
   const { activeSite } = useSession()
+  const terms = useTerms()
 
   const document = fixtureDocuments.find((entry) => entry.id === documentId)
 
@@ -97,7 +99,10 @@ export function DocumentViewerRoute() {
         <aside className={styles.rail}>
           <section className={styles.railSection}>
             <h2 className={styles.railTitle}>This document</h2>
-            <RailField label="Category" value={categoryLabel(document.category)} />
+            <RailField
+              label="Category"
+              value={categoryLabel(document.category, terms)}
+            />
             <RailField
               label="Filed"
               value={<FiledBy staff={document.filedBy} on={document.filedOn} />}

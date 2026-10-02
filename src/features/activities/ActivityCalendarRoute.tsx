@@ -330,7 +330,9 @@ function Session({ activity, now }: { activity: Activity; now: IsoDateTime }) {
       data-session={activity.id}
       data-state={state.kind}
     >
-      <span className={styles.sessionName}>{activity.name}</span>
+      <span className={styles.sessionName} data-recorded-text>
+        {activity.name}
+      </span>
       <span className={styles.sessionWhere}>
         {format.time(activity.startsAt)} · {activity.place}
       </span>

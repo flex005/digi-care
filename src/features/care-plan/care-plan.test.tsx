@@ -36,6 +36,15 @@ import { withResidentEdits } from '@/data/access/resident-store'
 import { withSessionCarePlan } from '@/data/access/care-plan-draft-store'
 import { finaliseCarePlanDomain, saveCarePlanDraft } from '@/data/access/client'
 import { compareVersions, currentVersion, PLAN_FIELDS } from './plan-fields'
+import { TERM_OPTIONS } from '@/lib/vocabulary'
+
+/**
+ * The default word for the people who act on a plan.
+ *
+ * One of the four field labels names them and takes the term rather than
+ * holding a word, so the assertions ask for the same form the screen does.
+ */
+const STAFF = TERM_OPTIONS.staff[0]!.term
 import { DUE_SOON_DAYS, wholeDaysBetween } from '@/lib/review-interval'
 
 /**
@@ -449,7 +458,7 @@ describe('the domain editor', () => {
     const finalise = container.querySelector<HTMLButtonElement>('[data-finalise]')
     expect(finalise?.disabled).toBe(true)
     for (const field of PLAN_FIELDS) {
-      expect(container.textContent).toContain(field.label)
+      expect(container.textContent).toContain(field.label(STAFF))
     }
 
     for (const field of PLAN_FIELDS) {
@@ -469,7 +478,7 @@ describe('the domain editor', () => {
     // `.toLowerCase()` that looked like tidy sentence case and was removing
     // the pronoun the label exists for.
     const needs = PLAN_FIELDS.find((field) => field.id === 'currentNeeds')!
-    expect(needs.label).toContain('I')
+    expect(needs.label(STAFF)).toContain('I')
     expect(needs.voice).toBe('resident')
     expect(PLAN_FIELDS.find((field) => field.id === 'agreedActions')!.voice).toBe(
       'staff',
@@ -794,7 +803,7 @@ describe('version history and the diff', () => {
       `[data-version="${record.versions.history.length}"]`,
     )
     for (const entry of changed) {
-      expect(row?.textContent, entry.field.id).toContain(entry.field.label)
+      expect(row?.textContent, entry.field.id).toContain(entry.field.label(STAFF))
     }
   })
 

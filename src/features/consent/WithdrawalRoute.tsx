@@ -11,7 +11,9 @@ import { useViewer } from '@/app/session/use-viewer'
 import { ReadOnlyHere } from '@/components/status'
 import { pluralise } from '@/lib/format'
 import { EffectCountValue } from './ConsentParts'
-import { CONSENT_MEANS } from './consent-meaning'
+import { consentMeans } from './consent-meaning'
+import type { Vocabulary } from '@/lib/vocabulary'
+import { useTerms } from '@/app/session/use-term'
 import styles from './consent.module.css'
 import { withdrawConsent } from '@/data/access/client'
 
@@ -31,6 +33,7 @@ import { withdrawConsent } from '@/data/access/client'
  */
 export function WithdrawalRoute() {
   const { resident } = useOutletContext<ResidentProfile>()
+  const terms = useTerms()
   const { consentType } = useParams<{ consentType: string }>()
   const format = useSiteFormat()
   const [confirming, setConfirming] = useState(false)
@@ -65,7 +68,7 @@ export function WithdrawalRoute() {
    * Either way they come from the record.
    */
   const effects: DownstreamEffect[] =
-    status.kind === 'withdrawn' ? status.remains : liveEffects(resident, type.id)
+    status.kind === 'withdrawn' ? status.remains : liveEffects(resident, type.id, terms)
 
   const alreadyWithdrawn = status.kind === 'withdrawn'
 
@@ -96,7 +99,7 @@ export function WithdrawalRoute() {
             )}
           </p>
           <p className={styles.questionHint}>
-            {CONSENT_MEANS[type.id as ConsentTypeId]}
+            {consentMeans(terms)[type.id as ConsentTypeId]}
           </p>
         </div>
 
@@ -224,6 +227,7 @@ export function WithdrawalRoute() {
 function liveEffects(
   resident: ResidentProfile['resident'],
   typeId: string,
+  terms: Vocabulary,
 ): DownstreamEffect[] {
   const effects: DownstreamEffect[] = []
 
@@ -238,9 +242,10 @@ function liveEffects(
     const portal = resident.consents.family_portal
     if (portal.kind === 'given') {
       effects.push({
+        // "Family Portal" is a separate product's name, not this service's
+        // word for the people it lets in.
         name: 'Family Portal access is still given',
-        explanation:
-          'A separate consent, unaffected by this one. Named family keep access unless that is withdrawn too.',
+        explanation: `A separate consent, unaffected by this one. Named ${terms.family.one} keeps access unless that is withdrawn too.`,
         count: { kind: 'unchanged' },
       })
     }

@@ -7,6 +7,7 @@ import { RecordedValueField } from './FieldList'
 import { SignedValue } from './SignedValue'
 import { ResuscitationPanel } from './ResuscitationPanel'
 import { ClinicalChangeControl } from './ClinicalChangeControl'
+import type { Vocabulary } from '@/lib/vocabulary'
 import styles from './profile.module.css'
 
 /**
@@ -83,172 +84,191 @@ function signedText(
       render={(entry) => (
         <SignedValue
           entry={entry}
-          render={(value) => <span className={styles.planText}>{value}</span>}
+          render={(value) => (
+            <span className={styles.planText} data-recorded-text>
+              {value}
+            </span>
+          )}
         />
       )}
     />
   )
 }
 
-export const FUTURE_PLANS_SECTIONS: FuturePlansSection[] = [
-  {
-    id: 'emergency',
-    title: 'In an emergency',
-    description:
-      'What staff do if this person collapses. Both are checked before CPR is started.',
-    banner: (profile) => (
-      <ResuscitationPanel
-        status={profile.resident.futurePlans.resuscitation}
-        residentName={profile.resident.preferredName}
-        siteName={profile.site.name}
-      />
-    ),
-    entries: [
-      {
-        id: 'adrt',
-        label: 'Advance decision to refuse treatment',
-        isUnrecorded: (plans) => plans.adrt.kind === 'unrecorded',
-        render: (profile) => (
-          <>
-            <RecordedValueField
-              record={profile.resident.futurePlans.adrt}
-              label="Advance decision to refuse treatment"
-              // Not "this person has no ADRT". An ADRT that exists and has not
-              // been recorded here is still legally binding, and treating an
-              // unrecorded one as absent is how a refused treatment gets given.
-              missingDetail="no ADRT is recorded, which is not the same as there being none, and an ADRT that exists is legally binding whether or not this screen knows about it"
-              attributed={false}
-              render={(entry) => (
-                <SignedValue
-                  entry={entry}
-                  render={(adrt) => (
-                    <>
-                      <span className={styles.planText}>{adrt.text}</span>
-                      {/*
-                       * Live from Phase 11. It lands on the document library,
-                       * where an ADRT whose id resolves to nothing renders as
-                       * the broken reference it is rather than a dead link.
-                       */}
-                      <Link
-                        to={`/residents/${profile.resident.id}/documents`}
-                        className={styles.documentLink}
-                        aria-label={`Open the advance decision document for ${profile.resident.preferredName}`}
-                        data-document-link
-                      >
-                        Open document
-                      </Link>
-                    </>
-                  )}
-                />
-              )}
-            />
-            <ClinicalChangeControl
-              residentName={profile.resident.preferredName}
-              siteName={profile.site.name}
-              buttonLabel={
-                profile.resident.futurePlans.adrt.kind === 'unrecorded'
-                  ? 'Record an advance decision'
-                  : 'Change this advance decision'
-              }
-              action={
-                profile.resident.futurePlans.adrt.kind === 'unrecorded'
-                  ? 'Record an advance decision to refuse treatment'
-                  : 'Change the advance decision to refuse treatment'
-              }
-              description={
-                profile.resident.futurePlans.adrt.kind === 'unrecorded'
-                  ? `Recording one changes what staff and paramedics may do for ${profile.resident.preferredName}.`
-                  : `Changing it overrides a signed document about what may be done to ${profile.resident.preferredName}.`
-              }
-              confirmLabel={
-                profile.resident.futurePlans.adrt.kind === 'unrecorded'
-                  ? 'Record advance decision'
-                  : 'Change advance decision'
-              }
-              destructive={profile.resident.futurePlans.adrt.kind === 'recorded'}
-            />
-          </>
-        ),
-      },
-      {
-        id: 'advance-care-plan',
-        label: 'Advance care plan',
-        // Written in this person's own voice and usually a paragraph of it.
-        width: 'full',
-        isUnrecorded: (plans) => plans.advanceCarePlan.kind === 'unrecorded',
-        render: signedText(
-          (resident) => resident.futurePlans.advanceCarePlan,
-          'Advance care plan',
-          'nobody has recorded what this person wants to happen as their health changes, in their own words',
-        ),
-      },
-    ],
-  },
-  {
-    id: 'where',
-    title: 'Where this person wants to be',
-    entries: [
-      {
-        id: 'place-of-care',
-        label: 'Preferred place of care',
-        isUnrecorded: (plans) => plans.preferredPlaceOfCare.kind === 'unrecorded',
-        render: signedText(
-          (resident) => resident.futurePlans.preferredPlaceOfCare,
-          'Preferred place of care',
-          'nobody has asked where this person would rather be cared for as they become less well',
-        ),
-      },
-      {
-        id: 'place-of-death',
-        label: 'Preferred place of death',
-        isUnrecorded: (plans) => plans.preferredPlaceOfDeath.kind === 'unrecorded',
-        render: signedText(
-          (resident) => resident.futurePlans.preferredPlaceOfDeath,
-          'Preferred place of death',
-          'nobody has asked where this person wants to die, and in the absence of an answer the ambulance is called and the answer becomes hospital',
-        ),
-      },
-    ],
-  },
-  {
-    id: 'after',
-    title: 'After death',
-    entries: [
-      {
-        id: 'funeral',
-        label: 'Funeral preferences',
-        isUnrecorded: (plans) => plans.funeralPreferences.kind === 'unrecorded',
-        render: signedText(
-          (resident) => resident.futurePlans.funeralPreferences,
-          'Funeral preferences',
-          'nobody has recorded whether this person wanted burial or cremation, or whether anything is already arranged',
-        ),
-      },
-      {
-        id: 'religious',
-        label: 'Religious preferences at the end of life',
-        isUnrecorded: (plans) => plans.religiousPreferences.kind === 'unrecorded',
-        render: signedText(
-          (resident) => resident.futurePlans.religiousPreferences,
-          'Religious preferences',
-          'nobody has recorded whether a priest, imam or other minister should be called, or how soon, and some of these cannot be done late',
-        ),
-      },
-      {
-        id: 'contact-on-death',
-        label: 'Who to contact',
-        isUnrecorded: (plans) => plans.contactOnDeath.kind === 'unrecorded',
-        render: signedText(
-          (resident) => resident.futurePlans.contactOnDeath,
-          'Who to contact',
-          'nobody has recorded who should be told first, or in what order',
-        ),
-      },
-    ],
-  },
-]
+/**
+ * The sections, named with the vocabulary in force.
+ *
+ * A function rather than a constant because two sentences here name the
+ * configurable word for the people who work in this service, and a
+ * module-level constant cannot read a term that is only known at render.
+ */
+export function futurePlansSections(terms: Vocabulary): FuturePlansSection[] {
+  return [
+    {
+      id: 'emergency',
+      title: 'In an emergency',
+      description: `What ${terms.staff.many} do if this person collapses. Both are checked before CPR is started.`,
+      banner: (profile) => (
+        <ResuscitationPanel
+          status={profile.resident.futurePlans.resuscitation}
+          residentName={profile.resident.preferredName}
+          siteName={profile.site.name}
+        />
+      ),
+      entries: [
+        {
+          id: 'adrt',
+          label: 'Advance decision to refuse treatment',
+          isUnrecorded: (plans) => plans.adrt.kind === 'unrecorded',
+          render: (profile) => (
+            <>
+              <RecordedValueField
+                record={profile.resident.futurePlans.adrt}
+                label="Advance decision to refuse treatment"
+                // Not "this person has no ADRT". An ADRT that exists and has not
+                // been recorded here is still legally binding, and treating an
+                // unrecorded one as absent is how a refused treatment gets given.
+                missingDetail="no ADRT is recorded, which is not the same as there being none, and an ADRT that exists is legally binding whether or not this screen knows about it"
+                attributed={false}
+                render={(entry) => (
+                  <SignedValue
+                    entry={entry}
+                    render={(adrt) => (
+                      <>
+                        <span className={styles.planText} data-recorded-text>
+                          {adrt.text}
+                        </span>
+                        {/*
+                         * Live from Phase 11. It lands on the document library,
+                         * where an ADRT whose id resolves to nothing renders as
+                         * the broken reference it is rather than a dead link.
+                         */}
+                        <Link
+                          to={`/residents/${profile.resident.id}/documents`}
+                          className={styles.documentLink}
+                          aria-label={`Open the advance decision document for ${profile.resident.preferredName}`}
+                          data-document-link
+                        >
+                          Open document
+                        </Link>
+                      </>
+                    )}
+                  />
+                )}
+              />
+              <ClinicalChangeControl
+                residentName={profile.resident.preferredName}
+                siteName={profile.site.name}
+                buttonLabel={
+                  profile.resident.futurePlans.adrt.kind === 'unrecorded'
+                    ? 'Record an advance decision'
+                    : 'Change this advance decision'
+                }
+                action={
+                  profile.resident.futurePlans.adrt.kind === 'unrecorded'
+                    ? 'Record an advance decision to refuse treatment'
+                    : 'Change the advance decision to refuse treatment'
+                }
+                description={
+                  profile.resident.futurePlans.adrt.kind === 'unrecorded'
+                    ? `Recording one changes what ${terms.staff.many} and paramedics may do for ${profile.resident.preferredName}.`
+                    : `Changing it overrides a signed document about what may be done to ${profile.resident.preferredName}.`
+                }
+                confirmLabel={
+                  profile.resident.futurePlans.adrt.kind === 'unrecorded'
+                    ? 'Record advance decision'
+                    : 'Change advance decision'
+                }
+                destructive={profile.resident.futurePlans.adrt.kind === 'recorded'}
+              />
+            </>
+          ),
+        },
+        {
+          id: 'advance-care-plan',
+          /*
+           * Left fixed: the Advance Care Plan is a standard end-of-life document,
+           * named as such in PRD §6.2 beside the DNAR and the ADRT. It is not
+           * this service's word for the plan of care it writes.
+           */
+          label: 'Advance care plan',
+          // Written in this person's own voice and usually a paragraph of it.
+          width: 'full',
+          isUnrecorded: (plans) => plans.advanceCarePlan.kind === 'unrecorded',
+          render: signedText(
+            (resident) => resident.futurePlans.advanceCarePlan,
+            'Advance care plan',
+            'nobody has recorded what this person wants to happen as their health changes, in their own words',
+          ),
+        },
+      ],
+    },
+    {
+      id: 'where',
+      title: 'Where this person wants to be',
+      entries: [
+        {
+          id: 'place-of-care',
+          label: 'Preferred place of care',
+          isUnrecorded: (plans) => plans.preferredPlaceOfCare.kind === 'unrecorded',
+          render: signedText(
+            (resident) => resident.futurePlans.preferredPlaceOfCare,
+            'Preferred place of care',
+            'nobody has asked where this person would rather be cared for as they become less well',
+          ),
+        },
+        {
+          id: 'place-of-death',
+          label: 'Preferred place of death',
+          isUnrecorded: (plans) => plans.preferredPlaceOfDeath.kind === 'unrecorded',
+          render: signedText(
+            (resident) => resident.futurePlans.preferredPlaceOfDeath,
+            'Preferred place of death',
+            'nobody has asked where this person wants to die, and in the absence of an answer the ambulance is called and the answer becomes hospital',
+          ),
+        },
+      ],
+    },
+    {
+      id: 'after',
+      title: 'After death',
+      entries: [
+        {
+          id: 'funeral',
+          label: 'Funeral preferences',
+          isUnrecorded: (plans) => plans.funeralPreferences.kind === 'unrecorded',
+          render: signedText(
+            (resident) => resident.futurePlans.funeralPreferences,
+            'Funeral preferences',
+            'nobody has recorded whether this person wanted burial or cremation, or whether anything is already arranged',
+          ),
+        },
+        {
+          id: 'religious',
+          label: 'Religious preferences at the end of life',
+          isUnrecorded: (plans) => plans.religiousPreferences.kind === 'unrecorded',
+          render: signedText(
+            (resident) => resident.futurePlans.religiousPreferences,
+            'Religious preferences',
+            'nobody has recorded whether a priest, imam or other minister should be called, or how soon, and some of these cannot be done late',
+          ),
+        },
+        {
+          id: 'contact-on-death',
+          label: 'Who to contact',
+          isUnrecorded: (plans) => plans.contactOnDeath.kind === 'unrecorded',
+          render: signedText(
+            (resident) => resident.futurePlans.contactOnDeath,
+            'Who to contact',
+            'nobody has recorded who should be told first, or in what order',
+          ),
+        },
+      ],
+    },
+  ]
+}
 
 /** Every entry, flattened — what the guard iterates. */
-export const FUTURE_PLAN_ENTRIES: FuturePlanEntry[] = FUTURE_PLANS_SECTIONS.flatMap(
-  (section) => section.entries,
-)
+export function futurePlanEntries(terms: Vocabulary): FuturePlanEntry[] {
+  return futurePlansSections(terms).flatMap((section) => section.entries)
+}

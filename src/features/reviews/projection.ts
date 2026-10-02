@@ -10,6 +10,7 @@ import type {
 } from '@/data/types'
 import { CARE_PLAN_DOMAINS, RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
 import { assertNever } from '@/lib/assert-never'
+import type { Term } from '@/lib/vocabulary'
 import { wholeDaysBetween } from '@/lib/review-interval'
 import { dueSoonDays } from '@/data/access/settings-store'
 
@@ -53,11 +54,22 @@ import { dueSoonDays } from '@/data/access/settings-store'
 
 export type ReviewableKind = 'risk_assessment' | 'care_plan_domain' | 'whole_care_plan'
 
-export const KIND_LABEL: Record<ReviewableKind, string> = {
+/**
+ * What each population is called on screen.
+ *
+ * A function rather than a constant because two of the three name the plan,
+ * and the word for that is the organisation's. Module level has no hook to
+ * call, so the rendering screen passes the term in — the same shape
+ * `NOT_GIVEN_REASONS` and `PlanField.label` use.
+ *
+ * `risk_assessment` keeps its wording: a risk assessment is a named document
+ * in its own right, and "Risk care assessment" is not a thing anybody writes.
+ */
+export const kindLabels = (carePlan: Term): Record<ReviewableKind, string> => ({
   risk_assessment: 'Risk assessment',
-  care_plan_domain: 'Care plan domain',
-  whole_care_plan: 'Whole care plan review',
-}
+  care_plan_domain: `${carePlan.One} domain`,
+  whole_care_plan: `Whole ${carePlan.one} review`,
+})
 
 /**
  * Where a review has got to, across all three populations.

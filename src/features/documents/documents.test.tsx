@@ -15,6 +15,10 @@ import { DocumentsTab } from './DocumentsTab'
 import { OrganisationLibraryRoute } from './OrganisationLibraryRoute'
 import { ExpiryQueueRoute } from './ExpiryQueueRoute'
 import { DOCUMENT_CATEGORIES } from './categories'
+import { vocabularyFor } from '@/lib/vocabulary'
+
+/** The default terms, so a change to a configured word cannot move this. */
+const TERMS = vocabularyFor('care_home', {})
 import { countExpiry, expiryDecisionCoverage, expiryFinding } from './expiry'
 import {
   brokenReferences,
@@ -202,9 +206,9 @@ describe("a resident's library", () => {
   it('puts legal and authority first, because that is the emergency order', () => {
     expect(DOCUMENT_CATEGORIES[0]?.id).toBe('legal_authority')
     const alphabetical = [...DOCUMENT_CATEGORIES]
-      .map((category) => category.label)
+      .map((category) => category.label(TERMS))
       .sort((a, b) => a.localeCompare(b))
-    expect(DOCUMENT_CATEGORIES.map((category) => category.label)).not.toEqual(
+    expect(DOCUMENT_CATEGORIES.map((category) => category.label(TERMS))).not.toEqual(
       alphabetical,
     )
   })
@@ -327,6 +331,7 @@ describe('empty is not always emptiness', () => {
         candidate,
         residentDocuments(candidate.id),
         TODAY,
+        TERMS,
       ).categories.some((category) => category.state.kind === 'empty'),
     )
     expect(resident).toBeDefined()
@@ -334,7 +339,7 @@ describe('empty is not always emptiness', () => {
 
   it("renders a gap where another module's record says a document exists", () => {
     const sites = residents.flatMap((resident) =>
-      residentLibrary(resident, residentDocuments(resident.id), TODAY)
+      residentLibrary(resident, residentDocuments(resident.id), TODAY, TERMS)
         .categories.filter((category) => category.state.kind === 'expected_but_empty')
         .map((category) => `${resident.id}/${category.id}`),
     )
@@ -355,7 +360,7 @@ describe('empty is not always emptiness', () => {
     const photography = brennan.consents.photography
     expect(photography.kind).toBe('withdrawn')
 
-    const expectation = expectationFor(brennan, 'photographs_media')
+    const expectation = expectationFor(brennan, 'photographs_media', TERMS)
     expect(expectation?.missing).toContain('14')
     expect(
       residentDocuments(brennan.id).filter(
@@ -387,7 +392,7 @@ describe('the organisation library', () => {
             : { kind: 'does_not_expire', decidedBy: staff, on: TODAY },
       }),
     )
-    const rows = organisationRows(documents, TODAY)
+    const rows = organisationRows(documents, TODAY, TERMS)
     expect(rows[0]?.id).toBe('photographs_media')
   })
 

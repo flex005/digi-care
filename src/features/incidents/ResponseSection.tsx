@@ -1,3 +1,4 @@
+import { useTerms } from '@/app/session/use-term'
 import { Select } from '@/components/primitives'
 import { SectionHeading, type HeadingLevel } from './SectionHeading'
 import styles from './incidents.module.css'
@@ -39,6 +40,8 @@ export function ResponseSection({
   onNotRequiredReason: (value: string) => void
   level?: HeadingLevel
 }) {
+  const terms = useTerms()
+
   return (
     <section className={styles.section} aria-labelledby="response-heading">
       <SectionHeading level={level} id="response-heading">
@@ -56,8 +59,8 @@ export function ResponseSection({
         {/* Yours, not the manager's. Their account is written later on
             the review and the two are different records. */}
         <span className={styles.hint}>
-          Your words, at the time. The manager writes their own account when they review
-          it.
+          Your words, at the time. The {terms.manager.one} writes their own account when
+          they review it.
         </span>
       </label>
 
@@ -74,7 +77,7 @@ export function ResponseSection({
           ]}
         />
         <Select
-          label="Family contacted"
+          label={`${terms.family.One} contacted`}
           placeholder="Choose an answer"
           value={family === '' ? undefined : family}
           onValueChange={(value) => onFamily(value as ContactChoice)}

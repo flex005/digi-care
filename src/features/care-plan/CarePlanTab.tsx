@@ -12,7 +12,7 @@ import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { useViewer } from '@/app/session/use-viewer'
 import { formatCount, formatLateness, pluralise } from '@/lib/format'
 import { OwedReviews } from './OwedReviews'
@@ -36,6 +36,7 @@ import { staffLabel } from '@/data/access/team-store'
  */
 export function CarePlanTab() {
   const { resident } = useOutletContext<ResidentProfile>()
+  const terms = useTerms()
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
 
   const byDomain = new Map(resident.carePlan.map((entry) => [entry.domainId, entry]))
@@ -81,7 +82,7 @@ export function CarePlanTab() {
               <>
                 {' '}
                 A further <span data-numeric>{pluralise(unsigned, 'domain')}</span>,
-                started, not signed, and nothing staff can follow yet.
+                started, not signed, and nothing {terms.staff.many} can follow yet.
               </>
             ) : null}
           </span>
@@ -144,7 +145,7 @@ export function CarePlanTab() {
                     record === undefined || record.status.kind === 'not_started'
                       ? 'Write'
                       : 'Open'
-                  } the ${domain.name} care plan domain for ${resident.fullLegalName}`}
+                  } the ${domain.name} ${terms.carePlan.one} domain for ${resident.fullLegalName}`}
                 >
                   {record === undefined || record.status.kind === 'not_started'
                     ? 'Write this domain'
@@ -177,6 +178,7 @@ export function CarePlanTab() {
  */
 function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime }) {
   const term = useTerm()
+  const terms = useTerms()
   /*
    * Only "am I naming a new one". Writing in an existing one is a route now,
    * exactly as it is for the ten — the modal that used to do it was missing
@@ -215,7 +217,7 @@ function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime
           ) : (
             <ReadOnlyHere
               roleName={viewer.roleName}
-              subject="this care plan"
+              subject={`this ${terms.carePlan.one}`}
               act="add a domain to it"
             />
           )}
@@ -280,7 +282,7 @@ function CustomDomains({ resident, now }: { resident: Resident; now: IsoDateTime
                   data-action={domain.status.kind === 'not_started' ? 'write' : 'open'}
                   aria-label={`${
                     domain.status.kind === 'not_started' ? 'Write' : 'Open'
-                  } the ${domain.name} care plan domain for ${resident.fullLegalName}`}
+                  } the ${domain.name} ${terms.carePlan.one} domain for ${resident.fullLegalName}`}
                 >
                   {domain.status.kind === 'not_started'
                     ? 'Write this domain'
@@ -327,7 +329,7 @@ function ResidentVoice({ record }: { record: CarePlanDomainBody | undefined }) {
   if (version === 'none' || version.currentNeeds.trim() === '') return null
 
   return (
-    <p className={styles.rowQuote} data-quote>
+    <p className={styles.rowQuote} data-quote data-recorded-text>
       &ldquo;{version.currentNeeds}&rdquo;
     </p>
   )
@@ -428,6 +430,7 @@ function DomainState({ timing }: { timing: ReviewTiming }) {
  */
 function DraftFact({ record }: { record: CarePlanDomainBody }) {
   const format = useSiteFormat()
+  const terms = useTerms()
   if (record.draft.kind !== 'draft') return null
   if (record.status.kind === 'in_progress') return null
 
@@ -439,7 +442,7 @@ function DraftFact({ record }: { record: CarePlanDomainBody }) {
           staffLabel(record.draft.updatedBy),
           record.draft.updatedAt,
         )}{' '}
-        · not signed, and the signed version above is what staff follow
+        · not signed, and the signed version above is what {terms.staff.many} follow
       </small>
     </span>
   )

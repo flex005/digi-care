@@ -2,6 +2,7 @@ import { now as appNow } from '@/data/fixtures/clock'
 import type { CareNote } from '@/data/types'
 import { elapsedMinutesBetween, formatDuration } from '@/lib/shift'
 import { useSiteFormat } from '@/app/session/use-session'
+import { useTerms } from '@/app/session/use-term'
 import { FlagReasonWords } from './note-parts'
 import { reviewOutcomeText } from './review-wording'
 import styles from './notes.module.css'
@@ -31,6 +32,7 @@ import styles from './notes.module.css'
  */
 export function SupervisionRecord({ note }: { note: CareNote }) {
   const format = useSiteFormat()
+  const terms = useTerms()
 
   if (note.review.kind === 'not_flagged') return null
 
@@ -95,7 +97,12 @@ export function SupervisionRecord({ note }: { note: CareNote }) {
           never folded into the reviewer's name. */}
       <div className={styles.supervisionRow} data-review-outcome>
         <dt className={styles.supervisionTerm}>Action taken</dt>
-        <dd className={styles.supervisionValue}>{reviewOutcomeText(outcome)}</dd>
+        <dd
+          className={styles.supervisionValue}
+          data-recorded-text={outcome.kind === 'other' || undefined}
+        >
+          {reviewOutcomeText(outcome, terms)}
+        </dd>
       </div>
       <div className={styles.supervisionRow}>
         <dt className={styles.supervisionTerm}>Waited</dt>

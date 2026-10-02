@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { ScreenTabs, type ScreenTab } from '@/components/shell/ScreenTabs'
+import { useTerms } from '@/app/session/use-term'
 import styles from './medications.module.css'
 
 /**
@@ -27,10 +28,12 @@ export const MEDICATION_TABS: ScreenTab[] = [
 ]
 
 export function MedicationsRoute() {
+  const terms = useTerms()
+
   return (
     <div className={styles.module}>
-      <h1 className={styles.pageTitle}>Medications</h1>
-      <ScreenTabs label="Medications" tabs={MEDICATION_TABS} />
+      <h1 className={styles.pageTitle}>{terms.medication.Many}</h1>
+      <ScreenTabs label={terms.medication.Many} tabs={MEDICATION_TABS} />
       <Outlet />
     </div>
   )

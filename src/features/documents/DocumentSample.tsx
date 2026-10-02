@@ -1,7 +1,7 @@
 import type { DocumentRecord, Resident } from '@/data/types'
 import { formatDate } from '@/lib/format'
-import { useTerm } from '@/app/session/use-term'
-import type { Term } from '@/lib/vocabulary'
+import { useTerm, useTerms } from '@/app/session/use-term'
+import type { Vocabulary } from '@/lib/vocabulary'
 import styles from './viewer.module.css'
 
 /**
@@ -26,6 +26,7 @@ export function DocumentSample({
   resident: Resident | undefined
 }) {
   const term = useTerm()
+  const terms = useTerms()
   const name = resident?.fullLegalName ?? `The ${term.one}`
   const room = resident?.room.kind === 'recorded' ? resident.room.value : 'not recorded'
 
@@ -47,7 +48,7 @@ export function DocumentSample({
 
       <h2 className={styles.docTitle}>{document.title}</h2>
       <p className={styles.strap}>
-        {strapFor(term)[document.category] ??
+        {strapFor(terms)[document.category] ??
           'A form of this type, as it renders in the viewer.'}
       </p>
 
@@ -62,10 +63,10 @@ export function DocumentSample({
 
       <div className={styles.block}>
         <p className={styles.blockTitle}>
-          {BLOCK[document.category]?.title ?? 'Record'}
+          {blocks(terms)[document.category]?.title ?? 'Record'}
         </p>
         <p className={styles.blockBody}>
-          {BLOCK[document.category]?.body ??
+          {blocks(terms)[document.category]?.body ??
             'The body of a form of this type would appear here.'}
         </p>
       </div>
@@ -109,36 +110,45 @@ function Field({ label, value }: { label: string; value: string }) {
 /**
  * The one-line strap under each sample's title.
  *
- * A function rather than a constant because two of these name the person the
- * record is about, and the word for that is the organisation's to choose. The
- * caller asks the owner for a form and never derives one.
+ * A function rather than a constant because four of these name a word the
+ * organisation chooses — the person the record is about, the assessment, the
+ * admission. The caller asks the owner for a form and never derives one.
  */
-function strapFor(term: Term): Partial<Record<DocumentRecord['category'], string>> {
+function strapFor(
+  terms: Vocabulary,
+): Partial<Record<DocumentRecord['category'], string>> {
   return {
     legal_authority:
       'This form records one decision. It does not affect any other treatment or care.',
     health_clinical: 'A clinical record issued by the service that made it.',
     consent_records: 'A record of what was agreed, by whom, and on what date.',
-    assessments_care_planning: 'An assessment carried out on the date shown.',
-    identity_admission: 'Held to establish identity at admission.',
-    correspondence: `Correspondence held on the ${term.one} record.`,
-    photographs_media: `An image held with the ${term.ones} consent.`,
+    /*
+     * Led with the term rather than "An assessment …": the article would have
+     * to agree with a word nobody here chooses, and "a"/"an" is exactly the
+     * kind of agreement a call site must not make.
+     */
+    assessments_care_planning: `${terms.assessment.One} carried out on the date shown.`,
+    identity_admission: `Held to establish identity at ${terms.admission.one}.`,
+    correspondence: `Correspondence held on the ${terms.subject.one} record.`,
+    photographs_media: `An image held with the ${terms.subject.ones} consent.`,
   }
 }
 
-const BLOCK: Partial<
-  Record<DocumentRecord['category'], { title: string; body: string }>
-> = {
-  legal_authority: {
-    title: 'Decision',
-    body: 'The decision this form records would be stated here, with the reason and who it was discussed with.',
-  },
-  health_clinical: {
-    title: 'Clinical summary',
-    body: 'The clinical detail would appear here, including medication changes and follow-up.',
-  },
-  consent_records: {
-    title: 'What was agreed',
-    body: 'What was consented to, who gave it, and on what authority, in the words used at the time.',
-  },
+function blocks(
+  terms: Vocabulary,
+): Partial<Record<DocumentRecord['category'], { title: string; body: string }>> {
+  return {
+    legal_authority: {
+      title: 'Decision',
+      body: 'The decision this form records would be stated here, with the reason and who it was discussed with.',
+    },
+    health_clinical: {
+      title: 'Clinical summary',
+      body: `The clinical detail would appear here, including changes to ${terms.medication.many} and follow-up.`,
+    },
+    consent_records: {
+      title: 'What was agreed',
+      body: 'What was consented to, who gave it, and on what authority, in the words used at the time.',
+    },
+  }
 }

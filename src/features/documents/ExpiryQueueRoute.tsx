@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import type { DocumentRecord, Resident } from '@/data/types'
 import { getSiteDocuments } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { Card, SelectedMark } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { formatCount } from '@/lib/format'
@@ -55,6 +55,7 @@ export function ExpiryQueueRoute() {
   const { activeSite } = useSession()
   const today = useSiteToday()
   const term = useTerm()
+  const terms = useTerms()
   const [loaded, setLoaded] = useState<
     { documents: DocumentRecord[]; residents: Resident[] } | 'loading'
   >('loading')
@@ -182,7 +183,7 @@ export function ExpiryQueueRoute() {
                       {row.document.title}
                     </p>
                     <p className={styles.rowMeta}>
-                      {categoryLabel(row.document.category)} ·{' '}
+                      {categoryLabel(row.document.category, terms)} ·{' '}
                       <FileFactsText file={row.document.file} />
                     </p>
                   </div>

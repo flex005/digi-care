@@ -7,6 +7,7 @@ import { SessionProvider } from '@/app/session/SessionProvider'
 import { TooltipProvider } from '@/components/primitives'
 import { incidents } from '@/data/fixtures/incidents'
 import { IncidentLogRoute } from './IncidentLogRoute'
+import { vocabularyFor } from '@/lib/vocabulary'
 
 /**
  * The incident log. PRD §6.5.
@@ -261,7 +262,17 @@ describe('accessibility', () => {
     const { container } = renderLog()
     await listed(container)
 
-    const action = screen.getByRole('link', { name: /Report an incident/ })
+    /*
+     * "New <incident report>", from the owner. The control used to read
+     * "Report an incident" and could not take the term: "Report an incident
+     * report" is not a phrase, so the copy leads with New and the term
+     * follows. A literal here would pin the old wording.
+     */
+    const newIncident = new RegExp(
+      `New ${vocabularyFor('care_home', {}).incidentReport.one}`,
+      'i',
+    )
+    const action = screen.getByRole('link', { name: newIncident })
     const filters = container.querySelector('[class*="filters"]')!
     expect(filters.contains(action)).toBe(false)
     const head = container.querySelector<HTMLElement>('[class*="logHead"]')!

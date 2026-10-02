@@ -6,7 +6,7 @@ import { useSession } from '@/app/session/use-session'
 import { Icon } from '@/components/icon/Icon'
 import { Unrecorded } from '@/components/status'
 import { formatCount, pluralise } from '@/lib/format'
-import { useTerm } from '@/app/session/use-term'
+import { useTerms } from '@/app/session/use-term'
 import { drillDowns, reportGroups } from './catalogue'
 import { loadReportData, type ReportData } from './data'
 import { REPORT_PERIOD_DAYS } from './period'
@@ -30,7 +30,7 @@ import styles from './reports.module.css'
  */
 export function ReportIndexRoute() {
   const { activeSite } = useSession()
-  const term = useTerm()
+  const terms = useTerms()
   const [data, setData] = useState<ReportData | 'loading'>('loading')
 
   useEffect(() => {
@@ -45,8 +45,8 @@ export function ReportIndexRoute() {
   }, [activeSite])
 
   const runs = useMemo(
-    () => (data === 'loading' ? [] : runAll(data, term)),
-    [data, term],
+    () => (data === 'loading' ? [] : runAll(data, terms)),
+    [data, terms],
   )
 
   if (data === 'loading') {
@@ -104,8 +104,8 @@ export function ReportIndexRoute() {
               {formatCount(headline.rows)}
             </p>
             <p className={styles.miniBody}>
-              drugs, rounds, staff members, incident types, categories and activities,
-              every one of them counted over the same period.
+              drugs, rounds, {terms.staff.many}, incident types, categories and
+              activities, every one of them counted over the same period.
             </p>
           </section>
 
@@ -167,7 +167,7 @@ export function ReportIndexRoute() {
       </div>
 
       <section className={styles.tableCard}>
-        {reportGroups(term).map((group) => (
+        {reportGroups(terms).map((group) => (
           <div key={group.group} data-report-group={group.group}>
             <h2 className={styles.groupTitle}>{group.group}</h2>
             <div className={styles.tableScroll}>
@@ -229,7 +229,7 @@ export function ReportIndexRoute() {
             Each of these opens from its compliance check.
           </p>
           <ul className={styles.drillList}>
-            {drillDowns(term).map((drill) => (
+            {drillDowns(terms).map((drill) => (
               <li key={drill.question}>
                 <Link
                   to={drill.to}

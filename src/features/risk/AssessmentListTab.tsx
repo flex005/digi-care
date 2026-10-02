@@ -20,7 +20,7 @@ import { StatusPill, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { assertNever } from '@/lib/assert-never'
 import { useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { formatCount, formatLateness } from '@/lib/format'
 import { PlaceholderBanner } from './PlaceholderBanner'
 import {
@@ -192,7 +192,7 @@ function Findings({ status }: { status: RiskStatus | CustomRisk }) {
 
   return (
     <div className={styles.rowFindings} data-findings>
-      <p className={styles.findingsBody} data-finding-description>
+      <p className={styles.findingsBody} data-finding-description data-recorded-text>
         {finding.description === '' ? (
           <span className={styles.findingsNone}>No description recorded.</span>
         ) : (
@@ -207,7 +207,9 @@ function Findings({ status }: { status: RiskStatus | CustomRisk }) {
         <ul className={styles.actionList} data-actions={finding.actions.length}>
           {finding.actions.map((action) => (
             <li key={`${action.description}-${action.responsible}`}>
-              <span className={styles.actionWhat}>{action.description}</span>
+              <span className={styles.actionWhat} data-recorded-text>
+                {action.description}
+              </span>
               {/* Never the action alone: a plan nobody owns is not a plan. */}
               <span className={styles.actionWho}>{action.responsible}</span>
             </li>
@@ -319,6 +321,7 @@ function CustomRisks({ resident }: { resident: Resident }) {
 
 function StateChip({ status, state }: { status: RiskStatus; state: ConfiguredState }) {
   const format = useSiteFormat()
+  const terms = useTerms()
 
   /*
    * **Plain, never hatched.** The home does not carry this assessment out and
@@ -359,7 +362,7 @@ function StateChip({ status, state }: { status: RiskStatus; state: ConfiguredSta
       <ReviewChip status={status} format={format} />
       {state === 'retired_answered' ? (
         <span className={styles.retiredNote} data-retired>
-          This home no longer carries this assessment out. The record stays.
+          This home no longer carries this {terms.assessment.one} out. The record stays.
         </span>
       ) : null}
     </span>

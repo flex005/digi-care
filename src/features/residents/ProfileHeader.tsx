@@ -10,7 +10,7 @@ import {
 } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSiteFormat } from '@/app/session/use-session'
-import { useTerm } from '@/app/session/use-term'
+import { useTerm, useTerms } from '@/app/session/use-term'
 import { formatDate, ageFrom, pluralise } from '@/lib/format'
 import { MEDICATION_LOOKAHEAD_HOURS } from '@/lib/shift'
 import { telHref } from '@/lib/phone'
@@ -133,6 +133,7 @@ function DueMedications({ due }: { due: DueMedication[] }) {
 
 export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
   const { resident, site, latestNote, dueSoon } = profile
+  const terms = useTerms()
   const gp = resident.gp
   const nextOfKin = resident.importantPeople.nextOfKin
 
@@ -235,10 +236,11 @@ export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
       <div className={[styles.band, styles.routine].join(' ')}>
         <section
           className={styles.panel}
-          aria-label={`Medication due in the next ${pluralise(MEDICATION_LOOKAHEAD_HOURS, 'hour')}`}
+          aria-label={`${terms.medication.Many} due in the next ${pluralise(MEDICATION_LOOKAHEAD_HOURS, 'hour')}`}
         >
           <h2 className={styles.panelTitle}>
-            Medication due · next {pluralise(MEDICATION_LOOKAHEAD_HOURS, 'hour')}
+            {terms.medication.Many} due · next{' '}
+            {pluralise(MEDICATION_LOOKAHEAD_HOURS, 'hour')}
           </h2>
           <DueMedications due={dueSoon} />
         </section>
@@ -248,8 +250,8 @@ export function ProfileHeader({ profile }: { profile: ResidentProfile }) {
           <LastNoteSummary note={latestNote} />
         </section>
 
-        <section className={styles.panel} aria-label="Care plan review">
-          <h2 className={styles.panelTitle}>Care plan review</h2>
+        <section className={styles.panel} aria-label={`${terms.carePlan.One} review`}>
+          <h2 className={styles.panelTitle}>{terms.carePlan.One} review</h2>
           {/* compact: completed-and-in-date and scheduled-not-yet-due render
               as plain text; due, overdue and never-scheduled keep their
               treatments. The same emphasis the residents list uses, for the
