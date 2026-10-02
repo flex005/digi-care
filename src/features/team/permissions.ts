@@ -121,13 +121,60 @@ const EXCEPTIONS: Partial<Record<StaffRole, Partial<Record<string, PermissionLev
       '/reports': 'no_access',
       '/settings': 'no_access',
       '/documents': 'read',
+
+      /*
+       * **Source: CW_PRD v2.0, Table 3**, which is the authority for this
+       * role in both builds (decided 17/09/2026, recorded in
+       * `docs/AM_PRD_STATUS.md`). It gives a care worker risk assessments and
+       * consents to **read** and no write in either; the baseline said
+       * `record` because nothing narrowed it, and the cell cited nothing.
+       *
+       * A cell with no source is how this started, which is why each of these
+       * names one.
+       */
+      '/risk-assessments': 'read',
+      '/consent': 'read',
+
+      /*
+       * **Source: CW_PRD v2.0, Table 3 — by absence.** The Care Worker PRD
+       * claims every action for both roles: "Anything not listed is not
+       * accessible to either role." Family Portal is not listed, so it is not
+       * `read` with nothing to write; it is no access at all.
+       */
+      '/family': 'no_access',
+
+      /*
+       * **Two rows the four levels cannot say, left at the baseline on
+       * purpose.** Written here rather than only in the status doc, because
+       * this is where somebody changing these cells will be looking.
+       *
+       * `/goals` — the authority gives this role progress notes and not
+       * setting a goal. `MODULE_ACTS` declares `/goals` records as "setting a
+       * goal and recording progress", one level covering both acts, so
+       * `record` claims more than the authority allows and `read` claims
+       * less. Splitting the module or adding a fifth level to force it would
+       * be inventing a distinction the rest of the build does not have.
+       *
+       * `/incidents` — the authority says a care worker reports and does not
+       * review. That one the levels DO express, and `record` is correct here:
+       * `/incidents` declares records as "reporting an incident" and approves
+       * as deciding the CQC question. Listed here only so the next reader
+       * knows it was checked rather than missed.
+       */
     },
     senior_carer: {
       // Same act, same reason: admitting and editing are manager-level.
       '/residents': 'read',
       '/care-plans': 'read',
-      '/compliance': 'read',
-      '/reports': 'read',
+      /*
+       * **Source: CW_PRD v2.0, Table 3**, which gives a senior carer no
+       * access to either. They were `read` from the baseline, citing nothing,
+       * which showed a manager a staff member who can open the compliance
+       * overview and the reports — neither of which that role reaches in the
+       * product they actually sign into.
+       */
+      '/compliance': 'no_access',
+      '/reports': 'no_access',
       '/settings': 'no_access',
       /*
        * **Three cells that were wrong for sixteen phases**, found the first
@@ -147,6 +194,22 @@ const EXCEPTIONS: Partial<Record<StaffRole, Partial<Record<string, PermissionLev
       '/care-notes': 'approve',
       '/handover': 'approve',
       '/medications': 'approve',
+
+      /*
+       * **Two rows the four levels cannot say, left at the baseline on
+       * purpose**, beside the cells rather than only in the status doc.
+       *
+       * `/goals` — as for the care worker above: the authority gives progress
+       * notes and not setting a goal, and `/goals` declares one `record` act
+       * covering both.
+       *
+       * `/incidents` — the authority says a senior carer **acknowledges** an
+       * incident and a manager **closes** it. Both are the `approve` act
+       * here, so `approve` would hand them closing and `record` withholds
+       * acknowledging. `record` is kept, which is the side that under-claims:
+       * a cell too small misinforms a manager, a cell too large would
+       * misdescribe what the role may do.
+       */
     },
     activities_coordinator: {
       '/activities': 'record',

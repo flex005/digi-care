@@ -35,7 +35,14 @@ afterEach(() => {
 })
 
 /** A fixture incident, read back through the session overlay every screen uses. */
-const subject = incidents[0]!
+/*
+ * Chosen by property rather than position: the list is sorted by a date
+ * relative to `now`, so `incidents[0]` is a different incident at different
+ * hours. See `incident-write-gates.test.tsx`, where that cost a day's green.
+ */
+const subject = incidents.find(
+  (one) => one.siteId === 'site-rosewood-court' && one.subject.kind === 'resident',
+)!
 const current = (): Incident => withIncidentEdits(subject)
 
 const correction = {

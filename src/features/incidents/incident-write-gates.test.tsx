@@ -34,7 +34,21 @@ afterEach(() => {
   resetSessionIncidents()
 })
 
-const subject = incidents[0]!
+/*
+ * **Chosen by what the test needs, not by position.** `incidents[0]` was the
+ * subject here, and the list is sorted by a date computed relative to `now` —
+ * so which incident is first changes as the day turns. It became `inc-903`
+ * once that fixture gained a stood-down urgency, and `UrgencySection`
+ * correctly offers no raise control on one, so these tests passed by day and
+ * failed after midnight. §8's rule about anything deriving from `now`, where
+ * the `now` is in the fixture rather than the assertion.
+ */
+const subject = incidents.find(
+  (one) =>
+    one.siteId === 'site-rosewood-court' &&
+    one.urgency.kind === 'ordinary' &&
+    one.subject.kind === 'resident',
+)!
 
 /** `record` or better at `/incidents`, straight off the permission table. */
 const MAY_WRITE: StaffRole[] = [

@@ -5,6 +5,10 @@ import { SessionProvider } from '@/app/session/SessionProvider'
 import { ToastProvider, TooltipProvider } from '@/components/primitives'
 import type { ResidentId, StaffRole } from '@/data/types'
 import { SignInAs } from '@/test/sign-in-as'
+import { levelFor } from '@/features/team/permissions'
+import { STAFF_ROLE_NAMES } from '@/data/types'
+
+const TESTABLE = Object.keys(STAFF_ROLE_NAMES) as StaffRole[]
 import { residents } from '@/data/fixtures/residents'
 import { ResidentProfileRoute } from '@/features/residents/ResidentProfileRoute'
 import { CapacityGateRoute } from './CapacityGateRoute'
@@ -22,9 +26,25 @@ import { WithdrawalRoute } from './WithdrawalRoute'
  * `approves: 'recording a capacity decision'`.
  */
 
-const MAY_RECORD: StaffRole[] = ['senior_carer', 'care_worker']
-const MAY_APPROVE: StaffRole[] = ['registered_manager', 'deputy_manager']
-const MAY_NOT_WRITE: StaffRole[] = ['auditor']
+/*
+ * **Derived from the table, which changed under this test on purpose.**
+ * `care_worker` was in `MAY_RECORD` here, hand-written, and that assertion
+ * now fails — because the authority moved, not because the assertion was
+ * wrong. CW_PRD v2.0 Table 3 became the source for that role on 17/09/2026
+ * (`docs/AM_PRD_STATUS.md`), and it gives a care worker consents to read
+ * only. §8 says a test edited to make a change pass is usually the test that
+ * was right; this is the other case, and the lists are now read from
+ * `levelFor` so the next correction moves them without anybody editing a
+ * test at all.
+ */
+const mayRecordIn = (moduleId: string) =>
+  TESTABLE.filter((role) => {
+    const level = levelFor(role, moduleId)
+    return level === 'record' || level === 'approve'
+  })
+const MAY_APPROVE = TESTABLE.filter((role) => levelFor(role, '/consent') === 'approve')
+const MAY_RECORD = mayRecordIn('/consent').filter((role) => !MAY_APPROVE.includes(role))
+const MAY_NOT_WRITE = TESTABLE.filter((role) => !mayRecordIn('/consent').includes(role))
 
 /*
  * Both at Rosewood Court, which is the home every signed-in role here is

@@ -395,7 +395,15 @@ describe('planning an activity session', () => {
 })
 
 describe('sharing an incident update with the family', () => {
-  const incident = incidents.find((one) => one.siteId === 'site-rosewood-court')!
+  /*
+   * Chosen by the property this needs — a resident subject, because
+   * `FamilyMessage` renders nothing for an incident about a visitor or a
+   * member of staff — rather than by index. `incidents[0]` is sorted by a
+   * date relative to `now`, so which incident it is changes as the day turns.
+   */
+  const incident = incidents.find(
+    (one) => one.siteId === 'site-rosewood-court' && one.subject.kind === 'resident',
+  )!
   const at = (role: StaffRole) =>
     bare(role, <FamilyMessage incident={incident} onChanged={() => undefined} />)
 
@@ -403,11 +411,17 @@ describe('sharing an incident update with the family', () => {
     await refusedFor(at(role).container, 'share an update')
   })
 
-  it.each(mayRecordIn('/family'))('offers %s the control', async (role) => {
+  /*
+   * Asserted on the section rather than on a button: no fixture names a
+   * family member, so the panel legitimately renders `data-no-family-named`
+   * and offers nothing to click. The gate's question is whether the section
+   * is refused, and `data-family-message` is what answers it.
+   */
+  it.each(mayRecordIn('/family'))('offers %s the section', async (role) => {
     const { container } = at(role)
     await waitFor(
       () => {
-        expect(within(container).getAllByRole('button').length).toBeGreaterThan(0)
+        expect(container.querySelector('[data-family-message]')).toBeTruthy()
       },
       { timeout: 5000 },
     )
