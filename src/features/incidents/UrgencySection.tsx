@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Incident } from '@/data/types'
-import { raiseUrgency } from '@/data/access/incident-store'
+import { raiseUrgency, standDownUrgency } from '@/data/access/incident-store'
 import { Button } from '@/components/primitives'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
@@ -15,10 +15,15 @@ import styles from './incidents.module.css'
  * same reason: the reporter decides at the time with what they knew then, and
  * somebody reading it later may know more.
  *
- * **Raise or reword, never stand down.** There is no control here to put it
- * back to ordinary, because that would erase the fact that somebody raised it
- * and what they said. The reasoning, and the union member that would make
- * standing down honest, are on `raiseUrgency` in the store.
+ * **Three states, and standing down is not the same as never raising.**
+ * Returning to `ordinary` would erase the fact that somebody raised this and
+ * what they said; `stood_down` keeps the raise in full and records the answer
+ * beside it, so the record says who judged it urgent and who disagreed. It is
+ * a decision, not a gap, so it renders quietly and never takes the hatch (§1).
+ *
+ * Raising asks `canRecordIn`, standing down asks `canApproveIn`: a senior
+ * carer may say an incident cannot wait, and overruling that is a manager's
+ * call.
  */
 export function UrgencySection({
   incident,
@@ -32,7 +37,18 @@ export function UrgencySection({
   const format = useSiteFormat()
   const urgency = incident.urgency
   const raised = urgency.kind === 'needs_attention_now'
+  const settled = urgency.kind === 'stood_down'
   const [because, setBecause] = useState('')
+  const [why, setWhy] = useState('')
+
+  /*
+   * On a first raise `worded` is the same act as `raised`, and printing both
+   * would state one value twice. Only a reword is worth a second line.
+   */
+  const reworded =
+    urgency.kind === 'needs_attention_now' &&
+    (urgency.worded.at !== urgency.raised.at ||
+      urgency.worded.by.id !== urgency.raised.by.id)
 
   return (
     <section className={styles.section} data-section="urgency">
@@ -43,11 +59,34 @@ export function UrgencySection({
           // Not hatched: nobody failed to record anything. An incident that
           // nobody marked urgent is a complete record saying so.
           'Nobody has said this one cannot wait.'
+        ) : urgency.kind === 'stood_down' ? (
+          /*
+           * **Quietly and in full, never hatched.** A stood-down urgency is a
+           * decision somebody made with their name on it, not a gap — §1's
+           * recorded-negative rule. Both judgements are stated, because that
+           * is what the record holds and keeping the raise is the whole
+           * reason this member exists.
+           */
+          <>
+            <strong>{urgency.raised.by.displayName}</strong> said this one could not
+            wait, <span data-numeric>{format.dateTime(urgency.raised.at)}</span>:{' '}
+            {urgency.because} Stood down by{' '}
+            <strong>{urgency.stoodDown.by.displayName}</strong> ·{' '}
+            <span data-numeric>{format.dateTime(urgency.stoodDown.at)}</span>:{' '}
+            {urgency.why}
+          </>
         ) : (
           <>
             This needs attention now: {urgency.because} Raised by{' '}
             <strong>{urgency.raised.by.displayName}</strong> ·{' '}
             <span data-numeric>{format.dateTime(urgency.raised.at)}</span>
+            {reworded && urgency.kind === 'needs_attention_now' ? (
+              <>
+                {'. Reworded by '}
+                <strong>{urgency.worded.by.displayName}</strong> ·{' '}
+                <span data-numeric>{format.dateTime(urgency.worded.at)}</span>
+              </>
+            ) : null}
           </>
         )}
       </p>
@@ -66,6 +105,17 @@ export function UrgencySection({
         <p className={styles.byline} data-urgency-read-only>
           Your role is {viewer.roleName}, which reads this incident and does not say
           whether it needs attention now.
+        </p>
+      ) : settled ? (
+        /*
+         * Nothing more to do, and said rather than left as an absent control.
+         * Re-raising would overwrite the stand-down, and the union holds one
+         * raise and one answer rather than a chain — the store refuses it for
+         * the same reason this screen does not offer it.
+         */
+        <p className={styles.byline} data-urgency-settled>
+          This was raised and answered. Raising it again would overwrite who stood it
+          down and why, so the record keeps both as they are.
         </p>
       ) : (
         <>
@@ -100,21 +150,56 @@ export function UrgencySection({
               {raised ? 'Update the reason' : 'This needs attention now'}
             </Button>
           </div>
+
+          {/*
+           * **Standing down is stricter than raising.** It overrules somebody
+           * else's clinical judgement, so it asks `canApproveIn` where the
+           * raise asks `canRecordIn`: a senior carer may say an incident
+           * cannot wait, and answering that is a manager's call.
+           */}
+          {raised ? (
+            viewer.canApproveIn('/incidents') ? (
+              <>
+                <label className={styles.field}>
+                  <span className={styles.fieldLabel}>
+                    Why it no longer needs attention now
+                  </span>
+                  <input
+                    className={styles.input}
+                    type="text"
+                    value={why}
+                    data-urgency-why
+                    placeholder="Seen by the GP within the hour and the family have been rung."
+                    onChange={(event) => {
+                      setWhy(event.target.value)
+                    }}
+                  />
+                </label>
+                <div className={styles.decisionActions}>
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    data-urgency-stand-down
+                    disabled={why.trim() === ''}
+                    onClick={() => {
+                      standDownUrgency(incident, why, currentUser)
+                      setWhy('')
+                      onChanged()
+                    }}
+                  >
+                    Stand this down
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <p className={styles.byline} data-stand-down-read-only>
+                Your role is {viewer.roleName}, which may say an incident needs
+                attention now and does not stand one down.
+              </p>
+            )
+          ) : null}
         </>
       )}
-
-      {/*
-       * Said where somebody would otherwise look for the control. A missing
-       * button with no explanation reads as an oversight; this says it is a
-       * decision and what the record would need to hold it.
-       */}
-      {raised ? (
-        <p className={styles.footState} data-urgency-no-standdown>
-          There is no way to take this back. Doing so would remove the fact that
-          somebody raised it and what they said, and the record has nowhere to put who
-          stood it down or why.
-        </p>
-      ) : null}
     </section>
   )
 }

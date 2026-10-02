@@ -4,6 +4,7 @@ import type {
   IsoDate,
   IsoDateTime,
   Recorded,
+  IncidentUrgency,
 } from '@/data/types'
 import { COMMUNAL_AREAS, INCIDENT_SEVERITIES, INCIDENT_TYPES } from '@/data/types'
 import { regionLabel } from '@/assets/body-map/regions'
@@ -61,6 +62,39 @@ const reviewLine = (label: string, field: Recorded<string>, format: PdfFormat) =
   field.kind === 'recorded'
     ? `${label}: ${field.value} (${field.recordedBy.displayName}, ${format.dateTime(field.recordedAt)})`
     : `${label}: not recorded.`
+
+/**
+ * What the file says about urgency, including the two things it must not drop.
+ *
+ * **A stood-down urgency has to reach the page.** Leaving it out lets a reader
+ * conclude either that the incident is still urgent or that nobody ever raised
+ * it, and those are opposite mistakes from the same omission. The raise is
+ * printed in full beside the stand-down, because that is what the record
+ * holds: somebody judged this urgent and somebody else answered them.
+ *
+ * **The reword is printed only when there was one.** On a first raise `worded`
+ * is the same act as `raised`, and saying it twice is a value stated twice.
+ */
+function urgencyLines(urgency: IncidentUrgency, format: PdfFormat): string[] {
+  if (urgency.kind === 'ordinary') return []
+
+  const raise = `${urgency.raised.by.displayName} said this one cannot wait, ${format.dateTime(urgency.raised.at)}: ${urgency.because}`
+
+  if (urgency.kind === 'stood_down') {
+    return [
+      raise,
+      `Stood down by ${urgency.stoodDown.by.displayName}, ${format.dateTime(urgency.stoodDown.at)}: ${urgency.why}`,
+    ]
+  }
+
+  return urgency.worded.at === urgency.raised.at &&
+    urgency.worded.by.id === urgency.raised.by.id
+    ? [raise]
+    : [
+        raise,
+        `Reworded by ${urgency.worded.by.displayName}, ${format.dateTime(urgency.worded.at)}.`,
+      ]
+}
 
 export function incidentPdfContent(
   incident: Incident,
@@ -130,9 +164,7 @@ export function incidentPdfContent(
           : incident.status.kind === 'under_review'
             ? `Under review. Acknowledged by ${incident.status.acknowledged.by.displayName}; review started by ${incident.status.reviewStarted.by.displayName}.`
             : `Closed by ${incident.status.closed.by.displayName}, ${format.dateTime(incident.status.closed.at)}.`,
-      incident.urgency.kind === 'needs_attention_now'
-        ? `${incident.urgency.raised.by.displayName} said this one cannot wait: ${incident.urgency.because}`
-        : '',
+      ...urgencyLines(incident.urgency, format),
     ].filter((line) => line !== ''),
   })
 

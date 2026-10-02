@@ -845,6 +845,8 @@ export function assembleReport(
         ? { kind: 'ordinary' }
         : {
             kind: 'needs_attention_now',
+            // First raise: the same act wrote the wording.
+            worded: stamp,
             raised: stamp,
             because: input.urgentBecause.trim(),
           },

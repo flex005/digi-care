@@ -4,15 +4,21 @@ import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
 import { TooltipProvider } from '@/components/primitives'
-import type { Incident } from '@/data/types'
+import type { Incident, IsoDateTime } from '@/data/types'
 import { SignInAs } from '@/test/sign-in-as'
 import { incidents } from '@/data/fixtures/incidents'
+import { now as appNow } from '@/data/fixtures/clock'
 import { staffOkonkwo } from '@/data/fixtures/organisation'
 import {
   raiseUrgency,
+  standDownUrgency,
   resetSessionIncidents,
   withIncidentEdits,
 } from '@/data/access/incident-store'
+import { outstandingDecisions } from './decisions'
+import { incidentPdfContent, type PdfFormat } from './incident-pdf'
+import { UNACKNOWLEDGED_INCIDENT } from '@/data/fixtures/incidents'
+import { staffHalloran } from '@/data/fixtures/organisation'
 import { IncidentDetailRoute } from './IncidentDetailRoute'
 
 /**
@@ -33,6 +39,7 @@ afterEach(() => {
 
 const ordinary = incidents.find((entry) => entry.urgency.kind === 'ordinary')!
 const read = (incident: Incident): Incident => withIncidentEdits(incident)
+const appNowIso = () => appNow().toISOString() as IsoDateTime
 
 describe('raising urgency after the report', () => {
   it('records the reason, who raised it, and survives the read overlay', () => {
@@ -159,4 +166,181 @@ describe('the control on the detail page', () => {
       labels.some((label) => /stand down|no longer urgent|ordinary/.test(label)),
     ).toBe(false)
   }, 30000)
+})
+
+/**
+ * The fixtures that make the raised and stood-down states reachable at all.
+ *
+ * Every one of the ten incident fixtures was `ordinary`, so `UrgencySection`,
+ * `outstandingDecisions` and `incident-pdf` all rendered a state nothing in
+ * the running product could produce. Three dead render sites, and the feature
+ * read as unbuilt to somebody looking for it.
+ */
+describe('the fixtures reach both raised states', () => {
+  const raisedFixture = incidents.find(
+    (entry) => entry.urgency.kind === 'needs_attention_now',
+  )
+  const stoodDownFixture = incidents.find(
+    (entry) => entry.urgency.kind === 'stood_down',
+  )
+
+  it('has an incident somebody said cannot wait', () => {
+    expect(raisedFixture).toBeTruthy()
+    expect(raisedFixture!.id).toBe(UNACKNOWLEDGED_INCIDENT)
+  })
+
+  it('has an incident that was raised and then stood down', () => {
+    expect(stoodDownFixture).toBeTruthy()
+    if (stoodDownFixture!.urgency.kind !== 'stood_down')
+      throw new Error('not stood down')
+    // The raise survives in full. That is the whole reason for the member.
+    expect(stoodDownFixture!.urgency.because).not.toBe('')
+    expect(stoodDownFixture!.urgency.raised.by.id).toBeTruthy()
+    expect(stoodDownFixture!.urgency.why).not.toBe('')
+    expect(stoodDownFixture!.urgency.stoodDown.by.id).not.toBe(
+      stoodDownFixture!.urgency.raised.by.id,
+    )
+  })
+
+  it('reaches the reworded case, where the two acts differ', () => {
+    if (raisedFixture!.urgency.kind !== 'needs_attention_now') throw new Error('nope')
+    expect(raisedFixture!.urgency.worded.at).not.toBe(raisedFixture!.urgency.raised.at)
+  })
+})
+
+describe('standing an urgency down', () => {
+  it('keeps the raise and records the answer beside it', () => {
+    raiseUrgency(ordinary, 'The family arrive at four.', staffOkonkwo)
+    const raisedAt = (() => {
+      const u = read(ordinary).urgency
+      if (u.kind !== 'needs_attention_now') throw new Error('not raised')
+      return u.raised
+    })()
+
+    standDownUrgency(read(ordinary), 'The GP saw her within the hour.', staffHalloran)
+
+    const after = read(ordinary)
+    if (after.urgency.kind !== 'stood_down') throw new Error('not stood down')
+    // Nothing deleted: both judgements are on the record, with both names.
+    expect(after.urgency.because).toBe('The family arrive at four.')
+    expect(after.urgency.raised.by.id).toBe(raisedAt.by.id)
+    expect(after.urgency.raised.at).toBe(raisedAt.at)
+    expect(after.urgency.why).toBe('The GP saw her within the hour.')
+    expect(after.urgency.stoodDown.by.id).toBe(staffHalloran.id)
+  })
+
+  it('refuses without a reason, and refuses when nothing was raised', () => {
+    expect(() => standDownUrgency(ordinary, '  ', staffOkonkwo)).toThrow(/saying why/i)
+
+    raiseUrgency(ordinary, 'Urgent.', staffOkonkwo)
+    expect(read(ordinary).urgency.kind).toBe('needs_attention_now')
+
+    resetSessionIncidents()
+    expect(() => standDownUrgency(ordinary, 'No longer.', staffOkonkwo)).toThrow(
+      /nothing has been raised/i,
+    )
+  })
+
+  /*
+   * The union holds one raise and one answer, not a chain, so re-raising
+   * would overwrite who stood it down and why — the erasure this member
+   * exists to prevent, arriving from the other direction.
+   */
+  it('will not re-raise something already stood down', () => {
+    raiseUrgency(ordinary, 'Urgent.', staffOkonkwo)
+    standDownUrgency(read(ordinary), 'Settled.', staffHalloran)
+
+    expect(() => raiseUrgency(read(ordinary), 'Urgent again.', staffOkonkwo)).toThrow(
+      /erase who stood it down/i,
+    )
+    expect(read(ordinary).urgency.kind).toBe('stood_down')
+  })
+
+  /*
+   * **A reword keeps the raise.** With one act this had to choose between
+   * recording who first raised it and who stands behind the current words,
+   * and it also reset the only timestamp there was, so an urgency raised six
+   * hours ago and reworded a minute ago read as a minute old.
+   */
+  it('a reword moves `worded` and leaves `raised` where it was', () => {
+    raiseUrgency(ordinary, 'First wording.', staffOkonkwo)
+    const first = read(ordinary).urgency
+    if (first.kind !== 'needs_attention_now') throw new Error('not raised')
+
+    raiseUrgency(read(ordinary), 'A clearer wording.', staffHalloran)
+    const second = read(ordinary).urgency
+    if (second.kind !== 'needs_attention_now') throw new Error('not raised')
+
+    expect(second.because).toBe('A clearer wording.')
+    expect(second.raised.at).toBe(first.raised.at)
+    expect(second.raised.by.id).toBe(first.raised.by.id)
+    expect(second.worded.by.id).toBe(staffHalloran.id)
+  })
+})
+
+describe('what the rest of the product does with a stood-down urgency', () => {
+  const stoodDown = incidents.find((entry) => entry.urgency.kind === 'stood_down')!
+  const raisedOne = incidents.find(
+    (entry) => entry.urgency.kind === 'needs_attention_now',
+  )!
+
+  /*
+   * **The entire point of the member.** A stood-down incident is not
+   * outstanding, and the positive case is asserted beside it so that a
+   * predicate refusing everything cannot pass as one that works.
+   */
+  it('does not report it as something that cannot wait', () => {
+    const ids = outstandingDecisions(stoodDown, appNowIso()).map((entry) => entry.id)
+    expect(ids).not.toContain('urgent')
+
+    const raisedIds = outstandingDecisions(raisedOne, appNowIso()).map(
+      (entry) => entry.id,
+    )
+    expect(raisedIds).toContain('urgent')
+  })
+
+  /*
+   * An export that drops the stand-down lets a reader conclude either that it
+   * is still urgent or that nobody ever raised it: opposite mistakes from one
+   * omission. The raise is on the page too, because that is what happened.
+   */
+  it('carries both halves into the PDF', () => {
+    const format: PdfFormat = { dateTime: (at) => `[${at}]`, date: (on) => `[${on}]` }
+    const text = incidentPdfContent(stoodDown, {
+      residentName: 'Emmanuel Okafor',
+      siteName: 'Rosewood Court',
+      format,
+    })
+      .sections.flatMap((section) => section.lines)
+      .join('\n')
+
+    if (stoodDown.urgency.kind !== 'stood_down') throw new Error('not stood down')
+    expect(text).toContain(stoodDown.urgency.because)
+    expect(text).toContain(stoodDown.urgency.why)
+    expect(text).toContain(stoodDown.urgency.stoodDown.by.displayName)
+    expect(text).toContain('Stood down by')
+  })
+
+  it('does not state the wording twice on a first raise', () => {
+    const format: PdfFormat = { dateTime: (at) => `[${at}]`, date: (on) => `[${on}]` }
+    const firstRaise = {
+      ...ordinary,
+      urgency: {
+        kind: 'needs_attention_now' as const,
+        raised: { by: staffOkonkwo, at: ordinary.reported.at },
+        because: 'Nobody has looked at her since.',
+        worded: { by: staffOkonkwo, at: ordinary.reported.at },
+      },
+    }
+    const text = incidentPdfContent(firstRaise, {
+      residentName: 'Emmanuel Okafor',
+      siteName: 'Rosewood Court',
+      format,
+    })
+      .sections.flatMap((section) => section.lines)
+      .join('\n')
+
+    expect(text).toContain('Nobody has looked at her since.')
+    expect(text).not.toContain('Reworded by')
+  })
 })

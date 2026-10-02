@@ -13,6 +13,7 @@ import type {
   PostIncidentReviewFlag,
   ResidentId,
   StaffRef,
+  IncidentUrgency,
 } from '../types'
 import { COMMUNAL_AREAS, subjectResidentId } from '../types'
 import { NOW, atTime, daysAgo, makeRandom, toIsoDateTime } from './generate'
@@ -569,6 +570,19 @@ const unacknowledged: {
   daysBack: number
   hour: number
   reporter: StaffRef
+  /**
+   * Set on two of these, because no fixture reached `needs_attention_now` at
+   * all and three screens render it — `UrgencySection`, `outstandingDecisions`
+   * and the PDF — so all three were dead in the running product and the
+   * feature read as unbuilt. §8's standing check about a state no fixture
+   * reaches, with three render sites behind it.
+   *
+   * **A literal, never a draw.** `incidents.ts` generates from one seeded
+   * stream; swapping a literal for a literal shifts nothing, and an `rng` call
+   * here would move every fixture after it. That is the `gender`-beside-
+   * `pronouns` defect.
+   */
+  urgency?: (occurredAt: Date) => IncidentUrgency
 }[] = [
   {
     id: UNACKNOWLEDGED_INCIDENT,
@@ -578,6 +592,19 @@ const unacknowledged: {
     daysBack: 5,
     hour: 3,
     reporter: staffNwosu,
+    /*
+     * Raised and still unacknowledged, which is what `outstandingDecisions`
+     * reports: somebody said this cannot wait and nobody has picked it up.
+     * Reworded an hour after the raise, so the two acts differ and the screen
+     * has a case where it must print both rather than one twice.
+     */
+    urgency: (occurredAt) => ({
+      kind: 'needs_attention_now',
+      raised: act(staffNwosu, after(occurredAt, 1)),
+      because:
+        'She was on the floor for an unknown time and is on anticoagulants. Nobody has examined her properly yet.',
+      worded: act(staffNwosu, after(occurredAt, 2)),
+    }),
   },
   {
     id: 'inc-902' as IncidentId,
@@ -596,6 +623,19 @@ const unacknowledged: {
     daysBack: 1,
     hour: 14,
     reporter: staffNwosu,
+    /*
+     * Raised and answered. The raise is kept in full beside the stand-down,
+     * which is the whole point of the member — and this incident is still
+     * unacknowledged, so it is the case that proves `outstandingDecisions`
+     * does not report a stood-down urgency as one that cannot wait.
+     */
+    urgency: (occurredAt) => ({
+      kind: 'stood_down',
+      raised: act(staffHalloran, after(occurredAt, 0.5)),
+      because: 'The trolley was left across a fire door on a floor with two wanderers.',
+      stoodDown: act(staffOkonkwo, after(occurredAt, 3)),
+      why: 'The door was clear within ten minutes and the night senior confirmed it. Logged for the walkaround, not for tonight.',
+    }),
   },
   {
     id: 'inc-904' as IncidentId,
@@ -646,7 +686,7 @@ for (const entry of unacknowledged) {
      * incident by somebody attaching it.
      */
     evidence: [],
-    urgency: { kind: 'ordinary' },
+    urgency: entry.urgency?.(occurredAt) ?? { kind: 'ordinary' },
     familyTold: { kind: 'not_decided' },
     edited: { kind: 'not_edited' },
     origin: { kind: 'reported' },

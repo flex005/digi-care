@@ -453,15 +453,44 @@ export interface IncidentEvidence {
  * is not presence at the scene but a reason, which is why `because` is on the
  * member rather than optional beside it.
  *
- * **There is no member for standing it down**, so the record cannot say that
- * somebody raised this and somebody else disagreed. Going back to `ordinary`
- * would delete the first judgement rather than answer it, so the store
- * refuses; a `stood_down` member carrying who and why is what would make that
- * honest, and adding one is a change to this union's shape.
+ * **`stood_down` answers a raise rather than deleting it.** Going back to
+ * `ordinary` would have erased the fact that somebody raised this and what
+ * they said, leaving the record unable to tell "nobody thought this urgent"
+ * from "somebody did and was overruled". So the member keeps `raised` and
+ * `because` in full and adds the second judgement beside them: the record
+ * says Amara raised this because X and Chidi stood it down because Y. That
+ * is what makes it safe, and it is why `ordinary` still means exactly what
+ * it meant before — nobody raised it — so no record already on file changes
+ * meaning.
+ *
+ * **It is a decision, not a gap**, so it renders quietly and in full and
+ * never takes the hatch (§1). A stood-down incident is a complete record.
+ *
+ * **`worded` is a second act, for the same reason `notified` carries two.**
+ * With one act, rewording had to choose between recording who first raised
+ * it and who stands behind the words that are there now. It also meant a
+ * reword reset the only timestamp there was, so an urgency raised six hours
+ * ago and reworded a minute ago read as a minute old — the screen
+ * understating how long something urgent had been sitting. On a first raise
+ * the two are the same act, and the screen says it once rather than twice.
  */
 export type IncidentUrgency =
   | { kind: 'ordinary' }
-  | { kind: 'needs_attention_now'; raised: IncidentAct; because: string }
+  | {
+      kind: 'needs_attention_now'
+      raised: IncidentAct
+      because: string
+      /** Who wrote the wording that is there now. Equals `raised` at first. */
+      worded: IncidentAct
+    }
+  | {
+      kind: 'stood_down'
+      /** Kept in full. Standing down answers a judgement, it does not erase one. */
+      raised: IncidentAct
+      because: string
+      stoodDown: IncidentAct
+      why: string
+    }
 
 /**
  * Whether anybody has decided to tell the family, and the fact that deciding

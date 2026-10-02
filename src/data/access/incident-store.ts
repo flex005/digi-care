@@ -124,6 +124,7 @@ let closed = 0
 let familyDecided = 0
 let corrected = 0
 let urgencyRaised = 0
+let urgencyStoodDown = 0
 
 /**
  * Incidents reported in this session.
@@ -343,33 +344,70 @@ export function recordFamilyDecision(
 /**
  * Saying an incident needs attention now, after it was filed.
  *
- * **Raise or reword, never stand down.** Going back to `ordinary` would erase
- * the fact that somebody raised it and what they said, and a recorded
- * judgement that disappears is the Evidence Invariant run backwards: the
- * record would no longer be able to say whether nobody thought it urgent or
- * somebody did and was overruled. A `stood_down` member carrying who stood it
- * down and why is the honest shape for that, and it is a status-union change,
- * so it is asked for rather than taken.
+ * **Raising and rewording are the same call and different records.** A first
+ * raise stamps `raised` and `worded` with the same act. A reword keeps
+ * `raised` exactly as it was and moves `worded` only, which is why the union
+ * carries two acts: with one, rewording had to choose between recording who
+ * first raised it and who stands behind the words that are there now, and it
+ * also reset the only timestamp there was — an urgency raised six hours ago
+ * and reworded a minute ago read as a minute old.
  *
- * **Rewording moves the stamp, and that is a trade rather than a free
- * choice.** `IncidentUrgency` has one act on it, so the record can hold
- * either who first raised it or who stands behind the words that are there
- * now, not both. It keeps the second: leaving a reworded reason under the
- * first person's name attributes somebody's words to somebody else, which is
- * the defect `correctReport` goes to some length to avoid in the other
- * direction. Holding both needs a second act on the type.
+ * **It will not re-raise something already stood down.** The union holds one
+ * raise and one stand-down, not a chain, so raising again would overwrite the
+ * stand-down and erase a judgement somebody recorded — the thing this whole
+ * member exists to avoid. Refused here rather than in the screen, because a
+ * rule that lives in a form is a rule the next form forgets.
  */
 export function raiseUrgency(incident: Incident, because: string, by: StaffRef): void {
   if (because.trim() === '')
     throw new Error('Saying an incident is urgent means saying why.')
+  if (incident.urgency.kind === 'stood_down')
+    throw new Error(
+      'This was stood down, and raising it again would erase who stood it down and why.',
+    )
+
+  const now = act(by)
   patch(incident.id, {
     urgency: {
       kind: 'needs_attention_now',
-      raised: act(by),
+      // The original raise survives a reword. Only the wording is re-stamped.
+      raised:
+        incident.urgency.kind === 'needs_attention_now' ? incident.urgency.raised : now,
       because: because.trim(),
+      worded: now,
     },
   })
   urgencyRaised += 1
+}
+
+/**
+ * Answering a raise rather than deleting it.
+ *
+ * The record keeps `raised` and `because` in full and adds who stood it down
+ * and why beside them, so it says "Amara raised this because X, Chidi stood
+ * it down because Y" rather than losing the first half. That is what makes
+ * standing down safe where returning to `ordinary` was not: `ordinary` means
+ * nobody raised it, and it still does.
+ *
+ * **Stricter than raising**, because this overrules somebody else's clinical
+ * judgement — the screen asks `canApproveIn('/incidents')` where raising asks
+ * `canRecordIn`.
+ */
+export function standDownUrgency(incident: Incident, why: string, by: StaffRef): void {
+  if (why.trim() === '') throw new Error('Standing down an urgency means saying why.')
+  if (incident.urgency.kind !== 'needs_attention_now')
+    throw new Error('Nothing has been raised on this incident to stand down.')
+
+  patch(incident.id, {
+    urgency: {
+      kind: 'stood_down',
+      raised: incident.urgency.raised,
+      because: incident.urgency.because,
+      stoodDown: act(by),
+      why: why.trim(),
+    },
+  })
+  urgencyStoodDown += 1
 }
 
 /**
@@ -419,6 +457,7 @@ export function incidentHoldings(): SessionHolding[] {
     ...held('family decisions you recorded', familyDecided),
     ...held('reports you corrected', corrected),
     ...held('incidents you marked urgent', urgencyRaised),
+    ...held('urgencies you stood down', urgencyStoodDown),
   ]
 }
 
@@ -433,4 +472,5 @@ export function resetSessionIncidents(): void {
   familyDecided = 0
   corrected = 0
   urgencyRaised = 0
+  urgencyStoodDown = 0
 }
