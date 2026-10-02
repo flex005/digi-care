@@ -16756,3 +16756,113 @@ both return the element itself.
 - **The report route and its link were gated too**, beyond the two named.
 - **`activities_coordinator` is dropped from the gate tests** because no
   fixture staff member holds it; recorded above rather than worked around.
+
+## Permission sweep, product-wide
+
+### The real count, and why the brief's table was not it
+
+**40 components call a store or client write. 14 referenced a permission
+check. 26 did not.**
+
+The brief's table counted components importing a store. Almost none do: they
+import `src/data/access/client.ts`, a facade whose **28 write exports**
+(`withdrawConsent`, `recordRound`, `submitCareNote`, `admit`…) wrap the
+stores. An audit that looked only at store imports found 25 call sites and
+missed every care note, every dose and every consent.
+
+**Three attempts at this number were wrong before one was right**, which is
+the §8 entry about a check that silently reads part of its input:
+
+1. A structural classifier called `boardFor` a write and missed
+   `recordFamilyDecision`.
+2. A brace matcher took the `{` in `function submitCareNote(input: {` as the
+   function body and found 5 client writes instead of 28.
+3. An import matcher used `.match`, which returns only the **first** import
+   from a module — and these files open with `import type {…} from
+   '@/data/access/client'`, so `withdrawConsent` was never in the captured
+   names. That version reported 0 components and 1 component on two runs.
+
+The number that shipped was checked against files by hand.
+
+### What was actually open
+
+Enforcement is UI-only. No store checks a level — the only mention of
+permissions under `src/data/access` was a comment. `AppShell` refuses a
+module at `no_access` only, and the auditor's baseline is `read`, so an
+auditor reached every screen in the product except Settings and could
+withdraw a consent, sign for a round, file an incident and admit a resident.
+
+One commit per module, thirteen modules. `ReadOnlyHere` is the one owner of
+the refusal: it names the role and the act, because a control that is simply
+absent reads as a feature nobody built, and because the sentence *is* the
+enforcement being visible.
+
+### Findings worth more than the gates
+
+- **`activities_coordinator` was declared and unreachable.** Levels for
+  sixteen modules, and its only holder was deliberately `never_given_access`,
+  so `SignInAs` threw and none of those levels was enforced by anything
+  observable. A second coordinator was added rather than that fixture state
+  destroyed, and the fixture test now asserts every role is held **by
+  somebody with access** — it previously asserted only that every role was
+  held, which `activities_coordinator` satisfied throughout.
+- **Nothing in `routes.tsx` guards a route by level.** Every screen is
+  reachable by typing its URL, so hiding a link is not a gate. That is why
+  the report route and the setup wizard both needed checking rather than
+  assuming the sidebar covered them.
+- **`AddMemberDialog` is exported and nothing renders it.** A write surface
+  with no caller, which is why no check was ever missed on it. Gated anyway
+  and recorded as unreachable rather than quietly deleted.
+- **Nobody holds exactly `record` on `/care-plans`.** The module declares
+  both acts and every role is `approve` or `read`, so draft-but-not-sign is
+  declared and unreachable. The test derives that list, so it is empty today
+  and fills itself in if a role ever lands between the two.
+- **`/consent` disagrees with its own screens.** The capacity gate is the
+  only route to `recordConsent`, which the table calls a *record* act, while
+  the gate itself is an MCA two-stage test, which it calls an *approve* act.
+  The stricter reading was taken and a test asserts the refusal for the two
+  record-only roles, so the mismatch is visible rather than discovered later.
+- **`setActive` is not a view preference.** Turning a risk template off
+  decides what records already on file mean, and `/settings` is `read` rather
+  than `no_access` for a deputy manager, so the shell does not cover it.
+
+### The guard ships, and the condition it had to clear
+
+`scripts/check-write-gates.mjs`, wired into `verify`. Each store and the
+client facade declare `WRITE_EXPORTS`; the guard requires every component
+calling one to ask about level or carry `// permission-ok: <why>`.
+
+**It needs two opt-outs, which is why it ships.** §8's condition is that a
+guard needing many escapes is wallpaper within a week, and this build has
+already written and thrown away a lowercasing guard for exactly that reason.
+Both opt-outs are real: the invitation screen has no signed-in viewer to ask
+about, and the setup wizard is refused by `AppShell` because
+`set_up_organisation` carries a route.
+
+**What it cannot do is in its success line**: a write left off a
+`WRITE_EXPORTS` list is a write it will not look for. It checks the other
+direction — every declared name must be a real export — and prints 89 writes
+across 19 modules and 40 components rather than a tick.
+
+Mutated both ways, with the exit code read from the process rather than from
+a pipe: removing a gate exits 1 naming the file and the write; renaming a
+declared export exits 1 naming the module.
+
+**Its first version printed a tick over one component.** This codebase writes
+no semicolons, so `import[^;]*?{…}[^;]*?from '…'` ran across several import
+lines and captured the wrong one's names. The braces are now anchored to
+their own `from`, and the 40 it reports matches the hand audit exactly.
+
+### Two process notes
+
+**A `verify` run took 960s and failed two unrelated tests on timeout.** It
+was not a regression: a previous `verify` had been moved to the background on
+timeout and I started another against the same tree, so two full runs were
+competing. Run once, cleanly, it is 58.5s and 1674 pass. The standing
+instruction is to run it once in the foreground with nothing alongside it,
+and this is what ignoring that looks like.
+
+**A mutation silently did not land and the run printed "10 passed".** A zsh
+loop left the filename as `NoteComposer nc.tsx`, so nothing was edited. The
+`grep -c` of the injected string printing empty is what caught it — the test
+output was identical to a guard catching nothing.
