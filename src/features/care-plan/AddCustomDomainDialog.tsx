@@ -3,6 +3,8 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import type { Resident } from '@/data/types'
 import { recordCustomCarePlanDomain } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import type { ProfileContext } from '@/features/residents/ResidentProfileRoute'
 import { Button, Dialog } from '@/components/primitives'
 import styles from './care-plan.module.css'
@@ -36,10 +38,26 @@ export function AddCustomDomainDialog({
   onAdded: () => void
 }) {
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const { refresh } = useOutletContext<ProfileContext>()
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [failure, setFailure] = useState('')
+
+  /*
+   * The trigger in `CarePlanTab` asks this too. Asked here as well so the
+   * gate and the act are in one file: a second route to this dialog would
+   * otherwise be guarded by whichever screen happened to open it.
+   */
+  if (!viewer.canRecordIn('/care-plans')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject="this care plan"
+        act="add a domain to it"
+      />
+    )
+  }
 
   const add = () => {
     void recordCustomCarePlanDomain({
