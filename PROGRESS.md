@@ -16923,3 +16923,60 @@ now asserts the section rather than a button.
 
 The tell both times was that the failures named roles the change did not
 touch: `registered_manager` cannot be affected by a care worker's cell.
+
+## The clock-ordered fixture lesson, moved to §8 and swept (7343fd4)
+
+### Why it moved
+
+f68da8e put it here. PROGRESS.md is append-only history — findable, not read.
+§8 is the list read at the start of a session, and its existing entry about
+`now` **assumes the `now` is in the test**, so somebody following it pins the
+clock, does exactly what it says, and still hits this. Added as an extension
+of that entry rather than a new bullet, which is how the file already handles
+"Second occurrence" and "This entry is no longer the mechanism".
+
+### The sweep
+
+Three fixture arrays sort by a generated date: `incidents` (`occurredAt`),
+`careNotes` (`recordedAt`) and `goalProgressNotes` (`recordedAt`). Each now
+declares it where the sort happens, so it is stated at the thing rather than
+only in a list. `medications.ts` has two more sorts, both local to a function
+rather than an exported array, so neither is indexable from a test.
+
+**Eleven numeric indexes into them, every one safe, nothing converted.** The
+three that were not safe were already fixed in f68da8e. Each surviving one
+carries a one-line reason:
+
+- `session-losses.test.ts` ×6 — `careNotes[0]` is a template to spread with
+  the id overridden, and `careNotes[1]` is an id to attach a review to with
+  both instants read off the same note. The assertions count what the session
+  holds; no note's content reaches them.
+- `auth.test.tsx` ×3 — templates with fresh ids, asserting the count of what
+  signing out discards.
+- `note-write-gates.test.tsx` ×1 — `CorrectionDialog` reads only
+  `original.id` and `original.category` and renders the same for any note.
+- `incident-pdf.test.ts` ×1 — every expectation is read back off `base`
+  itself, so it holds whichever incident the clock puts first.
+
+**`sites` and `residents` are indexed sixteen times and are not
+clock-dependent**: one is a literal array, the other is built from literal
+person lists in declaration order with no sort. Checked rather than assumed,
+because "it is a fixture array" was not the property that mattered.
+
+### The guard, costed and not shipped
+
+The condition was the same one as last time, and this time the cost fails it.
+
+Scoped to numeric indexes into the three declared arrays, a guard finds **11
+sites, every one legitimate, and none of the three real defects** — those
+were fixed before it could have run. Every surviving index is a template, an
+instant or an id, because **a test that wants a particular record already
+selects by property**. So the index is weak evidence, and the discriminator —
+*is this subject rendered, so that the component branches on its state* — is
+the identity-versus-condition class §8 already records as unmechanisable.
+
+11 escapes buying nothing is the lowercasing guard again: 30 sites, 27
+legitimate, written and thrown away for exactly this reason. So it is a
+question asked at the call site, written into §8 and marked unenforced with
+the numbers, rather than a script that teaches people to type an escape
+comment without reading it.
