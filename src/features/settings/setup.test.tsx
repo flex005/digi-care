@@ -463,9 +463,18 @@ describe('what kind of service it is', () => {
       organisationTypeAsConfigured(),
       subjectTermIdAsConfigured(),
     )
-    expect(term.One).toBe('Service User')
-    // Declared, not derived: the plural capitalises both words.
-    expect(term.Many).toBe('Service Users')
+    /*
+     * **The option picked is "Service User" and the word rendered is "Service
+     * user", and that gap is the design.** `label` is a name in a list, so it
+     * is title case; `One` and `Many` are words in sentences, so they are
+     * sentence case, matching STAFF_ROLE_NAMES and the sidebar's headings.
+     * Asserting both here is what makes the separation a rule rather than two
+     * fields that happen to differ.
+     */
+    expect(term.One).toBe('Service user')
+    // Declared, not derived: "service users" is not what an s append gives
+    // every term, and this is the one place both halves are read end to end.
+    expect(term.Many).toBe('Service users')
   }, 20000)
 
   it('clears an earlier word when the type changes, so the control does something', async () => {

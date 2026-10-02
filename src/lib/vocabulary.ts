@@ -10,12 +10,25 @@
  * the caller asks for a form and this returns it. **Nothing downstream calls
  * `.toLowerCase()`, `.toUpperCase()` or appends an `s`.**
  *
- * **Every form is declared, none derived.** §8 records `.toLowerCase()`
- * destroying a label twice, and here derivation breaks outright rather than
- * subtly: "Service User" lowercases to "service user" correctly, and its
- * plural is "Service Users" — which no naive capitalise of "service users"
- * produces. A term that declares its own four forms cannot be wrong about any
- * of them.
+ * **Every form is declared, none derived**, and the argument for that is the
+ * plural rather than the capitalisation. "person supported" pluralises to
+ * "people supported", which no `s` append reaches, and "next of kin" does not
+ * pluralise at all — facts about English that no transform knows.
+ *
+ * The capitalisation used to carry the argument too, and it no longer does:
+ * while these forms were title case, "Service Users" was not the naive
+ * capitalise of "service users". **Sentence case made it one.** The claim is
+ * recorded as retired rather than left standing, because a justification that
+ * has quietly stopped holding is how the next person is persuaded of something
+ * untrue. Capitalising a first letter is still not done at the call site — §8
+ * records `.toLowerCase()` destroying a label twice, and the same transform
+ * run the other way would title-case a term that must not be — but that is a
+ * one-owner rule, not an impossibility proof.
+ *
+ * **The forms are sentence case**, matching `STAFF_ROLE_NAMES` ("Registered
+ * manager") and the sidebar's section headings ("Planning and risk"). `label`
+ * is title case and deliberately separate: it is the name somebody picks in
+ * Settings, not a word in a sentence.
  *
  * **Why this is safe to make configurable at all.** §10's test is whether a
  * record already stored says something different afterwards. It does not: a
@@ -97,7 +110,7 @@ export const SUBJECT_TERMS: { id: string; label: string; term: Term }[] = [
   {
     id: 'service_user',
     label: 'Service User',
-    term: withForms('service user', 'service users', 'Service User', 'Service Users'),
+    term: withForms('service user', 'service users', 'Service user', 'Service users'),
   },
   {
     id: 'person_supported',
@@ -105,8 +118,8 @@ export const SUBJECT_TERMS: { id: string; label: string; term: Term }[] = [
     term: withForms(
       'person supported',
       'people supported',
-      'Person Supported',
-      'People Supported',
+      'Person supported',
+      'People supported',
     ),
   },
 ]
@@ -160,12 +173,12 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
     {
       id: 'care_plan',
       label: 'Care Plan',
-      term: withForms('care plan', 'care plans', 'Care Plan', 'Care Plans'),
+      term: withForms('care plan', 'care plans', 'Care plan', 'Care plans'),
     },
     {
       id: 'support_plan',
       label: 'Support Plan',
-      term: withForms('support plan', 'support plans', 'Support Plan', 'Support Plans'),
+      term: withForms('support plan', 'support plans', 'Support plan', 'Support plans'),
     },
     {
       id: 'treatment_plan',
@@ -173,8 +186,8 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
       term: withForms(
         'treatment plan',
         'treatment plans',
-        'Treatment Plan',
-        'Treatment Plans',
+        'Treatment plan',
+        'Treatment plans',
       ),
     },
     {
@@ -183,8 +196,8 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
       term: withForms(
         'care & support plan',
         'care & support plans',
-        'Care & Support Plan',
-        'Care & Support Plans',
+        'Care & support plan',
+        'Care & support plans',
       ),
     },
   ],
@@ -192,7 +205,7 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
     {
       id: 'staff',
       label: 'Staff',
-      term: withForms('staff member', 'staff', 'Staff Member', 'Staff'),
+      term: withForms('staff member', 'staff', 'Staff member', 'Staff'),
     },
     {
       id: 'care_staff',
@@ -200,14 +213,14 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
       term: withForms(
         'care staff member',
         'care staff',
-        'Care Staff Member',
-        'Care Staff',
+        'Care staff member',
+        'Care staff',
       ),
     },
     {
       id: 'team_member',
       label: 'Team Member',
-      term: withForms('team member', 'team members', 'Team Member', 'Team Members'),
+      term: withForms('team member', 'team members', 'Team member', 'Team members'),
     },
     {
       id: 'healthcare_professional',
@@ -215,8 +228,8 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
       term: withForms(
         'healthcare professional',
         'healthcare professionals',
-        'Healthcare Professional',
-        'Healthcare Professionals',
+        'Healthcare professional',
+        'Healthcare professionals',
       ),
     },
   ],
@@ -229,7 +242,7 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
     {
       id: 'care_manager',
       label: 'Care Manager',
-      term: withForms('care manager', 'care managers', 'Care Manager', 'Care Managers'),
+      term: withForms('care manager', 'care managers', 'Care manager', 'Care managers'),
     },
     {
       id: 'clinical_manager',
@@ -237,8 +250,8 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
       term: withForms(
         'clinical manager',
         'clinical managers',
-        'Clinical Manager',
-        'Clinical Managers',
+        'Clinical manager',
+        'Clinical managers',
       ),
     },
     {
@@ -281,8 +294,8 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
       term: withForms(
         'incident report',
         'incident reports',
-        'Incident Report',
-        'Incident Reports',
+        'Incident report',
+        'Incident reports',
       ),
     },
     {
@@ -291,8 +304,8 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
       term: withForms(
         'incident record',
         'incident records',
-        'Incident Record',
-        'Incident Records',
+        'Incident record',
+        'Incident records',
       ),
     },
     {
@@ -301,8 +314,8 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
       term: withForms(
         'clinical incident',
         'clinical incidents',
-        'Clinical Incident',
-        'Clinical Incidents',
+        'Clinical incident',
+        'Clinical incidents',
       ),
     },
   ],
@@ -323,8 +336,8 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
       term: withForms(
         'medication record',
         'medication records',
-        'Medication Record',
-        'Medication Records',
+        'Medication record',
+        'Medication records',
       ),
     },
   ],
@@ -340,8 +353,8 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
       term: withForms(
         'clinical assessment',
         'clinical assessments',
-        'Clinical Assessment',
-        'Clinical Assessments',
+        'Clinical assessment',
+        'Clinical assessments',
       ),
     },
     {
@@ -350,8 +363,8 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
       term: withForms(
         'care assessment',
         'care assessments',
-        'Care Assessment',
-        'Care Assessments',
+        'Care assessment',
+        'Care assessments',
       ),
     },
   ],
@@ -369,7 +382,7 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
     {
       id: 'next_of_kin',
       label: 'Next of Kin',
-      term: withForms('next of kin', 'next of kin', 'Next of Kin', 'Next of Kin'),
+      term: withForms('next of kin', 'next of kin', 'Next of kin', 'Next of kin'),
     },
     {
       id: 'contact',
@@ -383,6 +396,34 @@ export const TERM_OPTIONS: Record<TermId, TermChoice[]> = {
     },
   ],
 }
+
+/**
+ * Terms whose capitalised forms carry a capital after the first word.
+ *
+ * **Sentence case is this build's convention, and the vocabulary was the one
+ * place that broke it.** `STAFF_ROLE_NAMES` reads "Registered manager" and
+ * "Deputy manager"; the sidebar's section headings read "Care delivery" and
+ * "Planning and risk". `One` and `Many` were written title case — "Care Plan",
+ * "Service Users" — and nothing noticed, because the only term that existed
+ * when the rule was set was "Resident", which is the same string either way.
+ * A one-word term cannot distinguish the two conventions, so the first
+ * multi-word term was the first case that could, and by then the shape was
+ * already in place. §8's entry about a rule that was right for every case it
+ * had met.
+ *
+ * This list is for a term that genuinely contains a proper noun — a product
+ * name, a statutory title — where the inner capital is correct. **It is empty,
+ * and that is the claim being made** rather than an omission: none of the
+ * twenty-nine offered terms contains one. `vocabulary.test.ts` reads it in
+ * both directions, so an entry that stops being needed fails as loudly as a
+ * capital that was never declared.
+ *
+ * `label` is deliberately not covered. It is a name being chosen from a list
+ * in Settings, not a word in a sentence, and the two fields exist separately
+ * for exactly this reason: "Care & Support Plan" is the option somebody picks,
+ * "Care & support plan" is what the heading then reads.
+ */
+export const TERMS_WITH_A_PROPER_NOUN: readonly string[] = []
 
 /**
  * The terms whose plural really is the same word as their singular.

@@ -17349,3 +17349,68 @@ the tab beside it already says.
   no discharge feature exists, the word appears only in clinical question prose
   and recorded free text, and a control that changes nothing visible is a dead
   control.
+
+### Correction: the capitalised forms were title case, and this build is sentence case
+
+`One` and `Many` were written "Care Plan", "Service Users". The convention
+everywhere else it can be checked is sentence case — `STAFF_ROLE_NAMES` has
+'Registered manager' and 'Deputy manager', the sidebar's section headings are
+'Care delivery' and 'Planning and risk'. Every multi-word form is now sentence
+case. `label` stays title case: it is the name somebody picks from a list in
+Settings, not a word in a sentence, and the two fields exist separately for
+exactly this reason.
+
+**Why it got in.** "Resident" is the same string in title case and sentence
+case, so the only term that existed when the shape was set could not
+distinguish the two conventions. The first multi-word term was the first case
+that could, and by then the shape was in place — §8's rule that was right for
+every case it had met.
+
+Guarded rather than swept: `vocabulary.test.ts` asserts no word after the first
+in any `One`, `Many` or `Ones` carries a capital, with
+`TERMS_WITH_A_PROPER_NOUN` as the declared exception list. **It is empty, and
+that is the claim** — none of the twenty-nine offered terms contains a proper
+noun. Read in both directions, like `INVARIANT_PLURALS`, so a stale entry fails
+as loudly as an undeclared capital. Both directions mutated: "Healthcare
+Professional" fails with `staff/healthcare_professional: "Healthcare
+Professional": expected 'Professional' to be 'professional'`, and naming
+`next_of_kin` in the exception list fails with `next_of_kin has no inner
+capital and needs no exception`.
+
+"Care Plan updated" went back to "Care plan updated" without being touched: it
+reads `${terms.carePlan.One} updated`, so correcting the form corrected the
+string. That is the one-owner rule paying out — the copy was never a decision,
+and it is no longer recorded as one.
+
+**One justification in this module has been retired rather than left standing.**
+The docblock and a test both said "Service User" proved the forms cannot be
+derived: its plural was "Service Users", which no naive capitalise of "service
+users" produces. Sentence case makes "Service users" exactly that naive
+capitalise, so the argument is gone for that term. What survives is the half
+that was always stronger — **the plural**: "person supported" pluralises to
+"people supported", which no `s` append reaches, and "next of kin" does not
+pluralise at all. The test now asserts that instead, and the docblock says the
+old claim was retired and why, because a justification that has quietly stopped
+holding is how the next person is persuaded of something untrue.
+
+### What the screenshots found, and it needs a decision
+
+The case change is right in prose and it exposes a mismatch in the three places
+where a configured module name sits in a list beside a fixed one. **The sidebar,
+the permission matrix's Module column, and the profile's tab strip** now each
+read:
+
+> People supported · Care Notes · Handover · Medication records · Incidents ·
+> Risk Assessments · Care & support plans · Reviews
+
+Three of those come from the vocabulary and are sentence case; "Care Notes" and
+"Risk Assessments" are fixed `label`s in `nav-items.icons.ts` and are title
+case. The profile tabs do the same with "General Information", "Important
+People" and "Future Plans". It is most visible in the matrix, where they are one
+column.
+
+This is not a defect in the change — it is the rest of the shell still carrying
+the old convention, and it was invisible while the vocabulary agreed with it.
+Resolving it means sentence-casing the fixed module labels too, which is default
+product copy across the shell and Frank's call rather than a sweep to make
+quietly. "Family Portal" stays title case either way: it is a product's name.

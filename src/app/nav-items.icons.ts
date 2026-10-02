@@ -329,7 +329,7 @@ export interface NamedByTerm {
  * `origin` — and both say in their own docblocks that the nav declaration owns
  * the wording. That was true while every label was fixed. Now that Medications
  * and Care Plans take a configured term, a restated copy is a second owner
- * that silently stops agreeing: the sidebar would say "Care & Support Plans"
+ * that silently stops agreeing: the sidebar would say "Care & support plans"
  * and the activity log beside it "Care Plans", with nothing failing.
  */
 export function moduleName(path: string, terms: Vocabulary): string {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFERRED_TERMS,
   INVARIANT_PLURALS,
+  TERMS_WITH_A_PROPER_NOUN,
   SUBJECT_TERMS,
   TERM_IDS,
   TERM_OPTIONS,
@@ -37,16 +38,25 @@ describe('each type carries its own default', () => {
   })
 
   it('lets a type be overridden, because a default is not a lock', () => {
-    expect(subjectTerm('clinic', 'service_user').One).toBe('Service User')
+    expect(subjectTerm('clinic', 'service_user').One).toBe('Service user')
   })
 })
 
 /**
- * **The case that proves the forms cannot be derived.** "Service User"
- * lowercases to "service user" correctly, and its plural is "Service Users" —
- * which no capitalise of "service users" produces, because the second word
- * has to be capitalised too. A term that declares its four forms cannot be
- * wrong about any of them.
+ * **The cases that prove the forms cannot be derived — and the one that no
+ * longer does.**
+ *
+ * This described "Service User" as the proof: its plural was "Service Users",
+ * which no capitalise of "service users" produces, because the second word had
+ * to be capitalised too. **Moving the vocabulary to sentence case took that
+ * argument away.** "Service users" *is* the naive capitalise of "service
+ * users", so for this term the capitalised forms became derivable, and the
+ * assertion saying otherwise had to go rather than be quietly weakened.
+ *
+ * What survives is the half that was always the stronger one: **the plural**.
+ * "person supported" pluralises to "people supported", which no `s` append
+ * reaches, and "next of kin" does not pluralise at all. Those are facts about
+ * English that no transform knows, and they are why the forms are declared.
  */
 describe('a two-word term is right in every form', () => {
   const term = subjectTerm('care_home', 'service_user')
@@ -54,14 +64,17 @@ describe('a two-word term is right in every form', () => {
   it('has its own plural rather than one with an s appended to the singular', () => {
     expect(term.one).toBe('service user')
     expect(term.many).toBe('service users')
-    expect(term.One).toBe('Service User')
-    expect(term.Many).toBe('Service Users')
+    expect(term.One).toBe('Service user')
+    expect(term.Many).toBe('Service users')
   })
 
-  it('capitalises both words, which deriving from the lower form would not', () => {
-    const naive = term.many.charAt(0).toUpperCase() + term.many.slice(1)
-    expect(naive).toBe('Service users')
-    expect(term.Many).not.toBe(naive)
+  it('pluralises the head noun, which appending an s would not', () => {
+    const supported = subjectTerm('care_home', 'person_supported')
+    expect(supported.one).toBe('person supported')
+    expect(supported.many).toBe('people supported')
+    // What a derivation would produce, and it is not a phrase anybody writes.
+    expect(supported.many).not.toBe(`${supported.one}s`)
+    expect(supported.Many).toBe('People supported')
   })
 })
 
@@ -152,7 +165,7 @@ describe('the awkward terms in the rest of the vocabulary', () => {
   it('keeps "Next of Kin" invariant in the plural', () => {
     expect(nextOfKin.one).toBe('next of kin')
     expect(nextOfKin.many).toBe('next of kin')
-    expect(nextOfKin.Many).toBe('Next of Kin')
+    expect(nextOfKin.Many).toBe('Next of kin')
     // Appending an s is what a derivation would do, and it is wrong.
     expect(nextOfKin.many).not.toBe('next of kins')
   })
@@ -172,7 +185,7 @@ describe('the awkward terms in the rest of the vocabulary', () => {
       // Never an entity: this is text, and React escapes it on the way out.
       expect(form).not.toContain('&amp;')
     }
-    expect(andSupport.Many).toBe('Care & Support Plans')
+    expect(andSupport.Many).toBe('Care & support plans')
   })
 })
 
@@ -188,7 +201,7 @@ describe('every term declares every form', () => {
   it('defaults every term when nothing has been chosen', () => {
     const all = vocabularyFor('care_home', {})
     expect(all.subject.one).toBe('resident')
-    expect(all.carePlan.One).toBe('Care Plan')
+    expect(all.carePlan.One).toBe('Care plan')
     expect(all.family.Many).toBe('Families')
   })
 
@@ -235,5 +248,64 @@ describe('a plural is a different word unless it is declared not to be', () => {
       ).toBeTruthy()
       expect(choice!.term.many, id).toBe(choice!.term.one)
     }
+  })
+})
+
+/**
+ * Sentence case, which is this build's convention everywhere it can be checked.
+ *
+ * `STAFF_ROLE_NAMES` reads "Registered manager"; the sidebar's section
+ * headings read "Care delivery" and "Planning and risk". The vocabulary was
+ * written title case and nothing caught it, because "Resident" is the same
+ * string in both and it was the only term there was. **A rule can only be
+ * wrong once a case exists that distinguishes it**, and multi-word terms are
+ * that case.
+ */
+describe('a capitalised form is sentence case, not title case', () => {
+  const declared = new Set(TERMS_WITH_A_PROPER_NOUN)
+
+  /** Every word after the first, for a form with more than one word. */
+  const afterTheFirstWord = (form: string) => form.split(/\s+/).slice(1)
+
+  it.each(TERM_IDS)('%s capitalises only its first word', (id) => {
+    for (const choice of TERM_OPTIONS[id]) {
+      if (declared.has(choice.id)) continue
+      for (const form of [choice.term.One, choice.term.Many, choice.term.Ones]) {
+        for (const word of afterTheFirstWord(form)) {
+          expect(word, `${id}/${choice.id}: "${form}"`).toBe(word.toLowerCase())
+        }
+      }
+    }
+  })
+
+  /*
+   * The other direction, so the exception list cannot go stale and keep
+   * excusing a term that has since lost its proper noun — the same shape as
+   * INVARIANT_PLURALS, and for the same reason.
+   */
+  it('names only terms that really do carry an inner capital', () => {
+    for (const id of TERMS_WITH_A_PROPER_NOUN) {
+      const choice = TERM_IDS.flatMap((term) => TERM_OPTIONS[term]).find(
+        (entry) => entry.id === id,
+      )
+      expect(choice, `${id} is declared and is not an offered term`).toBeTruthy()
+      const capitalised = [choice!.term.One, choice!.term.Many].some((form) =>
+        afterTheFirstWord(form).some((word) => word !== word.toLowerCase()),
+      )
+      expect(capitalised, `${id} has no inner capital and needs no exception`).toBe(
+        true,
+      )
+    }
+  })
+
+  /*
+   * The label is the other half of the decision and is asserted here so the
+   * separation is a rule rather than a coincidence: the option somebody picks
+   * in Settings is a name, and the word the heading renders is not.
+   */
+  it('leaves the Settings label in title case', () => {
+    const plan = TERM_OPTIONS.carePlan.find((e) => e.id === 'care_and_support_plan')!
+    expect(plan.label).toBe('Care & Support Plan')
+    expect(plan.term.One).toBe('Care & support plan')
   })
 })

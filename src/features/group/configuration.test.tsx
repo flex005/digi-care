@@ -190,8 +190,8 @@ describe('a figure says where it shows in the words the sidebar uses', () => {
   const carePlans = navItems.find((item) => item.path === '/care-plans')!
 
   it.each([
-    ['care_plan', 'Care Plans'],
-    ['care_and_support_plan', 'Care & Support Plans'],
+    ['care_plan', 'Care plans'],
+    ['care_and_support_plan', 'Care & support plans'],
   ])('names the Care Plans module as %s renders it', (choice, expected) => {
     const terms = vocabularyFor('care_home', { carePlan: choice })
     // The sidebar's own label, through the owner of that resolution.
