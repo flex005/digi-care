@@ -3,6 +3,8 @@ import { useState } from 'react'
 import type { HandoverId, HandoverStatus, IsoDateTime, Resident } from '@/data/types'
 import { recordHandoverStatus } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { Button, Dialog, RadioGroup } from '@/components/primitives'
 import styles from './handover.module.css'
 
@@ -36,6 +38,7 @@ export function StatusDialog({
   onRecorded: (residentName: string, status: string) => void
 }) {
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const [open, setOpen] = useState(false)
   const [choice, setChoice] = useState<Choice | undefined>(undefined)
   const [note, setNote] = useState('')
@@ -67,6 +70,20 @@ export function StatusDialog({
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'Nothing was recorded')
     }
+  }
+
+  /*
+   * `/handover` declares `records: 'marking a resident on the board'`.
+   * Reading the board is not marking it.
+   */
+  if (!viewer.canRecordIn('/handover')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject="the handover board"
+        act="mark a resident on it"
+      />
+    )
   }
 
   return (
