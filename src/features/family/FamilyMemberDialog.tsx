@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import type { FamilyAccessLevel, FamilyMember, Resident } from '@/data/types'
 import { ACCESS_LEVELS, currentDetails, recordedAccess } from '@/data/types'
 import { Button, Dialog } from '@/components/primitives'
@@ -44,7 +46,22 @@ export function FamilyMemberDialog({
   onClose: () => void
   onSaved: () => void
 }) {
+  const viewer = useViewer()
   if (mode.kind === 'closed') return null
+  /*
+   * `/family` declares `records: "naming somebody who may see a resident's
+   * updates, and removing them"`. Who already has access is read on the tab;
+   * naming somebody and editing what they see are the writes.
+   */
+  if (!viewer.canRecordIn('/family')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject={`who may see ${resident.preferredName}'s updates`}
+        act="name somebody or change what they see"
+      />
+    )
+  }
   return (
     <Form
       /*

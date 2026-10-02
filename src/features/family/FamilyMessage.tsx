@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { Incident } from '@/data/types'
 import { Button } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { useSiteFormat } from '@/app/session/use-session'
 import { subjectResidentId } from '@/data/types'
 import {
@@ -40,6 +42,7 @@ export function FamilyMessage({
   onChanged: () => void
 }) {
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const format = useSiteFormat()
   const [message, setMessage] = useState('')
 
@@ -62,6 +65,21 @@ export function FamilyMessage({
     incidentId: incident.id,
     message: '',
   })
+
+  /*
+   * Sharing an update with the family writes a disclosure record against the
+   * resident. `/family` declares `records: 'naming somebody who may see a
+   * resident's updates, and removing them'` and `approves: false`.
+   */
+  if (!viewer.canRecordIn('/family')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject="what has been shared with the family"
+        act="share an update or withdraw one"
+      />
+    )
+  }
 
   return (
     <section className={styles.share} data-family-message={incident.id}>
