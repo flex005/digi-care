@@ -15,9 +15,10 @@ import { incidents } from '@/data/fixtures/incidents'
 import type { ResidentProfile } from '@/data/access/client'
 import { carersAndSeniors } from '@/data/fixtures/organisation'
 import { AlertDialog, Button, Card, Select, Toast } from '@/components/primitives'
-import { StatusPill, Unrecorded } from '@/components/status'
+import { ReadOnlyHere, StatusPill, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import {
   recordAssessment,
   recordCustomRisk,
@@ -145,6 +146,27 @@ export function AssessmentFormRoute() {
   /** Only ever asked for a first custom assessment; fixed once recorded. */
   const [newName, setNewName] = useState('')
   const { currentUser } = useSession()
+  const viewer = useViewer()
+
+  /*
+   * **The form is the write.** `/risk-assessments` declares
+   * `records: 'completing an assessment'` and `approves: false` — there is no
+   * separate sign-off, so completing it is the act and `canRecordIn` is the
+   * whole question. What was assessed, and by whom, is read on the tab.
+   */
+  if (!viewer.canRecordIn('/risk-assessments')) {
+    return (
+      <div className={styles.tabPanel}>
+        <Card padded>
+          <ReadOnlyHere
+            roleName={viewer.roleName}
+            subject="this risk assessment"
+            act="complete one"
+          />
+        </Card>
+      </div>
+    )
+  }
 
   if (resolved === 'no_such_risk') {
     return (
