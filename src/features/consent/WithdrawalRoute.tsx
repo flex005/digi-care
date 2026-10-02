@@ -7,6 +7,8 @@ import type { ResidentProfile } from '@/data/access/client'
 import { AlertDialog, Button, Card, Toast } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { pluralise } from '@/lib/format'
 import { EffectCountValue } from './ConsentParts'
 import { CONSENT_MEANS } from './consent-meaning'
@@ -34,6 +36,7 @@ export function WithdrawalRoute() {
   const [confirming, setConfirming] = useState(false)
   const [recorded, setRecorded] = useState(false)
   const { currentUser } = useSession()
+  const viewer = useViewer()
 
   const type = CONSENT_TYPES.find((entry) => entry.id === consentType)
   const status = type
@@ -144,7 +147,18 @@ export function WithdrawalRoute() {
               </>
             )}
           </p>
-          {alreadyWithdrawn ? null : (
+          {/*
+            Withdrawing is a record write: `/consent` declares records as
+            "seeking and withdrawing consent". What was consented to, and when,
+            stays readable to everyone — only taking it away is gated.
+          */}
+          {alreadyWithdrawn ? null : !viewer.canRecordIn('/consent') ? (
+            <ReadOnlyHere
+              roleName={viewer.roleName}
+              subject="what this person consented to"
+              act="withdraw it on their behalf"
+            />
+          ) : (
             <Button size="large" onClick={() => setConfirming(true)} data-withdraw>
               Record the withdrawal
             </Button>

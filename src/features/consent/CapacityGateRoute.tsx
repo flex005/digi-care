@@ -12,9 +12,10 @@ import { CONSENT_TYPES } from '@/data/types'
 import type { ResidentProfile } from '@/data/access/client'
 import { recordConsent } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { now as appNow } from '@/data/fixtures/clock'
 import { Button, Card, SelectedMark, Toast } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
+import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Icon } from '@/components/icon/Icon'
 import { formatCount, pluralise } from '@/lib/format'
 import { CONSENT_MEANS } from './consent-meaning'
@@ -70,6 +71,7 @@ export function CapacityGateRoute() {
    * described a capacity to record and nothing performed it.
    */
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const [stage, setStage] = useState<'capacity' | 'decision'>('capacity')
   const [outcome, setOutcome] = useState<'given' | 'refused' | 'unanswered'>(
     'unanswered',
@@ -83,6 +85,34 @@ export function CapacityGateRoute() {
   const [rationale, setRationale] = useState('')
   const [recorded, setRecorded] = useState<'no' | 'yes'>('no')
   const [failure, setFailure] = useState('')
+
+  /*
+   * **Asked at `approve`, which is stricter than the rest of `/consent`.**
+   * This screen's primary act is the Mental Capacity Act two-stage test, and
+   * `/consent` declares `approves: 'recording a capacity decision'`.
+   *
+   * **It is also the only way to `recordConsent`**, which the same module
+   * declares as a *record* act — "seeking and withdrawing consent". So a
+   * senior carer or care worker, who the table says may seek consent, has
+   * nowhere to do it: seeking runs through this gate and the gate is a
+   * capacity determination. That is a mismatch between the declaration and
+   * the screens, recorded rather than papered over, because the alternative
+   * is letting a record-only role complete a capacity test by reaching the
+   * second stage of it.
+   */
+  if (!viewer.canApproveIn('/consent')) {
+    return (
+      <div className={styles.tabPanel}>
+        <Card padded>
+          <ReadOnlyHere
+            roleName={viewer.roleName}
+            subject="what this person has consented to"
+            act="record a capacity decision"
+          />
+        </Card>
+      </div>
+    )
+  }
 
   if (!type) {
     return (
