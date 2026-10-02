@@ -93,7 +93,16 @@ export interface ProfileSection {
    * `onWrite` is what a banner's affordance calls where it can honestly
    * write. Threaded from the tab so the section declaration stays data.
    */
-  banner?: (resident: Resident, siteName: string, onWrite: () => void) => ReactNode
+  /**
+   * `onWrite` is `undefined` for a viewer who may not edit the record, and the
+   * banner is expected to drop its action rather than render a dead one.
+   * `AllergyPanel` already behaves this way; the type now says so.
+   */
+  banner?: (
+    resident: Resident,
+    siteName: string,
+    onWrite: (() => void) | undefined,
+  ) => ReactNode
   fields: ProfileField[]
 }
 

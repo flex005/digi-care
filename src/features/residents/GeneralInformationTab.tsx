@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import type { ResidentProfile } from '@/data/access/client'
 import type { Resident } from '@/data/types'
 import { Card, CardHeader } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
+import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import { Field, FieldList } from './FieldList'
 import { GENERAL_INFORMATION_SECTIONS } from './general-information-fields'
 import styles from './profile.module.css'
@@ -11,6 +11,7 @@ import { useState } from 'react'
 import type { IsoDateTime } from '@/data/types'
 import { editResident } from '@/data/access/client'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 
 /**
  * The General Information tab. PRD §6.2 — "all fields from source PRD §16.2".
@@ -46,27 +47,46 @@ import { useSession } from '@/app/session/use-session'
 export function GeneralInformationTab() {
   const { resident, site } = useOutletContext<ResidentProfile>()
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const [, setVersion] = useState(0)
+
+  /*
+   * Editing the record is the write; the record itself is this tab's whole
+   * point and stays visible. `ProfileSections` renders either way and simply
+   * stops being offered the editing callbacks.
+   */
+  const mayEdit = viewer.canRecordIn('/residents')
 
   return (
     <div className={styles.tabPanel}>
+      {mayEdit ? null : (
+        <ReadOnlyHere
+          roleName={viewer.roleName}
+          subject={`${resident.preferredName}'s record`}
+          act="edit it"
+        />
+      )}
       <ProfileSections
         resident={resident}
         siteName={site.name}
-        onRecordNoneKnown={() => {
-          void editResident({
-            residentId: resident.id,
-            field: 'no known allergies',
-            patch: {
-              allergies: {
-                kind: 'none_known',
-                recordedBy: currentUser,
-                recordedAt: appNow().toISOString() as IsoDateTime,
-              },
-            },
-            by: currentUser,
-          }).then(() => setVersion((count) => count + 1))
-        }}
+        onRecordNoneKnown={
+          !mayEdit
+            ? undefined
+            : () => {
+                void editResident({
+                  residentId: resident.id,
+                  field: 'no known allergies',
+                  patch: {
+                    allergies: {
+                      kind: 'none_known',
+                      recordedBy: currentUser,
+                      recordedAt: appNow().toISOString() as IsoDateTime,
+                    },
+                  },
+                  by: currentUser,
+                }).then(() => setVersion((count) => count + 1))
+              }
+        }
       />
     </div>
   )
@@ -95,7 +115,10 @@ export function ProfileSections({
         <Card key={section.id}>
           <CardHeader title={section.title} subtitle={section.description} />
           {section.banner
-            ? section.banner(resident, siteName, onRecordNoneKnown ?? (() => {}))
+            ? // Passed through, never defaulted to a no-op: `?? (() => {})`
+              // turned "this viewer may not write" into a button that looks
+              // live and does nothing.
+              section.banner(resident, siteName, onRecordNoneKnown)
             : null}
           <div className={styles.sectionBody}>
             <FieldList>

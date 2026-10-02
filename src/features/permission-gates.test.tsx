@@ -12,6 +12,11 @@ import { AssessmentFormRoute } from '@/features/risk/AssessmentFormRoute'
 import { WholePlanReviewRoute } from '@/features/reviews/WholePlanReviewRoute'
 import { DomainEditorRoute } from '@/features/care-plan/DomainEditorRoute'
 import { CarePlanTab } from '@/features/care-plan/CarePlanTab'
+import { AdmissionRoute } from '@/features/residents/AdmissionRoute'
+import { GeneralInformationTab } from '@/features/residents/GeneralInformationTab'
+import { UploadDrawer } from '@/features/documents/UploadDrawer'
+import { StatusDialog } from '@/features/handover/StatusDialog'
+import { handovers } from '@/data/fixtures/handover'
 
 /**
  * Write gates on the clinical record modules.
@@ -208,4 +213,128 @@ describe('drafting and signing a care plan domain', () => {
       await offered(tab(role).container, '[data-add-custom-domain]')
     },
   )
+})
+
+describe('admitting a resident', () => {
+  const at = (role: StaffRole) => {
+    const router = createMemoryRouter([{ path: '/', element: <AdmissionRoute /> }], {
+      initialEntries: ['/'],
+    })
+    return render(
+      <SessionProvider>
+        <TooltipProvider>
+          <ToastProvider>
+            <SignInAs as={role} />
+            <RouterProvider router={router} />
+            <ToastViewport />
+          </ToastProvider>
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+  }
+
+  it.each(mayNotRecordIn('/residents'))('refuses %s, and says why', async (role) => {
+    const { container } = at(role)
+    await refusedFor(container, 'admit one')
+    expect(container.querySelector('[data-admission]')).toBeNull()
+    expect(container.querySelector('[data-steps]')).toBeNull()
+  })
+
+  it.each(mayRecordIn('/residents'))('offers %s the form', async (role) => {
+    await offered(at(role).container, '[data-admission]')
+  })
+})
+
+describe("editing a resident's record", () => {
+  const at = (role: StaffRole) =>
+    renderAt(
+      role,
+      [{ path: '', element: <GeneralInformationTab /> }],
+      `/residents/${resident.id}`,
+    )
+
+  /*
+   * The record stays on screen either way — this tab IS the record. What goes
+   * is the one control that writes to it, and `AllergyPanel` drops its action
+   * when the callback is undefined rather than rendering a dead button.
+   */
+  it.each(mayNotRecordIn('/residents'))('refuses %s, and says why', async (role) => {
+    const { container } = at(role)
+    await refusedFor(container, 'edit it')
+    expect(container.textContent).toContain('Clinical')
+  })
+
+  it.each(mayRecordIn('/residents'))('does not refuse %s', async (role) => {
+    const { container } = at(role)
+    await waitFor(
+      () => {
+        expect(container.textContent).toContain('Clinical')
+      },
+      { timeout: 5000 },
+    )
+    expect(container.querySelector('[data-read-only-here]')).toBeNull()
+  })
+})
+
+describe('filing a document', () => {
+  const at = (role: StaffRole) =>
+    render(
+      <SessionProvider>
+        <TooltipProvider>
+          <SignInAs as={role} />
+          <UploadDrawer
+            owner={{ kind: 'resident', residentId: resident.id }}
+            subjectName={resident.preferredName}
+            onFiled={() => undefined}
+          />
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+
+  it.each(mayNotRecordIn('/documents'))('refuses %s, and says why', async (role) => {
+    const { container } = at(role)
+    await refusedFor(container, 'file one')
+    expect(container.querySelector('[data-add-document]')).toBeNull()
+  })
+
+  it.each(mayRecordIn('/documents'))('offers %s the control', async (role) => {
+    await offered(at(role).container, '[data-add-document]')
+  })
+})
+
+describe('marking a resident on the handover board', () => {
+  const handover = handovers.find((one) => one.siteId === 'site-rosewood-court')!
+
+  const at = (role: StaffRole) =>
+    render(
+      <SessionProvider>
+        <TooltipProvider>
+          <SignInAs as={role} />
+          <StatusDialog
+            handoverId={handover.id}
+            resident={resident}
+            current={{ kind: 'not_reviewed' }}
+            onRecorded={() => undefined}
+          />
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+
+  it.each(mayNotRecordIn('/handover'))('refuses %s, and says why', async (role) => {
+    const { container } = at(role)
+    await refusedFor(container, 'mark a resident on it')
+    expect(container.querySelector('button')).toBeNull()
+  })
+
+  it.each(mayRecordIn('/handover'))('offers %s the control', async (role) => {
+    const { container } = at(role)
+    await waitFor(
+      () => {
+        expect(container.querySelector('button')).toBeTruthy()
+      },
+      { timeout: 5000 },
+    )
+    expect(container.textContent).toContain('Review')
+    expect(container.querySelector('[data-read-only-here]')).toBeNull()
+  })
 })

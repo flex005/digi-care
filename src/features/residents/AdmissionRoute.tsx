@@ -26,9 +26,10 @@ import {
   type DraftRisk,
 } from '@/features/risk/RiskFieldSet'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { Button, Card } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
-import { Unrecorded } from '@/components/status'
+import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import styles from './admission.module.css'
 
 /**
@@ -69,6 +70,7 @@ const STEPS = [
 
 export function AdmissionRoute() {
   const { sites, activeSite, currentUser } = useSession()
+  const viewer = useViewer()
   const navigate = useNavigate()
 
   const [step, setStep] = useState(0)
@@ -246,6 +248,26 @@ export function AdmissionRoute() {
       }
       navigate(`/residents/${resident.id}`)
     })
+  }
+
+  /*
+   * `/residents` declares `records: 'admitting a resident, and editing their
+   * record'` and `approves: false`. Admission is the largest write in the
+   * product — it creates the subject every other record hangs off — so the
+   * refusal replaces the form rather than leaving its steps walkable.
+   */
+  if (!viewer.canRecordIn('/residents')) {
+    return (
+      <div className={styles.page}>
+        <Card padded>
+          <ReadOnlyHere
+            roleName={viewer.roleName}
+            subject={`the residents at ${activeSite.name}`}
+            act="admit one"
+          />
+        </Card>
+      </div>
+    )
   }
 
   return (
