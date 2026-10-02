@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { Incident } from '@/data/types'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { Button, Dialog } from '@/components/primitives'
 import {
   decideNotRequired,
@@ -37,6 +39,7 @@ export function NotificationDecisionDialog({
   onDecided: () => void
 }) {
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const [reason, setReason] = useState('')
   const [reference, setReference] = useState('')
 
@@ -73,6 +76,22 @@ export function NotificationDecisionDialog({
       : step === 'not_required'
         ? 'Record that the CQC does not need to be told?'
         : 'Record that the CQC has been told?'
+
+  /*
+   * **The approve act, not the record one.** `/incidents` declares
+   * `approves: 'deciding whether the CQC must be told'`, which is exactly
+   * this dialog. Reporting an incident is the record act and is gated
+   * separately on the report route.
+   */
+  if (!viewer.canApproveIn('/incidents')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject="this incident"
+        act="decide whether the CQC must be told"
+      />
+    )
+  }
 
   return (
     <Dialog
