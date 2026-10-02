@@ -13,7 +13,7 @@ import { staffLabel } from '@/data/access/team-store'
  * Grey is reserved system-wide for unrecorded, so a *recorded* EOLC decision
  * rendered grey would read as "nobody has looked" — Rule 2 failing in the one
  * place it must not. `--status-info` instead: a recorded, factual, neutral
- * clinical state, distinct in hue from DNAR's brand purple and ISOLATION's
+ * clinical state, distinct in hue from DNAR's brand colour and ISOLATION's
  * amber. Recorded in PROGRESS.md so the source PRD can be corrected.
  *
  * Hue is where that distinctness stops: in greyscale these three tints are

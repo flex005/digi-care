@@ -28,7 +28,7 @@
 }
 
 .blockedLink {
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   font-weight: var(--weight-semibold);
 }
@@ -139,8 +139,8 @@
 }
 
 .levelOn {
-  border-color: var(--purple-600);
-  background: var(--purple-50);
+  border-color: var(--brand-600);
+  background: var(--brand-50);
 }
 
 .levelMeans {
@@ -309,9 +309,9 @@
 }
 
 .filterTabActive {
-  border-color: var(--purple-600);
-  background: var(--purple-50);
-  color: var(--purple-600);
+  border-color: var(--brand-600);
+  background: var(--brand-50);
+  color: var(--brand-600);
   font-weight: var(--weight-semibold);
 }
 

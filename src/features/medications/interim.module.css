@@ -48,14 +48,14 @@
 /* The first question, and it looks like the first question. */
 .sourceBox {
   padding: var(--space-16) var(--space-20);
-  border: 1px solid var(--purple-200);
+  border: 1px solid var(--brand-200);
   border-left-width: 4px;
   border-radius: var(--radius-md);
-  background: var(--purple-50);
+  background: var(--brand-50);
 }
 
 .sourceTitle {
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-bold);
@@ -91,7 +91,7 @@
 }
 
 .optionOn {
-  border-color: var(--purple-600);
+  border-color: var(--brand-600);
 }
 
 .optionHint {
@@ -232,7 +232,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;

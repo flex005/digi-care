@@ -73,7 +73,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;
@@ -398,14 +398,14 @@
  * stays in the label and carries the state to a screen reader (§7).
  */
 .choiceOn {
-  border-color: var(--purple-600);
-  background: var(--purple-50);
+  border-color: var(--brand-600);
+  background: var(--brand-50);
   font-weight: var(--weight-semibold);
 }
 
 .choice input,
 .choiceOn input {
-  accent-color: var(--purple-600);
+  accent-color: var(--brand-600);
   cursor: pointer;
 }
 
@@ -561,18 +561,18 @@
 .noCounts {
   margin-top: var(--space-16);
   padding: var(--space-12) var(--space-16);
-  border: 1px solid var(--purple-200);
+  border: 1px solid var(--brand-200);
   border-left-width: 4px;
   border-radius: var(--radius-md);
   max-width: 88ch;
-  background: var(--purple-50);
+  background: var(--brand-50);
   color: var(--ink-700);
   font-size: var(--text-caption-size);
   line-height: var(--text-body-line);
 }
 
 .noCounts b {
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-weight: var(--weight-bold);
 }
 
@@ -682,8 +682,8 @@
 }
 
 .level {
-  background: var(--purple-50);
-  color: var(--purple-600);
+  background: var(--brand-50);
+  color: var(--brand-600);
 }
 
 .level[data-level='read'] {
@@ -803,7 +803,7 @@
 
 /* Says which kind of record this is, above whose it is. */
 .heroKind {
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
   font-weight: var(--weight-bold);
@@ -818,7 +818,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;
@@ -991,7 +991,7 @@
 }
 
 .search:focus-within {
-  border-color: var(--purple-600);
+  border-color: var(--brand-600);
 }
 
 .filterClaim {

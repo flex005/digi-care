@@ -49,9 +49,9 @@
 }
 
 .button:hover:not(:disabled) {
-  border-color: var(--purple-400);
-  background-color: var(--purple-50);
-  color: var(--purple-900);
+  border-color: var(--brand-400);
+  background-color: var(--brand-50);
+  color: var(--brand-900);
 }
 
 .where {

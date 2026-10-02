@@ -10,7 +10,7 @@
   position: fixed;
   z-index: 50;
   inset: 0;
-  background-color: var(--purple-900);
+  background-color: var(--brand-900);
   opacity: 0.32;
 }
 
@@ -107,13 +107,13 @@
 }
 
 .item[data-highlighted] {
-  background-color: var(--purple-50);
-  color: var(--purple-900);
+  background-color: var(--brand-50);
+  color: var(--brand-900);
   outline: none;
 }
 
 .item[data-state='checked'] {
-  background-color: var(--purple-50);
+  background-color: var(--brand-50);
   font-weight: var(--weight-semibold);
 }
 

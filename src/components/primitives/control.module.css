@@ -29,8 +29,8 @@
 
 .box[data-state='checked'],
 .box[data-state='indeterminate'] {
-  border-color: var(--purple-600);
-  background-color: var(--purple-600);
+  border-color: var(--brand-600);
+  background-color: var(--brand-600);
 }
 
 .box[data-disabled] {
@@ -61,8 +61,8 @@
 }
 
 .switch[data-state='checked'] {
-  border-color: var(--purple-600);
-  background-color: var(--purple-600);
+  border-color: var(--brand-600);
+  background-color: var(--brand-600);
 }
 
 .switch[data-disabled] {

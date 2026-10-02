@@ -58,7 +58,7 @@
 }
 
 .headerNote:hover {
-  color: var(--purple-900);
+  color: var(--brand-900);
 }
 
 .sortButton {
@@ -74,17 +74,17 @@
 }
 
 .sortButton:hover {
-  color: var(--purple-900);
+  color: var(--brand-900);
 }
 
 .sorted {
-  color: var(--purple-900);
+  color: var(--brand-900);
 }
 
 /* The arrow is reinforcement. The accessible name and aria-sort carry the
    meaning, so the direction is never conveyed by the glyph alone. */
 .sortArrow {
-  color: var(--purple-600);
+  color: var(--brand-600);
 }
 
 .row {
@@ -96,7 +96,7 @@
 }
 
 .row:hover {
-  background-color: var(--purple-50);
+  background-color: var(--brand-50);
 }
 
 /* Tighter vertical padding, and top-aligned so the first line of every cell

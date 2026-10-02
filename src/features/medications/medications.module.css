@@ -81,7 +81,7 @@
 }
 
 .segmentActive {
-  background-color: var(--purple-600);
+  background-color: var(--brand-600);
   color: var(--bg-surface);
 }
 
@@ -284,8 +284,8 @@
   margin-top: var(--space-4);
   padding: 0 var(--space-8);
   border-radius: var(--radius-pill);
-  background-color: var(--purple-50);
-  color: var(--purple-600);
+  background-color: var(--brand-50);
+  color: var(--brand-600);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
   font-weight: var(--weight-bold);
@@ -401,11 +401,11 @@
 /* Hover is a fill, not an outline: the outline belongs to focus and must not
    be imitated by something a pointer causes (PRD §7). */
 .cell:hover {
-  border-color: var(--purple-400);
+  border-color: var(--brand-400);
 }
 
 .cellSelected {
-  box-shadow: 0 0 0 2px var(--purple-600);
+  box-shadow: 0 0 0 2px var(--brand-600);
 }
 
 /* ---- row totals ---- */
@@ -580,8 +580,8 @@
 }
 
 .filterTabActive {
-  border-color: var(--purple-600);
-  background-color: var(--purple-600);
+  border-color: var(--brand-600);
+  background-color: var(--brand-600);
   color: var(--bg-surface);
 }
 
@@ -627,7 +627,7 @@
 }
 
 .omissionName:hover {
-  color: var(--purple-600);
+  color: var(--brand-600);
   text-decoration: underline;
 }
 
@@ -732,7 +732,7 @@
 }
 
 .noteLink {
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
@@ -849,13 +849,13 @@
 }
 
 .slot:hover {
-  border-color: var(--purple-400);
+  border-color: var(--brand-400);
 }
 
 .slotCurrent {
-  border-color: var(--purple-600);
-  background-color: var(--purple-50);
-  color: var(--purple-900);
+  border-color: var(--brand-600);
+  background-color: var(--brand-50);
+  color: var(--brand-900);
 }
 
 /* A complete round is recorded and unremarkable, so it is marked quietly —
@@ -872,7 +872,7 @@
 }
 
 .slotCurrent .slotCount {
-  color: var(--purple-600);
+  color: var(--brand-600);
 }
 
 .roundProgressBlock {
@@ -895,7 +895,7 @@
 .progressFill {
   display: block;
   height: 100%;
-  background-color: var(--purple-600);
+  background-color: var(--brand-600);
 }
 
 /* Reference: 19rem and minmax(0,1fr), gap 18px → the page's own 20px rhythm. */
@@ -942,7 +942,7 @@
 }
 
 .queueItem:hover {
-  background-color: var(--purple-50);
+  background-color: var(--brand-50);
 }
 
 .roundQueue > li:first-child .queueItem {
@@ -951,8 +951,8 @@
 
 /* A 3px rule marking the current item, not spacing. */
 .queueItemCurrent {
-  background-color: var(--purple-50);
-  box-shadow: inset 3px 0 0 var(--purple-600);
+  background-color: var(--brand-50);
+  box-shadow: inset 3px 0 0 var(--brand-600);
 }
 
 .queueRoom {
@@ -1138,8 +1138,8 @@
 }
 
 .doseTagCd {
-  background-color: var(--purple-50);
-  color: var(--purple-600);
+  background-color: var(--brand-50);
+  color: var(--brand-600);
 }
 
 .doseAnswers {
@@ -1173,7 +1173,7 @@
 }
 
 .answerButton:hover {
-  border-color: var(--purple-400);
+  border-color: var(--brand-400);
 }
 
 .answerGiven[aria-pressed='true'] {
@@ -1224,15 +1224,15 @@
 .cdBlock {
   margin-top: var(--space-12);
   padding: var(--space-12) var(--space-16);
-  border: 1px solid var(--purple-200);
+  border: 1px solid var(--brand-200);
   border-left-width: var(--space-4);
   border-radius: var(--radius-md);
-  background-color: var(--purple-50);
+  background-color: var(--brand-50);
 }
 
 .cdLabel {
   margin-bottom: var(--space-8);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
   font-weight: var(--weight-bold);
@@ -1649,7 +1649,7 @@
 }
 
 .registerRow:hover {
-  background-color: var(--purple-50);
+  background-color: var(--brand-50);
 }
 
 .registerList > li:first-child .registerRow {
@@ -1745,7 +1745,7 @@
   display: flex;
   gap: var(--space-4);
   align-items: center;
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   line-height: var(--text-caption-line);
   font-weight: var(--weight-semibold);
@@ -1758,7 +1758,7 @@
   gap: var(--space-8);
   align-items: center;
   align-self: flex-start;
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
@@ -2094,10 +2094,10 @@
 .requires {
   margin: 0 var(--space-24) var(--space-16);
   padding: var(--space-12) var(--space-16);
-  border: 1px solid var(--purple-200);
+  border: 1px solid var(--brand-200);
   border-left-width: var(--space-4);
   border-radius: var(--radius-md);
-  background-color: var(--purple-50);
+  background-color: var(--brand-50);
 }
 
 /**
@@ -2115,7 +2115,7 @@
 
 .requiresLabel {
   margin-bottom: var(--space-8);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
   font-weight: var(--weight-bold);
@@ -2150,7 +2150,7 @@
   width: var(--space-8);
   height: var(--space-8);
   border-radius: var(--radius-pill);
-  background-color: var(--purple-400);
+  background-color: var(--brand-400);
 }
 
 .requiresBlocked .requiresItem {

@@ -123,7 +123,7 @@
 }
 
 .swatchRecorded {
-  background: var(--purple-600);
+  background: var(--brand-600);
 }
 
 .swatchDueNow {
@@ -304,7 +304,7 @@
 }
 
 .barRecorded {
-  background: var(--purple-600);
+  background: var(--brand-600);
 }
 
 .barGap {
@@ -349,8 +349,8 @@
 }
 
 .filterTabActive {
-  border-color: var(--purple-600);
-  background-color: var(--purple-600);
+  border-color: var(--brand-600);
+  background-color: var(--brand-600);
   color: var(--bg-surface);
 }
 
@@ -391,7 +391,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-family: var(--font-family);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-semibold);
@@ -576,7 +576,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;
@@ -628,7 +628,7 @@
 }
 
 .pendingLink {
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   font-weight: var(--weight-semibold);
 }

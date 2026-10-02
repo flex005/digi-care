@@ -52,8 +52,8 @@
 }
 
 .stepOn {
-  border-color: var(--purple-600);
-  background: var(--purple-50);
+  border-color: var(--brand-600);
+  background: var(--brand-50);
 }
 
 .step button,
@@ -171,7 +171,7 @@
 }
 
 .link {
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-weight: var(--weight-semibold);
 }
 
@@ -208,7 +208,53 @@
 }
 
 .choiceOn {
-  border-color: var(--purple-600);
-  background-color: var(--purple-50);
+  border-color: var(--brand-600);
+  background-color: var(--brand-50);
   font-weight: var(--weight-semibold);
+}
+
+/*
+ * The ramp, shown rather than named.
+ *
+ * Five swatches because a hue name cannot say what a reader needs to know: at
+ * the lightness this ladder holds, a teal and a magenta differ a great deal in
+ * how vivid they can be, and the one thing somebody choosing wants is to see
+ * that before they choose. The step number sits on each so the preview and the
+ * tokens are legible as the same five things.
+ */
+.swatches {
+  display: flex;
+  gap: var(--space-8);
+  margin-bottom: var(--space-16);
+}
+
+.swatch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* The colour itself. A border so the lightest step is still a shape on white. */
+.swatchBlock {
+  height: 48px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+/*
+ * **The number sits under the swatch, not on it.** On it, the label has to be
+ * readable on all five steps at once — and the first attempt put white text
+ * with a dark shadow on every block, which reads on the two dark steps and
+ * disappears on the 200 and the 50. That is the legend defect §8 records in
+ * another medium: a key is read precisely by somebody who could not tell, so
+ * it fails exactly where it is being relied on. Underneath, in ink, it reads
+ * on every step and on every hue.
+ */
+.swatchLabel {
+  font-size: var(--text-micro-size);
+  line-height: var(--text-caption-line);
+  color: var(--ink-500);
+  text-align: center;
 }

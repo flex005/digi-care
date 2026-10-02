@@ -66,7 +66,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;
@@ -323,7 +323,7 @@
 }
 
 .categoryLink:hover {
-  color: var(--purple-600);
+  color: var(--brand-600);
   text-decoration: underline;
 }
 
@@ -376,8 +376,8 @@
 }
 
 .filterPill[aria-pressed='true'] {
-  border-color: var(--purple-900);
-  background: var(--purple-900);
+  border-color: var(--brand-900);
+  background: var(--brand-900);
   color: var(--bg-surface);
 }
 
@@ -421,7 +421,7 @@
 }
 
 .queueSubject a {
-  color: var(--purple-600);
+  color: var(--brand-600);
 }
 
 /* ---------------------------------------------------------------------------
@@ -517,8 +517,8 @@
 }
 
 .choice:has(input:checked) {
-  border-color: var(--purple-600);
-  background: var(--purple-50);
+  border-color: var(--brand-600);
+  background: var(--brand-50);
 }
 
 .choiceHint {
@@ -550,9 +550,9 @@
 
 .fileChoice[aria-pressed='true'] {
   border-style: solid;
-  border-color: var(--purple-600);
-  background: var(--purple-50);
-  color: var(--purple-600);
+  border-color: var(--brand-600);
+  background: var(--brand-50);
+  color: var(--brand-600);
 }
 
 /* Said where the file is chosen, not afterwards in a toast. */
@@ -595,7 +595,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;

@@ -31,7 +31,7 @@
   gap: var(--space-4);
   align-items: center;
   align-self: flex-start;
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;
@@ -57,8 +57,8 @@
   width: 56px;
   height: 56px;
   border-radius: var(--radius-pill);
-  background: var(--purple-50);
-  color: var(--purple-600);
+  background: var(--brand-50);
+  color: var(--brand-600);
   font-size: var(--text-h3-size);
   font-weight: var(--weight-extrabold);
   place-items: center;
@@ -89,8 +89,8 @@
   align-items: center;
   padding: var(--space-8) var(--space-16);
   border-radius: var(--radius-pill);
-  background: var(--purple-50);
-  color: var(--purple-600);
+  background: var(--brand-50);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-bold);
 }
@@ -103,7 +103,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;
@@ -129,7 +129,7 @@
 
 /*
  * The three-up status strip on /me. **Not `MetricTile`, and not a variant of
- * it.** These cards are tinted by state on purpose — reversed purple for the
+ * it.** These cards are tinted by state on purpose — reversed brand for the
  * round in hand, caution for what is waiting, the hatch for what nobody has
  * written up — where `MetricTile` states that it is never tinted by state,
  * because a tinted card cannot say whether the tint is the finding or the
@@ -149,7 +149,7 @@
 }
 
 .statusTileNow {
-  background: var(--purple-900);
+  background: var(--brand-900);
   color: var(--bg-surface);
   box-shadow: var(--shadow-card);
 }
@@ -175,7 +175,7 @@
 }
 
 .statusTileNow .statusTileKey {
-  color: var(--purple-200);
+  color: var(--brand-200);
 }
 
 .statusTileWarn .statusTileKey {
@@ -214,7 +214,7 @@
 }
 
 .statusTileNow .statusTileDetail {
-  color: var(--purple-200);
+  color: var(--brand-200);
 }
 
 .statusTileWarn .statusTileDetail {
@@ -235,7 +235,7 @@
   padding: var(--space-8) var(--space-16);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;
@@ -320,7 +320,7 @@
   display: inline-flex;
   gap: var(--space-4);
   align-items: center;
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-bold);
   white-space: nowrap;
@@ -486,9 +486,9 @@
 }
 
 .lvRecord {
-  border: 1px solid var(--purple-400);
-  background: var(--purple-50);
-  color: var(--purple-600);
+  border: 1px solid var(--brand-400);
+  background: var(--brand-50);
+  color: var(--brand-600);
 }
 
 .lvApprove {

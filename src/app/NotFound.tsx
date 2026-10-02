@@ -21,7 +21,7 @@ export function NotFound() {
       <p style={{ marginBottom: 'var(--space-16)' }}>
         <code>{window.location.pathname}</code> is not a route in diGi-Care.
       </p>
-      <Link to="/dev/states" style={{ color: 'var(--purple-600)', fontWeight: 600 }}>
+      <Link to="/dev/states" style={{ color: 'var(--brand-600)', fontWeight: 600 }}>
         Go to the status states page
       </Link>
     </div>

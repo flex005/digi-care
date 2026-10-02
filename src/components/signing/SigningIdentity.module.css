@@ -67,7 +67,7 @@
 .reveal {
   border: 0;
   background: none;
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-semibold);
   cursor: pointer;

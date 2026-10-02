@@ -23,13 +23,22 @@ import { held, type SessionHolding } from './session-holding'
  */
 
 export type SetupStepId =
-  'organisation' | 'vocabulary' | 'site' | 'templates' | 'invite'
+  'organisation' | 'vocabulary' | 'brand' | 'site' | 'templates' | 'invite'
 
 /** Steps 1 and 2 are required; 3 and 4 can be skipped. */
 /**
  * `vocabulary` is required: the term reaches every screen in the product, and
  * a default nobody chose is still a default on every heading. Asking makes it
  * a decision somebody took.
+ */
+/*
+ * `brand` is NOT required, and the asymmetry with `vocabulary` above is the
+ * point. A term nobody chose still puts a word on every heading, so the
+ * default is a decision somebody has to take. A hue nobody chose puts the
+ * purple this product has always been on the primary button, which is the
+ * state it shipped in — there is nothing for a reader to be misled about, so
+ * making it required would be asking a question to which "leave it" is the
+ * honest answer.
  */
 export const REQUIRED_STEPS: readonly SetupStepId[] = [
   'organisation',

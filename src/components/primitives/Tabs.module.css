@@ -15,13 +15,13 @@
 }
 
 .trigger:hover {
-  color: var(--purple-900);
+  color: var(--brand-900);
 }
 
 /* The active tab carries a colour AND a rule, so it is not colour alone. */
 .trigger[data-state='active'] {
-  border-bottom-color: var(--purple-600);
-  color: var(--purple-900);
+  border-bottom-color: var(--brand-600);
+  color: var(--brand-900);
 }
 
 .content {

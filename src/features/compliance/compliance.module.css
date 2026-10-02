@@ -74,7 +74,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;
@@ -125,7 +125,7 @@
 /* Dark, and carrying the least reassuring number available. */
 .hero {
   padding: var(--space-24);
-  background: var(--purple-900);
+  background: var(--brand-900);
   color: var(--bg-surface);
 }
 
@@ -276,7 +276,7 @@
 }
 
 .swatchRecorded {
-  background: var(--purple-600);
+  background: var(--brand-600);
 }
 
 .swatchGap {
@@ -310,7 +310,7 @@
 }
 
 .barRecorded {
-  background: var(--purple-600);
+  background: var(--brand-600);
 }
 
 /*
@@ -537,7 +537,7 @@
 .coverageUsable {
   display: block;
   height: 100%;
-  background: var(--purple-600);
+  background: var(--brand-600);
 }
 
 .coverageThin {
@@ -843,8 +843,8 @@
 }
 
 .filterPill[aria-pressed='true'] {
-  border-color: var(--purple-900);
-  background: var(--purple-900);
+  border-color: var(--brand-900);
+  background: var(--brand-900);
   color: var(--bg-surface);
 }
 

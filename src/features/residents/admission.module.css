@@ -47,7 +47,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;
@@ -165,8 +165,8 @@
 }
 
 .choice:has(input:checked) {
-  border-color: var(--purple-600);
-  background: var(--purple-50);
+  border-color: var(--brand-600);
+  background: var(--brand-50);
 }
 
 .choice b {
@@ -300,8 +300,8 @@
 }
 
 .stepOn {
-  border-color: var(--purple-600);
-  background: var(--purple-50);
+  border-color: var(--brand-600);
+  background: var(--brand-50);
 }
 
 .step button,

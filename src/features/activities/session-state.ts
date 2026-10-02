@@ -7,7 +7,7 @@ import { assertNever } from '@/lib/assert-never'
  * **Four states, and only one is a gap.** That distinction is the module:
  *
  *  - `planned` — it has not happened yet. Nobody has failed to record
- *    anything, so it takes a dashed purple border rather than the hatch.
+ *    anything, so it takes a dashed brand border rather than the hatch.
  *    Planned is not a gap.
  *  - `unrecorded` — it happened and nobody wrote up a single person. The
  *    hatch, and the lead finding.

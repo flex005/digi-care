@@ -20,11 +20,11 @@
 
 /* As supplied: the mark in brand purple, the wordmark in the deep ink. */
 .ink [data-part='mark'] {
-  fill: var(--purple-600);
+  fill: var(--brand-600);
 }
 
 .ink [data-part='word'] {
-  fill: var(--purple-900);
+  fill: var(--brand-900);
 }
 
 /*

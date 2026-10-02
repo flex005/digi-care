@@ -74,11 +74,11 @@
 }
 
 .spark[data-spark='plain'] .sparkLine {
-  stroke: var(--purple-600);
+  stroke: var(--brand-600);
 }
 
 .spark[data-spark='plain'] .sparkToday {
-  fill: var(--purple-600);
+  fill: var(--brand-600);
 }
 
 /* --------------------------------------------------------------------------
@@ -117,7 +117,7 @@
 
 .recordedLine {
   fill: none;
-  stroke: var(--purple-600);
+  stroke: var(--brand-600);
   stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -131,7 +131,7 @@
 }
 
 .barRecorded {
-  fill: var(--purple-600);
+  fill: var(--brand-600);
 }
 
 .baseline {
@@ -192,7 +192,7 @@
 }
 
 .arcRecorded {
-  stroke: var(--purple-600);
+  stroke: var(--brand-600);
 }
 
 /*
@@ -234,7 +234,7 @@
 
 .ringDone {
   fill: none;
-  stroke: var(--purple-600);
+  stroke: var(--brand-600);
   stroke-width: 6;
   stroke-linecap: round;
 }
@@ -342,7 +342,7 @@
 
 .barRecordedCss {
   flex: 1 1 auto;
-  background: var(--purple-600);
+  background: var(--brand-600);
 }
 
 .gapCount {

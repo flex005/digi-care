@@ -128,6 +128,7 @@ describe('the wizard writes through the owners, never its own copy', () => {
      */
     confirmStep('organisation')
     confirmStep('vocabulary')
+    confirmStep('brand')
     confirmStep('site')
     const { container } = renderWizard()
     await settled(container)
@@ -153,6 +154,7 @@ describe('the wizard writes through the owners, never its own copy', () => {
      */
     confirmStep('organisation')
     confirmStep('vocabulary')
+    confirmStep('brand')
     confirmStep('site')
     skipStep('templates')
     const before = teamMembers().length
@@ -188,6 +190,7 @@ describe('two states at setup, and what retiring one later means', () => {
      */
     confirmStep('organisation')
     confirmStep('vocabulary')
+    confirmStep('brand')
     confirmStep('site')
     const { container } = renderWizard()
     await settled(container)

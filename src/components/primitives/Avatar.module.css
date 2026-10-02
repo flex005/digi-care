@@ -6,8 +6,8 @@
   overflow: hidden;
   border: 1.5px solid var(--border-strong);
   border-radius: var(--radius-pill);
-  background-color: var(--purple-50);
-  color: var(--purple-900);
+  background-color: var(--brand-50);
+  color: var(--brand-900);
   font-weight: var(--weight-bold);
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -22,7 +22,7 @@
  */
 .brand {
   border-color: transparent;
-  background-color: var(--purple-600);
+  background-color: var(--brand-600);
   color: var(--bg-surface);
 }
 

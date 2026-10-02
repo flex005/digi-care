@@ -31,8 +31,8 @@
   padding: var(--space-4) var(--space-12);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-pill);
-  background-color: var(--purple-50);
-  color: var(--purple-900);
+  background-color: var(--brand-50);
+  color: var(--brand-900);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
@@ -93,8 +93,8 @@
 }
 
 .iconButton:hover {
-  background-color: var(--purple-50);
-  color: var(--purple-900);
+  background-color: var(--brand-50);
+  color: var(--brand-900);
 }
 
 /* The alert count. A bare number would break Rule 4, so the accessible name
@@ -119,7 +119,7 @@
  * profile reads as a block of chrome in its own right — matching the site pill
  * at the other end of the bar, which has always done this.
  *
- * Hover and the open menu both deepen to --purple-200 (ink-900 on it measures
+ * Hover and the open menu both deepen to --brand-200 (ink-900 on it measures
  * 11.09:1), so the control still answers a pointer and still shows when its
  * menu is open. Losing that feedback is the cost of a permanent tint, and it
  * is not one worth paying.
@@ -145,5 +145,5 @@
 
 .user:hover,
 .user[data-state='open'] {
-  background-color: var(--purple-200);
+  background-color: var(--brand-200);
 }

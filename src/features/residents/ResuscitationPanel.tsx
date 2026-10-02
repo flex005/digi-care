@@ -18,7 +18,7 @@ import type { Term } from '@/lib/vocabulary'
  * A missing badge must never read as "for resuscitation", and it must never
  * read as "DNAR". So there are three states and the third is rendered loudly:
  *
- *   DNAR in place        brand purple — a recorded clinical decision
+ *   DNAR in place        the brand colour — a recorded clinical decision
  *   For resuscitation    green — recorded, and CPR is to be attempted
  *   No decision recorded hatched — nobody has asked, and CPR is the default
  *

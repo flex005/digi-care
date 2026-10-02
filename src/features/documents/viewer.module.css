@@ -23,7 +23,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-caption-size);
   font-weight: var(--weight-semibold);
   text-decoration: none;
@@ -322,7 +322,7 @@
   gap: var(--space-4);
   align-items: center;
   margin-left: auto;
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-micro-size);
   font-weight: var(--weight-bold);
   white-space: nowrap;

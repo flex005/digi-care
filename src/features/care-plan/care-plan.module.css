@@ -18,7 +18,7 @@
   gap: var(--space-4);
   align-items: center;
   align-self: flex-start;
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
@@ -301,7 +301,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background-color: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
@@ -310,8 +310,8 @@
 }
 
 .rowActionPrimary {
-  border-color: var(--purple-600);
-  background-color: var(--purple-600);
+  border-color: var(--brand-600);
+  background-color: var(--brand-600);
   color: var(--bg-surface);
 }
 
@@ -325,23 +325,23 @@
 /*
  * Whose words go in which box, said rather than implied.
  *
- * Purple rather than the hatch: nothing is missing here. It is a constraint on
+ * The brand tint rather than the hatch: nothing is missing here. It is a constraint on
  * how the boxes are filled in, and the hatch is reserved for absence.
  */
 .voiceNote {
   max-width: 88ch;
   padding: var(--space-12) var(--space-16);
-  border: 1px solid var(--purple-200);
+  border: 1px solid var(--brand-200);
   border-left-width: var(--space-4);
   border-radius: var(--radius-md);
-  background-color: var(--purple-50);
+  background-color: var(--brand-50);
   color: var(--ink-700);
   font-size: var(--text-caption-size);
   line-height: var(--text-body-line);
 }
 
 .voiceNote b {
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-weight: var(--weight-bold);
 }
 
@@ -496,8 +496,8 @@
   margin-top: var(--space-4);
   padding: 0 var(--space-8);
   border-radius: var(--radius-pill);
-  background-color: var(--purple-50);
-  color: var(--purple-600);
+  background-color: var(--brand-50);
+  color: var(--brand-600);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
   font-weight: var(--weight-bold);
@@ -533,7 +533,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background-color: var(--bg-surface);
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
@@ -541,8 +541,8 @@
 }
 
 .versionSelectActive {
-  border-color: var(--purple-600);
-  background-color: var(--purple-50);
+  border-color: var(--brand-600);
+  background-color: var(--brand-50);
 }
 
 /* ---- The diff ---- */
@@ -689,8 +689,8 @@
 }
 
 .filterPillActive {
-  border-color: var(--purple-900);
-  background-color: var(--purple-900);
+  border-color: var(--brand-900);
+  background-color: var(--brand-900);
   color: var(--bg-surface);
 }
 

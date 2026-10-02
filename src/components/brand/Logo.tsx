@@ -12,10 +12,10 @@ import styles from './logo.module.css'
  *
  * **Two parts, coloured from tokens rather than from the file.** The artwork
  * ships with its hex baked in — `#6935CF` on the mark and `#1E0059` on the
- * wordmark, which are `--purple-600` and `--purple-900` — and each path
+ * wordmark, which are `--brand-600` and `--brand-900` — and each path
  * carries `data-part` so CSS can override both. That matters because the same
- * lockup sits on a white rail and on a deep purple panel, and brand purple on
- * brand purple is not readable.
+ * lockup sits on a white rail and on a deep brand panel, and the brand colour
+ * on itself is not readable.
  *
  * `tone="ink"` is the artwork as supplied, for light surfaces. `tone="light"`
  * puts the whole lockup in one light colour, because a two-tone mark on a dark

@@ -189,7 +189,7 @@
 }
 
 .segment:hover {
-  color: var(--purple-900);
+  color: var(--brand-900);
 }
 
 /* Chosen. The raised white surface is reinforcement; aria-pressed carries the
@@ -197,7 +197,7 @@
 .segmentActive {
   background-color: var(--bg-surface);
   box-shadow: var(--shadow-card);
-  color: var(--purple-900);
+  color: var(--brand-900);
   font-weight: var(--weight-semibold);
 }
 
@@ -216,14 +216,14 @@
 }
 
 .preferredName {
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-size);
   line-height: var(--text-body-line);
   font-weight: var(--weight-semibold);
 }
 
 .preferredName:hover {
-  color: var(--purple-900);
+  color: var(--brand-900);
   text-decoration: underline;
 }
 
@@ -359,5 +359,5 @@
 }
 
 .search:focus-within {
-  border-color: var(--purple-600);
+  border-color: var(--brand-600);
 }

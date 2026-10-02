@@ -120,11 +120,15 @@
   /* ==================================================================
      BRAND PALETTE — PRD §4.1 ✅ exact
      ================================================================== */
-  --purple-900: #1e0059; /* App header, primary text on light, headings */
-  --purple-600: #6935cf; /* Primary action, active nav, focus ring */
-  --purple-400: #a284f1; /* Secondary accent, chart series, hover */
-  --purple-200: #d5c6fb; /* Selected rows, subtle fills, disabled primary */
-  --purple-50: #f1ecff; /* Tinted card backgrounds, tag fills */
+  --brand-900: #1e0059; /* App header, primary text on light, headings */
+  --brand-600: #6935cf; /* Primary action, active nav, focus ring */
+
+  /* Secondary accent and hover borders. NOT chart series: this said so for
+     thirty phases and every series, axis and legend swatch is --brand-600.
+     check-brand-ramp.mjs reads charts.module.css rather than this line. */
+  --brand-400: #a284f1;
+  --brand-200: #d5c6fb; /* Selected rows, subtle fills, disabled primary */
+  --brand-50: #f1ecff; /* Tinted card backgrounds, tag fills */
 
   /* ==================================================================
      SURFACES AND NEUTRALS — PRD §4.2
@@ -135,7 +139,7 @@
 
   /*
    * **A neutral, and deliberately not the brand.** This was #1e0059 — the same
-   * hex as --purple-900, with a comment saying it reused the brand deep purple
+   * hex as --brand-900, with a comment saying it reused the brand deep purple
    * — which meant body text *was* the brand colour. Harmless while the brand
    * was fixed, and the whole problem the moment it becomes configurable: an
    * organisation choosing red would have read every paragraph in dark red.
@@ -281,7 +285,7 @@
    * The document viewer's stage. Values from docs/documents-medication-intake.
    *
    * A dark *neutral* rather than brand purple, and the reference says why: the
-   * page the stage holds has to read as paper. On --purple-900 it reads as part
+   * page the stage holds has to read as paper. On --brand-900 it reads as part
    * of the product, which is the one thing a sample of somebody else's form
    * must not do.
    * ---------------------------------------------------------------------- */
@@ -311,9 +315,9 @@
   --layout-topbar-height: 64px;
 
   /* ==================================================================
-     FOCUS — PRD §7. 2px --purple-600 with 2px offset. Never removed.
+     FOCUS — PRD §7. 2px --brand-600 with 2px offset. Never removed.
      ================================================================== */
-  --focus-ring: var(--purple-600);
+  --focus-ring: var(--brand-600);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
 }

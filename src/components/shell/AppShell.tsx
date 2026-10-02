@@ -23,7 +23,7 @@ import styles from './AppShell.module.css'
 /**
  * The application shell. PRD §4.7.
  *
- * Carries the diGiLog visual language — deep purple bar, white cards on pale
+ * Carries the diGiLog visual language — deep brand bar, white cards on pale
  * lavender, pill controls, generous radii — but its own information
  * architecture.
  *

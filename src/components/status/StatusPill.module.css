@@ -99,9 +99,9 @@
    bad news — it is a recorded clinical decision, and colouring it red or
    green would editorialise. PRD §6.2. */
 .brand {
-  border-color: var(--purple-600);
-  background-color: var(--purple-50);
-  color: var(--purple-900);
+  border-color: var(--brand-600);
+  background-color: var(--brand-50);
+  color: var(--brand-900);
 }
 
 /* Block form, for a cell in the MAR grid rather than an inline badge. */

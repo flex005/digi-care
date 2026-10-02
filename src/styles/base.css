@@ -12,7 +12,7 @@ body {
 }
 
 /**
- * PRD §7: visible focus ring, 2px --purple-600 with 2px offset, never removed.
+ * PRD §7: visible focus ring, 2px --brand-600 with 2px offset, never removed.
  * :focus-visible only, so a mouse click does not ring, but every keyboard
  * route does. There is no rule anywhere in this project that sets
  * `outline: none` without an immediate replacement.

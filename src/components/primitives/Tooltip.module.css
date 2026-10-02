@@ -3,7 +3,7 @@
   max-width: 280px;
   padding: var(--space-8) var(--space-12);
   border-radius: var(--radius-sm);
-  background-color: var(--purple-900);
+  background-color: var(--brand-900);
   color: var(--bg-surface);
   font-size: var(--text-caption-size);
   line-height: var(--text-caption-line);
@@ -12,5 +12,5 @@
 }
 
 .arrow {
-  fill: var(--purple-900);
+  fill: var(--brand-900);
 }

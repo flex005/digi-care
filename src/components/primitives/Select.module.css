@@ -40,7 +40,7 @@
 .indicator {
   display: inline-flex;
   width: var(--space-16);
-  color: var(--purple-600);
+  color: var(--brand-600);
 }
 
 /**

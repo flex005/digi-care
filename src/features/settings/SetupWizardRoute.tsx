@@ -21,6 +21,8 @@ import {
   chosenTermsAsConfigured,
   organisationTypeAsConfigured,
   subjectTermIdAsConfigured,
+  setBrand,
+  brandIdAsConfigured,
 } from '@/data/access/settings-store'
 import { isActive, setActive } from '@/data/access/site-config-store'
 import {
@@ -55,6 +57,13 @@ const TERM_LABELS: Record<TermId, string> = {
   assessment: 'A judgement recorded about somebody',
   family: 'The people close to them',
 }
+import {
+  BRAND_OPTIONS,
+  BRAND_STEPS,
+  DEFAULT_BRAND_ID,
+  brandOptionById,
+  brandRampHex,
+} from '@/lib/brand'
 import styles from './setup.module.css'
 
 /**
@@ -81,6 +90,7 @@ const defaultTermIdFor = (type: OrganisationType): string =>
 const ORDER: readonly { id: SetupStepId; name: string; required: boolean }[] = [
   { id: 'organisation', name: 'The organisation', required: true },
   { id: 'vocabulary', name: 'What kind of service it is', required: true },
+  { id: 'brand', name: 'Its colour', required: false },
   { id: 'site', name: 'Its first home', required: true },
   { id: 'templates', name: 'Risk assessments this home carries out', required: false },
   { id: 'invite', name: 'The first person to invite', required: false },
@@ -88,6 +98,12 @@ const ORDER: readonly { id: SetupStepId; name: string; required: boolean }[] = [
 
 export function SetupWizardRoute() {
   const { organisation, activeSite, reloadSites } = useSession()
+  const [brandChoice, setBrandChoice] = useState<string>(
+    brandIdAsConfigured() ?? DEFAULT_BRAND_ID,
+  )
+  /* The swatches follow the control immediately, so a reader sees the ramp
+     they are choosing rather than the one they already have. */
+  const previewRamp = brandRampHex(brandOptionById(brandChoice).hue)
   const fromOrganisation = cameFromOrganisation(useLocation().state)
   const [orgType, setOrgType] = useState<OrganisationType>(
     organisationTypeAsConfigured(),
@@ -289,6 +305,70 @@ export function SetupWizardRoute() {
                     setTermChoice(id as TermId, choice)
                   }
                   confirmStep('vocabulary')
+                  next()
+                }}
+              >
+                Confirm and continue
+              </Button>
+            </div>
+          </section>
+        ) : null}
+
+        {step === 'brand' ? (
+          <section className={styles.section} data-setup-section="brand">
+            <h2 className={styles.sectionTitle}>Its colour</h2>
+            {/*
+             * **Accents and actions, and nothing else.** The hue reaches the
+             * primary action, the active nav, the focus ring, chart series,
+             * tints and the deep header. It does not reach body text, which is
+             * a neutral, and it does not reach a single status colour: red,
+             * amber and green mean what they mean, and a home cannot configure
+             * its way out of the vocabulary this product is built on.
+             */}
+            <div className={styles.field} data-brand-choice>
+              <Select
+                labelVisible
+                label="Brand colour"
+                placeholder="Choose a colour"
+                value={brandChoice}
+                onValueChange={setBrandChoice}
+                options={BRAND_OPTIONS.map((entry) => ({
+                  value: entry.id,
+                  label: entry.label,
+                }))}
+              />
+            </div>
+
+            {/*
+             * The ramp, shown rather than described. Five swatches is the
+             * cheapest honest answer to "what will this look like", and the
+             * one thing a name cannot give: a teal and a magenta at the same
+             * lightness look very different, and only one of them is vivid.
+             */}
+            <div className={styles.swatches} data-brand-preview>
+              {BRAND_STEPS.map((step_) => (
+                <span key={step_} className={styles.swatch} data-swatch={step_}>
+                  <span
+                    className={styles.swatchBlock}
+                    style={{ background: previewRamp[step_] }}
+                  />
+                  <span className={styles.swatchLabel}>{step_}</span>
+                </span>
+              ))}
+            </div>
+
+            <p className={styles.note}>
+              Every colour that carries a clinical meaning stays exactly as it is: red,
+              amber, green, and the hatch that says nobody has recorded something. This
+              changes accents and actions. Body text does not move.
+            </p>
+
+            <div className={styles.actions}>
+              <Button
+                data-confirm-step="brand"
+                onClick={() => {
+                  setBrand(brandChoice)
+                  confirmStep('brand')
                   next()
                 }}
               >

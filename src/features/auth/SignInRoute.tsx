@@ -61,8 +61,8 @@ export function SignInRoute() {
       <div className={styles.card}>
         <div className={styles.authWrap}>
           <div className={styles.authSide}>
-            {/* Light, not the artwork as supplied: brand purple on the deep
-                purple panel would lose the mark into the background. */}
+            {/* Light, not the artwork as supplied: the brand colour on the deep
+                brand panel would lose the mark into the background. */}
             <Logo tone="light" height={40} title="Radiant digicare" />
             <p className={styles.claim}>
               A care record that says what nobody has written down.

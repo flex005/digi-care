@@ -429,7 +429,7 @@
 
 .clockLink {
   margin-left: auto;
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-weight: var(--weight-semibold);
   text-decoration: none;
   white-space: nowrap;
@@ -594,7 +594,7 @@
 }
 
 .clockTime {
-  color: var(--purple-600);
+  color: var(--brand-600);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-bold);

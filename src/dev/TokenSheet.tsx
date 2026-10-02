@@ -21,13 +21,7 @@ import styles from './dev.module.css'
  * decision.
  */
 
-const BRAND = [
-  '--purple-900',
-  '--purple-600',
-  '--purple-400',
-  '--purple-200',
-  '--purple-50',
-]
+const BRAND = ['--brand-900', '--brand-600', '--brand-400', '--brand-200', '--brand-50']
 const SURFACES = ['--bg-page', '--bg-surface', '--bg-surface-sunken']
 const INKS = ['--ink-900', '--ink-700', '--ink-500', '--ink-400']
 const BORDERS = ['--border-strong', '--border-subtle', '--border-unrecorded']

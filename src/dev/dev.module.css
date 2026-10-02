@@ -205,7 +205,7 @@
 .spacingBar {
   height: var(--space-16);
   border-radius: var(--radius-sm);
-  background-color: var(--purple-400);
+  background-color: var(--brand-400);
 }
 
 .radiusChip {
@@ -214,9 +214,9 @@
   justify-content: center;
   width: var(--space-64);
   height: var(--space-64);
-  border: 1.5px solid var(--purple-400);
-  background-color: var(--purple-50);
-  color: var(--purple-900);
+  border: 1.5px solid var(--brand-400);
+  background-color: var(--brand-50);
+  color: var(--brand-900);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
   font-weight: var(--weight-semibold);

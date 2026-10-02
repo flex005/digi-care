@@ -7,6 +7,12 @@ import { sites as fixtureSites } from '../fixtures/organisation'
 import { DUE_SOON_DAYS, REVIEW_INTERVAL_MONTHS } from '@/lib/review-interval'
 import { ROUND_TIMES, ROUND_WINDOW_MINUTES } from '@/data/fixtures/rounds'
 import { GAP_THRESHOLD_WAKING_MINUTES, MEDICATION_LOOKAHEAD_HOURS } from '@/lib/shift'
+import {
+  BRAND_STEPS,
+  DEFAULT_BRAND_ID,
+  brandOptionById,
+  brandRampHex,
+} from '@/lib/brand'
 
 /**
  * The figures this build runs on, and which of them can honestly move. Phase 15.
@@ -335,6 +341,57 @@ export function setTermChoice(id: TermId, choice: string): void {
   if (id === 'subject') subjectTermId = choice
 }
 
+/**
+ * The organisation's brand hue, as an option id.
+ *
+ * **Accents and actions only.** The ramp this drives reaches the primary
+ * action, the active nav, the focus ring, chart series, tints and the deep
+ * header — and nothing else. Body text is `--ink-900`, a neutral, which is
+ * why that was decoupled before this shipped.
+ *
+ * Undefined is not a gap: it means nobody has chosen, and the default is the
+ * purple this product has always been.
+ */
+let brandId: string | undefined
+
+export function brandIdAsConfigured(): string | undefined {
+  return brandId
+}
+
+/**
+ * Choose a hue, and paint it.
+ *
+ * **Setting the custom properties is the whole mechanism.** Stylelint forbids
+ * a colour literal outside `tokens.css`, and every component already reads
+ * `var(--brand-600)` — so generation writes the five properties onto `:root`
+ * at runtime and not one component changes. The declarations in `tokens.css`
+ * stay exactly where they are and are what a reader sees before anybody
+ * configures anything.
+ */
+export function setBrand(id: string): void {
+  brandId = id
+  applyBrand(id)
+}
+
+/**
+ * Paint the five steps onto `:root`, or clear them back to the stylesheet.
+ *
+ * Clearing removes the properties rather than writing the purple back, so the
+ * values in `tokens.css` are the single declaration of the default — writing
+ * them here would be a second copy of five hexes, and §8 has had enough of
+ * those.
+ */
+export function applyBrand(id: string | undefined): void {
+  if (typeof document === 'undefined') return
+  const root = document.documentElement
+  if (id === undefined || id === DEFAULT_BRAND_ID) {
+    for (const step of BRAND_STEPS) root.style.removeProperty(`--brand-${step}`)
+    return
+  }
+  const ramp = brandRampHex(brandOptionById(id).hue)
+  for (const step of BRAND_STEPS) root.style.setProperty(`--brand-${step}`, ramp[step])
+}
+
 export function setOrganisationName(name: string): void {
   organisationName = name.trim() === '' ? undefined : name.trim()
 }
@@ -364,6 +421,7 @@ export function settingsHoldings(): SessionHolding[] {
       subjectTermId === undefined ? 0 : 1,
     ),
     ...heldItem('words this service uses for its own things', chosenTerms.size),
+    ...heldItem('the brand colour you chose', brandId === undefined ? 0 : 1),
   ]
 }
 
@@ -374,6 +432,8 @@ export function resetSessionSettings(): void {
   organisationType = undefined
   subjectTermId = undefined
   chosenTerms.clear()
+  brandId = undefined
+  applyBrand(undefined)
   for (const entry of FIGURES) entry.value = entry.fallback
 }
 
@@ -407,4 +467,5 @@ export const WRITE_EXPORTS = [
   'setSiteName',
   'setSiteTimeZone',
   'setOrganisationName',
+  'setBrand',
 ] as const

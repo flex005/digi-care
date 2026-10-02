@@ -30,8 +30,8 @@
 
 .region:hover > ellipse,
 .region:hover > rect {
-  fill: var(--purple-50);
-  stroke: var(--purple-400);
+  fill: var(--brand-50);
+  stroke: var(--brand-400);
 }
 
 .region:focus-visible {
@@ -42,7 +42,7 @@
    boxes the whole group rather than the region somebody is on. */
 .region:focus-visible > ellipse,
 .region:focus-visible > rect {
-  stroke: var(--purple-600);
+  stroke: var(--brand-600);
   stroke-width: 3;
 }
 

@@ -6,11 +6,11 @@ import { Logo } from './Logo'
  * The product mark. PRD §4.7.
  *
  * **The colour is the whole risk here, and it is invisible to a DOM query.**
- * The same lockup sits on a white rail and on a deep purple panel, and it only
+ * The same lockup sits on a white rail and on a deep brand panel, and it only
  * works because every path carries `data-part` for CSS to override. A
  * re-export from the design tool would drop those attributes, the artwork
  * would fall back to its baked `#6935CF` and `#1E0059`, and the mark on the
- * sign-in panel would be brand purple on brand purple — present, correct,
+ * sign-in panel would be the brand colour on itself — present, correct,
  * and unreadable. Nothing else in the suite would notice.
  */
 describe('the mark can be recoloured by whatever it sits on', () => {
