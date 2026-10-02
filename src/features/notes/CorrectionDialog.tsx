@@ -3,6 +3,8 @@ import { useState } from 'react'
 import type { CareNote, IsoDateTime, Resident, Site } from '@/data/types'
 import { submitCorrectionNote } from '@/data/access/client'
 import { useSession, useTimeZone } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { shiftAt } from '@/lib/shift'
 import { Button, Dialog, Toast } from '@/components/primitives'
 import { NoteForm, type NoteDraft } from './NoteForm'
@@ -30,6 +32,7 @@ export function CorrectionDialog({
   onWritten: (note: CareNote) => void
 }) {
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const timeZone = useTimeZone()
 
   const [open, setOpen] = useState(false)
@@ -66,6 +69,21 @@ export function CorrectionDialog({
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'The correction failed')
     }
+  }
+
+  /*
+   * A correction is a new linked note, which is a write to `/care-notes`. The
+   * note it corrects stays on screen either way — a reader may read it and
+   * not add to it.
+   */
+  if (!viewer.canRecordIn('/care-notes')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject="this note"
+        act="add a correction to it"
+      />
+    )
   }
 
   return (

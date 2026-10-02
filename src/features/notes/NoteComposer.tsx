@@ -3,6 +3,8 @@ import { useState } from 'react'
 import type { CareNote, IsoDateTime, Resident, Site } from '@/data/types'
 import { submitCareNote } from '@/data/access/client'
 import { useSession, useTimeZone } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { shiftAt } from '@/lib/shift'
 import { Button, Dialog, Toast } from '@/components/primitives'
 import { NoteForm, type NoteDraft } from './NoteForm'
@@ -31,6 +33,7 @@ export function NoteComposer({
   onWritten: (note: CareNote) => void
 }) {
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const timeZone = useTimeZone()
 
   const [open, setOpen] = useState(false)
@@ -69,6 +72,21 @@ export function NoteComposer({
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'The note was not written')
     }
+  }
+
+  /*
+   * **Writing is the act; the notes themselves are read elsewhere.** This is
+   * the control, so the refusal stands where it stood rather than leaving a
+   * tab that looks as though somebody forgot to build the button.
+   */
+  if (!viewer.canRecordIn('/care-notes')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject={`care notes about ${resident.preferredName}`}
+        act="write one"
+      />
+    )
   }
 
   return (
