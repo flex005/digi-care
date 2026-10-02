@@ -4,6 +4,8 @@ import { STAFF_ROLE_NAMES } from '@/data/types'
 import { Button, Dialog } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { addMember, setResidentAssignment, teamMembers } from '@/data/access/team-store'
 import { residentsBySite } from '@/data/fixtures/residents'
 import { toIsoDate } from '@/data/fixtures/generate'
@@ -33,6 +35,7 @@ import styles from './team.module.css'
  */
 export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
   const { activeSite, sites, currentUser } = useSession()
+  const viewer = useViewer()
   const [open, setOpen] = useState(false)
   const [fullName, setFullName] = useState('')
   const [role, setRole] = useState<StaffRole>('care_worker')
@@ -81,6 +84,23 @@ export function InviteDrawer({ onAdded }: { onAdded: () => void }) {
     reset()
     setOpen(false)
     onAdded()
+  }
+
+  /*
+   * **Already gated by its caller**, which renders this only when
+   * `viewer.may('manage_team')`. Asked here as well because the gate and the
+   * act then live in the same file: a second route to this drawer would
+   * otherwise be guarded by whichever screen happened to render it, which is
+   * the shape the incident correction form was fixed for.
+   */
+  if (!viewer.may('manage_team')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject="the team"
+        act="invite somebody or assign their homes"
+      />
+    )
   }
 
   return (

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { StaffMember, StaffRole } from '@/data/types'
 import { STAFF_ROLE_NAMES } from '@/data/types'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { Button, Dialog } from '@/components/primitives'
 import { formatCount } from '@/lib/format'
 import { addMember } from '@/data/access/team-store'
@@ -91,6 +93,7 @@ export function AddMemberDialog({
   onAdded: () => void
 }) {
   const { currentUser, activeSite, sites } = useSession()
+  const viewer = useViewer()
   const [fullName, setFullName] = useState('')
   const [role, setRole] = useState<StaffRole>('care_worker')
   const [siteId, setSiteId] = useState(activeSite.id)
@@ -103,6 +106,23 @@ export function AddMemberDialog({
     setFullName('')
     onAdded()
     onClose()
+  }
+
+  /*
+   * **Nothing in the product renders this dialog.** `AddMemberDialog` is
+   * exported and has no caller — a write surface nobody can reach, which is
+   * why no permission check was ever missed on it. Gated anyway rather than
+   * left as the one component that would be unguarded the moment somebody
+   * wires it up, and recorded as unreachable rather than quietly deleted.
+   */
+  if (!viewer.may('manage_team')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject="the team"
+        act="add somebody to it"
+      />
+    )
   }
 
   return (
