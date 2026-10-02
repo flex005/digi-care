@@ -24,7 +24,7 @@ const GENERAL_INFORMATION_FIELDS = generalInformationFields(
 )
 
 /**
- * General Information. PRD §6.2, source PRD §16.2.
+ * General information. PRD §6.2, source PRD §16.2.
  *
  * The rule under test is not that the fields render — it is that **none of
  * them can be an empty row**. "—" is the most common way a care record turns

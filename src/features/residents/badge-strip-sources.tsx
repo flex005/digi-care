@@ -25,7 +25,7 @@ import type { TimeZone } from '@/lib/format'
  * thing carrying the status colour, at the largest size on the card. A
  * component returning a finished pill cannot be laid out that way from
  * outside. The badge components still exist and are still used where a pill is
- * the right shape: the General Information tab, and /dev/states.
+ * the right shape: the General information tab, and /dev/states.
  */
 
 /** What the flag says, and how loudly. */

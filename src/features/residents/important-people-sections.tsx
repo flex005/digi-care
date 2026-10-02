@@ -9,7 +9,7 @@ import type { Vocabulary } from '@/lib/vocabulary'
 import styles from './profile.module.css'
 
 /**
- * Important People. Every category in `ImportantPeople`, declared rather than
+ * Important people. Every category in `ImportantPeople`, declared rather than
  * hardcoded into a render function — the same discipline as General
  * Information, for the same reason.
  *

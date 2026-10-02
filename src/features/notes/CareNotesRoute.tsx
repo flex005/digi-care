@@ -45,7 +45,7 @@ import {
 import styles from './notes.module.css'
 
 /**
- * Care Notes across the home. PRD §6.3.
+ * Care notes across the home. PRD §6.3.
  *
  * The sentence this screen exists to say: **these notes are waiting for
  * somebody to act on them.** That is why it opens on the supervisory queue

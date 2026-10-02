@@ -61,6 +61,27 @@ export interface NavSection {
   label: string
 }
 
+/**
+ * Labels whose inner capital is correct, because they are names.
+ *
+ * **Sentence case is this build's convention and the shell was the last place
+ * still breaking it.** The group headings here were always sentence case —
+ * 'Care delivery', 'Planning and risk' — and the item labels were title case,
+ * and the two sat in one file without anybody noticing. The reason is the same
+ * one that hid it in the vocabulary: nine of the items are single words, and a
+ * single word is the same string in both conventions. Only a multi-word label
+ * can tell them apart, and until the vocabulary produced some there were
+ * almost none.
+ *
+ * "Family Portal" is a separate product with its own PRD and its own UI
+ * (CLAUDE.md, Scope). It is a name, not a description of a section, so its
+ * capital is right. `scripts/check-shell-labels.mjs` reads this list in both
+ * directions: a label with an inner capital that is not named here fails, and
+ * a name here that has no inner capital fails too, so an entry cannot go stale
+ * and keep excusing something.
+ */
+export const PRODUCT_NAMES_IN_LABELS: readonly string[] = ['Family Portal']
+
 export const navSections: NavSection[] = [
   { id: 'overview', label: '' },
   { id: 'delivery', label: 'Care delivery' },
@@ -91,7 +112,7 @@ export const navItems: NavItem[] = [
     section: 'delivery',
   },
   {
-    label: 'Care Notes',
+    label: 'Care notes',
     path: '/care-notes',
     icon: 'note-task/note-01',
     phase: 2,
@@ -148,7 +169,7 @@ export const navItems: NavItem[] = [
      * assessment behind a consent. So the module keeps its name, and the term
      * reaches the sentences inside it.
      */
-    label: 'Risk Assessments',
+    label: 'Risk assessments',
     path: '/risk-assessments',
     icon: 'alert-notification/alert-diamond',
     phase: 5,
@@ -156,7 +177,10 @@ export const navItems: NavItem[] = [
     section: 'planning',
   },
   {
-    label: 'Care Plans',
+    /* The fallback, which `navLabel` only reaches if the term above is ever
+       removed — so it is sentence case like every other fixed label rather
+       than a title-case string waiting to come back. */
+    label: 'Care plans',
     term: { id: 'carePlan', form: 'Many' },
     path: '/care-plans',
     icon: 'education/clipboard',

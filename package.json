@@ -13,7 +13,7 @@
     "icons": "node scripts/icons/build-icons.mjs",
     "icons:check": "node scripts/icons/build-icons.mjs --check",
     "typecheck": "tsc -b",
-    "lint": "npm run lint:es && npm run lint:css && npm run lint:hatch && npm run lint:tel && npm run lint:plurals && npm run lint:selectors && npm run lint:instants && npm run lint:dashes && npm run lint:losses && npm run lint:svg && npm run lint:tokens && npm run lint:assignment && npm run lint:percentages && npm run lint:family && npm run lint:refusals && npm run lint:cssclasses && npm run lint:writegates && npm run lint:pluralagree",
+    "lint": "npm run lint:es && npm run lint:css && npm run lint:hatch && npm run lint:tel && npm run lint:plurals && npm run lint:selectors && npm run lint:instants && npm run lint:dashes && npm run lint:losses && npm run lint:svg && npm run lint:tokens && npm run lint:assignment && npm run lint:percentages && npm run lint:family && npm run lint:refusals && npm run lint:cssclasses && npm run lint:writegates && npm run lint:pluralagree && npm run lint:shelllabels",
     "lint:es": "eslint .",
     "lint:css": "stylelint \"src/**/*.css\"",
     "lint:hatch": "node scripts/check-hatch.mjs",
@@ -38,7 +38,8 @@
     "lint:refusals": "node scripts/check-refusal-handled.mjs",
     "lint:cssclasses": "node scripts/check-css-classes.mjs",
     "lint:writegates": "node scripts/check-write-gates.mjs",
-    "lint:pluralagree": "node scripts/check-plural-agreement.mjs"
+    "lint:pluralagree": "node scripts/check-plural-agreement.mjs",
+    "lint:shelllabels": "node scripts/check-shell-labels.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --fix",

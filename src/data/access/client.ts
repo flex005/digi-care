@@ -62,8 +62,13 @@ import type {
   StockCount,
 } from '../types'
 import { subjectResidentId } from '../types'
+import { vocabularyFor, type Vocabulary } from '@/lib/vocabulary'
 import { organisation, sites, staff } from '../fixtures/organisation'
-import { configuredSites } from './settings-store'
+import {
+  chosenTermsAsConfigured,
+  configuredSites,
+  organisationTypeAsConfigured,
+} from './settings-store'
 import { viewerHolds, viewerHomes } from './viewer-scope'
 import { RecordNotYours } from './record-not-yours'
 import { goalProgressNotes, goals, goalsFor } from '../fixtures/goals'
@@ -190,6 +195,34 @@ const LATENCY_MS = 120
 function nameOf(residentId: ResidentId): string {
   return fixtureResidentById(residentId)?.fullLegalName ?? 'a resident not on file'
 }
+
+/**
+ * A module's name for the activity log, in the words the sidebar uses.
+ *
+ * **Three of the seven move with the vocabulary** — the subject, the care plan
+ * and medication — so a literal here is a second owner that disagrees with the
+ * rail the moment anybody configures a term. It did: the log said "Care Plans"
+ * while the sidebar said "Care & support plans", and nothing failed.
+ *
+ * Read from the vocabulary rather than from `navLabel`, which owns the rail's
+ * spelling, because nothing else in `src/data` reaches into `src/app` —
+ * `check-shell-labels.mjs` holds the two together instead, and the four fixed
+ * names are checked against the declarations by the same script.
+ */
+const moduleNamed = {
+  get subject() {
+    return termsNow().subject.Many
+  },
+  get carePlan() {
+    return termsNow().carePlan.Many
+  },
+  get medication() {
+    return termsNow().medication.Many
+  },
+} as const
+
+const termsNow = (): Vocabulary =>
+  vocabularyFor(organisationTypeAsConfigured(), chosenTermsAsConfigured())
 
 function logged<T>(
   value: T,
@@ -374,7 +407,7 @@ export function submitCareNote(input: {
 
   appendNote(note)
   return logged(note, {
-    module: 'Care Notes',
+    module: 'Care notes',
     what: `Wrote a care note about ${nameOf(input.residentId)}: ${input.category.replace(/_/g, ' ')}`,
     to: `/residents/${input.residentId}/notes/${note.id}`,
     by: input.author,
@@ -446,7 +479,7 @@ export function submitCorrectionNote(input: {
   appendNote(note)
   supersede(original.id, note.id)
   return logged(note, {
-    module: 'Care Notes',
+    module: 'Care notes',
     what: `Corrected an earlier care note about ${nameOf(input.residentId)}`,
     to: `/residents/${input.residentId}/notes/${note.id}`,
     by: input.author,
@@ -505,7 +538,7 @@ export function recordNoteReview(input: {
   }
   recordReview(input.noteId, review)
   return logged(review, {
-    module: 'Care Notes',
+    module: 'Care notes',
     what: `Reviewed a flagged care note about ${nameOf(note.residentId)}`,
     to: `/residents/${note.residentId}/notes/${note.id}`,
     by: input.by,
@@ -693,7 +726,7 @@ export function closeOmission(input: {
     closure,
   })
   return logged(closure, {
-    module: 'Medications',
+    module: moduleNamed.medication,
     what: `Closed an omission for ${nameOf(record.residentId)}`,
     to: '/medications',
     by: input.by,
@@ -952,7 +985,7 @@ export function recordCustomCarePlanDomain(input: {
   const updated = residentById(input.residentId)
   if (!updated) return reject(`No resident with id ${input.residentId}`)
   return logged(domain, {
-    module: 'Care Plans',
+    module: moduleNamed.carePlan,
     what: `Added a care plan domain for ${updated.fullLegalName}: ${domain.name}`,
     to: `/residents/${updated.id}/care-plan`,
     by: input.by,
@@ -988,7 +1021,7 @@ export function finaliseCarePlanDomain(input: {
   }
   const token = finaliseDomain(input)
   return logged(token, {
-    module: 'Care Plans',
+    module: moduleNamed.carePlan,
     what: `Finalised a care plan domain for ${nameOf(input.residentId)}: ${input.domainId.replace(/_/g, ' ')}`,
     to: `/residents/${input.residentId}/care-plan/${input.domainId}`,
     by: input.by,
@@ -1176,7 +1209,7 @@ export function admit(input: AdmissionInput): Promise<Resident> {
   }
   const resident = admitResident(input)
   return logged(resident, {
-    module: 'Residents',
+    module: moduleNamed.subject,
     what: `Admitted ${resident.fullLegalName} to ${input.siteId === 'site-ashgrove-lodge' ? 'Ashgrove Lodge' : 'Rosewood Court'}`,
     to: `/residents/${resident.id}`,
     by: input.admittedBy,
@@ -1204,7 +1237,7 @@ export function editResident(input: {
   if (!updated) return reject(`No resident with id ${input.residentId}`)
 
   return logged(updated, {
-    module: 'Residents',
+    module: moduleNamed.subject,
     what: `Recorded ${input.field} for ${updated.fullLegalName}`,
     to: `/residents/${updated.id}`,
     by: input.by,
@@ -1268,7 +1301,7 @@ export function recordAssessment(input: {
   const updated = residentById(input.residentId)
   if (!updated) return reject(`No resident with id ${input.residentId}`)
   return logged(updated, {
-    module: 'Risk Assessments',
+    module: 'Risk assessments',
     what: `Assessed ${input.templateId.replace(/_/g, ' ')} for ${updated.fullLegalName}: ${input.level}`,
     to: `/residents/${updated.id}/risk-assessments`,
     by: input.by,
@@ -1348,7 +1381,7 @@ export function recordCustomRisk(input: {
   const updated = residentById(input.residentId)
   if (!updated) return reject(`No resident with id ${input.residentId}`)
   return logged(updated, {
-    module: 'Risk Assessments',
+    module: 'Risk assessments',
     what: `${existing === undefined ? 'Recorded' : 'Re-scored'} ${risk.name} for ${updated.fullLegalName}: ${input.level}`,
     to: `/residents/${updated.id}/risk-assessments`,
     by: input.by,
@@ -1726,7 +1759,7 @@ export function countersignControlledDrug(input: {
   }
   recordCountersignature(input.medicationId, input.date, input.roundTime, signed)
   return logged(signed, {
-    module: 'Medications',
+    module: moduleNamed.medication,
     what: `Countersigned a controlled drug dose for ${nameOf(record.residentId)}`,
     to: '/medications/register',
     by: input.by,

@@ -7,7 +7,7 @@ import { useTerms } from '@/app/session/use-term'
 import styles from './profile.module.css'
 
 /**
- * The Future Plans tab. PRD §6.2 — "DNAR, ADRT, advance care plan, preferred
+ * The Future plans tab. PRD §6.2 — "DNAR, ADRT, advance care plan, preferred
  * place of care and death, funeral and religious preferences. Every entry
  * date-stamped, signed, version-controlled. Changing a DNAR or ADRT raises a
  * confirmation naming the resident and warning that all staff on shift are

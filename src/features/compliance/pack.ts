@@ -137,7 +137,7 @@ export function packContents(data: ComplianceData, terms: Vocabulary): PackConte
       what: 'Risk assessments never completed',
       count: `${formatCount(templates - assessed)} of ${formatCount(templates)}`,
       to: '/risk-assessments',
-      where: 'Risk Assessments',
+      where: 'Risk assessments',
     },
     {
       id: 'plans-never-written',

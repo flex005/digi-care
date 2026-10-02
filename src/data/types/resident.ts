@@ -103,7 +103,7 @@ export interface SocialWorker {
 }
 
 /**
- * Important People. Each category is `Recorded<T>` rather than an optional
+ * Important people. Each category is `Recorded<T>` rather than an optional
  * field or an empty array, so "no LPA holder recorded" is distinguishable
  * from "this resident has no LPA" — which are different legal situations.
  */

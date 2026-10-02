@@ -17414,3 +17414,78 @@ the old convention, and it was invisible while the vocabulary agreed with it.
 Resolving it means sentence-casing the fixed module labels too, which is default
 product copy across the shell and Frank's call rather than a sweep to make
 quietly. "Family Portal" stays title case either way: it is a product's name.
+
+### The fixed shell labels follow, and a guard now holds both halves
+
+Five renamed: 'Care Notes' → 'Care notes', 'Risk Assessments' → 'Risk
+assessments', 'General Information' → 'General information', 'Important People'
+→ 'Important people', 'Future Plans' → 'Future plans'. **59 occurrences across
+35 files**, because the declarations are the smaller half — the rest are
+citations, and a citation is what rots.
+
+'Family Portal' keeps its capital: a separate product's name, not a description
+of a section. Every single-word label is untouched, which is the whole reason
+this survived thirty phases — nine of the seventeen nav items are one word, and
+a one-word label is the same string in both conventions. Only a multi-word
+label can tell them apart, and until the vocabulary produced some there were
+almost none. Third time this build has hit that shape: the plural pairings, the
+vocabulary's own title case, and now the shell.
+
+**`scripts/check-shell-labels.mjs`**, wired into `lint`. Three claims, three
+mutations, each run and read:
+
+- *A declared label in title case.* 'Care notes' → 'Care Notes' fails with
+  `"Care Notes" is title case — "Notes" would be lower case in sentence case`.
+- *A stale citation anywhere in the tree*, which is the half a sweep cannot
+  hold. `key-questions.ts`'s `from: 'Important people · every recorded contact'`
+  put back to title case fails naming the file and line.
+- *A stale exception entry.* Adding 'Care notes' to `PRODUCT_NAMES_IN_LABELS`
+  fails with `declared a product name and has no inner capital`.
+
+Its success line counts what it read against what it was given — 26 fixed
+labels, **10 of them multi-word and so able to tell the conventions apart**, 1
+declared product name, 0 stale citations across 482 files — and says what it
+cannot see: a label assembled at runtime from anything but the vocabulary.
+
+**It fired on its own documentation first.** Four findings were docblocks
+explaining the defect, including this script's. That is §8's `check-hatch`
+entry exactly — the cheapest fix is to reword the prose, and the habit that
+builds is writing about the rule obliquely, which is how the next real citation
+gets in under a comment. It strips comments now and matches the construct.
+
+### Two things the guard found that the brief's list did not
+
+- **The Care Plans nav item's fallback label was still 'Care Plans'.** Invisible
+  today, because the item carries `term: { id: 'carePlan', form: 'Many' }` and
+  `navLabel` never reaches the literal — and it would have come back the moment
+  anybody removed the term. A title-case string lying in wait is exactly what
+  this guard is for.
+- **The session activity log in `client.ts` restated seven module names**, three
+  of which the vocabulary owns: 'Care Plans', 'Medications', 'Residents'. So the
+  log already disagreed with the rail under *any* non-default vocabulary — it
+  said "Care Plans" beside a sidebar reading "Care & support plans", and nothing
+  failed. Those three now read the vocabulary. The four fixed ones stay literal
+  and `check-shell-labels` holds them against the declarations, because nothing
+  else in `src/data` reaches into `src/app`.
+
+### A test that moved with the edit rather than catching it
+
+`needs.test.tsx` asserted `toMatch(/Future Plans/)` against a description in
+`needs-sections.ts` that names the tab. The sweep changed both in the same edit
+and the test stayed green — §8's assertion written from the same string as the
+code, confirming a change rather than catching one. It reads the label from
+`TABS` now, and the mutation proves it: putting 'Future Plans' back in
+`needs-sections.ts` fails with `expected '…' to contain 'Future plans'`.
+
+### Read in a browser, non-default vocabulary
+
+The permission matrix's Module column and the profile's tab strip were where
+the mismatch was visible, so they are where it was confirmed. Both are now
+uniform sentence case — *Dashboard · People supported · Care notes · Handover ·
+Medication records · Incidents · Risk assessments · Care & support plans* — with
+'Family Portal' the only capitalised name on either, which is correct.
+
+**Noticed and not changed:** the ten care plan domain names render title case
+("Personal Care and Hygiene", "Nutrition and Hydration"). They are reference
+data from the PRD rather than shell labels, so they are outside both this
+change and the guard. Worth a decision at some point; not assumed here.

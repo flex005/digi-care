@@ -72,7 +72,7 @@ function originOf(resident: Resident, id: string): { origin: string; detail: str
   const resuscitation = resident.futurePlans.resuscitation
   if (resuscitation.kind === 'dnar_in_place' && resuscitation.documentId === id) {
     return {
-      origin: 'Future Plans',
+      origin: 'Future plans',
       detail: `signed ${formatDate(resuscitation.signedOn)} by ${resuscitation.signedBy}`,
     }
   }
@@ -80,14 +80,14 @@ function originOf(resident: Resident, id: string): { origin: string; detail: str
   const adrt = resident.futurePlans.adrt
   if (adrt.kind === 'recorded' && adrt.value.value.documentId === id) {
     return {
-      origin: 'Future Plans',
+      origin: 'Future plans',
       detail: `signed ${formatDate(adrt.value.signedOn)} by ${adrt.value.signedBy.displayName}`,
     }
   }
 
   const lpa = resident.importantPeople.lpaHolder
   if (lpa.kind === 'recorded' && lpa.value.documentId === id) {
-    return { origin: 'Important People', detail: `held by ${lpa.value.name}` }
+    return { origin: 'Important people', detail: `held by ${lpa.value.name}` }
   }
 
   for (const medication of medicationsFor(resident.id)) {

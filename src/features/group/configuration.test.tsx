@@ -192,7 +192,7 @@ describe('a figure says where it shows in the words the sidebar uses', () => {
   it.each([
     ['care_plan', 'Care plans'],
     ['care_and_support_plan', 'Care & support plans'],
-  ])('names the Care Plans module as %s renders it', (choice, expected) => {
+  ])('names the Care plans module as %s renders it', (choice, expected) => {
     const terms = vocabularyFor('care_home', { carePlan: choice })
     // The sidebar's own label, through the owner of that resolution.
     expect(navLabel(carePlans, terms)).toBe(expected)

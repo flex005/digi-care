@@ -159,7 +159,7 @@ const VOCABULARY = [
     chosen: 'Care Assessment',
     shows: /care assessments?/i,
     was: /\bassessments?\b/i,
-    /* Two names, not one exclusion. "Risk Assessments" is a module declared in
+    /* Two names, not one exclusion. "Risk assessments" is a module declared in
        nav-items and keyed by the permission matrix and the activity log — and
        the compound does not survive the adjective either ("Risk Clinical
        Assessments" is not a phrase). A capacity assessment is the Mental

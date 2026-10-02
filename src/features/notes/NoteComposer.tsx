@@ -13,7 +13,7 @@ import { NoteForm, type NoteDraft } from './NoteForm'
  * The note composer. PRD §6.3, and the first real write surface in the
  * product.
  *
- * It writes. Unlike the two controls on Future Plans, which raise a real
+ * It writes. Unlike the two controls on Future plans, which raise a real
  * confirmation and record nothing, a care note needs no clinician's signature
  * and no document reference: the author is whoever is signed in and the
  * timestamp is now. There is nothing to fabricate, so faking it would have

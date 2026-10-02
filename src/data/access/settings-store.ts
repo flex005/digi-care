@@ -121,7 +121,7 @@ const FIGURES: AdjustableFigure[] = [
     value: GAP_THRESHOLD_WAKING_MINUTES,
     fallback: GAP_THRESHOLD_WAKING_MINUTES,
     fixedAtGeneration: false,
-    seenOn: () => 'Care Notes',
+    seenOn: () => 'Care notes',
   },
   {
     id: 'review-interval-months',
@@ -132,7 +132,7 @@ const FIGURES: AdjustableFigure[] = [
     value: REVIEW_INTERVAL_MONTHS,
     fallback: REVIEW_INTERVAL_MONTHS,
     fixedAtGeneration: false,
-    seenOn: (terms) => `Reviews, ${terms.carePlan.Many}, Risk Assessments`,
+    seenOn: (terms) => `Reviews, ${terms.carePlan.Many}, Risk assessments`,
   },
   {
     /*

@@ -153,7 +153,7 @@ export type PermissionLevel = 'no_access' | 'read' | 'record' | 'approve'
 export interface SessionAct {
   id: string
   at: string
-  /** The module, in the words the sidebar uses: "Care Notes". */
+  /** The module, in the words the sidebar uses: "Care notes". */
   module: string
   /** What happened, naming the subject: "Wrote a care note about …". */
   what: string

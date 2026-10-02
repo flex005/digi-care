@@ -8,11 +8,11 @@ import { useTerms } from '@/app/session/use-term'
 import styles from './profile.module.css'
 
 /**
- * The Important People tab. PRD §6.2 — "next of kin, emergency contact, LPA
+ * The Important people tab. PRD §6.2 — "next of kin, emergency contact, LPA
  * holder with document link, social worker, professionals. Each with
  * communication preference. Primary contact toggle."
  *
- * Same visual language as General Information and Needs: 20px section title
+ * Same visual language as General information and Needs: 20px section title
  * over a one-line description above a divider, label-left value-right rows,
  * the same three answer types.
  *

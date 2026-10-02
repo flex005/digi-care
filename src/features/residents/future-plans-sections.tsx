@@ -11,7 +11,7 @@ import type { Vocabulary } from '@/lib/vocabulary'
 import styles from './profile.module.css'
 
 /**
- * Future Plans. PRD §6.2 — "DNAR, ADRT, advance care plan, preferred place of
+ * Future plans. PRD §6.2 — "DNAR, ADRT, advance care plan, preferred place of
  * care and death, funeral and religious preferences. Every entry date-stamped,
  * signed, version-controlled."
  *

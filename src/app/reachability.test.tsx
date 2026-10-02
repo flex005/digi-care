@@ -67,7 +67,7 @@ function profileRouteSegments(): string[] {
     (profile?.children ?? [])
       .map((child: RouteObject) => (child.index ? '.' : (child.path ?? '')))
       // Detail screens beneath a tab are reached from the tab, not from the tab
-      // strip: `notes/:noteId` is opened by a note on the Care Notes tab. A
+      // strip: `notes/:noteId` is opened by a note on the Care notes tab. A
       // parameterised segment is never a tab.
       .filter((path) => !path.includes(':'))
   )

@@ -11,7 +11,7 @@ import { PrimaryContactControl } from './PrimaryContactControl'
 import styles from './profile.module.css'
 
 /**
- * A person, rendered the same way wherever one appears on Important People.
+ * A person, rendered the same way wherever one appears on Important people.
  *
  * Name and relationship first, then the ways to reach them, then how they
  * have asked to be reached, then whether they are the one the home rings

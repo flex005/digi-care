@@ -505,7 +505,7 @@ function caring(terms: Vocabulary): Check[] {
       kind: 'derived',
       id: 'communication-preferences',
       name: 'Contacts with a communication preference recorded',
-      from: 'Important People · every recorded contact',
+      from: 'Important people · every recorded contact',
       run: (data) => {
         let total = 0
         let recorded = 0
@@ -640,7 +640,7 @@ function responsive(terms: Vocabulary): Check[] {
       kind: 'derived',
       id: 'resuscitation-recorded',
       name: `${term.Many} with a resuscitation decision recorded`,
-      from: `Future Plans · every ${term.one}`,
+      from: `Future plans · every ${term.one}`,
       run: (data) => {
         const recorded = data.residents.filter(
           (resident) =>
@@ -657,7 +657,7 @@ function responsive(terms: Vocabulary): Check[] {
       kind: 'derived',
       id: 'end-of-life-preferences',
       name: `${term.Many} with an end of life preference recorded`,
-      from: 'Future Plans · preferred place of care',
+      from: 'Future plans · preferred place of care',
       run: (data) => {
         const recorded = data.residents.filter(
           (resident) => resident.futurePlans.preferredPlaceOfCare.kind === 'recorded',

@@ -85,7 +85,7 @@ export function ReviewNoteControl({
   const fieldId = useId()
 
   /*
-   * Marking a flagged note reviewed is the approve act in Care Notes: signing
+   * Marking a flagged note reviewed is the approve act in Care notes: signing
    * off somebody else's work. Withheld from the auditor, who is the one role
    * signing into this platform with zero write, and not as a disabled button:
    * the control is not theirs to have.

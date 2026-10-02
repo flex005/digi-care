@@ -11,7 +11,7 @@ import type { Vocabulary } from '@/lib/vocabulary'
 import styles from './profile.module.css'
 
 /**
- * General Information. Every field from source PRD §16.2, declared rather than
+ * General information. Every field from source PRD §16.2, declared rather than
  * hardcoded into a render function.
  *
  * The declaration is the guard. `general-information.test.tsx` asserts that

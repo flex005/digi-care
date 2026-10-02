@@ -166,9 +166,9 @@ export function PrimitiveGallery() {
         <span className={styles.groupTitle}>Tabs</span>
         <Tabs defaultValue="general">
           <TabsList>
-            <TabsTrigger value="general">General Information</TabsTrigger>
+            <TabsTrigger value="general">General information</TabsTrigger>
             <TabsTrigger value="needs">Needs</TabsTrigger>
-            <TabsTrigger value="people">Important People</TabsTrigger>
+            <TabsTrigger value="people">Important people</TabsTrigger>
           </TabsList>
           <TabsContent value="general">
             Tab panels get their content in Phase 1.

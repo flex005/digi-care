@@ -91,7 +91,7 @@ const BASE: Record<StaffRole, PermissionLevel> = {
  * what those two roles can do is the Care Worker PRD's role table (CW_PRD,
  * Table 3), decided 17/09/2026. Their cells in this file predate both v2.0
  * PRDs, cite no source, and disagree with that table in several places:
- * a care worker records Risk Assessments, Consent and Family Portal here and
+ * a care worker records Risk assessments, Consent and Family Portal here and
  * may not there; a senior carer reads Compliance and Reports here and has no
  * access there; and four levels cannot say "assigned residents only", "both
  * shifts must sign" or "acknowledge, a manager closes" at all. The values are
@@ -644,7 +644,7 @@ export function moduleForPath(pathname: string): string | undefined {
  * One owner because the alternative is already in the build and already wrong:
  * five screens say "You are a read-only auditor", which was true while the
  * only way into read-only was a control that said auditor on it. An
- * organisation admin reads Care Notes too, and telling them they are an auditor
+ * organisation admin reads Care notes too, and telling them they are an auditor
  * is a screen inventing a fact about the person reading it.
  */
 export function readOnlyReason(role: StaffRole, moduleId: string): string {

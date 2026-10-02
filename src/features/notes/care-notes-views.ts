@@ -12,7 +12,7 @@ import { staffLabel } from '@/data/access/team-store'
 import type { Term } from '@/lib/vocabulary'
 
 /**
- * The cross-resident Care Notes view. PRD §6.3.
+ * The cross-resident Care notes view. PRD §6.3.
  *
  * > Same records as the profile timeline, different question: *what is
  * > happening in this home* rather than *what happened to this person*. It

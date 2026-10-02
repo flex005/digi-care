@@ -16,7 +16,7 @@ import { staffLabel } from '@/data/access/team-store'
  * support level per domain. A domain with no care plan content shows the
  * unrecorded treatment and links to create it."
  *
- * Built in the same visual language as General Information, deliberately: the
+ * Built in the same visual language as General information, deliberately: the
  * same 20px section header over a one-line plain-English description and a
  * divider, the same label-left value-right rhythm, the same three answer
  * types. Two tabs on the same record that answer questions in two different

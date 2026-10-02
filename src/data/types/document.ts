@@ -88,7 +88,7 @@ export interface DocumentReference {
   category: DocumentCategoryId
   /** What the missing document is: "DNAR form". */
   title: string
-  /** Where the id is held: "Future Plans". */
+  /** Where the id is held: "Future plans". */
   origin: string
   /** What the referring record says: "signed 17/05/2025 by Dr O. Balogun". */
   detail: string

@@ -11,7 +11,7 @@ import type { Term } from '@/lib/vocabulary'
 
 /**
  * The resuscitation decision, as a full-width panel rather than one row of
- * eight — the Future Plans counterpart of the allergies panel, and for the
+ * eight — the Future plans counterpart of the allergies panel, and for the
  * same reason.
  *
  * PRD §2.1: "For DNAR the same ambiguity is catastrophic in both directions."

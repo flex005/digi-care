@@ -9,7 +9,7 @@ import type { Vocabulary } from '@/lib/vocabulary'
  * social and emotional, communication, clinical — and maps each to the care
  * plan domains it draws on. Between them those five claim **nine of the ten
  * domains**. `end_of_life` belongs to none of them, because §16.2 handles end
- * of life under Future Plans instead.
+ * of life under Future plans instead.
  *
  * Rendering only the five would therefore drop a care plan domain off this
  * screen entirely, and **absence from a list is the same bug as a blank cell**
@@ -73,7 +73,7 @@ export function needsSections(terms: Vocabulary): NeedsSection[] {
     {
       id: 'other',
       name: `Other ${terms.carePlan.one} domains`,
-      description: `Part of the ${terms.carePlan.one}; end of life wishes are recorded on the Future Plans tab.`,
+      description: `Part of the ${terms.carePlan.one}; end of life wishes are recorded on the Future plans tab.`,
       domainIds: UNCLAIMED,
     },
   ]

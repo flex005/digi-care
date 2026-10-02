@@ -17,7 +17,7 @@ const FUTURE_PLANS_SECTIONS = futurePlansSections(vocabularyFor('care_home', {})
 const FUTURE_PLAN_ENTRIES = futurePlanEntries(vocabularyFor('care_home', {}))
 
 /**
- * Future Plans. PRD §6.2.
+ * Future plans. PRD §6.2.
  *
  * Two things are under test that are not under test anywhere else:
  *

@@ -15,7 +15,7 @@ import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
 
 /**
- * The General Information tab. PRD §6.2 — "all fields from source PRD §16.2".
+ * The General information tab. PRD §6.2 — "all fields from source PRD §16.2".
  *
  * Five sections, each headed by a 20px title and a one-line description of
  * what the section is for in the reader's terms, above a divider. The

@@ -129,7 +129,7 @@ export function RecordedValueField<T>({
    * Optional because most fields do not need it: "Religion not recorded"
    * already says everything there is to say. It earns its place where the
    * consequence of the gap is not obvious from the field's name, which on
-   * Important People and Future Plans is most of them.
+   * Important people and Future plans is most of them.
    */
   missingDetail?: string
   attributed: boolean

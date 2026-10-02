@@ -6,7 +6,7 @@ import { SessionProvider } from '@/app/session/SessionProvider'
 import { TooltipProvider } from '@/components/primitives'
 import { CARE_PLAN_DOMAINS } from '@/data/types'
 import { residents } from '@/data/fixtures/residents'
-import { ResidentProfileRoute } from './ResidentProfileRoute'
+import { ResidentProfileRoute, TABS } from './ResidentProfileRoute'
 import { NeedsTab } from './NeedsTab'
 import { needsSections, RENDERED_DOMAIN_IDS } from './needs-sections'
 import { vocabularyFor } from '@/lib/vocabulary'
@@ -64,8 +64,19 @@ describe('every care plan domain is on the screen', () => {
     expect(NEEDS_SECTIONS.length).toBeLessThanOrEqual(6)
     const other = NEEDS_SECTIONS.find((section) => section.id === 'other')
     expect(other?.domainIds).toContain('end_of_life')
-    // The catch-all explains itself rather than appearing unlabelled.
-    expect(other?.description).toMatch(/Future Plans/)
+    /*
+     * **Through the tab's own declaration, not a literal.** This read
+     * `/Future Plans/` and went green when the tab was renamed to sentence
+     * case, because the sweep moved the test and the string it asserts in the
+     * same edit — the §8 defect where an assertion written from the same
+     * string as the code confirms a change rather than catching one. Reading
+     * the label from TABS means a rename that misses `needs-sections.ts` fails
+     * here as well as in check-shell-labels.
+     */
+    const futurePlans = TABS.find((tab) => tab.path === 'future-plans')!
+    expect(other?.description).toContain(
+      futurePlans.label(vocabularyFor('care_home', {})),
+    )
   })
 
   /**
@@ -184,7 +195,7 @@ describe('a domain with no content says so', () => {
 describe('the Stale state', () => {
   it('shows a domain past its review date as overdue, with how long', async () => {
     // Grace Adeyemi's mobility domain was finalised 14 months ago and never
-    // reviewed — PRD §5.3 gap 7. Unlike General Information, this tab has a
+    // reviewed — PRD §5.3 gap 7. Unlike General information, this tab has a
     // real Stale state, because domains carry review dates.
     const { container } = renderNeeds('res-adeyemi')
     await waitFor(() =>

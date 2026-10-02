@@ -26,7 +26,7 @@ const IMPORTANT_PEOPLE_CATEGORIES = importantPeopleCategories(
 )
 
 /**
- * Important People. PRD §6.2, source PRD §16.2.
+ * Important people. PRD §6.2, source PRD §16.2.
  *
  * The failure this tab is exposed to is a missing category, not a blank field.
  * "No advocate recorded" and "assessed as not needing one" are the same empty

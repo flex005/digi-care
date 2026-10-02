@@ -8,7 +8,7 @@
  *  1. It is about 410px tall, which is half a laptop viewport held permanently
  *     against four tabs of dense record.
  *  2. §2.4's rule is about write surfaces, and the profile has none. It is
- *     read-only throughout, and the two change controls on Future Plans open a
+ *     read-only throughout, and the two change controls on Future plans open a
  *     confirmation that names the subject in its own sentence, which is a
  *     separate §2.4 bullet and unaffected.
  *
@@ -769,7 +769,7 @@
 /**
  * A domain: the term on the left, its facts on the right, the (disabled)
  * write affordance at the far edge — the same label-left value-right rhythm
- * General Information uses, one level down.
+ * General information uses, one level down.
  *
  * The label column is 240px here as it is there, so the two tabs line up when
  * a reader switches between them.
@@ -888,7 +888,7 @@
   cursor: not-allowed;
 }
 
-/* ---- Important People ---- */
+/* ---- Important people ---- */
 
 /**
  * One person. Name and relationship, how to reach them, how they asked to be
@@ -965,7 +965,7 @@
   border-top: 1px solid var(--border-subtle);
 }
 
-/* ---- Future Plans ---- */
+/* ---- Future plans ---- */
 
 /* Recorded in this person's own words, most of the time. Not italicised the
    way the care plan summary is: these are signed statements of intent, not

@@ -55,23 +55,23 @@ export interface ProfileTab {
 }
 
 export const TABS: ProfileTab[] = [
-  { label: () => 'General Information', path: '.', end: true, screen: 3, built: true },
+  { label: () => 'General information', path: '.', end: true, screen: 3, built: true },
   { label: () => 'Needs', path: 'needs', end: false, screen: 4, built: true },
   {
-    label: () => 'Important People',
+    label: () => 'Important people',
     path: 'people',
     end: false,
     screen: 5,
     built: true,
   },
   {
-    label: () => 'Future Plans',
+    label: () => 'Future plans',
     path: 'future-plans',
     end: false,
     screen: 6,
     built: true,
   },
-  { label: () => 'Care Notes', path: 'notes', end: false, screen: 7, built: true },
+  { label: () => 'Care notes', path: 'notes', end: false, screen: 7, built: true },
   {
     label: (terms) => terms.medication.Many,
     path: 'medications',
@@ -81,12 +81,12 @@ export const TABS: ProfileTab[] = [
   },
   {
     /*
-     * Left fixed: "Risk Assessments" is a module name declared in
+     * Left fixed: "Risk assessments" is a module name declared in
      * `src/app/nav-items.icons.ts` and keyed by the permission matrix and the
      * activity log, and the compound does not survive the configurable
      * adjective — "Risk Clinical Assessments" is not a phrase anybody writes.
      */
-    label: () => 'Risk Assessments',
+    label: () => 'Risk assessments',
     path: 'risk-assessments',
     end: false,
     screen: 9,
