@@ -16980,3 +16980,69 @@ legitimate, written and thrown away for exactly this reason. So it is a
 question asked at the call site, written into §8 and marked unenforced with
 the numbers, rather than a script that teaches people to type an escape
 comment without reading it.
+
+## The correction modal now renders the report form, not a copy of it (b409c42)
+
+Five sections extracted — `SeverityPicker`, `WhatHappenedSection`,
+`ResponseSection`, `UrgencyQuestion`, `FamilyQuestion` — plus a
+`SectionHeading` that takes the level. `InjurySection` and `EvidenceField`
+were already shared; these are the ones that had not been.
+
+### The report-form half was measured, not assumed
+
+Before and after screenshots at 1280 came back **byte-identical** (115,087
+bytes). A later comparison said otherwise and was wrong: the clock banner
+prints the real time, so two captures minutes apart differ for a reason that
+has nothing to do with the code. The settled check is a controlled comparison
+across a stash — build the committed code, capture, restore, build, capture —
+reading every section's heading, tag, position relative to the first section,
+width, height, class list and full text. **Identical.** Geometry rather than
+pixels, because it is immune to the banner and says *where* a difference is.
+
+### What the heading level is for
+
+Radix renders the dialog's title as the `h2`, so the same sections have to be
+`h3` inside the modal or the outline skips a level while looking right on
+screen. The body map's own captions follow the section rather than sitting at
+a fixed `h3`: left alone, "Front" came out a **sibling** of "Injury" — the
+document saying the two are peers while the screen shows one inside the other.
+
+### What changed about the record
+
+`contactState` is lifted out of `assembleReport` so both forms build the three
+contact answers through one function. `EvidenceField` is seeded from the
+record, which is why evidence is now in reach of a correction where
+`ReporterCorrection`'s docblock had said it was not: the attachments render
+with remove controls, so a correction that could not carry them would destroy
+every one on save. Urgency and the family decision write through
+`raiseUrgency` and `recordFamilyDecision`, and **only where the answer moved**,
+so a reworded description does not re-stamp an urgency somebody else raised.
+
+A stood-down urgency cannot be re-raised, and the modal says so rather than
+offering a box that throws on save. That sentence now has one owner shared
+with the page section — they were two separately typed copies, which is how
+the test for it first matched two elements and read as the modal not
+rendering it at all.
+
+### The mutation that passed, again
+
+Removing the re-stamp rule for the contacts **failed nothing**. The test
+handed the store back `marked.response.gp` — the original object, original
+stamp and all — and then asserted the original author survived, which is true
+however the store behaves. Exactly the mistake the injuries test made one
+phase earlier, made again by somebody who had written that entry. It now
+sends admin-stamped values as the form does, and the mutation fails with
+`expected 'staff-a-okonkwo' to be 'staff-c-nwosu'`.
+
+### Seven failures that were not the change
+
+A `verify` run came back with seven failures across notes, medications and
+risk — modules this work never touched. They did not reproduce: the same code
+passes the full suite, passes those files alone, and passes `verify` cleanly
+at 1682. A stray `vite` server was still running during that run, which
+`pkill -f "vite preview"` had missed because the process line reads
+`node .../.bin/vite`. Same shape as the 960s run recorded above, and the same
+cause: something of mine competing for the machine. Recorded as an
+attribution with its evidence rather than a certainty — what is established is
+that it does not reproduce once the tree is quiet, not that load is proven to
+be the mechanism.
