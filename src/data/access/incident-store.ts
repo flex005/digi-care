@@ -14,6 +14,8 @@ import type {
   IncidentTypeId,
   IncidentUrgency,
   ImmediateResponse,
+  ContactState,
+  EmergencyServicesRecord,
   InjuryMap,
   WitnessRecord,
   IsoDateTime,
@@ -74,16 +76,30 @@ export interface ReporterCorrection {
    * correcting admin's name — see `sameInjuries`/`sameWitnesses` below for
    * why that name is only applied where the fact actually moved.
    *
-   * **What a correction still cannot reach**, each for its own reason: the
-   * resident it happened to, because changing the subject of a clinical
-   * record is a different and graver act than fixing what it says (§2); the
-   * evidence, because those are session-only object URLs with nothing to
-   * re-attach; and the family decision, which `recordFamilyDecision` already
-   * owns on the detail page. And still not `ManagerReview` — that wall is
-   * what this type exists to hold.
+   * **What a correction still cannot reach**: the resident it happened to,
+   * because changing the subject of a clinical record is a different and
+   * graver act than fixing what it says (§2); the family decision and the
+   * urgency, which `recordFamilyDecision` and `raiseUrgency` already own and
+   * which the modal calls rather than copying; and `ManagerReview` — that
+   * wall is what this type exists to hold.
    */
   injuries: InjuryMap
   witnesses: WitnessRecord
+  /**
+   * The three contact answers and the evidence, which the correction modal
+   * gained when it was brought up to the report form.
+   *
+   * **Evidence is now in reach, where this type's docblock used to say it was
+   * not.** The reason given was that there is nothing to re-attach — true of
+   * adding one, and it was the wrong conclusion for the list as a whole: the
+   * modal renders the attachments with their remove controls, so a correction
+   * that could not carry them would destroy every one on save. What is still
+   * out of reach is the resident the incident happened to.
+   */
+  gp: ContactState
+  family: ContactState
+  emergencyServices: EmergencyServicesRecord
+  evidence: IncidentEvidence[]
 }
 
 /**
@@ -108,6 +124,27 @@ function sameInjuries(current: InjuryMap, next: InjuryMap): boolean {
   if (current.kind === 'marked' && next.kind === 'marked')
     return sameRegions(current.regions, next.regions)
   return true
+}
+
+/**
+ * Whether a contact answer says anything new.
+ *
+ * Compared on the answer and its reason, never on the stamp — the stamp is
+ * what we are deciding whether to move, so including it would make every
+ * comparison false and re-attribute everything on every save.
+ */
+function sameContact(current: ContactState, next: ContactState): boolean {
+  if (current.kind !== next.kind) return false
+  if (current.kind === 'not_required' && next.kind === 'not_required')
+    return current.reason === next.reason
+  return true
+}
+
+function sameEmergency(
+  current: EmergencyServicesRecord,
+  next: EmergencyServicesRecord,
+): boolean {
+  return current.kind === next.kind
 }
 
 function sameWitnesses(current: WitnessRecord, next: WitnessRecord): boolean {
@@ -177,10 +214,14 @@ export function withIncidentEdits(incident: Incident): Incident {
           location: edit.correction.location,
           description: edit.correction.description,
           injuries: edit.correction.injuries,
+          evidence: edit.correction.evidence,
           response: {
             ...incident.response,
             immediateAction: edit.correction.immediateAction,
             witnesses: edit.correction.witnesses,
+            gp: edit.correction.gp,
+            family: edit.correction.family,
+            emergencyServices: edit.correction.emergencyServices,
           },
           edited: edit.edited ?? incident.edited,
         }),
@@ -442,6 +483,23 @@ export function correctReport(
       witnesses: sameWitnesses(incident.response.witnesses, correction.witnesses)
         ? incident.response.witnesses
         : correction.witnesses,
+      /*
+       * Same rule as the body map and the witnesses: the stamp moves only
+       * where the answer moved. A correction to the description must not
+       * re-attribute "the GP was contacted" to whoever fixed a typo.
+       */
+      gp: sameContact(incident.response.gp, correction.gp)
+        ? incident.response.gp
+        : correction.gp,
+      family: sameContact(incident.response.family, correction.family)
+        ? incident.response.family
+        : correction.family,
+      emergencyServices: sameEmergency(
+        incident.response.emergencyServices,
+        correction.emergencyServices,
+      )
+        ? incident.response.emergencyServices
+        : correction.emergencyServices,
     },
     edited: { kind: 'edited', edited: act(by) },
   })

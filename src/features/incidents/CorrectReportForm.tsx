@@ -1,21 +1,35 @@
 import { useState } from 'react'
 import type {
   BodyRegionId,
-  CommunalAreaId,
   Incident,
   IncidentAct,
   IncidentSeverityId,
   IncidentTypeId,
   IsoDateTime,
 } from '@/data/types'
-import { COMMUNAL_AREAS, INCIDENT_SEVERITIES, INCIDENT_TYPES } from '@/data/types'
-import { correctReport } from '@/data/access/incident-store'
-import { AlertDialog, Button, Dialog, Select } from '@/components/primitives'
+import {
+  correctReport,
+  raiseUrgency,
+  recordFamilyDecision,
+} from '@/data/access/incident-store'
+import { AlertDialog, Button, Dialog } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { useSession } from '@/app/session/use-session'
 import { instantFromWallClockField, wallClockField } from '@/lib/format'
 import { useViewer } from '@/app/session/use-viewer'
 import { InjurySection, type InjuryChoice } from './InjurySection'
+import { SeverityPicker } from './SeverityPicker'
+import { WhatHappenedSection, type AreaChoice } from './WhatHappenedSection'
+import {
+  ResponseSection,
+  type ContactChoice,
+  type EmergencyChoice,
+} from './ResponseSection'
+import { UrgencyQuestion, NO_RE_RAISE } from './UrgencyQuestion'
+import { FamilyQuestion, type FamilyChoice } from './FamilyQuestion'
+import { EvidenceField } from './EvidenceField'
+import { SectionHeading } from './SectionHeading'
+import { contactChoiceOf, contactState } from './contact-state'
 import styles from './incidents.module.css'
 
 /**
@@ -99,7 +113,7 @@ export function CorrectReportForm({
   const [occurredAt, setOccurredAt] = useState(
     wallClockField(incident.occurredAt, activeSite.timeZone),
   )
-  const [area, setArea] = useState<CommunalAreaId | 'resident_room' | 'not_recorded'>(
+  const [area, setArea] = useState<AreaChoice>(
     incident.location.kind === 'communal'
       ? incident.location.area
       : incident.location.kind === 'resident_room'
@@ -137,6 +151,50 @@ export function CorrectReportForm({
       ? incident.response.witnesses.people.join(', ')
       : '',
   )
+  /*
+   * **Everything the report form asks, seeded from the record.** A field the
+   * modal did not carry was a field a correction silently dropped: the
+   * evidence especially, because the attachments render with remove controls
+   * and an empty list saved over them would destroy every one.
+   */
+  const [gp, setGp] = useState<ContactChoice>(contactChoiceOf(incident.response.gp))
+  const [familyContact, setFamilyContact] = useState<ContactChoice>(
+    contactChoiceOf(incident.response.family),
+  )
+  const [emergency, setEmergency] = useState<EmergencyChoice>(
+    incident.response.emergencyServices.kind === 'called'
+      ? incident.response.emergencyServices.service
+      : 'not_called',
+  )
+  const [notRequiredReason, setNotRequiredReason] = useState(
+    incident.response.gp.kind === 'not_required'
+      ? incident.response.gp.reason
+      : incident.response.family.kind === 'not_required'
+        ? incident.response.family.reason
+        : '',
+  )
+  const [evidence, setEvidence] = useState([...incident.evidence])
+
+  /*
+   * Urgency and the family decision are seeded here and written through
+   * `raiseUrgency` and `recordFamilyDecision`, never through `correctReport`.
+   * Those two own their own rules — a blank reason is refused, a stood-down
+   * urgency cannot be re-raised — and a second copy here is how a rule stops
+   * being true in one of the two places it lives.
+   */
+  const [urgentBecause, setUrgentBecause] = useState(
+    incident.urgency.kind === 'needs_attention_now' ? incident.urgency.because : '',
+  )
+  const [tellFamily, setTellFamily] = useState<FamilyChoice>(
+    incident.familyTold.kind === 'should_be_told'
+      ? 'should'
+      : incident.familyTold.kind === 'not_to_be_told'
+        ? 'not'
+        : 'undecided',
+  )
+  const [notTellingReason, setNotTellingReason] = useState(
+    incident.familyTold.kind === 'not_to_be_told' ? incident.familyTold.reason : '',
+  )
 
   /*
    * The act, not the page. Everybody reads an incident; one role rewrites one.
@@ -163,7 +221,15 @@ export function CorrectReportForm({
     description.trim() === '' ||
     immediateAction.trim() === '' ||
     (injury === 'found' && marked.length === 0) ||
-    (witnessChoice === 'witnessed' && names.length === 0)
+    (witnessChoice === 'witnessed' && names.length === 0) ||
+    /*
+     * The same rule the report form holds: `not_required` is a decision and a
+     * decision carries its reason, so it cannot be saved without one.
+     */
+    ((gp === 'not_required' || familyContact === 'not_required') &&
+      notRequiredReason.trim() === '') ||
+    // And a family decision of "no" needs its why, as FamilyDecision requires.
+    (tellFamily === 'not' && notTellingReason.trim() === '')
 
   return (
     <Dialog
@@ -205,153 +271,99 @@ export function CorrectReportForm({
             go on the record in its place.
           </b>
         </p>
-
-        <div className={styles.twoUp}>
-          <Select
-            label="Type"
-            labelVisible
-            placeholder="Choose a type"
-            value={type}
-            onValueChange={(value) => setType(value as IncidentTypeId)}
-            options={INCIDENT_TYPES.map((entry) => ({
-              value: entry.id,
-              label: entry.name,
-            }))}
-          />
-          <Select
-            label="Severity"
-            labelVisible
-            placeholder="Choose a severity"
-            value={severity}
-            onValueChange={(value) => setSeverity(value as IncidentSeverityId)}
-            options={INCIDENT_SEVERITIES.map((entry) => ({
-              value: entry.id,
-              label: entry.name,
-            }))}
-          />
-        </div>
-
-        <div className={styles.twoUp}>
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>When it happened</span>
-            <input
-              className={styles.input}
-              type="datetime-local"
-              value={occurredAt}
-              data-correct-occurred
-              onChange={(event) => setOccurredAt(event.target.value)}
-            />
-          </label>
-          <Select
-            label="Where"
-            labelVisible
-            placeholder="Choose a place"
-            value={area}
-            onValueChange={(value) =>
-              setArea(value as CommunalAreaId | 'resident_room' | 'not_recorded')
-            }
-            options={[
-              { value: 'not_recorded', label: 'Not recorded' },
-              { value: 'resident_room', label: "The resident's own room" },
-              ...COMMUNAL_AREAS.map((entry) => ({
-                value: entry.id,
-                label: entry.name,
-              })),
-            ]}
-          />
-        </div>
-
-        {area === 'resident_room' ? (
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>Room</span>
-            <input
-              className={styles.input}
-              type="text"
-              value={room}
-              data-correct-room
-              onChange={(event) => setRoom(event.target.value)}
-            />
-          </label>
-        ) : null}
-
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>What happened</span>
-          <textarea
-            className={styles.input}
-            rows={4}
-            value={description}
-            data-correct-description
-            onChange={(event) => setDescription(event.target.value)}
-          />
-        </label>
-
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>What was done at the time</span>
-          <textarea
-            className={styles.input}
-            rows={3}
-            value={immediateAction}
-            data-correct-action
-            onChange={(event) => setImmediateAction(event.target.value)}
-          />
-        </label>
-
-        {/* The same body map the report form uses, not a second one. A
-            second implementation of the one control that records where
-            somebody was hurt is a second thing to keep in step. */}
-        <InjurySection
-          choice={injury}
-          marked={marked}
-          onChoice={setInjury}
-          onToggle={(id) => {
-            setMarked((current) =>
-              current.includes(id)
-                ? current.filter((entry) => entry !== id)
-                : [...current, id],
-            )
-          }}
-        />
-
-        {/* Asked, never left blank — the same reason as on the report form:
-            an empty field would mean either "nobody saw it" or "nobody
-            recorded who", and on an unwitnessed fall that is the difference
-            the record turns on. */}
-        <div className={styles.field}>
-          <Select
-            labelVisible
-            label="Anyone who saw it"
-            placeholder="Choose an answer"
-            value={witnessChoice}
-            data-correct-witness
-            onValueChange={(value) => {
-              setWitnessChoice(value as 'nobody' | 'witnessed')
-            }}
-            options={[
-              { value: 'nobody', label: 'Nobody saw it happen' },
-              { value: 'witnessed', label: 'Somebody saw it' },
-            ]}
-          />
-          {witnessChoice === 'witnessed' ? (
-            <input
-              className={styles.input}
-              type="text"
-              value={witnessNames}
-              data-correct-witness-names
-              onChange={(event) => {
-                setWitnessNames(event.target.value)
-              }}
-              placeholder="Who saw it"
-              aria-label="Who saw it"
-            />
-          ) : null}
-        </div>
-
         {failure === '' ? null : (
           <p className={styles.footState} data-correction-failure>
             {failure}
           </p>
         )}
       </section>
+
+      {/*
+        **The report form's sections, rendered rather than matched.** These are
+        the same components `ReportIncidentRoute` renders, so the two forms
+        cannot drift: a hint changed in one is changed in both, and the
+        severity scale an admin corrects is the scale the reporter chose from.
+
+        At `h3`, because Radix renders the dialog's title as the `h2` — the
+        page's `h1` is not in this document, so `h2` here would skip a level
+        while looking identical.
+
+        In the report form's order. "Who this happened to" is the one section
+        left out: changing the subject of a clinical record is a different and
+        graver act than fixing what it says.
+      */}
+      <WhatHappenedSection
+        level="h3"
+        type={type}
+        onType={setType}
+        occurredAt={occurredAt}
+        onOccurredAt={setOccurredAt}
+        area={area}
+        onArea={setArea}
+        room={room}
+        onRoom={setRoom}
+        witnessChoice={witnessChoice}
+        onWitnessChoice={setWitnessChoice}
+        witnessNames={witnessNames}
+        onWitnessNames={setWitnessNames}
+        description={description}
+        onDescription={setDescription}
+      />
+
+      <SeverityPicker level="h3" severity={severity} onSeverity={setSeverity} />
+
+      <InjurySection
+        level="h3"
+        choice={injury}
+        marked={marked}
+        onChoice={setInjury}
+        onToggle={(id) => {
+          setMarked((current) =>
+            current.includes(id)
+              ? current.filter((entry) => entry !== id)
+              : [...current, id],
+          )
+        }}
+      />
+
+      <ResponseSection
+        level="h3"
+        immediateAction={immediateAction}
+        onImmediateAction={setImmediateAction}
+        gp={gp}
+        onGp={setGp}
+        family={familyContact}
+        onFamily={setFamilyContact}
+        emergency={emergency}
+        onEmergency={setEmergency}
+        notRequiredReason={notRequiredReason}
+        onNotRequiredReason={setNotRequiredReason}
+      />
+
+      <section className={styles.section} data-section="evidence">
+        <SectionHeading level="h3">Photographs or video</SectionHeading>
+        <p className={styles.sectionNote}>
+          Anything you took at the time. Nothing is required.
+        </p>
+        {/* Seeded from the record, so what is already attached renders with
+            its remove control. Starting empty would destroy it on save. */}
+        <EvidenceField evidence={evidence} onChange={setEvidence} by={currentUser} />
+      </section>
+
+      <UrgencyQuestion
+        level="h3"
+        urgentBecause={urgentBecause}
+        onUrgentBecause={setUrgentBecause}
+        refusedReason={incident.urgency.kind === 'stood_down' ? NO_RE_RAISE : undefined}
+      />
+
+      <FamilyQuestion
+        level="h3"
+        tellFamily={tellFamily}
+        onTellFamily={setTellFamily}
+        notTellingReason={notTellingReason}
+        onNotTellingReason={setNotTellingReason}
+      />
 
       <AlertDialog
         open={confirming}
@@ -392,7 +404,9 @@ export function CorrectReportForm({
                     ? { kind: 'not_recorded' }
                     : area === 'resident_room'
                       ? { kind: 'resident_room', room }
-                      : { kind: 'communal', area },
+                      : area === ''
+                        ? { kind: 'not_recorded' }
+                        : { kind: 'communal', area },
                 description,
                 immediateAction,
                 injuries:
@@ -413,9 +427,78 @@ export function CorrectReportForm({
                         recordedBy: currentUser,
                       }
                     : { kind: 'nobody_witnessed', recordedBy: currentUser },
+                gp: contactState(gp, notRequiredReason, currentUser, stamp.at),
+                family: contactState(
+                  familyContact,
+                  notRequiredReason,
+                  currentUser,
+                  stamp.at,
+                ),
+                emergencyServices:
+                  emergency === 'not_called'
+                    ? { kind: 'not_called' }
+                    : {
+                        kind: 'called',
+                        service: emergency,
+                        at: stamp.at,
+                        by: currentUser,
+                        outcome:
+                          incident.response.emergencyServices.kind === 'called'
+                            ? incident.response.emergencyServices.outcome
+                            : '',
+                      },
+                evidence,
               },
               currentUser,
             )
+
+            /*
+             * **Through the owners, and only where the answer moved.**
+             * `raiseUrgency` and `recordFamilyDecision` hold their own rules —
+             * a blank reason is refused, a stood-down urgency cannot be
+             * re-raised — so the modal calls them rather than patching the
+             * record itself. And it calls them only on a change, because
+             * either one re-stamps: saving a reworded description would
+             * otherwise put this admin's name on an urgency somebody else
+             * raised, which is the rule `correctReport` already keeps.
+             */
+            const urgencyNow =
+              incident.urgency.kind === 'needs_attention_now'
+                ? incident.urgency.because
+                : ''
+            if (
+              incident.urgency.kind !== 'stood_down' &&
+              urgentBecause.trim() !== '' &&
+              urgentBecause.trim() !== urgencyNow
+            ) {
+              raiseUrgency(incident, urgentBecause, currentUser)
+            }
+
+            const familyNow =
+              incident.familyTold.kind === 'should_be_told'
+                ? 'should'
+                : incident.familyTold.kind === 'not_to_be_told'
+                  ? 'not'
+                  : 'undecided'
+            const reasonNow =
+              incident.familyTold.kind === 'not_to_be_told'
+                ? incident.familyTold.reason
+                : ''
+            if (
+              tellFamily !== familyNow ||
+              (tellFamily === 'not' && notTellingReason.trim() !== reasonNow)
+            ) {
+              if (tellFamily === 'should') {
+                recordFamilyDecision(incident, { kind: 'should' }, currentUser)
+              } else if (tellFamily === 'not' && notTellingReason.trim() !== '') {
+                recordFamilyDecision(
+                  incident,
+                  { kind: 'not', reason: notTellingReason.trim() },
+                  currentUser,
+                )
+              }
+            }
+
             setConfirming(false)
             onClose()
             onCorrected()

@@ -10,10 +10,12 @@ import { incidents } from '@/data/fixtures/incidents'
 import { staffOkonkwo } from '@/data/fixtures/organisation'
 import {
   correctReport,
+  raiseUrgency,
   resetSessionIncidents,
   withIncidentEdits,
 } from '@/data/access/incident-store'
 import { wallClockField } from '@/lib/format'
+import { NO_RE_RAISE } from './UrgencyQuestion'
 import { IncidentDetailRoute } from './IncidentDetailRoute'
 
 /**
@@ -56,6 +58,11 @@ const correction = {
   // says nothing new about the body map or who saw it.
   injuries: subject.injuries,
   witnesses: subject.response.witnesses,
+  // Unchanged too: the contacts and the evidence the modal now carries.
+  gp: subject.response.gp,
+  family: subject.response.family,
+  emergencyServices: subject.response.emergencyServices,
+  evidence: subject.evidence,
 }
 
 describe('a correction replaces the reporter’s account', () => {
@@ -143,7 +150,13 @@ describe('through the screen somebody actually uses', () => {
      * it sits in the page header and is not portalled.
      */
     const description =
-      await screen.findByLabelText<HTMLTextAreaElement>('What happened')
+      /*
+       * A regex, not the exact string: the shared section wraps its hint
+       * inside the same `<label>`, so the accessible name is "In your own
+       * words What you found, what you saw…". An exact match silently finds
+       * nothing, which is how this first read as the modal not rendering.
+       */
+      await screen.findByLabelText<HTMLTextAreaElement>(/In your own words/)
     // The form opens from the record rather than blank: a correction that
     // started empty would delete an account by being saved untouched.
     expect(description.value).toBe(subject.description)
@@ -206,10 +219,10 @@ describe('a correction leaves the time alone unless somebody changes it', () => 
     await user.click(container.querySelector('[data-correct-report]')!)
 
     // Untouched: the field is read, never typed into.
-    const when = await screen.findByLabelText<HTMLInputElement>('When it happened')
+    const when = await screen.findByLabelText<HTMLInputElement>(/When it happened/)
     const asOpened = when.value
 
-    const description = screen.getByLabelText<HTMLTextAreaElement>('What happened')
+    const description = screen.getByLabelText<HTMLTextAreaElement>(/In your own words/)
     await user.clear(description)
     await user.type(description, 'Corrected wording, nothing about the time.')
     await user.click(screen.getByRole('button', { name: /Save the correction/ }))
@@ -285,6 +298,10 @@ describe('a correction reaches the two observations, and only re-stamps what mov
     location: marked.location,
     description: marked.description,
     immediateAction: marked.response.immediateAction,
+    gp: marked.response.gp,
+    family: marked.response.family,
+    emergencyServices: marked.response.emergencyServices,
+    evidence: marked.evidence,
     ...asFormSends,
   }
 
@@ -467,5 +484,185 @@ describe('the form refuses what the record cannot hold', () => {
     await waitFor(() => {
       expect(save.disabled).toBe(false)
     })
+  }, 30000)
+})
+
+/**
+ * The fields the correction gained when the modal was brought up to the
+ * report form.
+ *
+ * **Each is a write that silently did nothing before.** The modal held six
+ * fields and the report form holds eleven, so a correction could not change
+ * who was contacted, what was attached, whether it was urgent or whether the
+ * family should be told — and the evidence case was worse than missing,
+ * because the list is now rendered with remove controls and an empty one
+ * saved over the record would destroy every attachment.
+ */
+describe('the widened correction carries the rest of the report', () => {
+  const marked = incidents.find((entry) => entry.id === 'inc-034')!
+  const read = (): Incident => withIncidentEdits(marked)
+
+  const unchanged = {
+    type: marked.type,
+    severity: marked.severity,
+    occurredAt: marked.occurredAt,
+    location: marked.location,
+    description: marked.description,
+    immediateAction: marked.response.immediateAction,
+    injuries: marked.injuries,
+    witnesses: marked.response.witnesses,
+    gp: marked.response.gp,
+    family: marked.response.family,
+    emergencyServices: marked.response.emergencyServices,
+    evidence: marked.evidence,
+  }
+
+  it('lands a changed contact answer, with the correcting admin on it', () => {
+    correctReport(
+      marked,
+      {
+        ...unchanged,
+        gp: {
+          kind: 'not_required',
+          reason: 'Seen by the GP that morning for the same thing.',
+          recordedBy: staffOkonkwo,
+          recordedAt: '2026-10-02T09:00:00.000Z' as IsoDateTime,
+        },
+      },
+      staffOkonkwo,
+    )
+
+    const after = read()
+    if (after.response.gp.kind !== 'not_required') throw new Error('gp did not land')
+    expect(after.response.gp.reason).toBe(
+      'Seen by the GP that morning for the same thing.',
+    )
+    expect(after.response.gp.recordedBy.id).toBe(staffOkonkwo.id)
+  })
+
+  it('lands changed evidence rather than dropping the list', () => {
+    expect(marked.evidence).toEqual([])
+    correctReport(
+      marked,
+      {
+        ...unchanged,
+        evidence: [
+          {
+            id: 'evidence-added',
+            kind: 'photo',
+            fileName: 'bruise.jpg',
+            size: 2048,
+            url: 'blob:test/bruise.jpg',
+            attached: {
+              by: staffOkonkwo,
+              at: '2026-10-02T09:00:00.000Z' as IsoDateTime,
+            },
+          },
+        ],
+      },
+      staffOkonkwo,
+    )
+    expect(read().evidence.map((one) => one.fileName)).toEqual(['bruise.jpg'])
+  })
+
+  /*
+   * **The rule extended to the new fields.** A correction to the description
+   * must not re-attribute "the GP was contacted" to whoever fixed a typo, for
+   * the same reason it must not re-attribute a body map.
+   */
+  /*
+   * **Stamped with the admin, exactly as the form sends it.** The form rebuilds
+   * every contact answer on save through `contactState(..., currentUser, now)`,
+   * so the store is what has to notice the answer did not move and keep the
+   * original name. Handing the store back `marked.response.gp` — the original
+   * object, original stamp and all — would assert something true however the
+   * store behaves, which is the mistake the injuries test already made once
+   * and the mutation caught again here.
+   */
+  it('leaves a contact stamp alone when only the description changed', () => {
+    if (marked.response.gp.kind !== 'contacted')
+      throw new Error('fixture lost its contacted GP, so this asserts nothing')
+    const gpBefore = marked.response.gp
+
+    correctReport(
+      marked,
+      {
+        ...unchanged,
+        description: 'Reworded, nothing about the GP.',
+        // The same fact, re-stamped by the admin, which is what the form sends.
+        gp: {
+          kind: 'contacted',
+          at: '2026-10-02T09:00:00.000Z' as IsoDateTime,
+          by: staffOkonkwo,
+          outcome: gpBefore.outcome,
+        },
+      },
+      staffOkonkwo,
+    )
+
+    const after = read()
+    expect(after.description).toBe('Reworded, nothing about the GP.')
+    if (after.response.gp.kind !== 'contacted') throw new Error('gp lost')
+    expect(after.response.gp.by.id).toBe(gpBefore.by.id)
+    expect(after.response.gp.by.id).not.toBe(staffOkonkwo.id)
+    expect(after.response.gp.at).toBe(gpBefore.at)
+  })
+
+  it('leaves the evidence alone when only the description changed', () => {
+    correctReport(
+      marked,
+      { ...unchanged, description: 'Reworded again.' },
+      staffOkonkwo,
+    )
+    expect(read().evidence).toEqual(marked.evidence)
+  })
+})
+
+/**
+ * **A stood-down urgency cannot be re-raised from either route.**
+ *
+ * The rule lives in `raiseUrgency`, and the modal calls it rather than
+ * patching the record itself. A second copy in the modal is exactly how a
+ * rule stops being true in one of the two places it lives — so this asserts
+ * the refusal through the store, and the modal's own box asserts that it does
+ * not offer the input in the first place.
+ */
+describe('the stood-down refusal holds from the modal as well as the page', () => {
+  const standable = incidents.find((entry) => entry.urgency.kind === 'stood_down')!
+
+  it('refuses a re-raise through the store the modal calls', () => {
+    expect(standable.urgency.kind).toBe('stood_down')
+    expect(() =>
+      raiseUrgency(withIncidentEdits(standable), 'Urgent again.', staffOkonkwo),
+    ).toThrow(/erase who stood it down/i)
+    expect(withIncidentEdits(standable).urgency.kind).toBe('stood_down')
+  })
+
+  it('does not offer the modal an urgency box to type into', async () => {
+    const user = userEvent.setup()
+    const router = createMemoryRouter(
+      [{ path: '/incidents/:incidentId', element: <IncidentDetailRoute /> }],
+      { initialEntries: [`/incidents/${standable.id}`] },
+    )
+    const { container } = render(
+      <SessionProvider>
+        <TooltipProvider>
+          <SignInAs as="registered_manager" />
+          <RouterProvider router={router} />
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+    await waitFor(() => expect(container.querySelector('[data-subject]')).toBeTruthy())
+    await user.click(container.querySelector('[data-correct-report]')!)
+
+    /*
+     * Scoped to the dialog: the page's own urgency section refuses this in the
+     * same words — they share `NO_RE_RAISE` — so an unscoped query matches two
+     * elements and throws, which read as the modal not rendering it at all.
+     */
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByText(NO_RE_RAISE)).toBeTruthy()
+    // Not merely explained: there is nothing to type into.
+    expect(document.querySelector('[data-urgent-because]')).toBeNull()
   }, 30000)
 })

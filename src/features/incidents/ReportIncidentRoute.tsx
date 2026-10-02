@@ -14,7 +14,6 @@ import type {
   SiteId,
   StaffRef,
 } from '@/data/types'
-import { COMMUNAL_AREAS, INCIDENT_TYPES } from '@/data/types'
 import { now as appNow } from '@/data/fixtures/clock'
 import { residentsBySite } from '@/data/fixtures/residents'
 import { reportIncident, type IncidentReport } from '@/data/access/incident-store'
@@ -25,10 +24,15 @@ import { useViewer } from '@/app/session/use-viewer'
 import type { TimeZone } from '@/lib/format'
 import { instantFromWallClockField } from '@/lib/format'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
-import { TELL_THEM } from '@/features/family/family-statement'
 import { ChoiceMark } from './ChoiceMark'
+import { contactState } from './contact-state'
 import { EvidenceField } from './EvidenceField'
 import { InjurySection, type InjuryChoice } from './InjurySection'
+import { SeverityPicker } from './SeverityPicker'
+import { WhatHappenedSection } from './WhatHappenedSection'
+import { ResponseSection } from './ResponseSection'
+import { UrgencyQuestion } from './UrgencyQuestion'
+import { FamilyQuestion } from './FamilyQuestion'
 import styles from './incidents.module.css'
 
 /**
@@ -48,38 +52,6 @@ import styles from './incidents.module.css'
  * choice is explicit and closed: a resident, or a recorded statement that no
  * resident was involved. Never a blank, and never a default.
  */
-
-const SEVERITIES: {
-  id: IncidentSeverityId
-  name: string
-  gloss: string
-  tint: string
-}[] = [
-  {
-    id: 'no_harm',
-    name: 'No harm',
-    gloss: 'nothing came of it',
-    tint: styles.severityNoHarm!,
-  },
-  {
-    id: 'low_harm',
-    name: 'Low harm',
-    gloss: 'minor treatment, no lasting effect',
-    tint: styles.severityLowHarm!,
-  },
-  {
-    id: 'moderate_harm',
-    name: 'Moderate harm',
-    gloss: 'treatment needed, recovery expected',
-    tint: styles.severityModerateHarm!,
-  },
-  {
-    id: 'severe_harm',
-    name: 'Severe harm',
-    gloss: 'permanent or long-term effect',
-    tint: styles.severitySevereHarm!,
-  },
-]
 
 /**
  * The two types that can happen to nobody.
@@ -271,134 +243,23 @@ export function ReportIncidentRoute() {
           </section>
 
           {/* 2 — what */}
-          <section className={styles.section} aria-labelledby="what-heading">
-            <h2 className={styles.sectionTitle} id="what-heading">
-              What happened
-            </h2>
-
-            <div className={styles.twoUp}>
-              <Select
-                labelVisible
-                label="Type"
-                placeholder="Choose a type"
-                value={type === '' ? undefined : type}
-                onValueChange={(value) => setType(value as IncidentTypeId)}
-                options={INCIDENT_TYPES.map((entry) => ({
-                  value: entry.id,
-                  label: entry.name,
-                }))}
-              />
-              <label className={styles.field}>
-                <span className={styles.label}>When it happened</span>
-                <input
-                  className={styles.input}
-                  type="datetime-local"
-                  value={occurredAt}
-                  onChange={(event) => setOccurredAt(event.target.value)}
-                />
-                <span className={styles.hint}>Not when you are writing this up.</span>
-              </label>
-            </div>
-
-            <div className={styles.twoUp}>
-              <Select
-                labelVisible
-                label="Where"
-                placeholder="Choose a place"
-                value={area === '' ? undefined : area}
-                onValueChange={(value) =>
-                  setArea(value as CommunalAreaId | 'resident_room')
-                }
-                options={[
-                  { value: 'resident_room', label: "The resident's own room" },
-                  ...COMMUNAL_AREAS.map((entry) => ({
-                    value: entry.id,
-                    label: entry.name,
-                  })),
-                ]}
-              />
-
-              {/* Asked, never left blank. "Leave blank if nobody saw it" would
-                  make an empty field mean either "nobody saw it" or "nobody
-                  recorded who" — and on an unwitnessed fall that is the
-                  difference the record turns on. */}
-              <div className={styles.field}>
-                <Select
-                  labelVisible
-                  label="Anyone who saw it"
-                  placeholder="Choose an answer"
-                  value={witnessChoice === '' ? undefined : witnessChoice}
-                  onValueChange={(value) =>
-                    setWitnessChoice(value as 'nobody' | 'witnessed')
-                  }
-                  options={[
-                    { value: 'nobody', label: 'Nobody saw it happen' },
-                    { value: 'witnessed', label: 'Somebody saw it' },
-                  ]}
-                />
-                {witnessChoice === 'witnessed' ? (
-                  <input
-                    className={styles.input}
-                    type="text"
-                    value={witnessNames}
-                    onChange={(event) => setWitnessNames(event.target.value)}
-                    placeholder="Who saw it"
-                    aria-label="Who saw it"
-                  />
-                ) : null}
-              </div>
-            </div>
-
-            <label className={styles.field}>
-              <span className={styles.label}>In your own words</span>
-              <textarea
-                className={styles.textarea}
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="What you found, what you saw, what the resident said."
-              />
-              <span className={styles.hint}>
-                Written for whoever reads this next: a manager tonight, an inspector in
-                a year.
-              </span>
-            </label>
-          </section>
+          <WhatHappenedSection
+            type={type}
+            onType={setType}
+            occurredAt={occurredAt}
+            onOccurredAt={setOccurredAt}
+            area={area}
+            onArea={(value) => setArea(value as CommunalAreaId | 'resident_room')}
+            witnessChoice={witnessChoice}
+            onWitnessChoice={setWitnessChoice}
+            witnessNames={witnessNames}
+            onWitnessNames={setWitnessNames}
+            description={description}
+            onDescription={setDescription}
+          />
 
           {/* 3 — harm */}
-          <section className={styles.section} aria-labelledby="harm-heading">
-            <h2 className={styles.sectionTitle} id="harm-heading">
-              How much harm was caused
-            </h2>
-            <div
-              className={styles.severities}
-              role="radiogroup"
-              aria-labelledby="harm-heading"
-            >
-              {SEVERITIES.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={severity === option.id}
-                  className={[
-                    styles.severity,
-                    option.tint,
-                    severity === option.id ? styles.severitySelected : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  data-severity={option.id}
-                  onClick={() => setSeverity(option.id)}
-                >
-                  {/* The words carry the meaning; the tint reinforces it and
-                      never stands alone (§7). */}
-                  <ChoiceMark selected={severity === option.id} />
-                  <span className={styles.severityName}>{option.name}</span>
-                  <span className={styles.severityGloss}>{option.gloss}</span>
-                </button>
-              ))}
-            </div>
-          </section>
+          <SeverityPicker severity={severity} onSeverity={setSeverity} />
 
           {/* 4 — injury */}
           <InjurySection
@@ -415,81 +276,18 @@ export function ReportIncidentRoute() {
           />
 
           {/* 5 — what you did */}
-          <section className={styles.section} aria-labelledby="response-heading">
-            <h2 className={styles.sectionTitle} id="response-heading">
-              What you did about it
-            </h2>
-
-            <label className={styles.field}>
-              <span className={styles.label}>Immediate action taken</span>
-              <textarea
-                className={styles.textarea}
-                value={immediateAction}
-                onChange={(event) => setImmediateAction(event.target.value)}
-                placeholder="What you did in the minutes after."
-              />
-              {/* Yours, not the manager's. Their account is written later on
-                  the review and the two are different records. */}
-              <span className={styles.hint}>
-                Your words, at the time. The manager writes their own account when they
-                review it.
-              </span>
-            </label>
-
-            <div className={styles.threeUp}>
-              <Select
-                label="GP contacted"
-                placeholder="Choose an answer"
-                value={gp === '' ? undefined : gp}
-                onValueChange={(value) => setGp(value as ContactChoice)}
-                options={[
-                  { value: 'not_yet', label: 'Not yet' },
-                  { value: 'not_required', label: 'Not required' },
-                  { value: 'contacted', label: 'Contacted' },
-                ]}
-              />
-              <Select
-                label="Family contacted"
-                placeholder="Choose an answer"
-                value={family === '' ? undefined : family}
-                onValueChange={(value) => setFamily(value as ContactChoice)}
-                options={[
-                  { value: 'not_yet', label: 'Not yet' },
-                  { value: 'not_required', label: 'Not required' },
-                  { value: 'contacted', label: 'Contacted' },
-                ]}
-              />
-              <Select
-                label="Emergency services"
-                placeholder="Choose an answer"
-                value={emergency === '' ? undefined : emergency}
-                onValueChange={(value) => setEmergency(value as EmergencyChoice)}
-                options={[
-                  { value: 'not_called', label: 'Not called' },
-                  { value: 'ambulance_999', label: '999: ambulance' },
-                  { value: 'nhs_111', label: '111' },
-                ]}
-              />
-            </div>
-
-            {/* `not_required` is a decision and a decision carries its reason.
-                Without one it is indistinguishable from a call nobody made. */}
-            {gp === 'not_required' || family === 'not_required' ? (
-              <label className={styles.field}>
-                <span className={styles.label}>Why it was not required</span>
-                <input
-                  className={styles.input}
-                  type="text"
-                  value={notRequiredReason}
-                  onChange={(event) => setNotRequiredReason(event.target.value)}
-                  placeholder="No injury and no change in condition."
-                />
-                <span className={styles.hint}>
-                  A decision without a reason reads the same as a call nobody made.
-                </span>
-              </label>
-            ) : null}
-          </section>
+          <ResponseSection
+            immediateAction={immediateAction}
+            onImmediateAction={setImmediateAction}
+            gp={gp}
+            onGp={setGp}
+            family={family}
+            onFamily={setFamily}
+            emergency={emergency}
+            onEmergency={setEmergency}
+            notRequiredReason={notRequiredReason}
+            onNotRequiredReason={setNotRequiredReason}
+          />
 
           <section className={styles.section} data-section="evidence">
             <h2 className={styles.sectionTitle}>Photographs or video</h2>
@@ -512,28 +310,10 @@ export function ReportIncidentRoute() {
            * person who was there can say is that this one cannot wait its
            * turn, and why.
            */}
-          <section className={styles.section} data-section="urgency">
-            <h2 className={styles.sectionTitle}>Does this need attention now?</h2>
-            <p className={styles.sectionNote}>
-              Every incident goes to a manager unacknowledged. This says yours should
-              not wait its turn, and it shows up on the incident as something owed.
-            </p>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Why it cannot wait</span>
-              <textarea
-                className={styles.input}
-                rows={2}
-                value={urgentBecause}
-                data-urgent-because
-                placeholder="Leave blank unless it genuinely cannot wait."
-                onChange={(event) => setUrgentBecause(event.target.value)}
-              />
-              <span className={styles.hint}>
-                A reason, not a tick: &ldquo;needs attention now&rdquo; with nothing
-                behind it tells a manager to hurry and not what about.
-              </span>
-            </label>
-          </section>
+          <UrgencyQuestion
+            urgentBecause={urgentBecause}
+            onUrgentBecause={setUrgentBecause}
+          />
 
           {/*
            * **Deciding is not telling, and the instruction is not behind a
@@ -542,54 +322,12 @@ export function ReportIncidentRoute() {
            * `TELL_THEM.incident` is in front of the control rather than inside
            * a dialog, because the risk here is precisely somebody not clicking.
            */}
-          <section className={styles.section} data-section="family">
-            <h2 className={styles.sectionTitle}>Should the family be told?</h2>
-
-            <p className={styles.instruction} data-nothing-sent>
-              <b>{TELL_THEM.incident}</b>
-            </p>
-
-            <div className={styles.choices} data-family-choices>
-              {(
-                [
-                  ['should', 'Yes, they should be told'],
-                  ['not', 'No, and here is why'],
-                  ['undecided', 'Not decided yet'],
-                ] as const
-              ).map(([id, label]) => (
-                <label
-                  key={id}
-                  className={tellFamily === id ? styles.choiceOn : styles.choice}
-                  data-family-choice={id}
-                >
-                  <input
-                    type="radio"
-                    name="tell-family"
-                    checked={tellFamily === id}
-                    onChange={() => setTellFamily(id)}
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-
-            {tellFamily === 'not' ? (
-              <label className={styles.field}>
-                <span className={styles.fieldLabel}>Why not</span>
-                <textarea
-                  className={styles.input}
-                  rows={2}
-                  value={notTellingReason}
-                  data-not-telling-reason
-                  onChange={(event) => setNotTellingReason(event.target.value)}
-                  placeholder="No injury, and the family asked to be told weekly rather than each time."
-                />
-                <span className={styles.hint}>
-                  A decision without a reason reads the same as one nobody made.
-                </span>
-              </label>
-            ) : null}
-          </section>
+          <FamilyQuestion
+            tellFamily={tellFamily}
+            onTellFamily={setTellFamily}
+            notTellingReason={notTellingReason}
+            onNotTellingReason={setNotTellingReason}
+          />
 
           <div className={styles.foot}>
             {/* Names exactly what is missing, as the round's footer does. A
@@ -762,16 +500,7 @@ export function assembleReport(
   const stamp: IncidentAct = { by, at }
 
   const contact = (choice: ContactChoice | ''): ContactState =>
-    choice === 'contacted'
-      ? { kind: 'contacted', at, by, outcome: '' }
-      : choice === 'not_required'
-        ? {
-            kind: 'not_required',
-            reason: input.notRequiredReason.trim(),
-            recordedBy: by,
-            recordedAt: at,
-          }
-        : { kind: 'not_yet' }
+    contactState(choice, input.notRequiredReason, by, at)
 
   /*
    * Three injury states, never two. "Nobody checked" and "checked, nothing

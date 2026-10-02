@@ -5,6 +5,7 @@ import { Unrecorded } from '@/components/status'
 import { Button } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { ChoiceMark } from './ChoiceMark'
+import { SectionHeading, type HeadingLevel } from './SectionHeading'
 import styles from './incidents.module.css'
 
 /**
@@ -48,22 +49,32 @@ const CHOICES: { id: Exclude<InjuryChoice, undefined>; title: string; note: stri
     },
   ]
 
+/**
+ * The body map's own captions sit one level below this section's heading, so
+ * they follow it rather than being fixed at `h3`. Left fixed, "Front" became a
+ * sibling of "Injury" inside the correction modal — the document saying the
+ * two are peers while the screen shows one inside the other.
+ */
+const SUB: Record<HeadingLevel, 'h3' | 'h4'> = { h2: 'h3', h3: 'h4' }
+
 export function InjurySection({
   choice,
   marked,
   onChoice,
   onToggle,
+  level = 'h2',
 }: {
   choice: InjuryChoice
   marked: BodyRegionId[]
   onChoice: (choice: Exclude<InjuryChoice, undefined>) => void
   onToggle: (id: BodyRegionId) => void
+  level?: HeadingLevel
 }) {
   return (
     <section className={styles.section} aria-labelledby="injury-heading">
-      <h2 className={styles.sectionTitle} id="injury-heading">
+      <SectionHeading level={level} id="injury-heading">
         Injury
-      </h2>
+      </SectionHeading>
 
       <div
         className={styles.choices}
@@ -96,17 +107,26 @@ export function InjurySection({
         <div className={styles.mapArea} data-body-map-area>
           <div className={styles.maps}>
             <div className={styles.mapBox}>
-              <h3 className={styles.mapCaption}>Front</h3>
+              {(() => {
+                const Sub = SUB[level]
+                return <Sub className={styles.mapCaption}>Front</Sub>
+              })()}
               <BodyMap view="front" marked={marked} onToggle={onToggle} />
             </div>
             <div className={styles.mapBox}>
-              <h3 className={styles.mapCaption}>Back</h3>
+              {(() => {
+                const Sub = SUB[level]
+                return <Sub className={styles.mapCaption}>Back</Sub>
+              })()}
               <BodyMap view="back" marked={marked} onToggle={onToggle} />
             </div>
           </div>
 
           <div className={styles.markedPanel}>
-            <h3 className={styles.mapCaption}>Sites marked</h3>
+            {(() => {
+              const Sub = SUB[level]
+              return <Sub className={styles.mapCaption}>Sites marked</Sub>
+            })()}
             <MarkedList marked={marked} onToggle={onToggle} />
             {/* Said on the screen, not only in the code: the list is what the
                 record holds, and the map is the way of entering it. */}

@@ -4,6 +4,7 @@ import { raiseUrgency, standDownUrgency } from '@/data/access/incident-store'
 import { Button } from '@/components/primitives'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
+import { NO_RE_RAISE } from './UrgencyQuestion'
 import styles from './incidents.module.css'
 
 /**
@@ -114,8 +115,7 @@ export function UrgencySection({
          * the same reason this screen does not offer it.
          */
         <p className={styles.byline} data-urgency-settled>
-          This was raised and answered. Raising it again would overwrite who stood it
-          down and why, so the record keeps both as they are.
+          {NO_RE_RAISE}
         </p>
       ) : (
         <>
