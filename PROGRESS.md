@@ -16650,3 +16650,109 @@ the mutation fails four role cases.
 - **The wide panel is 920px.** Content is 872px after padding, which gives the
   body map area 272px for its sites panel and ~292px per map.
 - **A `stood_down` urgency member is not added** — flagged for a decision.
+
+## Incident urgency: a permission hole, a stand-down, and fixtures (5236948, 2e60f35)
+
+### 1. Three write controls were asking nobody
+
+`UrgencySection`, `FamilyDecision` and `ReportIncidentRoute` each wrote to a
+clinical record with no permission check, while `ManagerReviewForm` on the
+same page had one. So an **auditor** — a CQC inspector or external reviewer,
+told on five screens that they read — could raise an urgency, decide whether a
+resident's family were told, and file a whole incident. The product was
+breaking a refusal it states out loud.
+
+All three ask `canRecordIn('/incidents')` and follow `ManagerReviewForm`: they
+say why rather than returning null, because a section whose control is
+silently missing leaves a reader guessing between a permission and a bug. The
+state stays visible to everyone; what is gated is the act.
+
+**The report route came out of the sweep rather than the brief, and it matters
+more than the other two.** Nothing in `routes.tsx` guards any route by level,
+so every screen in the product is reachable by typing its URL — hiding the
+link on the log is not a gate. Both are now done.
+
+Two findings recorded rather than fixed:
+
+- `activities_coordinator` is `read` at `/incidents` and **no member of staff
+  with access holds it**. `SignInAs` refuses outright: "no test can render the
+  product as one." So the read-only half of that table has exactly one
+  reachable role, and a permission written for the other is enforced by
+  nothing anybody can observe.
+- **Routes carry no permission guard at all.** That is a product-wide shape,
+  not an incidents one.
+
+One assertion was dropped for being unfalsifiable: `expect(no
+[data-field="description"])` names an attribute the report form has never had.
+Replaced with `[data-report-submit]`, asserted **present** for a role that may
+file one, so the negative means something.
+
+### 2. `stood_down`, and a second act on `needs_attention_now`
+
+`stood_down` answers a raise rather than deleting it. It keeps `raised` and
+`because` in full and records `stoodDown` and `why` beside them, so the record
+says *Amara raised this because X, Chidi stood it down because Y*. `ordinary`
+still means nobody raised it, so **no record already on file changes meaning**
+— which is what made this safe where returning to `ordinary` was not.
+
+It is a decision, not a gap: quiet, full, never hatched (§1).
+
+`worded` answers the trade flagged last phase. With one act a reword had to
+choose between recording who first raised it and who stands behind the current
+words, and it reset the only timestamp there was — an urgency raised six hours
+ago and reworded a minute ago read as a minute old, the screen understating how
+long something urgent had been sitting. On a first raise the two acts are
+equal and both the screen and the PDF state it once, not twice.
+
+Standing down asks `canApproveIn`; raising asks `canRecordIn`. Re-raising
+something stood down is refused in the store: the union holds one raise and one
+answer rather than a chain, so raising again would overwrite who stood it down
+and why — the erasure this member exists to prevent, arriving from the other
+side.
+
+**The compiler did not catch the two readers that mattered.** `decisions.ts`
+and `incident-pdf.ts` both narrow on `kind` and read `raised`/`because`, which
+the new member also has, so neither failed to compile. `decisions.ts` happened
+to be correct by construction; **the PDF would have shipped silently dropping a
+stand-down**, which lets a reader conclude either that an incident is still
+urgent or that nobody ever raised it — opposite mistakes from one omission.
+A type change that compiles everywhere is not a type change nobody needs to
+read.
+
+### 3. No fixture reached the raised state, so three render sites were dead
+
+All ten incident fixtures were `ordinary`. `UrgencySection`,
+`outstandingDecisions` and `incident-pdf` each render the raised state and
+nothing in the running product could produce one — §8's standing check, with
+three render sites behind it, and the reason Frank went looking for the
+feature and concluded it was not built.
+
+Two fixtures now reach `needs_attention_now` and `stood_down`, **as literal
+values with no new `rng` draw**, so the seeded stream does not shift.
+
+**The stood-down fixture was first put on `inc-902`, which is at Ashgrove
+Lodge** — reachable only by switching site, which is the same findability
+problem one layer down. Moved to `inc-903` at Rosewood Court, so both states
+are on the site the product opens on.
+
+Checked in Chromium rather than only jsdom: both paint, `rgb(30, 0, 89)` on
+white, neither hatched, and `elementFromPoint` at the element's own
+coordinates returns the element itself, so nothing is drawn over it. The
+raised one appears in **"Three things are owed on this incident"** at the top
+of the detail page, which is where somebody looking for the feature would find
+it.
+
+**One false alarm from my own instrument, recorded because the method was
+wrong rather than the page.** The first run reported `notOccluded: false` for
+both states. The check called `elementFromPoint` without scrolling the section
+into view, so it was asking about coordinates below the fold. Scrolled first,
+both return the element itself.
+
+### Decisions taken that were not specified
+
+- **Re-raising after a stand-down is refused**, rather than starting a fresh
+  raise. The union has no room for a chain, so a second raise would overwrite
+  the stand-down. The screen says so where the control would be.
+- **The report route and its link were gated too**, beyond the two named.
+- **`activities_coordinator` is dropped from the gate tests** because no
+  fixture staff member holds it; recorded above rather than worked around.
