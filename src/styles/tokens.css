@@ -133,7 +133,18 @@
   --bg-surface: #ffffff; /* ✅ Cards, tables, drawers, dialogs */
   --bg-surface-sunken: #f8fafe; /* ⚠️ unverified — table headers, inset panels */
 
-  --ink-900: #1e0059; /* ✅ Primary text (reuses brand deep purple) */
+  /*
+   * **A neutral, and deliberately not the brand.** This was #1e0059 — the same
+   * hex as --purple-900, with a comment saying it reused the brand deep purple
+   * — which meant body text *was* the brand colour. Harmless while the brand
+   * was fixed, and the whole problem the moment it becomes configurable: an
+   * organisation choosing red would have read every paragraph in dark red.
+   *
+   * oklch(0.233 0 0), which is the same lightness as the purple it replaces
+   * with the chroma taken out, so the shift is small and nothing else in the
+   * type scale had to move. 16.76:1 on white, against 17.52:1 before.
+   */
+  --ink-900: #1e1e1e; /* ✅ Primary text */
   --ink-700: #443b63; /* ⚠️ unverified — body text */
   --ink-500: #6e6688; /* ⚠️ unverified — secondary text, labels */
   --ink-400: #9a93b0; /* ⚠️ unverified — placeholder, disabled text */
