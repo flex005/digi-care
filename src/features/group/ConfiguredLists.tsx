@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import {
   CARE_PLAN_DOMAINS,
   CONSENT_TYPES,
@@ -37,8 +39,31 @@ export function ConfiguredLists({
   siteName: string
   onChanged: () => void
 }) {
+  const viewer = useViewer()
   const [, setVersion] = useState(0)
   const residents = residentsBySite(siteId).length
+
+  /*
+   * **Already gated by its caller**: `HomeSettingsRoute` renders this only
+   * when `viewer.may('configure_service')`. Asked here too so the gate and
+   * the act live in the same file.
+   *
+   * It needs asking at all because turning an item off is a real write, not a
+   * view preference — `setActive` decides what a risk template or a communal
+   * area means for records already on file, which is the §9 case about a
+   * setting that reaches back. And `/settings` is `read` rather than
+   * `no_access` for a deputy manager, so the shell does not refuse this
+   * screen to everybody who may not configure it.
+   */
+  if (!viewer.may('configure_service')) {
+    return (
+      <ReadOnlyHere
+        roleName={viewer.roleName}
+        subject="how this home is configured"
+        act="turn any of it on or off"
+      />
+    )
+  }
 
   const sets = [
     {
