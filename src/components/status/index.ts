@@ -1,4 +1,5 @@
 export { NeverWrittenUp } from './NeverWrittenUp'
+export { ReadOnlyHere } from './ReadOnlyHere'
 
 export { Unrecorded } from './Unrecorded'
 export type { UnrecordedProps, UnrecordedVariant } from './Unrecorded'

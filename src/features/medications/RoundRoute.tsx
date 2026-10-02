@@ -18,8 +18,9 @@ import {
 } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
 import { AlertDialog, Avatar, Button, Card, Toast } from '@/components/primitives'
-import { AllergyBadge, NotYourHome } from '@/components/status'
+import { AllergyBadge, NotYourHome, ReadOnlyHere } from '@/components/status'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { formatDate, zonedDate } from '@/lib/format'
 import { carersAndSeniors } from '@/data/fixtures/organisation'
@@ -59,6 +60,7 @@ import styles from './medications.module.css'
 
 export function RoundRoute() {
   const { activeSite, currentUser } = useSession()
+  const viewer = useViewer()
 
   const [now] = useState<IsoDateTime>(() => appNow().toISOString() as IsoDateTime)
   const [written, setWritten] = useState(0)
@@ -109,6 +111,26 @@ export function RoundRoute() {
           <Button variant="secondary" onClick={resource.retry}>
             Try again
           </Button>
+        </Card>
+      </div>
+    )
+  }
+
+  /*
+   * **The whole screen is the write.** A round is signing for doses; there is
+   * nothing on it to read that is not part of doing that, so the refusal
+   * replaces the page rather than a control on it. The MAR chart is where a
+   * read-only role reads what was given.
+   */
+  if (!viewer.canRecordIn('/medications')) {
+    return (
+      <div className={styles.page}>
+        <Card padded>
+          <ReadOnlyHere
+            roleName={viewer.roleName}
+            subject="medication records"
+            act="sign for a dose"
+          />
         </Card>
       </div>
     )

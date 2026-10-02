@@ -1,0 +1,13 @@
+/*
+ * A viewer reading a record their role does not write to.
+ *
+ * Quiet, like NotYourHome beside it and for the same reason: nothing is
+ * missing, so it never takes the hatch, and nothing is wrong, so it never
+ * takes caution. A boundary stated plainly where the control would have been.
+ */
+.refusal {
+  max-width: 64ch;
+  color: var(--ink-700);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-line);
+}

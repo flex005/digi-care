@@ -4,8 +4,9 @@ import type { IsoDateTime, Medication, Resident } from '@/data/types'
 import type { PrnAdministration } from '@/data/access/mar-store'
 import { recordPrn, recordPrnOutcomeFor } from '@/data/access/client'
 import { Button } from '@/components/primitives'
-import { Unrecorded } from '@/components/status'
+import { ReadOnlyHere, Unrecorded } from '@/components/status'
 import { useSession, useSiteFormat } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
 import { staffLabel } from '@/data/access/team-store'
 import styles from './medications.module.css'
 
@@ -35,6 +36,7 @@ export function PrnSection({
   given: PrnAdministration[]
   onChanged: () => void
 }) {
+  const viewer = useViewer()
   if (available.length === 0) return null
 
   return (
@@ -43,6 +45,14 @@ export function PrnSection({
         <h3 className={styles.prnTitle}>Available if needed</h3>
         <p className={styles.prnNote}>Not due, and not part of this round.</p>
       </div>
+      {/* What is available stays readable; giving one is the act. */}
+      {viewer.canRecordIn('/medications') ? null : (
+        <ReadOnlyHere
+          roleName={viewer.roleName}
+          subject="what is available if needed"
+          act="give a PRN dose or record its outcome"
+        />
+      )}
 
       <ul className={styles.prnList}>
         {available.map((medication) => (
@@ -71,6 +81,7 @@ function PrnRow({
   onChanged: () => void
 }) {
   const { currentUser } = useSession()
+  const viewer = useViewer()
   const format = useSiteFormat()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')
@@ -119,7 +130,7 @@ function PrnRow({
       </div>
 
       <div className={styles.prnAction}>
-        {open ? null : (
+        {open || !viewer.canRecordIn('/medications') ? null : (
           <Button variant="secondary" size="small" onClick={() => setOpen(true)}>
             Give a dose
           </Button>
@@ -178,6 +189,7 @@ function PrnOutcome({
   onChanged: () => void
 }) {
   const format = useSiteFormat()
+  const viewer = useViewer()
   const { currentUser } = useSession()
   const [text, setText] = useState('')
   const [error, setError] = useState('')
@@ -215,25 +227,36 @@ function PrnOutcome({
         label="No outcome recorded"
         detail="a dose given and never checked is not a complete record"
       />
-      <label className={styles.cdField}>
-        <span className={styles.cdFieldLabel}>What happened afterwards</span>
-        <input
-          className={styles.cdInput}
-          type="text"
-          value={text}
-          placeholder="Reported relief by 15:00"
-          onChange={(event) => setText(event.target.value)}
+      {viewer.canRecordIn('/medications') ? null : (
+        <ReadOnlyHere
+          roleName={viewer.roleName}
+          subject="what was given"
+          act="record what happened afterwards"
         />
-      </label>
-      {error === '' ? null : <p className={styles.required}>{error}</p>}
-      <Button
-        variant="secondary"
-        size="small"
-        disabled={text.trim() === ''}
-        onClick={record}
-      >
-        Record outcome
-      </Button>
+      )}
+      {!viewer.canRecordIn('/medications') ? null : (
+        <>
+          <label className={styles.cdField}>
+            <span className={styles.cdFieldLabel}>What happened afterwards</span>
+            <input
+              className={styles.cdInput}
+              type="text"
+              value={text}
+              placeholder="Reported relief by 15:00"
+              onChange={(event) => setText(event.target.value)}
+            />
+          </label>
+          {error === '' ? null : <p className={styles.required}>{error}</p>}
+          <Button
+            variant="secondary"
+            size="small"
+            disabled={text.trim() === ''}
+            onClick={record}
+          >
+            Record outcome
+          </Button>
+        </>
+      )}
     </div>
   )
 }

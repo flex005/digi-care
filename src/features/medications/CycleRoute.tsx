@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { ReadOnlyHere } from '@/components/status'
 import { Button, Card, Dialog } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { formatCount, formatDate } from '@/lib/format'
@@ -33,6 +35,13 @@ import styles from './cycle.module.css'
  */
 export function CycleRoute() {
   const { activeSite, currentUser } = useSession()
+  const viewer = useViewer()
+  /*
+   * The cycle itself reads as a record — what the pharmacy sent, what is
+   * missing, who accepted what — and stays readable. Accepting a row,
+   * querying it and stopping a drug are the writes.
+   */
+  const mayAct = viewer.canRecordIn('/medications')
   const [version, setVersion] = useState(0)
   const [asking, setAsking] = useState<{ row: string; kind: 'query' | 'stop' } | null>(
     null,
@@ -144,7 +153,7 @@ export function CycleRoute() {
                         {action.by.displayName}
                         {action.note === '' ? '' : ` · ${action.note}`}
                       </span>
-                    ) : (
+                    ) : !mayAct ? null : (
                       <>
                         <Button
                           size="small"
@@ -207,7 +216,7 @@ export function CycleRoute() {
                         {action.kind === 'stopped_here' ? 'Stopped here' : 'Queried'} by{' '}
                         {action.by.displayName} · {action.note}
                       </span>
-                    ) : (
+                    ) : !mayAct ? null : (
                       <>
                         <Button
                           variant="secondary"
@@ -244,9 +253,17 @@ export function CycleRoute() {
             <span data-numeric>{formatCount(handled)}</span> of{' '}
             <span data-numeric>{formatCount(everyId.length)}</span> handled so far.
           </p>
-          <Button disabled={!allHandled(everyId)} data-close-cycle>
-            Close the cycle
-          </Button>
+          {mayAct ? (
+            <Button disabled={!allHandled(everyId)} data-close-cycle>
+              Close the cycle
+            </Button>
+          ) : (
+            <ReadOnlyHere
+              roleName={viewer.roleName}
+              subject="the pharmacy cycle"
+              act="accept a row, query one or stop a drug here"
+            />
+          )}
         </div>
       </Card>
 
