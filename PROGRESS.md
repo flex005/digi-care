@@ -17743,3 +17743,40 @@ and worth saying rather than assuming.
 The test that asserted the old always-on sentence now holds the rule instead:
 absent before anything is confirmed, present with the chip states once
 something is.
+
+### The setup subtitle is gone, and the empty slot is the decision
+
+Removed, with nothing in its place, and the reasoning recorded in the docblock
+where it stood so the next reader finds an absence somebody chose rather than
+something missing.
+
+Three reasons, and the first is the one that matters: **the chips now carry
+four states in both treatment and words**, with the step being looked at
+reading "Doing this now" — so a sentence announcing that marks exist states no
+fact the strip does not. §8 says that where a screen needs prose for a reader
+to draw the right inference, the treatment is the thing to fix. That fix landed
+in the same pass, which left the sentence as scaffolding for the version that
+was broken.
+
+Second, it rendered conditionally, so confirming step 1 made a line materialise
+and push the card down — movement with no meaning, directly above the strip
+whose job is stability. That is the same objection that ruled out centring the
+page, and I had reintroduced it one element higher.
+
+Third, the job the original sentence did cannot be done honestly here at all: a
+reload clears the session, so nothing in this build can tell a return from a
+first pass. A smaller true sentence sitting in the slot a now-impossible one
+left is how copy outlives its reason.
+
+`.nothingRemembers` went with it. `check-css-classes` only looks for a class
+applied and never defined, so dead CSS in the other direction is invisible to
+it — the class would have sat there styling nothing.
+
+**Measured rather than assumed**, because removing an element that only
+sometimes rendered can leave a gap sized for it: the header's bottom edge is
+117px at step 1 and 117px at step 2, at 1280 and at 1440, with a uniform 16px
+to the strip. No phantom slot, and the card no longer moves when a step is
+confirmed.
+
+The test holds the absence in both states and was mutated — putting the
+sentence back fails both assertions.

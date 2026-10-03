@@ -241,36 +241,43 @@ describe('two states at setup, and what retiring one later means', () => {
 })
 
 describe('"first login only" is not claimed, and progress is honest', () => {
-  /*
-   * **Says nothing on a first run, and that is the rule.** The line used to
-   * read "It picks up at the first step nobody has confirmed or skipped" and
-   * was always on screen — describing a resume to somebody it had not happened
-   * to, before anything existed to resume from. It is a statement of state
-   * now, so it appears only when there is a state to state.
+  /**
+   * **No subtitle, ever, and the strip carries the progress instead.**
+   *
+   * The header had a line reading "It picks up at the first step nobody has
+   * confirmed or skipped" — a mechanism rather than a state, describing a
+   * resume to somebody it had not happened to. It cannot be made honest here:
+   * a reload clears the session, so nothing distinguishes a return from a
+   * first pass. A replacement stating what the chips already say was tried and
+   * removed; this holds the slot empty so it is not refilled as an oversight.
    */
-  it('says nothing about confirmed steps before there are any', async () => {
+  it('puts no sentence between the heading and the steps, at any point', async () => {
     const { container } = renderWizard()
     await settled(container)
     expect(container.querySelector('[data-nothing-remembers]')).toBeNull()
+    const header = container.querySelector('[data-setup-wizard] header')!
+    // The mark and the title. Nothing else.
+    expect(header.children).toHaveLength(2)
   }, 20000)
 
-  it('marks the strip once a step has been confirmed', async () => {
+  it('says where somebody is on the strip rather than what each step demands', async () => {
     confirmStep('organisation')
     const { container } = renderWizard()
     await settled(container)
-    expect(container.querySelector('[data-nothing-remembers]')!.textContent).toMatch(
-      /confirmed and skipped steps are marked/i,
-    )
     /*
-     * And the chip says where somebody is rather than what the step demands:
-     * confirmed reads Confirmed, and the one being looked at says so instead
-     * of repeating whether it was required.
+     * Still no sentence once something is confirmed, which is the state that
+     * used to make one appear — and its appearing pushed the card down, which
+     * is movement with no meaning above a strip whose job is stability.
      */
+    expect(container.querySelector('[data-nothing-remembers]')).toBeNull()
+
     const confirmed = container.querySelector('[data-setup-step="organisation"]')!
     expect(confirmed.getAttribute('data-state')).toBe('confirmed')
     expect(confirmed.textContent).toContain('Confirmed')
     const current = container.querySelector('[data-current="true"]')!
     expect(current.textContent).toContain('Doing this now')
+    // The rule only where it is still a question: a confirmed step has moved on.
+    expect(confirmed.textContent).not.toContain('Required')
   }, 20000)
 
   it('refuses to skip a required step', () => {

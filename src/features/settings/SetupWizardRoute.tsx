@@ -127,8 +127,6 @@ export function SetupWizardRoute() {
 
 function SetupWizard() {
   const { organisation, activeSite, reconfigured } = useSession()
-  /* Whether there is anything to pick up from — see the header. */
-  const resumed = ORDER.some((entry) => isConfirmed(entry.id) || isSkipped(entry.id))
   const [brandChoice, setBrandChoice] = useState<string>(
     brandIdAsConfigured() ?? DEFAULT_BRAND_ID,
   )
@@ -169,27 +167,37 @@ function SetupWizard() {
         <Logo height={32} title="Radiant digicare" />
         <h1 className={styles.title}>Set up {organisation.name}</h1>
         {/*
-         * **Only once there is something to say, and a state rather than a
-         * mechanism.** This always said "It picks up at the first step nobody
-         * has confirmed or skipped" — which on a first run describes a resume
-         * that is not happening, and "nobody" is strange wording for one person
-         * setting up their own organisation.
+         * **There is no subtitle here, and the empty slot is the decision.**
          *
-         * The first replacement was "Picking up where this was left", and a
-         * screenshot killed it: confirm step 1 and you land on step 2 with
-         * something confirmed, having left nothing. Any sentence claiming a
-         * return is wrong in the middle of a first pass, because this build has
-         * no way to tell the two apart — a reload clears the session entirely.
-         * So it states what is true whenever it appears, and says nothing about
-         * how somebody got there.
+         * It read "It picks up at the first step nobody has confirmed or
+         * skipped" — a mechanism rather than a state, describing a resume to
+         * somebody it had not happened to, in wording ("nobody") that is odd
+         * for one person setting up their own organisation.
          *
-         * **The wording is Frank's to settle**; this is the proposal.
+         * **The job it was doing cannot be done honestly here at all.** A
+         * reload clears the session, so nothing in this build can tell a return
+         * from a first pass; any sentence claiming one is wrong half the time
+         * and there is no state to condition it on. "Picking up where this was
+         * left" was tried and a screenshot killed it: confirm step 1, land on
+         * step 2, and something is confirmed while nothing was left.
+         *
+         * **And the strip below now says all of it.** Four states in both
+         * treatment and words, with the step being looked at reading "Doing
+         * this now" — so a sentence announcing that marks exist states no fact
+         * the chips do not. §8: where a screen needs prose for a reader to draw
+         * the right inference, the treatment is the thing to fix. That fix
+         * landed, and left the sentence as scaffolding for the version that was
+         * broken.
+         *
+         * A smaller true sentence in the slot a now-impossible one left is how
+         * copy outlives its reason. The last attempt also rendered
+         * conditionally, so confirming step 1 made a line materialise and push
+         * the card down — movement with no meaning, directly above the strip
+         * whose job is stability, which is the objection that ruled out
+         * centring the page.
+         *
+         * So: nothing goes here. An absence is a decision somebody took.
          */}
-        {resumed ? (
-          <p className={styles.nothingRemembers} data-nothing-remembers>
-            Confirmed and skipped steps are marked below.
-          </p>
-        ) : null}
       </header>
 
       <ol className={styles.steps} data-setup-steps>
