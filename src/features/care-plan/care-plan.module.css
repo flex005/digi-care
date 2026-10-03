@@ -663,37 +663,6 @@
   line-height: var(--text-body-line);
 }
 
-/* ---------------------------------------------------------------------------
- * Filter pills
- *
- * The queue rendered `styles.filterPill` and this stylesheet had no such rule,
- * so those buttons carried no class at all: unstyled, and with no visible
- * chosen state on a control whose whole job is showing which view you are in.
- * Same shape as every other queue's, because a pill means one thing.
- * ------------------------------------------------------------------------ */
-
-.filterPill {
-  display: inline-flex;
-  gap: var(--space-4);
-  align-items: center;
-  padding: var(--space-8) var(--space-16);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
-  background-color: var(--bg-surface);
-  color: var(--ink-700);
-  font-family: var(--font-family);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-  font-weight: var(--weight-semibold);
-  cursor: pointer;
-}
-
-.filterPillActive {
-  border-color: var(--brand-900);
-  background-color: var(--brand-900);
-  color: var(--bg-surface);
-}
-
 /* The name a domain outside the ten keeps, asked once, in its dialog. */
 .nameField {
   display: flex;

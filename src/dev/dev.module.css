@@ -135,13 +135,6 @@
   width: 190px;
 }
 
-.marSlotLabel {
-  color: var(--ink-500);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-  font-weight: var(--weight-semibold);
-}
-
 /* ---- token sheet ---- */
 
 .swatches {
@@ -233,10 +226,5 @@
   color: var(--ink-700);
   font-size: var(--text-micro-size);
   line-height: var(--text-micro-line);
-  font-weight: var(--weight-semibold);
-}
-
-.contrastWarn {
-  color: var(--status-critical-ink);
   font-weight: var(--weight-semibold);
 }

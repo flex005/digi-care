@@ -118,13 +118,6 @@
   min-width: 0;
 }
 
-.noteHead {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-12);
-  align-items: center;
-}
-
 .noteCategory {
   color: var(--ink-500);
   font-size: var(--text-body-sm-size);
@@ -356,14 +349,6 @@
   color: var(--ink-500);
   font-size: var(--text-caption-size);
   line-height: var(--text-caption-line);
-}
-
-.immutability {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-16);
-  align-items: flex-start;
-  padding: var(--space-20) var(--space-24);
 }
 
 .immutabilityBody {
@@ -680,14 +665,6 @@
   color: var(--brand-900);
 }
 
-.question {
-  max-width: 80ch;
-  padding: 0 var(--space-24) var(--space-20);
-  color: var(--ink-700);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-}
-
 /**
  * Rule 3c, made visible. See FilterNotice.tsx.
  *
@@ -739,20 +716,6 @@
   align-items: baseline;
   padding: var(--space-20) var(--space-24) var(--space-16);
   border-bottom: 1px solid var(--border-subtle);
-}
-
-/* Why the queue is in this order, or what the filter did to the claim.
-   Rule 3c: every claim here says what it was measured over. */
-.queueWhy {
-  max-width: 88ch;
-  color: var(--ink-700);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-}
-
-.queueWhy strong {
-  color: var(--ink-900);
-  font-weight: var(--weight-semibold);
 }
 
 /* ---- the queue rows ---- */
@@ -985,68 +948,6 @@
 
 .quietList > .quietRow:last-child {
   border-bottom: none;
-}
-
-/* ---------------------------------------------------------------------------
- * Count cards
- * ------------------------------------------------------------------------ */
-
-.counts {
-  display: grid;
-  gap: var(--space-12);
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-}
-
-.count,
-.countCaution,
-.countGap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-12) var(--space-16);
-  border-radius: var(--radius-lg);
-}
-
-.count {
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-surface);
-  color: var(--ink-700);
-}
-
-.countCaution {
-  border: 1px solid var(--status-caution);
-  background: var(--status-caution-tint);
-  color: var(--status-caution-ink);
-}
-
-.countGap {
-  composes: unrecorded from '../../styles/unrecorded.module.css';
-  border-radius: var(--radius-lg);
-}
-
-.countLabel {
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-  font-weight: var(--weight-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.countValue {
-  font-size: var(--text-h2-size);
-  line-height: var(--text-h2-line);
-  font-weight: var(--weight-extrabold);
-  font-variant-numeric: tabular-nums;
-}
-
-.countOf {
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-}
-
-.count .countLabel,
-.count .countOf {
-  color: var(--ink-500);
 }
 
 /* ---------------------------------------------------------------------------

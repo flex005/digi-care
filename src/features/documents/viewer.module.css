@@ -36,13 +36,6 @@
   font-weight: var(--weight-bold);
 }
 
-.errorBody {
-  max-width: 62ch;
-  color: var(--ink-700);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-line);
-}
-
 /* Stage and rail are one surface: no gap between them. */
 .viewer {
   display: grid;

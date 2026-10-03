@@ -12,13 +12,6 @@
   gap: var(--space-20);
 }
 
-.pageTitle {
-  color: var(--ink-900);
-  font-size: var(--text-h1-size);
-  line-height: var(--text-h1-line);
-  font-weight: var(--weight-bold);
-}
-
 /*
  * A settings tab's own heading names what the tab holds, the organisation or
  * the home, so it does not repeat the page title and the tab above it.
@@ -93,55 +86,8 @@
   line-height: var(--text-caption-line);
 }
 
-.siteRows,
 .groupRows {
   list-style: none;
-}
-
-.siteRow {
-  display: grid;
-  gap: var(--space-12);
-  align-items: center;
-  padding: var(--space-12) var(--space-20);
-  border-top: 1px solid var(--border-subtle);
-  grid-template-columns: minmax(0, 1fr) auto;
-}
-
-.siteRows li:first-child .siteRow {
-  border-top: 0;
-}
-
-.siteRowLabel {
-  color: var(--ink-700);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-}
-
-.siteRowNote {
-  display: block;
-  margin-top: var(--space-4);
-  color: var(--ink-500);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-}
-
-.siteRowValue {
-  font-size: var(--text-body-sm-size);
-  font-weight: var(--weight-extrabold);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.siteRowValue[data-tone='critical'] {
-  color: var(--status-critical-ink);
-}
-
-.siteRowValue[data-tone='caution'] {
-  color: var(--status-caution-ink);
-}
-
-.siteRowValue[data-tone='calm'] {
-  color: var(--ink-700);
 }
 
 .siteFoot {

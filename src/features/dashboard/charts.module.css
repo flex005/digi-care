@@ -82,82 +82,6 @@
 }
 
 /* --------------------------------------------------------------------------
- * The area chart
- * ----------------------------------------------------------------------- */
-
-.area {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.grid line {
-  stroke: var(--border-subtle);
-  stroke-width: 1;
-}
-
-/*
- * Inside a viewBox this resolves to user units, so the label scales with the
- * chart — and it still comes off the closed type scale rather than being the
- * one place a tenth step got in through an SVG attribute.
- */
-.axis text {
-  fill: var(--ink-400);
-  font-size: var(--text-micro-size);
-  font-weight: var(--weight-semibold);
-}
-
-.dueLine {
-  fill: none;
-  stroke: var(--status-unrecorded);
-  stroke-width: 2;
-  stroke-dasharray: 5 4;
-  stroke-linejoin: round;
-}
-
-.recordedLine {
-  fill: none;
-  stroke: var(--brand-600);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* The gap's own figure, above its bar. */
-.gapLabel {
-  fill: var(--status-unrecorded-ink);
-  font-size: var(--text-micro-size);
-  font-weight: var(--weight-extrabold);
-}
-
-.barRecorded {
-  fill: var(--brand-600);
-}
-
-.baseline {
-  stroke: var(--border-strong);
-  stroke-width: 1;
-}
-
-/* Today is still running, so its bar is outlined rather than filled in. */
-.barToday {
-  fill: none;
-  stroke: var(--status-critical);
-  stroke-width: 1.5;
-  stroke-dasharray: 3 3;
-}
-
-.todayMark {
-  stroke: var(--status-critical);
-  stroke-width: 2;
-  stroke-dasharray: 4 4;
-}
-
-.todayDot {
-  fill: var(--status-critical);
-}
-
-/* --------------------------------------------------------------------------
  * The donut and the rings
  * ----------------------------------------------------------------------- */
 
@@ -237,16 +161,6 @@
   stroke: var(--brand-600);
   stroke-width: 6;
   stroke-linecap: round;
-}
-
-/*
- * The swatch's edge, so a 12px square of hatch reads as a deliberate marker
- * rather than a smudge. The same dashed unrecorded border the CSS hatch draws
- * around a cell — named here because an SVG rect cannot compose a CSS class.
- */
-.swatchEdge {
-  stroke: var(--border-unrecorded);
-  stroke-width: 1;
 }
 
 /* --------------------------------------------------------------------------

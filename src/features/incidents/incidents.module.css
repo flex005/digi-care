@@ -33,13 +33,6 @@
   font-weight: var(--weight-bold);
 }
 
-.lede {
-  margin-top: var(--space-4);
-  color: var(--ink-500);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-}
-
 .section {
   display: flex;
   flex-direction: column;

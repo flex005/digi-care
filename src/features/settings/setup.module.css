@@ -254,11 +254,6 @@
   line-height: var(--text-body-line);
 }
 
-.link {
-  color: var(--brand-600);
-  font-weight: var(--weight-semibold);
-}
-
 /*
  * The service-type choice.
  *

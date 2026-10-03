@@ -728,10 +728,3 @@
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-bold);
 }
-
-.noFileBody {
-  margin-top: var(--space-4);
-  max-width: 88ch;
-  font-size: var(--text-caption-size);
-  line-height: var(--text-body-line);
-}

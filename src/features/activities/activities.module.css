@@ -34,13 +34,6 @@
   flex-wrap: wrap;
 }
 
-.rangeLabel {
-  color: var(--ink-700);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-  font-weight: var(--weight-semibold);
-}
-
 /*
  * One shape for range and for arrangement.
  *

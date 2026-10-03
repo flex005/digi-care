@@ -17780,3 +17780,78 @@ confirmed.
 
 The test holds the absence in both states and was mutated — putting the
 sentence back fails both assertions.
+
+## check-css-classes runs both directions
+
+It reported "N applied and never defined" and was blind to the opposite — a
+class the stylesheet defines that nothing applies. That cost three hand-catches
+in one day, each the same shape, a class whose only consumer was deleted:
+`.correctOpen`, `.logRowWrap`/`.rowDownload`, `.nothingRemembers`. Each found
+by grep, each reported as "the guard reads it the other way so I checked by
+hand". §8's rule is that a check which has not prevented a recurrence after
+three tries either becomes enforceable or stops counting as coverage.
+
+### Costed before shipping, which is what decided it
+
+The lowercasing guard (30 sites, 27 legitimate) and the clock-ordered fixture
+guard (11 sites, all legitimate) were refused because the legitimate cases
+swamped the findings. **This one found 94 across 24 files and none of them was
+a legitimate exception.** Four were spot-checked at random and all four were
+genuinely dead:
+
+- `MarCell.module.css .detail` — nothing in its only importer applies it.
+- `care-plan.module.css .filterPill` — the queue that renders `styles.filterPill`
+  imports `reviews.module.css`, so the care-plan copy is dead. That file already
+  carried a comment about an earlier incident with the same class.
+- `auth.module.css .brand`, `admission.module.css .actions` — zero uses in
+  their own feature.
+
+And the largest: **30 classes in `me.module.css`, left behind by commit
+`093ea50` "Finish the team screens, delete /me"**, which removed
+`MyDashboardRoute.tsx` and none of its styling. The defect at scale, with its
+cause in the history.
+
+So: no allowlist. The 94 were deleted, and the stylesheet bundle fell from
+364.9 kB to 350.8 kB.
+
+### The three wrinkles, each handled
+
+- **`composes:`** counts as use, in both forms. `composes: x from './other.css'`
+  is how every consumer reaches `unrecorded.module.css`, a file **no component
+  imports at all** — without this the whole file reads as dead.
+- **A computed key** suppresses its stylesheet in the new direction rather than
+  being counted and ignored, or live classes get reported as dead. There are
+  none in the tree today, so that branch was exercised deliberately by injecting
+  `styles[String(organisation.id)]`: it skipped `setup.module.css`, reported no
+  dead classes in it, and named it in the success line.
+- **`:global`** selectors are not collected at all; they are not reached through
+  `styles.`.
+
+### Four mutations
+
+- A class applied and never defined still fails — and now fails in **both**
+  directions, which is more informative: renaming `.roleChoices` reports two
+  components applying a missing class and one orphaned definition.
+- A class defined and never applied fails.
+- **The real case**: `.nothingRemembers` put back exactly as it was is reported.
+  That is the one proving the guard would have caught what three greps did.
+- The computed-key path, above.
+
+### The cleanup is where the work was, and it went wrong three times
+
+Automating the deletion took four attempts. Index-splicing mis-measured a block
+and took 71 lines with it; a comment-swallowing regex mangled two files;
+stylelint turned out to be a **useless oracle** because it tolerates `}.details {`
+— a stray brace directly before a live rule, which is exactly how a
+mis-measured deletion hides. Each attempt was reverted from HEAD rather than
+patched forward.
+
+What worked was line-based editing over prettier-formatted CSS, where every
+rule ends with a line that is exactly `}` — an invariant that holds for 65 of
+the 67 stylesheets, the two exceptions being nested `@media`. **The oracle that
+mattered was the guard's own first direction**: if a deletion removed a class
+something applies, the run says so immediately. It caught my over-deletion five
+times.
+
+`/me/permissions` was screenshotted afterwards, since `me.module.css` lost most
+of its rules: it renders exactly as before.

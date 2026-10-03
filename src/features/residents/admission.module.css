@@ -406,58 +406,6 @@
   line-height: var(--text-caption-line);
 }
 
-.riskFields {
-  padding: 0 var(--space-16) var(--space-16);
-}
-
-.riskRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-16);
-
-  /* Tops aligned: the score's hint makes that column taller, and bottom
-     alignment dropped the level control half a field below its own label. */
-  align-items: flex-start;
-}
-
-.riskRow .field {
-  flex: 1 1 12rem;
-}
-
-.fieldHint {
-  max-width: 48ch;
-  color: var(--ink-500);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-caption-line);
-}
-
-.actions {
-  margin-top: var(--space-12);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-  align-items: flex-start;
-}
-
-.actionRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-12);
-  align-items: center;
-  width: 100%;
-}
-
-.actionRow input {
-  flex: 1 1 20rem;
-  padding: var(--space-8) var(--space-12);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  background: var(--bg-surface);
-  color: var(--ink-900);
-  font: inherit;
-  font-size: var(--text-body-sm-size);
-}
-
 .customRisks {
   margin-top: var(--space-24);
   border: 1px solid var(--border-subtle);

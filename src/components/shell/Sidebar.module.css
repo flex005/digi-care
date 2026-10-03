@@ -234,7 +234,6 @@
   background-color: var(--status-critical);
 }
 
-.collapsed .wordmark,
 .collapsed .label,
 .collapsed .phaseTag,
 .collapsed .sectionLabel {

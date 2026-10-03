@@ -43,12 +43,5 @@
   font-weight: var(--weight-semibold);
 }
 
-.detail {
-  color: inherit;
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-  font-weight: var(--weight-regular);
-}
-
 /* A missing second signature is not styled here. It is a hole in the record,
    so it goes through <Unrecorded> like every other hole — see MarCell.tsx. */

@@ -530,14 +530,6 @@
   font-weight: var(--weight-regular);
 }
 
-.choiceNote {
-  margin-top: var(--space-8);
-  max-width: 62ch;
-  color: var(--ink-500);
-  font-size: var(--text-caption-size);
-  line-height: var(--text-body-line);
-}
-
 .fileChoice {
   padding: var(--space-12);
   border: 1px dashed var(--border-strong);

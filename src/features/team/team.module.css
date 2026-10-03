@@ -53,14 +53,6 @@
   font-weight: var(--weight-bold);
 }
 
-.errorBody {
-  margin: var(--space-4) 0 var(--space-12);
-  max-width: 66ch;
-  color: var(--ink-700);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-line);
-}
-
 .headLink,
 .backLink,
 .openLink,

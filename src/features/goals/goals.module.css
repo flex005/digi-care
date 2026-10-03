@@ -397,11 +397,6 @@
   font-weight: var(--weight-bold);
 }
 
-.sectionActions {
-  display: flex;
-  gap: var(--space-8);
-}
-
 /* ---- The timeline ---- */
 
 .timeline {

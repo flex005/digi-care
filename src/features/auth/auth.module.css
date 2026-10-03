@@ -37,21 +37,6 @@
   line-height: var(--text-body-line);
 }
 
-/* The hatch, from its one definition. See PrototypeNotice.tsx for why. */
-.proto {
-  composes: unrecorded from '../../styles/unrecorded.module.css';
-  padding: var(--space-16) var(--space-20);
-  border-left-width: 5px;
-  border-radius: var(--radius-md);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-line);
-  font-weight: var(--weight-semibold);
-}
-
-.proto b {
-  font-weight: var(--weight-extrabold);
-}
-
 /*
  * Sign-in only: it is a form and nothing else, with no heading above the card,
  * so a card pinned to the top edge over an empty half-screen reads as a page
@@ -85,14 +70,6 @@
   padding: var(--space-40) var(--space-40);
   background: var(--brand-900);
   color: var(--bg-surface);
-}
-
-.brand {
-  display: flex;
-  gap: var(--space-12);
-  align-items: center;
-  font-size: var(--text-h2-size);
-  font-weight: var(--weight-extrabold);
 }
 
 .claim {
@@ -145,13 +122,6 @@
   font-size: var(--text-caption-size);
   line-height: var(--text-body-sm-line);
   font-weight: var(--weight-semibold);
-}
-
-.dialogBody {
-  margin-top: var(--space-12);
-  color: var(--ink-700);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-line);
 }
 
 /* No narrower max-width of its own: inside a centred column a child that is

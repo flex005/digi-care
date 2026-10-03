@@ -39,21 +39,6 @@
   line-height: var(--text-body-sm-line);
 }
 
-/**
- * The coverage cards. The lead is wider as well as larger, because position
- * and size are the only things ranking it: a measured count never wears the
- * unrecorded tint, whatever it is counting (PRD §4.5).
- *
- * `align-items: stretch` on the grid rather than a height on each card, so
- * four cards with different amounts of text still read level.
- */
-.glance {
-  display: grid;
-  grid-template-columns: 1.6fr repeat(3, minmax(0, 1fr));
-  gap: var(--space-16);
-  align-items: stretch;
-}
-
 /* ---- earlier handovers ---- */
 
 .unsignedList {

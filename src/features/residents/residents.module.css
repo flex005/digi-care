@@ -272,14 +272,6 @@
   white-space: nowrap;
 }
 
-/* ---- loading ---- */
-
-.skeletonRow {
-  height: var(--space-20);
-  border-radius: var(--radius-sm);
-  background-color: var(--bg-surface-sunken);
-}
-
 .loadingNote {
   padding: var(--space-24);
   color: var(--ink-500);

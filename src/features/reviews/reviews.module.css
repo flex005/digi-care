@@ -141,14 +141,6 @@
   background-color: var(--bg-surface);
 }
 
-.coverageFigure {
-  color: var(--ink-900);
-  font-size: var(--text-display-size);
-  line-height: var(--text-display-line);
-  font-weight: var(--weight-extrabold);
-  letter-spacing: -0.02em;
-}
-
 .coverageTitle {
   color: var(--ink-900);
   font-size: var(--text-body-sm-size);
