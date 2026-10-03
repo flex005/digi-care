@@ -50,6 +50,27 @@ export interface ProfileTab {
   label: (terms: Vocabulary) => string
   path: string
   end: boolean
+  /**
+   * Which screen in PRD §6.2 this tab is, as a cross-reference.
+   *
+   * **Nothing in this build reads it or verifies it**, and that is not an
+   * oversight waiting to be tidied away. It was rendered once, in the disabled
+   * "coming in a later phase" chip beside an unbuilt tab; every tab is built,
+   * that branch is gone, and the field outlived its only reader.
+   *
+   * **It is kept because this build reconciles against its PRDs by hand**, and
+   * a tab-to-screen mapping is what makes that possible — the CW_PRD Table 3
+   * correction was exactly that kind of pass, done by reading a document
+   * nothing here can parse. Deleting the field would cost the next such pass
+   * the mapping and save nothing.
+   *
+   * **And a wrong number here is inert**, which is why it may stay unverified
+   * where `document-store`'s "Tests read it; screens do not" could not. That
+   * was a claim about this repo, checkable from inside it, and false — it told
+   * a reader an export was accounted for when nothing read it. This is a claim
+   * about a document outside the repo: it suppresses no check and excuses no
+   * defect, so being unconfirmed is the worst it can be.
+   */
   screen: number
   built: boolean
 }
