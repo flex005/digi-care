@@ -17678,3 +17678,68 @@ guard checked the `from` route against `topLevelPaths()`, which filters out
 parameterised routes because no nav item points at one. That filter belongs to
 the orphan question; reusing it here made a real route look absent. It reads
 `everyDeclaredPath()` now.
+
+### The setup page reads as a page
+
+Six things, three of them one defect. Every one was visible and none of them
+was a test failure: every string was in the DOM and correct.
+
+**The mark.** Sign-in renders the logo at 40, verification at 32, and this —
+the third page in one outside-the-app sequence, immediately after the page
+somebody arrives from — rendered none. Matching verification.
+
+**One fact stated three times**, which is §8's repeated-segment entry three
+times on one screen. The title names the organisation directly above a field
+pre-filled with it; the card heading "What the organisation is called" and the
+label "Organisation name" say the same thing within 60px; "Step 1 of 6"
+restates a numbered strip with one chip highlighted.
+
+Each resolved by deciding the owner. The heading goes — the label survives
+because it is also the input's accessible name, and dropping the heading fixes
+the other half at the same time: the step is a *confirmation*, the name is
+already there and the button says "Confirm and continue", so a heading phrased
+as a question made it read as though nothing were known. "Step 1 of 6" goes;
+the chips own position.
+
+**The chips told a reader what each step demands, not where they are.** Every
+open step read "Required" or "Can be skipped" — the rule, true before anybody
+starts and after they finish — so past the single highlight done and ahead
+looked identical. Four states now, with the current one saying "Doing this
+now", and the rule still shown on the steps it is still a question for. Six
+variable-width chips wrapping 4-then-2 at whatever point their text lengths
+fell became a three-column grid: 3 + 3 at 1280 and at 1440, a shape somebody
+can see rather than one the strings chose. Confirmed takes a quiet
+`--brand-400` left bar, skipped a neutral one, current the brand border — a
+difference of kind rather than of degree, since two brand-tinted rectangles
+differing only in strength is what a reader cannot tell apart.
+
+**The subtitle described a mechanism.** "It picks up at the first step nobody
+has confirmed or skipped" was always on screen, explaining a resume to somebody
+it had not happened to. **The first replacement was killed by a screenshot**:
+"Picking up where this was left" is wrong in the middle of a first pass —
+confirm step 1, land on step 2, and something is confirmed while nothing was
+left. This build cannot tell a return from a first pass at all, because a
+reload clears the session. So it states what is true whenever it appears and
+says nothing about how somebody got there.
+
+**The way out was a phrase at the end of a sentence about requirements**, which
+is §8's entry about a way *into* a screen failing because it was styled as the
+text around it, pointed the other way. It is the button primitive now, in a
+footer bar, apart from the sentence.
+
+**Top-aligned and framed rather than centred, and the reason is that the
+content changes height.** An auth screen centres because sign-in is one card of
+a fixed size; step 1 is a single field and step 2 is a type picker plus nine
+selects, so centring would slide the card up the viewport as somebody advanced
+and back down when they returned — movement with no meaning, beside a strip
+whose whole job is saying where they are. It gets a frame instead: the mark, a
+rule under the header, a footer bar at the end.
+
+**The landing is honest.** Leaving immediately with nothing confirmed lands on
+a full dashboard — 28 residents, real figures, charts — because setup
+configures words and colour rather than whether records exist. Nothing to fix,
+and worth saying rather than assuming.
+
+The test that asserted the old always-on sentence now holds the rule instead:
+absent before anything is confirmed, present with the chip states once
+something is.

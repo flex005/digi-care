@@ -39,10 +39,24 @@
   max-width: 52rem;
 }
 
+/*
+ * **Top-aligned, framed — not centred, and the reason is that the content
+ * changes height.** An auth screen centres because sign-in is one card of a
+ * fixed size; these six steps are not. Step 1 is a single field and step 2 is
+ * a type picker plus nine selects, so centring would slide the card up the
+ * viewport as somebody advanced and back down when they returned — movement
+ * with no meaning, on a strip whose whole job is saying where they are.
+ *
+ * So it stays at the top and gets a frame instead: the mark, a rule under the
+ * header, and a footer bar at the end. The dead space below is then the bottom
+ * of a page rather than the page running out.
+ */
 .head {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
+  padding-bottom: var(--space-16);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .title {
@@ -61,9 +75,16 @@
   border-left: 2px solid var(--border-subtle);
 }
 
+/*
+ * **A sequence, not a set.** Six variable-width chips wrapped four-then-two at
+ * whatever point their text lengths happened to fall, so the break read as an
+ * accident and nothing but the numbers said there was an order. A three-column
+ * grid wraps 3 + 3 at every width this product supports, which is a shape
+ * somebody can see rather than one the strings chose.
+ */
 .steps {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-8);
   list-style: none;
   padding: 0;
@@ -77,9 +98,35 @@
   background: var(--bg-surface);
 }
 
+/*
+ * **Three treatments for three positions**, so the progression is visible past
+ * the single highlight. Done is quiet and settled — it is not a finding, and
+ * §1 is clear that recorded and unremarkable renders quietly. Current carries
+ * the brand. Ahead is plain.
+ *
+ * The left bar rather than a tint on the whole chip: a confirmed step and the
+ * current step would otherwise both be brand-coloured rectangles differing
+ * only in strength, which is a difference of degree where the reader needs a
+ * difference of kind.
+ */
+.step[data-state='confirmed'],
+.stepOn[data-state='confirmed'] {
+  border-left: 3px solid var(--brand-400);
+}
+
+.step[data-state='skipped'],
+.stepOn[data-state='skipped'] {
+  border-left: 3px solid var(--border-strong);
+}
+
 .stepOn {
   border-color: var(--brand-600);
   background: var(--brand-50);
+}
+
+.stepOn[data-current='true'] {
+  border-left-color: var(--brand-600);
+  border-left-width: 3px;
 }
 
 .step button,
@@ -87,6 +134,8 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  width: 100%;
+  height: 100%;
   padding: var(--space-8) var(--space-12);
   border: 0;
   background: none;
@@ -190,7 +239,25 @@
   align-items: center;
 }
 
+/*
+ * **A bar, so the page has a bottom edge.** The footer was a sentence with the
+ * only way out appended to it, and with no logo above and nothing below it the
+ * screen ran out rather than ended. The rule and the gap give the content a
+ * boundary; the control sits on the right, apart from the sentence about what
+ * setup still requires, because it is not part of that requirement.
+ */
 .footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.footerSays {
+  flex: 1 1 20rem;
   color: var(--ink-500);
   font-size: var(--text-body-sm-size);
   line-height: var(--text-body-line);

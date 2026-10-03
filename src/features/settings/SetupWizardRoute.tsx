@@ -31,7 +31,8 @@
 import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
-import { Button, Card } from '@/components/primitives'
+import { Logo } from '@/components/brand/Logo'
+import { Button, Card, buttonClassName } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
 import { NoAccess } from '@/app/NoAccess'
@@ -126,6 +127,8 @@ export function SetupWizardRoute() {
 
 function SetupWizard() {
   const { organisation, activeSite, reconfigured } = useSession()
+  /* Whether there is anything to pick up from — see the header. */
+  const resumed = ORDER.some((entry) => isConfirmed(entry.id) || isSkipped(entry.id))
   const [brandChoice, setBrandChoice] = useState<string>(
     brandIdAsConfigured() ?? DEFAULT_BRAND_ID,
   )
@@ -147,7 +150,6 @@ function SetupWizard() {
   const [zone, setZone] = useState(activeSite.timeZone)
   const [invitedBefore] = useState(() => teamMembers().length)
 
-  const index = ORDER.findIndex((entry) => entry.id === step)
   const next = () => {
     const following = resumeAt(ORDER.map((entry) => entry.id))
     if (following !== undefined) setStep(following)
@@ -157,15 +159,37 @@ function SetupWizard() {
   return (
     <div className={styles.page} data-setup-wizard>
       <header className={styles.head}>
+        {/*
+         * **The mark, because the two pages before this one carry it.** Sign-in
+         * renders it at 40 and verification at 32; this was the third page in
+         * one outside-the-app sequence and the only one that dropped the brand,
+         * immediately after the page somebody arrives from. Matching
+         * verification rather than sign-in for that reason.
+         */}
+        <Logo height={32} title="Radiant digicare" />
         <h1 className={styles.title}>Set up {organisation.name}</h1>
         {/*
-         * First and plain, because "first login only" is a claim this build
-         * cannot keep, and a reader told nothing would reasonably believe
-         * finishing here means it will not appear again.
+         * **Only once there is something to say, and a state rather than a
+         * mechanism.** This always said "It picks up at the first step nobody
+         * has confirmed or skipped" — which on a first run describes a resume
+         * that is not happening, and "nobody" is strange wording for one person
+         * setting up their own organisation.
+         *
+         * The first replacement was "Picking up where this was left", and a
+         * screenshot killed it: confirm step 1 and you land on step 2 with
+         * something confirmed, having left nothing. Any sentence claiming a
+         * return is wrong in the middle of a first pass, because this build has
+         * no way to tell the two apart — a reload clears the session entirely.
+         * So it states what is true whenever it appears, and says nothing about
+         * how somebody got there.
+         *
+         * **The wording is Frank's to settle**; this is the proposal.
          */}
-        <p className={styles.nothingRemembers} data-nothing-remembers>
-          It picks up at the first step nobody has confirmed or skipped.
-        </p>
+        {resumed ? (
+          <p className={styles.nothingRemembers} data-nothing-remembers>
+            Confirmed and skipped steps are marked below.
+          </p>
+        ) : null}
       </header>
 
       <ol className={styles.steps} data-setup-steps>
@@ -181,19 +205,37 @@ function SetupWizard() {
                   ? 'skipped'
                   : 'open'
             }
+            /* The one being looked at, separately from whether it is done:
+               somebody can go back to a confirmed step and change it. */
+            data-current={entry.id === step ? 'true' : undefined}
           >
             <button type="button" onClick={() => setStep(entry.id)}>
               <span className={styles.stepName}>
                 {position + 1}. {entry.name}
               </span>
+              {/*
+               * **Where somebody is, not what each step demands.** Every open
+               * step said "Required" or "Can be skipped" — which is the rule,
+               * true before anybody starts and true after they finish, so the
+               * strip described the form rather than the progress through it.
+               * Past the single highlight a reader could not tell done from
+               * ahead.
+               *
+               * Four states now, and the one being looked at says so. The rule
+               * still shows, on the steps it is still a question for: once a
+               * step is confirmed or skipped, whether it was required is
+               * history.
+               */}
               <span className={styles.stepMeta}>
                 {isConfirmed(entry.id)
                   ? 'Confirmed'
                   : isSkipped(entry.id)
                     ? 'Skipped'
-                    : entry.required
-                      ? 'Required'
-                      : 'Can be skipped'}
+                    : entry.id === step
+                      ? 'Doing this now'
+                      : entry.required
+                        ? 'Required'
+                        : 'Can be skipped'}
               </span>
             </button>
           </li>
@@ -203,7 +245,22 @@ function SetupWizard() {
       <Card>
         {step === 'organisation' ? (
           <section className={styles.section} data-setup-section="organisation">
-            <h2 className={styles.sectionTitle}>What the organisation is called</h2>
+            {/*
+             * **No heading here, and that is the fix rather than an omission.**
+             * The page title already names the organisation, the chip above
+             * says "1. The organisation", and the field label says
+             * "Organisation name" — so a heading reading "What the organisation
+             * is called" was the same fact a third time, within 60px of the
+             * label. §8's repeated-segment entry: read the screen back and look
+             * for a value stated twice. The label is the one that survives,
+             * because it is also the input's accessible name.
+             *
+             * It also stopped the step asking a question it knows the answer
+             * to. The organisation has a name, the field is pre-filled with it
+             * and the button says "Confirm and continue": this is a
+             * confirmation, and a heading phrased as a question made it read as
+             * though nothing were known.
+             */}
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Organisation name</span>
               <input
@@ -494,9 +551,16 @@ function SetupWizard() {
         className={styles.footer}
         data-setup-state={requiredDone() ? 'required-done' : 'required-open'}
       >
-        {requiredDone()
-          ? 'The two required steps are confirmed. Anything skipped can be done from Settings or the team list at any time.'
-          : `Step ${index + 1} of ${ORDER.length}. The organisation and its first home have to be confirmed before setup is done.`}{' '}
+        {/*
+         * **"Step 1 of 6" is gone; the chips own that.** It restated a numbered
+         * strip sitting directly above with one of its six highlighted — the
+         * reader got the position twice and no second fact.
+         */}
+        <span className={styles.footerSays}>
+          {requiredDone()
+            ? 'The two required steps are confirmed. Anything skipped can be done from Settings or the team list at any time.'
+            : 'The organisation and its first home have to be confirmed before setup is done.'}
+        </span>
         {/*
          * **Always into the app, never back to Settings.** This used to offer
          * "Back to the organisation" to anybody who arrived from that tab, and
@@ -504,7 +568,18 @@ function SetupWizard() {
          * the wizard is gone, and the way in is the offer after verification.
          * Setup finishes by arriving somewhere, which is the product.
          */}
-        <Link to="/" className={styles.link} data-setup-exit>
+        {/*
+         * **A control, not a phrase at the end of a sentence.** It was an
+         * inline link appended to a sentence about what setup still requires,
+         * so the only way out read as part of that requirement. §8 records a
+         * way *into* a screen failing because it was styled as the text around
+         * it; this is the same shape pointed at a way out.
+         */}
+        <Link
+          to="/"
+          className={buttonClassName({ variant: 'secondary' })}
+          data-setup-exit
+        >
           Go to the dashboard
         </Link>
       </p>

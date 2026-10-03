@@ -241,13 +241,37 @@ describe('two states at setup, and what retiring one later means', () => {
 })
 
 describe('"first login only" is not claimed, and progress is honest', () => {
-  it('picks up at the first step nobody has confirmed', async () => {
+  /*
+   * **Says nothing on a first run, and that is the rule.** The line used to
+   * read "It picks up at the first step nobody has confirmed or skipped" and
+   * was always on screen — describing a resume to somebody it had not happened
+   * to, before anything existed to resume from. It is a statement of state
+   * now, so it appears only when there is a state to state.
+   */
+  it('says nothing about confirmed steps before there are any', async () => {
+    const { container } = renderWizard()
+    await settled(container)
+    expect(container.querySelector('[data-nothing-remembers]')).toBeNull()
+  }, 20000)
+
+  it('marks the strip once a step has been confirmed', async () => {
+    confirmStep('organisation')
     const { container } = renderWizard()
     await settled(container)
     expect(container.querySelector('[data-nothing-remembers]')!.textContent).toMatch(
-      /picks up at the first step nobody has confirmed or skipped/i,
+      /confirmed and skipped steps are marked/i,
     )
-  })
+    /*
+     * And the chip says where somebody is rather than what the step demands:
+     * confirmed reads Confirmed, and the one being looked at says so instead
+     * of repeating whether it was required.
+     */
+    const confirmed = container.querySelector('[data-setup-step="organisation"]')!
+    expect(confirmed.getAttribute('data-state')).toBe('confirmed')
+    expect(confirmed.textContent).toContain('Confirmed')
+    const current = container.querySelector('[data-current="true"]')!
+    expect(current.textContent).toContain('Doing this now')
+  }, 20000)
 
   it('refuses to skip a required step', () => {
     expect(() => skipStep('organisation')).toThrow(/is required/i)
