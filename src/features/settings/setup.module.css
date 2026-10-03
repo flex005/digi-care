@@ -182,6 +182,21 @@
  * So `.formColumn` carries the measure and the fields fill it. The container
  * and its contents then end at the same place, which is the thing a reader
  * actually sees.
+ *
+ * **The card stays wider than the column, and the reason is not the one it
+ * looks like.** `SettingsRoute` puts the vocabulary and brand sections in
+ * their own `<Card>`, with Figures, the clock and the fixed section in a
+ * separate one — so narrowing the customisation card would not touch the
+ * label-left/input-right layout of Figures at all. That objection is false and
+ * is written down here because it is the first one anybody re-examining this
+ * will reach for, and finding it false would read as the decision having been
+ * mistaken.
+ *
+ * The reason that holds is about the two cards together: narrowing one of two
+ * stacked cards leaves them with different widths, and **a card-to-card edge
+ * is more visible down a column than a card-to-form edge is within one**. That
+ * is the same principle this change applied one level down — make the things a
+ * reader scans share an edge — and at this level it argues the other way.
  */
 .field {
   display: flex;

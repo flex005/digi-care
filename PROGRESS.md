@@ -17855,3 +17855,39 @@ times.
 
 `/me/permissions` was screenshotted afterwards, since `me.module.css` lost most
 of its rules: it renders exactly as before.
+
+### Form fields share a right edge with the controls above them
+
+The measure sat on each field rather than on the column. `.field` carried
+`max-width: 28rem`, so every input stopped at 448px whatever its container —
+790px in the wizard, 1082px on the Organisation tab. On that tab the radio
+options directly above the word pickers spanned the full card, so the type
+choices and the pickers disagreed about where the form ended by 634px.
+
+`.formColumn` carries the measure now and the fields fill it, so the radios,
+the labels and the selects share one edge. 34rem rather than 28 because these
+labels are sentences — "The people this service holds records about" — and a
+label wrapping above a short control is the same raggedness one line up.
+Measured rather than eyeballed: 448px → 544px, and flush with the column
+instead of 634px short of it.
+
+**The card stays wider than the column, and the first reason given for that was
+wrong.** It was recorded in chat as "narrowing the cards would affect the
+Figures section, which is label-left/input-right and wants the full width".
+That is true of the tab and false of the card: `SettingsRoute` puts vocabulary
+and brand in their own `<Card>` and Figures, the clock and the fixed section in
+a separate one, so narrowing the customisation card alone would not touch
+Figures. Anybody re-examining the decision would have found that out and
+concluded the decision itself was mistaken.
+
+The reason that holds is one level up: **narrowing one of two stacked cards
+leaves them with different widths, and a card-to-card edge is more visible down
+a column than a card-to-form edge is within one.** It is the same principle the
+change applied inside the form — make the things a reader scans share an edge —
+and here it argues for leaving the cards alone. The conclusion is unchanged;
+only the reason is.
+
+Worth noting where the wrong reason lived: **nowhere but the chat message.** No
+PROGRESS entry and no docblock carried it, because the change shipped without
+either. A reason that exists only in a reply is one the next reader cannot
+check or correct, which is why both now carry it.
