@@ -137,6 +137,7 @@ What the other build would need to read is `src/lib/vocabulary.ts`: the organisa
 - Changing a role on the staff profile (listed above).
 - **Custom care plan domains, at the home level.** The two readings of this are worth separating, because one of them shipped. A domain written **for one resident** is built: it is added on that resident's own care plan tab or at admission, drafts and signs through the same writers as the ten, and is counted in its own sentence. A domain **configured for a whole home**, so that every resident there carries it and the home's denominator says eleven rather than ten, is not built and is what the Settings screen refuses.
 - Settings that change what existing records mean are shown on the risk assessment list only. The care plan and consent screens do not yet show when a domain or consent type has been turned off.
+- **A seven-day trend on dashboard figures. Undecided rather than unbuilt.** `Sparkline` exists in `charts.tsx` and nothing renders it. It is a line rather than an arrow on purpose — "↑5%" states a direction with no denominator and no period, which Rule 4 does not allow — so the component carries a decision this build holds everywhere else. Whether the dashboard's figures should carry a trend at all is the open question; the component is kept unused until that is answered rather than deleted as an orphan.
 - Billing.
 
 ## Defects found while writing this, and fixed in Phase 25

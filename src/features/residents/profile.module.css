@@ -866,22 +866,6 @@
   background-color: var(--brand-50);
 }
 
-/* A link to a screen a later phase builds. Present, disabled, saying so. */
-.pendingLink {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--space-32);
-  padding: var(--space-4) var(--space-12);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  color: var(--ink-400);
-  font-size: var(--text-body-sm-size);
-  line-height: var(--text-body-sm-line);
-  font-weight: var(--weight-semibold);
-  white-space: nowrap;
-  cursor: not-allowed;
-}
-
 /* ---- Important people ---- */
 
 /**

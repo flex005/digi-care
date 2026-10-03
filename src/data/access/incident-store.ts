@@ -228,8 +228,6 @@ export function withIncidentEdits(incident: Incident): Incident {
   }
 }
 
-export const editedThisSession = (id: IncidentId): boolean => edits.has(id)
-
 /** What the reporter gathered. The store stamps the rest. */
 export interface IncidentReport {
   siteId: SiteId

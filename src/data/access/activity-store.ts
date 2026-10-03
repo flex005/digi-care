@@ -64,11 +64,6 @@ export function activitiesAt(siteId: SiteId): Activity[] {
     .map(withActivityEdits)
 }
 
-export const addedThisSession = (id: ActivityId): boolean =>
-  added.some((activity) => activity.id === id)
-
-export const changedThisSession = (id: ActivityId): boolean => edits.has(id)
-
 /**
  * A new session.
  *

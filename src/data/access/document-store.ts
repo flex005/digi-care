@@ -73,11 +73,6 @@ export function siteDocuments(siteId: SiteId): DocumentRecord[] {
   return [...documentsForSite(siteId), ...fromSession]
 }
 
-/** Whether a document was added this session. Tests read it; screens do not. */
-export function addedThisSession(id: DocumentId): boolean {
-  return sessionDocuments.some((document) => document.id === id)
-}
-
 /**
  * The exports that change a record, declared so a guard can read them.
  *
