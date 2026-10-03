@@ -1,13 +1,30 @@
-import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import {
+  BrandControls,
+  VocabularyControls,
+  type VocabularyValue,
+} from '@/features/settings/OrganisationControls'
+import { DEFAULT_BRAND_ID } from '@/lib/brand'
+import type { TermId } from '@/lib/vocabulary'
 import { useSession } from '@/app/session/use-session'
 import { useViewer } from '@/app/session/use-viewer'
-import { Card, buttonClassName } from '@/components/primitives'
+import { Card } from '@/components/primitives'
 import { Unrecorded } from '@/components/status'
 import { formatCount } from '@/lib/format'
-import { changedFigures, figures, setFigure } from '@/data/access/settings-store'
+import {
+  brandIdAsConfigured,
+  changedFigures,
+  chosenTermsAsConfigured,
+  figures,
+  organisationTypeAsConfigured,
+  setBrand,
+  setFigure,
+  setOrganisationType,
+  setSubjectTerm,
+  setTermChoice,
+  subjectTermIdAsConfigured,
+} from '@/data/access/settings-store'
 import { CLOCK_IS_OVERRIDDEN, clockHref } from '@/data/fixtures/clock'
-import { SETUP_FROM_ORGANISATION } from '@/features/settings/setup-origin'
 import styles from './group.module.css'
 import { useTerms } from '@/app/session/use-term'
 
@@ -56,7 +73,7 @@ const CLOCK_CHOICES: { value: string; label: string; what: string }[] = [
 ]
 
 export function SettingsRoute() {
-  const { organisation } = useSession()
+  const { organisation, reconfigured } = useSession()
   const viewer = useViewer()
   const terms = useTerms()
   /*
@@ -70,6 +87,19 @@ export function SettingsRoute() {
   const mayConfigure = viewer.may('configure_service')
   const [, setVersion] = useState(0)
   const bump = () => setVersion((count) => count + 1)
+  /*
+   * Seeded from the store rather than held only here: these controls are a
+   * view of configured state, so they show what is in force on arrival and
+   * what somebody just chose afterwards.
+   */
+  const [vocabulary, setVocabulary] = useState<VocabularyValue>(() => ({
+    type: organisationTypeAsConfigured(),
+    subjectTermId: subjectTermIdAsConfigured(),
+    choices: chosenTermsAsConfigured(),
+  }))
+  const [brandChoice, setBrandChoice] = useState<string>(
+    () => brandIdAsConfigured() ?? DEFAULT_BRAND_ID,
+  )
 
   const adjustable = figures().filter((figure) => !figure.fixedAtGeneration)
   const fixed = figures().filter((figure) => figure.fixedAtGeneration)
@@ -85,26 +115,13 @@ export function SettingsRoute() {
           <p className={styles.pageSubtitle}>Settings that apply to every home.</p>
         </div>
         {/*
-         * The way into the setup wizard, and the first control on the tab.
-         * AM v2.0 runs it on the first Admin's first sign-in; with no accounts
-         * that moment does not exist here, so it is reached from the tab for
-         * the thing it sets up.
-         *
-         * **A button, because it was a link drawn as the grey line above it.**
-         * The route was reachable, a test found the link, and the person it
-         * was built for could not find it on the screen.
+         * **No way into the wizard from here any more.** Setting the
+         * organisation up is a thing somebody does once, outside the product,
+         * and it is reached from the offer after verification. This tab's job
+         * is what can be changed afterwards — the type, the words and the
+         * colour — and those are controls on it now rather than a button that
+         * leaves the product to find them.
          */}
-        {viewer.may('set_up_organisation') ? (
-          <Link
-            to="../setup"
-            relative="path"
-            state={{ from: SETUP_FROM_ORGANISATION }}
-            className={buttonClassName()}
-            data-open-setup
-          >
-            Set up the organisation
-          </Link>
-        ) : null}
       </header>
       {mayConfigure ? null : (
         <p className={styles.readOnlyNote} data-settings-read-only>
@@ -112,6 +129,69 @@ export function SettingsRoute() {
           configuring the service belongs to the person it is registered to.
         </p>
       )}
+
+      {/*
+       * **What the wizard asked once, changeable afterwards.** The type, the
+       * words and the colour are the three things an organisation says about
+       * itself, and until now they existed only inside the setup wizard — so
+       * once setup was done there was no way to change any of them. The
+       * controls are the same components the wizard renders, not a second copy.
+       *
+       * Everything else the wizard asks is a setup act and stays there: a first
+       * home and a first invitation happen once, and homes and Team have their
+       * own screens for the rest.
+       */}
+      {mayConfigure ? (
+        <Card>
+          <section
+            className={styles.settingsSection}
+            data-settings-section="vocabulary"
+          >
+            <h3 className={styles.settingsTitle}>What kind of service it is</h3>
+            <p className={styles.settingsNote}>
+              These appear on every screen: headings, labels and tab names. Words
+              somebody has already written into a record are not changed, and neither
+              are statutory titles like Registered manager.
+            </p>
+            {/*
+             * **Written as it changes, with no save button.** A settings tab has
+             * no confirm step, and a control whose effect waits on a button
+             * somebody might not press is a control that silently does nothing.
+             */}
+            <VocabularyControls
+              value={vocabulary}
+              onChange={(next) => {
+                setVocabulary(next)
+                setOrganisationType(next.type)
+                if (next.subjectTermId !== undefined) setSubjectTerm(next.subjectTermId)
+                for (const [id, choice] of Object.entries(next.choices)) {
+                  setTermChoice(id as TermId, choice)
+                }
+                /* The whole tree, not just this tab: the sidebar beside these
+                   controls renders the words being changed. */
+                reconfigured()
+              }}
+            />
+          </section>
+
+          <section className={styles.settingsSection} data-settings-section="brand">
+            <h3 className={styles.settingsTitle}>Its colour</h3>
+            <p className={styles.settingsNote}>
+              Every colour that carries a clinical meaning stays exactly as it is: red,
+              amber, green, and the hatch that says nobody has recorded something. This
+              changes accents and actions. Body text does not move.
+            </p>
+            <BrandControls
+              value={brandChoice}
+              onChange={(next) => {
+                setBrandChoice(next)
+                setBrand(next)
+                reconfigured()
+              }}
+            />
+          </section>
+        </Card>
+      ) : null}
 
       <Card>
         <section className={styles.settingsSection} data-settings-section="adjustable">

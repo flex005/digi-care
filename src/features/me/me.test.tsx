@@ -41,7 +41,7 @@ function signedInAs(member: StaffMember) {
     const value: Session = {
       organisation,
       sites,
-      reloadSites: () => {},
+      reconfigured: () => {},
       activeSite: site,
       setActiveSite: () => {},
       signIn: {

@@ -1,20 +1,22 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  brandIdAsConfigured,
+  chosenTermsAsConfigured,
   organisationTypeAsConfigured,
+  resetSessionSettings,
   subjectTermIdAsConfigured,
 } from '@/data/access/settings-store'
-import { subjectTerm } from '@/lib/vocabulary'
+import { TERM_IDS, subjectTerm, vocabularyFor } from '@/lib/vocabulary'
 import { render, screen, waitFor } from '@testing-library/react'
+import type { ReactNode } from 'react'
+import type { StaffRole } from '@/data/types'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { SessionProvider } from '@/app/session/SessionProvider'
 import { useSession } from '@/app/session/use-session'
-import {
-  TooltipProvider,
-  ToastProvider,
-  buttonClassName,
-} from '@/components/primitives'
+import { TooltipProvider, ToastProvider } from '@/components/primitives'
 import { SignInAs } from '@/test/sign-in-as'
+import { brandOptionById, brandRampHex } from '@/lib/brand'
 import { mayDo } from '@/features/team/permissions'
 import { isActive, resetSessionSiteConfig } from '@/data/access/site-config-store'
 import {
@@ -23,7 +25,6 @@ import {
   resumeAt,
   skipStep,
 } from '@/data/access/setup-store'
-import { resetSessionSettings } from '@/data/access/settings-store'
 import { resetSessionTeam, teamMembers } from '@/data/access/team-store'
 import { SettingsRoute } from '@/features/group/SettingsRoute'
 import { HomeSettingsRoute } from '@/features/group/HomeSettingsRoute'
@@ -53,11 +54,26 @@ function OrganisationName() {
   return <p data-session-organisation>{organisation.name}</p>
 }
 
-function renderWizard() {
+/**
+ * The router mounts once somebody is signed in, and that is about the gate.
+ *
+ * `SignInAs` signs in from an effect, so on the very first paint the session
+ * is signed out — and the wizard now redirects a signed-out visitor to
+ * sign-in, which in a memory router with no such route is an unhandled error.
+ * That is the gate working, in a harness that was written when there was none.
+ * The gate itself is asserted directly in "who may open it" below; here the
+ * router simply waits, so these tests go on being about the wizard.
+ */
+function AfterSignIn({ children }: { children: ReactNode }) {
+  const { signIn } = useSession()
+  return signIn.kind === 'signed_out' ? null : <>{children}</>
+}
+
+function renderWizard(as: StaffRole = 'registered_manager') {
   const router = createMemoryRouter(
     [
       {
-        path: '/settings/setup',
+        path: '/setup',
         element: (
           <>
             <SetupWizardRoute />
@@ -65,15 +81,19 @@ function renderWizard() {
           </>
         ),
       },
+      { path: '/sign-in', element: <p data-signed-out>Sign in</p> },
+      { path: '/', element: <p data-landed>The product</p> },
     ],
-    { initialEntries: ['/settings/setup'] },
+    { initialEntries: ['/setup'] },
   )
   return render(
     <SessionProvider>
       <TooltipProvider>
         <ToastProvider>
-          <SignInAs as="registered_manager" />
-          <RouterProvider router={router} />
+          <SignInAs as={as} />
+          <AfterSignIn>
+            <RouterProvider router={router} />
+          </AfterSignIn>
         </ToastProvider>
       </TooltipProvider>
     </SessionProvider>,
@@ -252,7 +272,65 @@ describe('who may open it, and where it is reached from', () => {
     expect(mayDo('auditor', 'set_up_organisation')).toBe(false)
   })
 
-  it('is a button at the top of the organisation tab, for the person who holds it', async () => {
+  /**
+   * **The gate, now that the shell cannot be it.**
+   *
+   * `set_up_organisation` carried `route: '/settings/setup'` and `AppShell`
+   * refused any path matching an act the viewer may not perform. At `/setup`
+   * no shell renders, so that refusal cannot run — and a screen that was
+   * unreachable for five roles would have been reachable by every role that
+   * can sign in. These hold the replacement.
+   */
+  it.each(['deputy_manager', 'senior_carer', 'care_worker', 'auditor'] as const)(
+    'refuses %s the external route, naming the act rather than the module',
+    async (role) => {
+      const { container } = renderWizard(role)
+      await waitFor(() =>
+        expect(
+          container.querySelector('[data-no-access="set_up_organisation"]'),
+        ).toBeTruthy(),
+      )
+      // Refused, not merely empty: the wizard is not on the page at all.
+      expect(container.querySelector('[data-setup-wizard]')).toBeNull()
+    },
+    20000,
+  )
+
+  it('sends somebody who is not signed in to sign in, rather than refusing them', async () => {
+    /*
+     * Not the same fact as a refusal. Nobody has said who they are yet, so
+     * there is nothing to refuse — they go to sign-in the way `RequireSignIn`
+     * sends anybody heading for the product.
+     */
+    const router = createMemoryRouter(
+      [
+        { path: '/setup', element: <SetupWizardRoute /> },
+        { path: '/sign-in', element: <p data-signed-out>Sign in</p> },
+      ],
+      { initialEntries: ['/setup'] },
+    )
+    const { container } = render(
+      <SessionProvider>
+        <TooltipProvider>
+          <ToastProvider>
+            <RouterProvider router={router} />
+          </ToastProvider>
+        </TooltipProvider>
+      </SessionProvider>,
+    )
+    await waitFor(() =>
+      expect(container.querySelector('[data-signed-out]')).toBeTruthy(),
+    )
+    expect(container.querySelector('[data-setup-wizard]')).toBeNull()
+    expect(container.querySelector('[data-no-access]')).toBeNull()
+  }, 20000)
+
+  it('is not reached from the organisation tab any more', async () => {
+    /*
+     * The button that used to open it is gone: setup happens outside the
+     * product, from the offer after verification. What the tab has instead is
+     * asserted in "the organisation tab changes what the wizard set" below.
+     */
     const router = createMemoryRouter(
       [{ path: '/settings/organisation', element: <SettingsRoute /> }],
       { initialEntries: ['/settings/organisation'] },
@@ -265,31 +343,10 @@ describe('who may open it, and where it is reached from', () => {
         </TooltipProvider>
       </SessionProvider>,
     )
-    /*
-     * A screen with no way in is not built, and this route is a child of the
-     * settings shell that the top-level reachability guard does not descend
-     * into. So the proof is here: the link exists and points at the route.
-     */
     await waitFor(() =>
-      expect(container.querySelector('[data-open-setup]')).toBeTruthy(),
+      expect(container.querySelector('[data-settings-section]')).toBeTruthy(),
     )
-    const open = container.querySelector('[data-open-setup]')!
-    expect(open.getAttribute('href')).toBe('/settings/setup')
-
-    /*
-     * **And it can be seen as a way in, which the href never said.** It was a
-     * link inside a grey subtitle, styled as the line above it, and this test
-     * passed while the person it was built for could not find it. jsdom
-     * applies no CSS, so this holds what a test can hold: the control is the
-     * button primitive, and it sits in the tab's header ahead of every
-     * section. Whether it reads as a button is a screenshot's question.
-     */
-    expect(open.className).toBe(buttonClassName())
-    expect(open.closest('header')).toBeTruthy()
-    const firstSection = container.querySelector('[data-settings-section]')!
-    expect(
-      open.compareDocumentPosition(firstSection) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
+    expect(container.querySelector('[data-open-setup]')).toBeNull()
   }, 20000)
 
   it('is not on a home’s own tab, because it sets up the organisation', async () => {
@@ -360,62 +417,129 @@ describe('the page, the tab and the tab’s heading are three different names', 
   }, 30000)
 })
 
-describe('the wizard’s way out is true from wherever somebody came', () => {
-  function renderFrom(start: string) {
+/**
+ * **The controls the wizard asks once, changeable afterwards.**
+ *
+ * Before this, the term pickers and the brand picker existed only inside
+ * `SetupWizardRoute`. Once setup was done there was no way to change the
+ * type, a word or the colour from anywhere in the product — three
+ * configurable things with no control behind them, which is the §8 shape of a
+ * screen claiming a capability nothing performs, turned the other way round:
+ * a capability with no screen.
+ */
+describe('the organisation tab changes what the wizard set', () => {
+  const renderTab = (as: StaffRole = 'registered_manager') => {
     const router = createMemoryRouter(
-      [
-        { path: '/', element: <p data-dashboard-standin>the dashboard</p> },
-        { path: '/settings/organisation', element: <SettingsRoute /> },
-        { path: '/settings/setup', element: <SetupWizardRoute /> },
-      ],
-      { initialEntries: [start] },
+      [{ path: '/settings/organisation', element: <SettingsRoute /> }],
+      { initialEntries: ['/settings/organisation'] },
     )
     return render(
       <SessionProvider>
         <TooltipProvider>
-          <ToastProvider>
-            <SignInAs as="registered_manager" />
-            <RouterProvider router={router} />
-          </ToastProvider>
+          <SignInAs as={as} />
+          <RouterProvider router={router} />
         </TooltipProvider>
       </SessionProvider>,
     )
   }
 
-  it('goes back to the organisation for somebody who came from it', async () => {
-    const user = userEvent.setup()
-    const { container } = renderFrom('/settings/organisation')
+  it('offers the type, every term and the colour', async () => {
+    const { container } = renderTab()
     await waitFor(() =>
-      expect(container.querySelector('[data-open-setup]')).toBeTruthy(),
+      expect(
+        container.querySelector('[data-settings-section="vocabulary"]'),
+      ).toBeTruthy(),
     )
-    await user.click(container.querySelector('[data-open-setup]')!)
-    await waitFor(() =>
-      expect(container.querySelector('[data-setup-exit]')).toBeTruthy(),
+    // The type.
+    expect(container.querySelector('[data-org-type="hospital"]')).toBeTruthy()
+    // Every term, counted from the declaration rather than a number typed here.
+    expect(container.querySelectorAll('[data-term-choice]')).toHaveLength(
+      TERM_IDS.length,
     )
-    const exit = container.querySelector('[data-setup-exit]')!
-    expect(exit.textContent).toBe('Back to the organisation')
-    expect(exit.getAttribute('href')).toBe('/settings/organisation')
+    // The colour, and the ramp it would produce.
+    expect(container.querySelector('[data-settings-section="brand"]')).toBeTruthy()
+    expect(container.querySelector('[data-brand-choice]')).toBeTruthy()
+    expect(
+      container.querySelectorAll('[data-brand-preview] [data-swatch]'),
+    ).toHaveLength(5)
   }, 20000)
 
-  it('offers the dashboard to somebody who did not, such as from sign-in', async () => {
-    /*
-     * Somebody who arrived from sign-in has not been to the Organisation tab,
-     * so going there is not going back. The dashboard is true from either
-     * direction, and it is what anything but the Organisation tab gets.
-     */
-    const { container } = renderFrom('/settings/setup')
+  it('writes a changed term through the owner the screens read', async () => {
+    const user = userEvent.setup()
+    const { container } = renderTab()
     await waitFor(() =>
-      expect(container.querySelector('[data-setup-exit]')).toBeTruthy(),
+      expect(container.querySelector('[data-term-choice="carePlan"]')).toBeTruthy(),
     )
+    expect(
+      vocabularyFor(organisationTypeAsConfigured(), chosenTermsAsConfigured()).carePlan
+        .One,
+    ).toBe('Care plan')
+
+    await user.click(
+      container.querySelector('[data-term-choice="carePlan"] [role="combobox"]')!,
+    )
+    await user.click(await screen.findByRole('option', { name: 'Care & Support Plan' }))
+
+    await waitFor(() =>
+      expect(
+        vocabularyFor(organisationTypeAsConfigured(), chosenTermsAsConfigured())
+          .carePlan.One,
+      ).toBe('Care & support plan'),
+    )
+  }, 20000)
+
+  it('writes a changed colour through the owner, and paints it', async () => {
+    const user = userEvent.setup()
+    const { container } = renderTab()
+    await waitFor(() =>
+      expect(container.querySelector('[data-brand-choice]')).toBeTruthy(),
+    )
+    expect(brandIdAsConfigured()).toBeUndefined()
+
+    await user.click(container.querySelector('[data-brand-choice] [role="combobox"]')!)
+    await user.click(await screen.findByRole('option', { name: 'Teal' }))
+
+    await waitFor(() => expect(brandIdAsConfigured()).toBe('teal'))
+    /*
+     * And it reaches `:root`, which is the whole mechanism — every component
+     * reads `var(--brand-600)` and nothing else changes.
+     */
+    expect(document.documentElement.style.getPropertyValue('--brand-600')).toBe(
+      brandRampHex(brandOptionById('teal').hue)['600'],
+    )
+  }, 20000)
+
+  it('shows a role that cannot configure the service none of it', async () => {
+    const { container } = renderTab('auditor')
+    await waitFor(() =>
+      expect(container.querySelector('[data-settings-read-only]')).toBeTruthy(),
+    )
+    expect(container.querySelector('[data-settings-section="vocabulary"]')).toBeNull()
+    expect(container.querySelector('[data-settings-section="brand"]')).toBeNull()
+  }, 20000)
+})
+
+describe('the wizard finishes by arriving in the product', () => {
+  it('offers the dashboard, and no longer a way back into Settings', async () => {
+    /*
+     * **One exit, because there is only one direction now.** This used to
+     * offer "Back to the organisation" to anybody who arrived from that tab,
+     * carried in the navigation state by `setup-origin.ts`. With the entry
+     * point moved to the post-verification offer there is no such person, so
+     * the state had nobody to send it and the helper was deleted rather than
+     * left as a branch no route can reach.
+     */
+    const { container } = renderWizard()
+    await settled(container)
     const exit = container.querySelector('[data-setup-exit]')!
-    expect(exit.textContent).toBe('Go to the dashboard')
     expect(exit.getAttribute('href')).toBe('/')
+    expect(exit.textContent).toContain('Go to the dashboard')
   }, 20000)
 })
 
 /**
- * The step that decides what every screen calls the people this service holds
- * records about.
+ * The step that chooses what this service calls the people it holds records
+ * about.
  *
  * **Required, not optional.** The term reaches every heading in the product,
  * and a default nobody chose is still a default on all of them — asking makes

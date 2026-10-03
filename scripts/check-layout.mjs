@@ -178,11 +178,27 @@ const VOCABULARY = [
   },
 ]
 
+/**
+ * Set every term, on the wizard the crawl is already standing on.
+ *
+ * It used to navigate to `/settings/setup` itself. The wizard is outside the
+ * shell now and the crawl arrives by taking the offer, which is how a person
+ * arrives — so this no longer goes anywhere, and a step that does not appear
+ * fails by name rather than as a timeout on a selector.
+ */
 async function setEveryTermToItsLeastDefault(page) {
-  await go(page, '/settings/setup')
   const organisation = await page.$('[data-confirm-step="organisation"]')
   if (organisation) await organisation.click()
-  await page.waitForSelector('[data-setup-section="vocabulary"]', { timeout: 15000 })
+  const vocabulary = await page
+    .waitForSelector('[data-setup-section="vocabulary"]', { timeout: 15000 })
+    .then(() => true)
+    .catch(() => false)
+  if (!vocabulary) {
+    console.error(
+      '✖ layout: took the setup offer and reached the wizard, and its vocabulary step did not appear. Either the step moved or confirming the organisation no longer advances to it.',
+    )
+    process.exit(1)
+  }
 
   for (const term of VOCABULARY) {
     const field = `[data-term-choice="${term.id}"] [role="combobox"]`
@@ -292,7 +308,52 @@ try {
       text: '',
     })
   }
-  await page.click('[data-offer-dashboard]')
+  /*
+   * **The offer leads to the wizard, and that is now the way in.** Setup moved
+   * outside the shell, so `/settings/setup` no longer exists and the crawl
+   * cannot navigate to it: it takes the same path a person does. Each step
+   * names itself when it does not appear, because §8 records this crawl
+   * failing as `waiting for locator('main')` — true, and a diagnosis the next
+   * person has to work out from scratch.
+   */
+  await page.click('[data-offer-setup]')
+  const inWizard = await page
+    .waitForSelector('[data-setup-wizard]', { timeout: 15000 })
+    .then(() => true)
+    .catch(() => false)
+  if (!inWizard) {
+    console.error(
+      '✖ layout: took the setup offer and the wizard did not appear. Either /setup moved, or it refused the registered manager — which would mean the gate it carries since leaving the shell is refusing the one role that holds the act.',
+    )
+    process.exit(1)
+  }
+  visited += 1
+  /* Outside the shell: no sidebar, no top bar, and it is still a screen at
+     1280 that must not scroll sideways. */
+  const wizardScrolls = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  )
+  if (wizardScrolls > 1) {
+    findings.push({
+      route: '/setup',
+      why: `the page scrolls sideways by ${wizardScrolls}px`,
+      label: 'the document',
+      text: '',
+    })
+  }
+  const shellOnSetup = await page.evaluate(
+    () => document.querySelector('nav[aria-label="Main navigation"]') !== null,
+  )
+  if (shellOnSetup) {
+    console.error(
+      '✖ layout: /setup rendered the application sidebar. It is meant to sit outside the shell like sign-in and verification, and a shell around it means the route moved back inside.',
+    )
+    process.exit(1)
+  }
+
+  await setEveryTermToItsLeastDefault(page)
+
+  await page.click('[data-setup-exit]')
   const landed = await page
     .waitForSelector('main', { timeout: 15000 })
     .then(() => true)
@@ -333,9 +394,10 @@ try {
    * option somebody can choose and it is the case the grammar breaks on: two
    * words, a plural that is not the singular plus an s, and a possessive.
    * A sentinel would have proved the plumbing and not the English.
+   *
+   * Already done, on the wizard, before the crawl landed in the product: the
+   * terms are set where somebody actually sets them.
    */
-  await setEveryTermToItsLeastDefault(page)
-
   const queue = ['/']
 
   while (queue.length > 0 && visited < MAX_SCREENS) {

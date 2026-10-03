@@ -581,7 +581,14 @@ export const ADMIN_ACTS = [
      */
     id: 'set_up_organisation',
     module: '/settings',
-    route: '/settings/setup',
+    /*
+     * **Undefined, because the wizard is outside the shell now.** `route` means
+     * "AppShell refuses this path", and the shell does not render at `/setup` —
+     * so naming it here would be configuration that reads like a gate and
+     * performs nothing. `SetupWizardRoute` refuses in-page instead, the way
+     * `correct_incident_report` above does.
+     */
+    route: undefined,
     what: 'Set up the organisation',
     phrase: 'Setting up the organisation',
     why: 'Naming the organisation, its first home, what that home carries out and who joins it first are the decisions for the person the service is registered to.',

@@ -17587,3 +17587,94 @@ wrong medium. The number sits under the swatch in ink now.
   graphical object somebody reads a value off — but it is the thinnest thing in
   the ramp, and if a hover border ever becomes the sole indicator of something
   it stops being adequate.
+
+## Setup moves outside the application, and Settings gains the controls
+
+### The gate, which had to be solved in the same change
+
+`SetupWizardRoute` carried a `permission-ok` saying it was refused by the
+shell: `set_up_organisation` named `route: '/settings/setup'`, `AppShell`
+refuses any path matching an act the viewer may not perform, and `/settings` is
+`no_access` for four of the six roles. All true while the wizard was nested
+under the shell route. At `/setup` no shell renders and **neither refusal
+runs** — a screen unreachable for five roles would have become reachable by
+every role that can sign in, under a comment asserting it was covered.
+
+So the wizard gates itself, as a wrapper rather than an early return (it reads
+six pieces of configured state before it draws, and hooks cannot be
+conditional). Signed out goes to sign-in carrying where they were headed;
+signed in without the act gets `NoAccess`, naming the act. `route` is
+`undefined`, following `correct_incident_report` — a route the shell cannot
+reach is configuration that looks like a gate.
+
+**The opt-out is deleted, not reworded, and running the guard is what settled
+that.** `check-write-gates` only counts a `permission-ok` on a file that asks
+nothing about the viewer. This file now asks, so the marker would never be read
+again — and left in place it would have been a standing excuse waiting for
+somebody to delete the gate, at which point the guard would have counted the
+file as deliberate instead of failing it. The run says so: deliberate opt-outs
+went from 2 to 1.
+
+### What the move made dead, and what it made reachable
+
+- **`setup-origin.ts` is deleted.** `SETUP_FROM_ORGANISATION` was passed by
+  exactly one caller — the Organisation tab's button into the wizard — and that
+  button is gone. With nothing to send the state, `cameFromOrganisation` could
+  only ever return false, so the "Back to the organisation" exit was a branch no
+  route could reach. One exit now: into the product.
+- **The post-verification offer is the way in.** `data-offer-setup` leads to
+  `/setup`, which makes it the primary path rather than a thing to skip past.
+- **The controls existed only inside the wizard.** The type, the nine terms and
+  the colour had no control anywhere once setup was done — three configurable
+  things with nothing to change them, which is the §8 shape of a screen claiming
+  a capability nothing performs, inverted. They are now on the Organisation tab,
+  as the same components the wizard renders (`OrganisationControls.tsx`), not a
+  second copy. A first home and a first invitation stay in the wizard: they are
+  setup acts, and homes and Team have their own screens.
+
+### Three defects the browser walk found that the tests could not
+
+1. **The wizard rendered flush against the top-left of a 1440px viewport.**
+   `.page` was `max-width: 52rem` and nothing else, which was right while the
+   settings shell supplied the page background, the gutter and the centring.
+   Outside the shell nothing does, and it read as an unstyled fragment rather
+   than as setup. It frames itself now the way `auth.module.css`'s `.screen`
+   does. Same class as §8's verification card at full width.
+2. **The shared controls had no vertical rhythm of their own**, so on the
+   Settings tab every label sat flush against the control above it. They were
+   returning a bare fragment and inheriting the wizard's section gap — a shared
+   component that only looks right inside one parent is the drift the extraction
+   exists to prevent.
+3. **Changing a term in Settings left the sidebar beside it saying the old
+   word.** The brand updated everywhere immediately, because it is a custom
+   property on `:root`; the terms are React state read at render, and nothing
+   told the tree to draw again. `SessionProvider` already had the bump —
+   **called `reloadSites`**, and calling something named for sites after
+   changing a noun is the stale-name defect. Renamed to `reconfigured` across
+   its five references, with the reason at the declaration.
+
+### Mutations
+
+- **The self-gate removed:** all four non-admin roles fail
+  `refuses <role> the external route, naming the act rather than the module`.
+- **The Settings controls removed:** the three tests asserting the type, the
+  terms and the colour are changeable there all fail.
+
+### The crawl
+
+It takes the real path now — sign in, verify, the offer, `/setup`, set every
+term on the wizard, the exit, the product — and **each step names itself when it
+does not appear**, including a check that `/setup` renders no sidebar, which
+would mean the route had moved back inside the shell. **The screen count is 70,
+which is the cap**, so it is not evidence of coverage and is not offered as
+any: §8 records this crawl reporting 70 while reaching a smaller product. What
+protects it is the named steps.
+
+### Recorded, not changed
+
+`/setup` is excused in `reachability.test.tsx` as reached from
+`/verify/:staffId`. That exposed a second defect: the staleness half of that
+guard checked the `from` route against `topLevelPaths()`, which filters out
+parameterised routes because no nav item points at one. That filter belongs to
+the orphan question; reusing it here made a real route look absent. It reads
+`everyDeclaredPath()` now.

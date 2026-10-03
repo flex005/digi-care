@@ -38,7 +38,7 @@ export interface Session {
   organisation: Organisation
   sites: Site[]
   /** Re-reads the site names and zones after settings change them. */
-  reloadSites: () => void
+  reconfigured: () => void
   activeSite: Site
   setActiveSite: (site: Site) => void
   signIn: SignInState

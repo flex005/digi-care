@@ -97,7 +97,7 @@ export function VerifyRoute() {
             >
               Go to the dashboard
             </Button>
-            <Button data-offer-setup onClick={() => navigate('/settings/setup')}>
+            <Button data-offer-setup onClick={() => navigate('/setup')}>
               Set it up
             </Button>
           </div>

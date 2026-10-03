@@ -1,15 +1,41 @@
 /*
- * permission-ok: refused by the shell, not by this file. `set_up_organisation`
- * carries `route: '/settings/setup'`, and `AppShell` refuses any route that
- * matches an admin act the viewer may not perform — so this screen is already
- * unreachable for every role but the registered person. `/settings` is also
- * `no_access` for four of the six roles, which covers it a second time.
+ * **The gate on this screen, and why there is no `permission-ok` here.**
+ *
+ * This file carried one, and the claim in it stopped being true the moment the
+ * screen moved. It read "refused by the shell, not by this file":
+ * `set_up_organisation` carried `route: '/settings/setup'`, `AppShell` refuses
+ * any path matching an admin act the viewer may not perform, and `/settings`
+ * is `no_access` for four of the six roles besides. All of that was correct
+ * while the wizard was nested under the shell route.
+ *
+ * It is at `/setup` now, outside the shell, where no shell renders and neither
+ * refusal runs. A screen that was unreachable for five roles would have become
+ * reachable by every role that can sign in, under an opt-out comment asserting
+ * it was covered — the §8 class of a comment claiming a guarantee, arriving in
+ * the one place meant to stop it.
+ *
+ * So the gate is below, in `SetupWizardRoute` itself: signed out goes to
+ * sign-in, and a signed-in viewer without the act gets the same refusal the
+ * thirteen module gates give. `set_up_organisation.route` is `undefined` for
+ * the same reason — a route the shell cannot reach is configuration that looks
+ * like a gate.
+ *
+ * **The opt-out is deleted rather than reworded**, which is the part worth
+ * keeping. `check-write-gates` only counts a `permission-ok` on a file that
+ * asks nothing about the viewer; this file now asks, so the marker would never
+ * be read again — and left in place it would have been a standing excuse
+ * waiting for somebody to delete the gate, at which point the guard would have
+ * counted this file as deliberate instead of failing it. The run says so:
+ * deliberate opt-outs went from 2 to 1.
  */
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
-import { Button, Card, Select } from '@/components/primitives'
+import { Button, Card } from '@/components/primitives'
 import { useSession } from '@/app/session/use-session'
+import { useViewer } from '@/app/session/use-viewer'
+import { NoAccess } from '@/app/NoAccess'
+import { actById } from '@/features/team/permissions'
 import {
   TIME_ZONES,
   setOrganisationName,
@@ -36,34 +62,10 @@ import {
 } from '@/data/access/setup-store'
 import { teamMembers } from '@/data/access/team-store'
 import { InviteDrawer } from '@/features/team/InviteDrawer'
-import { cameFromOrganisation } from './setup-origin'
-import {
-  ORGANISATION_TYPES,
-  TERM_IDS,
-  TERM_OPTIONS,
-  type OrganisationType,
-  type TermId,
-} from '@/lib/vocabulary'
+import { type OrganisationType, type TermId } from '@/lib/vocabulary'
 
-/** What each term is called on the form that chooses it. */
-const TERM_LABELS: Record<TermId, string> = {
-  subject: 'The people this service holds records about',
-  carePlan: 'The plan of their care',
-  staff: 'The people who work here',
-  manager: 'The person who runs the service',
-  admission: 'Somebody joining the service',
-  incidentReport: 'A record of something that went wrong',
-  medication: 'What is given and signed for',
-  assessment: 'A judgement recorded about somebody',
-  family: 'The people close to them',
-}
-import {
-  BRAND_OPTIONS,
-  BRAND_STEPS,
-  DEFAULT_BRAND_ID,
-  brandOptionById,
-  brandRampHex,
-} from '@/lib/brand'
+import { DEFAULT_BRAND_ID } from '@/lib/brand'
+import { BrandControls, VocabularyControls } from './OrganisationControls'
 import styles from './setup.module.css'
 
 /**
@@ -83,10 +85,6 @@ import styles from './setup.module.css'
  * can open, it resumes within a session at the first step nobody confirmed or
  * skipped, and nothing remembers it past a reload.
  */
-/** The id of the term a type defaults to, so the Select shows it selected. */
-const defaultTermIdFor = (type: OrganisationType): string =>
-  type === 'hospital' ? 'patient' : type === 'clinic' ? 'client' : 'resident'
-
 const ORDER: readonly { id: SetupStepId; name: string; required: boolean }[] = [
   { id: 'organisation', name: 'The organisation', required: true },
   { id: 'vocabulary', name: 'What kind of service it is', required: true },
@@ -96,15 +94,41 @@ const ORDER: readonly { id: SetupStepId; name: string; required: boolean }[] = [
   { id: 'invite', name: 'The first person to invite', required: false },
 ]
 
+/**
+ * The gate, and the reason it is a wrapper rather than an early return.
+ *
+ * The wizard below reads the session, the site and six pieces of configured
+ * state before it renders anything, and hooks cannot be called conditionally —
+ * so the refusal has to happen in a component that runs first and renders
+ * nothing else.
+ *
+ * Two refusals, not one, because they are different facts. Nobody signed in
+ * has not been refused: they have not been asked yet, and they go to sign-in
+ * carrying where they were going, exactly as `RequireSignIn` does for the
+ * product. Somebody signed in without the act **has** been refused, and gets
+ * the same screen every module gate gives, naming the act and linking to what
+ * they do hold.
+ */
+const SETUP_ACT = 'set_up_organisation' as const
+
 export function SetupWizardRoute() {
-  const { organisation, activeSite, reloadSites } = useSession()
+  const { signIn } = useSession()
+  const viewer = useViewer()
+  const act = actById(SETUP_ACT)
+
+  if (signIn.kind === 'signed_out') {
+    return <Navigate to="/sign-in" replace state={{ from: '/setup' }} />
+  }
+  if (!viewer.may(SETUP_ACT)) return <NoAccess act={act} />
+
+  return <SetupWizard />
+}
+
+function SetupWizard() {
+  const { organisation, activeSite, reconfigured } = useSession()
   const [brandChoice, setBrandChoice] = useState<string>(
     brandIdAsConfigured() ?? DEFAULT_BRAND_ID,
   )
-  /* The swatches follow the control immediately, so a reader sees the ramp
-     they are choosing rather than the one they already have. */
-  const previewRamp = brandRampHex(brandOptionById(brandChoice).hue)
-  const fromOrganisation = cameFromOrganisation(useLocation().state)
   const [orgType, setOrgType] = useState<OrganisationType>(
     organisationTypeAsConfigured(),
   )
@@ -203,7 +227,7 @@ export function SetupWizardRoute() {
                 data-confirm-step="organisation"
                 onClick={() => {
                   setOrganisationName(orgName)
-                  reloadSites()
+                  reconfigured()
                   confirmStep('organisation')
                   next()
                 }}
@@ -224,70 +248,14 @@ export function SetupWizardRoute() {
              * an earlier override, because otherwise the control would do
              * nothing for somebody who changed their mind.
              */}
-            <div className={styles.choices} role="radiogroup" aria-label="Service type">
-              {ORGANISATION_TYPES.map((entry) => (
-                <label
-                  key={entry.id}
-                  className={orgType === entry.id ? styles.choiceOn : styles.choice}
-                  data-org-type={entry.id}
-                >
-                  <input
-                    type="radio"
-                    name="organisation-type"
-                    checked={orgType === entry.id}
-                    onChange={() => {
-                      setOrgType(entry.id)
-                      /*
-                       * The type picks the subject's default, so an earlier
-                       * override of THAT term goes — otherwise the control
-                       * does nothing for somebody who changed their mind. The
-                       * other eight are untouched: they have nothing to do
-                       * with the type.
-                       */
-                      setTermId(undefined)
-                      setTermChoices((current) => {
-                        const next = { ...current }
-                        delete next.subject
-                        return next
-                      })
-                    }}
-                  />
-                  {entry.name}
-                </label>
-              ))}
-            </div>
-
-            {/*
-              No wrapping `<label>`: `Select` is a Radix combobox rather than a
-              native control, so a label around it associates with nothing — it
-              carries its own `label` prop, which is the association.
-
-              One Select per term. The subject comes first because the type
-              above picks its default; the rest default to their own first
-              option and are changed only by somebody who wants to.
-            */}
-            {TERM_IDS.map((id) => (
-              <div className={styles.field} key={id} data-term-choice={id}>
-                <Select
-                  labelVisible
-                  label={TERM_LABELS[id]}
-                  placeholder="Choose a word"
-                  value={
-                    id === 'subject'
-                      ? (termId ?? defaultTermIdFor(orgType))
-                      : (termChoices[id] ?? TERM_OPTIONS[id][0]!.id)
-                  }
-                  onValueChange={(value) => {
-                    if (id === 'subject') setTermId(value)
-                    setTermChoices((current) => ({ ...current, [id]: value }))
-                  }}
-                  options={TERM_OPTIONS[id].map((entry) => ({
-                    value: entry.id,
-                    label: entry.label,
-                  }))}
-                />
-              </div>
-            ))}
+            <VocabularyControls
+              value={{ type: orgType, subjectTermId: termId, choices: termChoices }}
+              onChange={(next) => {
+                setOrgType(next.type)
+                setTermId(next.subjectTermId)
+                setTermChoices(next.choices)
+              }}
+            />
 
             <p className={styles.note}>
               These appear on every screen: headings, labels and tab names. Words
@@ -325,37 +293,7 @@ export function SetupWizardRoute() {
              * amber and green mean what they mean, and a home cannot configure
              * its way out of the vocabulary this product is built on.
              */}
-            <div className={styles.field} data-brand-choice>
-              <Select
-                labelVisible
-                label="Brand colour"
-                placeholder="Choose a colour"
-                value={brandChoice}
-                onValueChange={setBrandChoice}
-                options={BRAND_OPTIONS.map((entry) => ({
-                  value: entry.id,
-                  label: entry.label,
-                }))}
-              />
-            </div>
-
-            {/*
-             * The ramp, shown rather than described. Five swatches is the
-             * cheapest honest answer to "what will this look like", and the
-             * one thing a name cannot give: a teal and a magenta at the same
-             * lightness look very different, and only one of them is vivid.
-             */}
-            <div className={styles.swatches} data-brand-preview>
-              {BRAND_STEPS.map((step_) => (
-                <span key={step_} className={styles.swatch} data-swatch={step_}>
-                  <span
-                    className={styles.swatchBlock}
-                    style={{ background: previewRamp[step_] }}
-                  />
-                  <span className={styles.swatchLabel}>{step_}</span>
-                </span>
-              ))}
-            </div>
+            <BrandControls value={brandChoice} onChange={setBrandChoice} />
 
             <p className={styles.note}>
               Every colour that carries a clinical meaning stays exactly as it is: red,
@@ -415,7 +353,7 @@ export function SetupWizardRoute() {
                 onClick={() => {
                   setSiteName(activeSite.id, siteName.trim())
                   setSiteTimeZone(activeSite.id, zone)
-                  reloadSites()
+                  reconfigured()
                   confirmStep('site')
                   next()
                 }}
@@ -559,15 +497,16 @@ export function SetupWizardRoute() {
         {requiredDone()
           ? 'The two required steps are confirmed. Anything skipped can be done from Settings or the team list at any time.'
           : `Step ${index + 1} of ${ORDER.length}. The organisation and its first home have to be confirmed before setup is done.`}{' '}
-        {fromOrganisation ? (
-          <Link to="/settings/organisation" className={styles.link} data-setup-exit>
-            Back to the organisation
-          </Link>
-        ) : (
-          <Link to="/" className={styles.link} data-setup-exit>
-            Go to the dashboard
-          </Link>
-        )}
+        {/*
+         * **Always into the app, never back to Settings.** This used to offer
+         * "Back to the organisation" to anybody who arrived from that tab, and
+         * there is no longer such a person: the Organisation tab's button into
+         * the wizard is gone, and the way in is the offer after verification.
+         * Setup finishes by arriving somewhere, which is the product.
+         */}
+        <Link to="/" className={styles.link} data-setup-exit>
+          Go to the dashboard
+        </Link>
       </p>
     </div>
   )

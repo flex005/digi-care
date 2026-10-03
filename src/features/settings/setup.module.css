@@ -6,10 +6,36 @@
  * status colour. The notice that nothing remembers the wizard is prose in the
  * flow, not an alarm: nothing here is wrong.
  */
+
+/*
+ * **A standalone screen, because the shell is no longer around it.**
+ *
+ * This was `max-width: 52rem` and nothing else, which was right while the
+ * wizard was a route inside the settings shell: the content column supplied
+ * the page background, the gutter and the centring. Outside the shell nothing
+ * does, and the first browser walk after the move showed it flush against the
+ * top-left corner with the rest of a 1440px viewport empty — a screen that
+ * reads as an unstyled fragment rather than as setup. §8 records the same
+ * thing on the verification card, which rendered at the full width because
+ * `.card` sets a surface and never a width.
+ *
+ * So it frames itself the way `auth.module.css`'s `.screen` does: page
+ * background, a gutter, centred, full height. The 52rem measure stays, on the
+ * content inside.
+ */
 .page {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-16);
+  width: 100%;
+  min-height: 100vh;
+  padding: var(--space-32) var(--space-24);
+  background: var(--bg-page);
+}
+
+.page > * {
+  width: 100%;
   max-width: 52rem;
 }
 
@@ -257,4 +283,21 @@
   line-height: var(--text-caption-line);
   color: var(--ink-500);
   text-align: center;
+}
+
+/*
+ * **The shared controls carry their own rhythm.**
+ *
+ * `VocabularyControls` and `BrandControls` render in two places now — the
+ * wizard's step card and the Organisation tab's settings card — and they were
+ * returning a bare fragment, so their spacing came from whichever parent they
+ * landed in. In the wizard that was `.section`'s gap and they looked right; on
+ * the Settings tab there is no such gap and every label sat flush against the
+ * control above it. A shared component that only looks right inside one parent
+ * is the drift the extraction exists to prevent, so the stack is theirs.
+ */
+.controlStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
 }

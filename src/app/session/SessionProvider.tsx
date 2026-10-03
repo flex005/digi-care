@@ -24,9 +24,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
    */
   const [signIn, setSignIn] = useState<SignInState>({ kind: 'signed_out' })
   /*
-   * Bumped when site settings change, because the name and the zone are read
-   * from the settings store rather than straight from the fixtures — and the
-   * zone decides what every clinical timestamp on every screen says.
+   * Bumped when **anything configured** changes, because every one of them is
+   * read while a screen draws rather than taken from the fixtures: a home's
+   * name and its zone, which decides what every clinical timestamp says, and
+   * the words this service uses, which decide what every heading says.
+   *
+   * It was called `reloadSites`, and that name was true until the Organisation
+   * tab gained the term pickers. Changing a word there wrote through the owner
+   * and the sidebar beside it went on saying the old one, because nothing had
+   * told the tree to draw again — and the alternative to renaming was calling
+   * something named for sites after changing a noun, which is the stale-name
+   * defect this build keeps finding.
    */
   const [configured, setConfigured] = useState(0)
 
@@ -128,7 +136,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     () => ({
       organisation: configuredOrganisation,
       sites,
-      reloadSites: () => setConfigured((count) => count + 1),
+      reconfigured: () => setConfigured((count) => count + 1),
       activeSite,
       setActiveSite: (site: Site) => setActiveSiteId(site.id),
       signIn,

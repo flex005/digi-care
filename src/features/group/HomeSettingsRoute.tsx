@@ -15,7 +15,7 @@ import styles from './group.module.css'
  * organisation tab.
  */
 export function HomeSettingsRoute() {
-  const { activeSite, reloadSites } = useSession()
+  const { activeSite, reconfigured } = useSession()
   const viewer = useViewer()
   const [, setVersion] = useState(0)
   const bump = () => setVersion((count) => count + 1)
@@ -60,7 +60,7 @@ export function HomeSettingsRoute() {
                     activeSite.id,
                     event.target.value.trim() || activeSite.name,
                   )
-                  reloadSites()
+                  reconfigured()
                 }}
               />
             ) : (
@@ -78,7 +78,7 @@ export function HomeSettingsRoute() {
                 data-setting="site-timezone"
                 onChange={(event) => {
                   setSiteTimeZone(activeSite.id, event.target.value)
-                  reloadSites()
+                  reconfigured()
                 }}
               >
                 {TIME_ZONES.map((zone) => (

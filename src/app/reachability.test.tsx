@@ -225,6 +225,31 @@ function topLevelPaths(): string[] {
   return [...index, ...named(children), ...named(router.routes)]
 }
 
+/**
+ * Every declared path, parameterised ones included.
+ *
+ * `topLevelPaths` drops anything with a `:` because the orphan check compares
+ * against sidebar items and no nav item points at a parameterised route. That
+ * filter belongs to *that* question. Asking "is the screen this is reached
+ * from a real route" through the same list is the proxy defect §8 records —
+ * it made `/verify/:staffId` look like it did not exist, which it plainly
+ * does.
+ */
+function everyDeclaredPath(): string[] {
+  const out: string[] = []
+  const walk = (routes: readonly RouteObject[], prefix: string) => {
+    for (const route of routes) {
+      const path = route.path ?? ''
+      const full =
+        path === '' ? prefix : path.startsWith('/') ? path : `${prefix}/${path}`
+      if (path !== '') out.push(full)
+      if (route.children) walk(route.children, full === '/' ? '' : full)
+    }
+  }
+  walk(router.routes, '')
+  return out
+}
+
 describe('every sidebar item agrees with the router', () => {
   /**
    * The other half of the same failure, and the one that was about to bite:
@@ -310,6 +335,16 @@ describe('every sidebar item agrees with the router', () => {
       from: '/incidents',
       why: 'Report an incident on the log',
     },
+    {
+      /*
+       * Outside the shell, like sign-in and verification, so no sidebar item
+       * could point at it. The way in is the offer on the verification screen,
+       * which is where somebody is the one time they need it.
+       */
+      path: '/setup',
+      from: '/verify/:staffId',
+      why: 'the organisation setup offer after verifying',
+    },
   ]
 
   it('names every route that has no way in from the navigation', () => {
@@ -347,6 +382,7 @@ describe('every sidebar item agrees with the router', () => {
      * permission exceptions, one file over.
      */
     const routed = new Set(topLevelPaths())
+    const declared = new Set(everyDeclaredPath())
     for (const entry of UNLINKED) {
       expect(
         routed.has(entry.path),
@@ -354,7 +390,7 @@ describe('every sidebar item agrees with the router', () => {
       ).toBe(true)
       // And the screen it says it is reached from is itself a route.
       expect(
-        routed.has(entry.from),
+        declared.has(entry.from),
         `${entry.path} says it is reached from ${entry.from}, which is not a route`,
       ).toBe(true)
     }

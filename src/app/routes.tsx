@@ -90,13 +90,18 @@ import { NotFound } from './NotFound'
  * `/` redirects to /residents. /dev/states is never deleted — it is how the
  * Evidence Invariant is checked visually at the end of every phase.
  *
- * **Four routes sit outside the shell and outside the gate**: signing in,
- * accepting an invitation, seeing what that invitation would give you, and
- * signing out. The first three are reached before anybody has said who they
- * are, so there is no sidebar and no site switcher on them; the fourth is an
- * authentication screen too, and it is the one place in the build where an
- * action destroys work. Everything else redirects to `/sign-in` until somebody
- * has signed in and chosen a home.
+ * **Five routes sit outside the shell**: signing in, accepting an invitation,
+ * seeing what that invitation would give you, signing out, and setting the
+ * organisation up. The first three are reached before anybody has said who
+ * they are, so there is no sidebar and no site switcher on them; the fourth is
+ * an authentication screen too, and it is the one place in the build where an
+ * action destroys work.
+ *
+ * **The fifth is outside the shell and NOT outside the gate**, which is the
+ * distinction worth keeping: `/setup` needs a viewer and carries its own
+ * refusal, because the shell's gate cannot run where there is no shell.
+ * Everything else redirects to `/sign-in` until somebody has signed in and
+ * chosen a home.
  */
 export const router = createBrowserRouter([
   { path: '/sign-in', element: <SignInRoute /> },
@@ -111,6 +116,22 @@ export const router = createBrowserRouter([
    */
   { path: '/verify/:staffId', element: <VerifyRoute /> },
   { path: '/sign-out', element: <SignOutRoute /> },
+  /*
+   * Setting the organisation up is not a screen inside the product; it is the
+   * thing somebody does before there is a product to be inside. So it sits out
+   * here with sign-in and verification — no sidebar, no top bar, no site
+   * switcher — and the post-verification offer leads straight to it.
+   *
+   * **It is the first outside-shell route that needs a viewer, and it gates
+   * itself.** The other four are reached before anybody has said who they are;
+   * this one is reached immediately after. `AppShell` refuses any path matching
+   * an admin act the viewer may not perform, and out here there is no shell to
+   * do it — so `SetupWizardRoute` sends a signed-out visitor to sign-in and
+   * refuses a signed-in one who does not hold `set_up_organisation`.
+   * `/invitation` is not a precedent for leaving it ungated: that screen has no
+   * viewer at all.
+   */
+  { path: '/setup', element: <SetupWizardRoute /> },
   {
     path: '/',
     element: (
@@ -209,9 +230,6 @@ export const router = createBrowserRouter([
           { path: 'home', element: <HomeSettingsRoute /> },
           { path: 'organisation', element: <SettingsRoute /> },
           { path: 'team/:staffId', element: <StaffDetailRoute /> },
-          // Phase 23. Reached from the Organisation tab, and refused by the shell
-          // for anybody who does not hold `set_up_organisation`.
-          { path: 'setup', element: <SetupWizardRoute /> },
         ],
       },
       { path: 'activities/:activityId', element: <AttendanceRoute /> },

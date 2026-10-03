@@ -46,7 +46,7 @@ function renderAt(path: string) {
       { path: '/invitation/:staffId', element: <InvitationRoute /> },
       { path: '/verify/:staffId', element: <VerifyRoute /> },
       { path: '/', element: <p>the product</p> },
-      { path: '/settings/setup', element: <p>the setup wizard</p> },
+      { path: '/setup', element: <p>the setup wizard</p> },
     ],
     { initialEntries: [path] },
   )
