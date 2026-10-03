@@ -113,6 +113,20 @@ Both are recorded beside the cells in `permissions.ts` as well as here, because 
 
 **The Care Worker PRD is marked "Draft — For Design and Engineering Review", with no approvers named.** It is the better of the two documents, and it is not signed off: anything built on a disputed row should be easy to move.
 
+## What organisation customisation owes the Care Worker build
+
+**None of this is work in this repo and none of it is a defect here.** Phases 1 to 3 made the organisation's terminology and its brand colour configurable, and both are properties of the **organisation** rather than of this product. That makes them obligations on the Care Worker build and a question for whoever owns both. This entry exists so the question is asked deliberately rather than discovered by somebody noticing that the two products disagree.
+
+**Terminology, and it is the one that matters.** An organisation that chooses Patient, or Service User, or Person Supported has chosen it for the service — not for the Admin and Manager product. A care worker reading "Resident" while their manager reads "Patient" about the same person is not an inconsistent look: it is a mismatch between two people who hand over to each other, several times a day, about somebody they are both responsible for. That is a different and worse problem than a visual one, and it is the reason this is first.
+
+What the other build would need to read is `src/lib/vocabulary.ts`: the organisation type, nine terms, and six declared forms each — `one`, `many`, `One`, `Many`, `ones`, `Ones`. The forms are declared rather than derived, and that is load-bearing rather than fastidious: "next of kin" does not pluralise, "person supported" becomes "people supported", and no transform produces either. A second build deriving its own forms from one string would get those wrong in exactly the places this one did before the forms were declared.
+
+**The brand colour, for the same reason and with less at stake.** An organisation branded in one product and not the other reads as a defect rather than as branding. The generation in `src/lib/brand.ts` is a locked lightness ladder with the hue swapped and the chroma clamped into the sRGB gamut, which makes it portable: **the ladder is the thing to share, not the five hex values.** Hexes handed over are a second copy that drifts; the ladder regenerates the same ramp from one hue angle, and carries its own contrast pairings with it.
+
+**Where the configuration lives once there is a backend.** Today it is in-memory session state in this build, in `src/data/access/settings-store.ts`, cleared on reload — which is fine for a build with no backend and is not a design. Two products each keeping their own copy will drift, and neither will be authoritative about what an organisation calls its residents. It belongs on the organisation record that both read. Cheap to say now, expensive to discover after both are built against their own copies.
+
+**What does not flow that way.** The four permission cells corrected on 02/10/2026 moved this build **towards** CW_PRD Table 3, which is already the authority for those roles in both builds — so nothing is owed back and the other build has nothing to change. The two rows the four levels cannot express are recorded above, with the reason they are blocked by the model rather than by an undecided question; they are not waiting on the Care Worker build either.
+
 ## Asked for by the PRD and not built
 
 - The invitation and verification emails, the forgot-password flow and the lockout alert (no email).
