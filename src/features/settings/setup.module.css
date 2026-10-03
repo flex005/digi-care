@@ -183,20 +183,20 @@
  * and its contents then end at the same place, which is the thing a reader
  * actually sees.
  *
- * **The card stays wider than the column, and the reason is not the one it
- * looks like.** `SettingsRoute` puts the vocabulary and brand sections in
- * their own `<Card>`, with Figures, the clock and the fixed section in a
- * separate one — so narrowing the customisation card would not touch the
- * label-left/input-right layout of Figures at all. That objection is false and
- * is written down here because it is the first one anybody re-examining this
- * will reach for, and finding it false would read as the decision having been
- * mistaken.
+ * **In the setup flow the column is the card, and there is no measure at
+ * all.** A first attempt capped the column at 34rem in both places, which left
+ * the organisation name input ending 246px short of its card — the same gap
+ * one level out, and still the thing a reader sees. On a standalone page whose
+ * card is already measured at 52rem there is nothing for a second measure to
+ * do: the card *is* the line length, so the field fills it and the two edges
+ * agree. `.section` is the wizard's own wrapper; Settings uses
+ * `group.module.css`'s `.settingsSection`, so this reaches only the flow it is
+ * meant to.
  *
- * The reason that holds is about the two cards together: narrowing one of two
- * stacked cards leaves them with different widths, and **a card-to-card edge
- * is more visible down a column than a card-to-form edge is within one**. That
- * is the same principle this change applied one level down — make the things a
- * reader scans share an edge — and at this level it argues the other way.
+ * **The cap stays on the Settings tab, where the card is 1082px** and a text
+ * input that wide is a worse answer than a short one. Two screens, two
+ * containers, one rule applied to each: the form ends where its container
+ * does, and the container is measured where it needs to be.
  */
 .field {
   display: flex;
@@ -208,7 +208,8 @@
  * A readable line length for form content. 34rem rather than 28 because the
  * labels here are sentences — "The people this service holds records about" —
  * and a label that wraps above a short control is the same raggedness one line
- * up.
+ * up. Dropped inside the wizard's own `.section`, below, where the card
+ * already supplies the measure.
  */
 .formColumn {
   display: flex;
@@ -395,4 +396,14 @@
   flex-direction: column;
   gap: var(--space-16);
   max-width: 34rem;
+}
+
+/*
+ * **The setup flow: the card is the measure, so nothing inside it stops
+ * short.** Last in the file because `.controlStack` is declared above and
+ * stylelint's no-descending-specificity wants the plain selector first.
+ */
+.section .formColumn,
+.section .controlStack {
+  max-width: none;
 }

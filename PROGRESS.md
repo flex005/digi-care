@@ -17871,8 +17871,24 @@ label wrapping above a short control is the same raggedness one line up.
 Measured rather than eyeballed: 448px → 544px, and flush with the column
 instead of 634px short of it.
 
-**The card stays wider than the column, and the first reason given for that was
-wrong.** It was recorded in chat as "narrowing the cards would affect the
+**Then the card gap itself was the complaint, and in the setup flow it is
+gone.** Capping the column at 34rem left the organisation name input ending
+246px short of its card — the same gap one level out, and still the thing a
+reader sees on a screenshot. On a standalone page whose card is already
+measured at 52rem there is nothing for a second measure to do: the card *is*
+the line length, so `.section .formColumn` and `.section .controlStack` drop
+the cap and the field fills the card. `.section` is the wizard's own wrapper
+and Settings uses `group.module.css`'s `.settingsSection`, so it reaches only
+that flow.
+
+**The cap stays on the Organisation tab**, where the card is 1082px and a text
+input that wide is a worse answer than a short one. Two screens, two
+containers, one rule applied to each: the form ends where its container does,
+and the container is measured where it needs to be. What follows is the
+reasoning for leaving *that* card alone, and the correction to it stands.
+
+**The card stays wider than the column there, and the first reason given for
+that was wrong.** It was recorded in chat as "narrowing the cards would affect the
 Figures section, which is label-left/input-right and wants the full width".
 That is true of the tab and false of the card: `SettingsRoute` puts vocabulary
 and brand in their own `<Card>` and Figures, the clock and the fixed section in
