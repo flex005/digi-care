@@ -169,11 +169,37 @@
   max-width: 68ch;
 }
 
+/*
+ * **The measure belongs to the column, not to each field.**
+ *
+ * This was `max-width: 28rem` on the field itself, which is a sensible length
+ * for a line of text and the wrong place to put it: the card around it is
+ * 790px in the wizard and 1082px on the Organisation tab, so every input sat
+ * at 448px with up to 634px of empty container beside it. A field that stops
+ * well short of the box it is in reads as a field that failed to fill it
+ * rather than as one that was measured.
+ *
+ * So `.formColumn` carries the measure and the fields fill it. The container
+ * and its contents then end at the same place, which is the thing a reader
+ * actually sees.
+ */
 .field {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  max-width: 28rem;
+}
+
+/*
+ * A readable line length for form content. 34rem rather than 28 because the
+ * labels here are sentences — "The people this service holds records about" —
+ * and a label that wraps above a short control is the same raggedness one line
+ * up.
+ */
+.formColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  max-width: 34rem;
 }
 
 .fieldLabel {
@@ -353,4 +379,5 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-16);
+  max-width: 34rem;
 }

@@ -269,15 +269,17 @@ function SetupWizard() {
              * confirmation, and a heading phrased as a question made it read as
              * though nothing were known.
              */}
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Organisation name</span>
-              <input
-                type="text"
-                value={orgName}
-                onChange={(event) => setOrgName(event.target.value)}
-                data-field="organisation-name"
-              />
-            </label>
+            <div className={styles.formColumn}>
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Organisation name</span>
+                <input
+                  type="text"
+                  value={orgName}
+                  onChange={(event) => setOrgName(event.target.value)}
+                  data-field="organisation-name"
+                />
+              </label>
+            </div>
             {/*
              * Named rather than silently omitted: somebody who has read AUTH-05
              * will look for these, and a step that quietly drops them reads as
@@ -388,29 +390,31 @@ function SetupWizard() {
               The home you are signed in to. Its timezone decides what every clinical
               timestamp in it says.
             </p>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Home name</span>
-              <input
-                type="text"
-                value={siteName}
-                onChange={(event) => setSiteNameDraft(event.target.value)}
-                data-field="site-name"
-              />
-            </label>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Timezone</span>
-              <select
-                value={zone}
-                onChange={(event) => setZone(event.target.value)}
-                data-field="site-timezone"
-              >
-                {TIME_ZONES.map((entry) => (
-                  <option key={entry} value={entry}>
-                    {entry}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className={styles.formColumn}>
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Home name</span>
+                <input
+                  type="text"
+                  value={siteName}
+                  onChange={(event) => setSiteNameDraft(event.target.value)}
+                  data-field="site-name"
+                />
+              </label>
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Timezone</span>
+                <select
+                  value={zone}
+                  onChange={(event) => setZone(event.target.value)}
+                  data-field="site-timezone"
+                >
+                  {TIME_ZONES.map((entry) => (
+                    <option key={entry} value={entry}>
+                      {entry}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
             <div className={styles.actions}>
               <Button
                 disabled={siteName.trim() === ''}
