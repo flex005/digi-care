@@ -17907,3 +17907,53 @@ Worth noting where the wrong reason lived: **nowhere but the chat message.** No
 PROGRESS entry and no docblock carried it, because the change shipped without
 either. A reason that exists only in a reply is one the next reader cannot
 check or correct, which is why both now carry it.
+
+### A reference search that excludes a file extension excludes a layer
+
+Frank's list for the dead-export cleanup named `note-store.ts`'s
+`reviewedThisSession` as unread. It is imported by `client.ts` and used twice:
+as the guard in `undoNoteReview` that refuses to take back a review recorded in
+another session, and as the body of `reviewRecordedThisSession` — which the
+same message named as a function that stays. Deleting it would have broken the
+build and removed a real check.
+
+The cause was search scope: `*.test.ts`, `*.test.tsx` and `*.tsx`, never `.ts`.
+That skips `client.ts`, the stores, and every non-component module.
+
+**In this repo the excluded layer is `client.ts`**, the facade nearly every
+component imports instead of a store — and it has now been missed twice by
+searches scoped to `.tsx`. The first was a table of write surfaces that counted
+components importing the stores directly and missed that almost everything goes
+through the facade, which made the count wrong.
+
+A search over components and tests answers a question about components and
+tests. **Before reporting that nothing references something, state which
+extensions were searched** — and if `.ts` is not among them, the answer is
+about half the build.
+
+What made it harmless both times was checking before acting rather than acting
+on the list. The probe for this cleanup walked every `.ts` and `.tsx`, which is
+why the report had `reviewedThisSession` on the right side of the line and the
+hand-check found it before anything was deleted.
+
+### The inline pending branch goes the same way as PendingLink
+
+`ResidentProfileRoute` carried its own disabled "coming in a later phase" arm —
+the identical shape to `PendingLink`, by other means. Every tab now carries
+`built: true`, so it could not render. Deleted; `built` stays on the
+declaration because `reachability.test.tsx` reads it, and a tab marked built
+with no route is still a finding.
+
+`PrescriptionsTab`'s disabled button stays. Its comment draws the distinction:
+"'Coming in a later phase' is a promise; this is not waiting on a phase." It is
+a live control saying something true about itself.
+
+**It orphaned `.tabPhase`, and `check-css-classes` said so on the next run** —
+the second time in two deletions that the direction added this morning caught
+the consequence of one. The prediction was made before the run and the run
+confirmed it.
+
+**Left for a decision rather than deleted:** `ProfileTab.screen` is now read by
+nothing. It records each tab's PRD §6.2 screen number, so it is documentation
+of a mapping rather than litter — the `Sparkline` judgement again, and not one
+to batch into a cleanup.

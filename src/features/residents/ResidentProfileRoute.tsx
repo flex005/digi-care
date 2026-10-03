@@ -4,7 +4,7 @@ import type { ResidentId } from '@/data/types'
 import type { ResidentProfile } from '@/data/access/client'
 import { getResidentProfile } from '@/data/access/client'
 import { useResource } from '@/data/access/use-resource'
-import { Button, Tooltip } from '@/components/primitives'
+import { Button } from '@/components/primitives'
 import { Icon } from '@/components/icon/Icon'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { useTerm, useTerms } from '@/app/session/use-term'
@@ -169,36 +169,28 @@ export function ResidentProfileRoute() {
           <ProfileHeader profile={resource.data} />
 
           <nav className={styles.tabs} aria-label="Profile sections">
-            {TABS.map((tab) => {
-              const label = tab.label(terms)
-              return tab.built ? (
-                <NavLink
-                  key={tab.path}
-                  to={tab.path}
-                  end={tab.end}
-                  className={({ isActive }) =>
-                    [styles.tab, styles.tabBuilt, isActive ? styles.tabActive : '']
-                      .filter(Boolean)
-                      .join(' ')
-                  }
-                >
-                  {label}
-                </NavLink>
-              ) : (
-                <Tooltip key={tab.path} content={`${label} (coming in a later phase)`}>
-                  <span
-                    className={styles.tab}
-                    role="link"
-                    aria-disabled="true"
-                    aria-label={`${label} (coming in a later phase)`}
-                    tabIndex={0}
-                  >
-                    {label}
-                    <span className={styles.tabPhase}>S{tab.screen}</span>
-                  </span>
-                </Tooltip>
-              )
-            })}
+            {/*
+             * **No unbuilt branch any more.** Every tab carries `built: true`,
+             * so the disabled "coming in a later phase" arm could not render —
+             * the same expired scaffolding as `PendingLink`, which rendered the
+             * identical shape and was deleted for the same reason. `built`
+             * stays on the declaration because `reachability.test.tsx` reads
+             * it: a tab marked built with no route is still a finding.
+             */}
+            {TABS.map((tab) => (
+              <NavLink
+                key={tab.path}
+                to={tab.path}
+                end={tab.end}
+                className={({ isActive }) =>
+                  [styles.tab, styles.tabBuilt, isActive ? styles.tabActive : '']
+                    .filter(Boolean)
+                    .join(' ')
+                }
+              >
+                {tab.label(terms)}
+              </NavLink>
+            ))}
           </nav>
 
           {/* The header above stays mounted across every tab — that is what

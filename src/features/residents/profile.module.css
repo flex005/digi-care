@@ -444,14 +444,6 @@
   composes: tab from '@/components/shell/ScreenTabs.module.css';
 }
 
-.tabPhase {
-  padding: 0 var(--space-4);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-}
-
 .errorPanel {
   display: flex;
   flex-direction: column;
