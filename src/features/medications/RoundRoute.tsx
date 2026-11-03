@@ -30,7 +30,7 @@ import { PrnSection } from './PrnSection'
 import {
   EMPTY_ANSWER,
   buildRound,
-  currentRound,
+  currentRoundAt,
   isAnswered,
   openingCountFor,
   outstanding,
@@ -140,12 +140,12 @@ export function RoundRoute() {
 
   const timeZone = activeSite.timeZone
   const date = zonedDate(now, timeZone)
-  const hhmm = new Date(now).toTimeString().slice(0, 5)
 
   const allRounds = [
     ...new Set(resource.data.medications.flatMap((m) => m.roundTimes)),
   ].sort()
-  const roundTime = chosenRound === 'auto' ? currentRound(allRounds, hhmm) : chosenRound
+  const roundTime =
+    chosenRound === 'auto' ? currentRoundAt(allRounds, now, timeZone) : chosenRound
 
   const round = buildRound(
     resource.data.residents,

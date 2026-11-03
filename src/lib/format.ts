@@ -136,6 +136,37 @@ export function zonedWallClock(value: IsoDateTime, timeZone: TimeZone): number {
 }
 
 /**
+ * The instant a wall clock in the site's zone was showing a given time.
+ *
+ * The inverse of `zonedWallClock`. Here it builds every wall-clock time in the
+ * fixtures on the home's clock (`src/data/fixtures/home-zone.ts`): a round at
+ * 20:00 is the home's 20:00, whatever zone the machine is in. Ported from the
+ * Care Worker build, which also uses it for the incident form's "when it
+ * happened", collected as a wall clock and stored as an instant. Clinical
+ * timestamps are the home's (CLAUDE.md §6), when written as well as when drawn.
+ *
+ * **Two passes, because the offset depends on the answer.** The wall clock is
+ * `t + offset(t)`, so `t` is found by guessing the offset at the wall value,
+ * then taking the offset that actually applies at the guess. One refinement is
+ * enough for every real zone: a second pass only ever moves the answer within
+ * the hour around a clock change, where the wall time itself is ambiguous.
+ */
+export function instantFromZonedWallClock(
+  wall: string,
+  timeZone: TimeZone,
+): IsoDateTime {
+  const iso = (ms: number) => new Date(ms).toISOString() as IsoDateTime
+  // "YYYY-MM-DDTHH:mm" from a datetime-local input, read as if it were UTC.
+  const asIfUtc = Date.parse(`${wall.slice(0, 16)}:00.000Z`)
+  if (Number.isNaN(asIfUtc))
+    throw new Error(`${wall} is not a wall clock this can read.`)
+
+  const guess = asIfUtc - (zonedWallClock(iso(asIfUtc), timeZone) - asIfUtc)
+  const answer = asIfUtc - (zonedWallClock(iso(guess), timeZone) - guess)
+  return iso(answer)
+}
+
+/**
  * The two directions a `datetime-local` field needs, in the **site's** zone.
  *
  * `zonedWallClock` above produces a number for arithmetic that must never be

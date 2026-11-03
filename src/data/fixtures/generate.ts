@@ -14,6 +14,7 @@
 
 import type { IsoDate, IsoDateTime } from '../types'
 import { GENERATED_AT } from './clock'
+import { atHomeClock, homeDate, shiftOnHomeClock } from './home-zone'
 
 /**
  * The instant the whole fixture set is generated against.
@@ -75,21 +76,18 @@ export function makeRandom(seed: number): Random {
 // Dates
 // ---------------------------------------------------------------------------
 
+/** The home's calendar day at an instant, never the machine's. */
 export function toIsoDate(date: Date): IsoDate {
-  const year = date.getFullYear()
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
-  return `${year}-${month}-${day}` as IsoDate
+  return homeDate(date)
 }
 
 export function toIsoDateTime(date: Date): IsoDateTime {
   return date.toISOString() as IsoDateTime
 }
 
+/** The same time on the home's clock, `days` home days earlier. */
 export function daysAgo(days: number, from: Date = NOW): Date {
-  const date = new Date(from)
-  date.setDate(date.getDate() - days)
-  return date
+  return shiftOnHomeClock(from, { days: -days })
 }
 
 export function daysAhead(days: number, from: Date = NOW): Date {
@@ -97,16 +95,19 @@ export function daysAhead(days: number, from: Date = NOW): Date {
 }
 
 export function monthsAgo(months: number, from: Date = NOW): Date {
-  const date = new Date(from)
-  date.setMonth(date.getMonth() - months)
-  return date
+  return shiftOnHomeClock(from, { months: -months })
 }
 
-/** A given clock time on a given day, in the site's zone. */
+/**
+ * A given clock time on a given day, **on the home's clock**.
+ *
+ * It said "in the site's zone" and called `setHours`, which is the machine's.
+ * The two agreed while the machine and London were both an hour ahead of UTC,
+ * and stopped agreeing on 25/10/2026: every round, care note and incident time
+ * moved an hour against the home, and a 20:00 dose read "from 19:00 GMT".
+ */
 export function atTime(day: Date, hour: number, minute: number): Date {
-  const date = new Date(day)
-  date.setHours(hour, minute, 0, 0)
-  return date
+  return atHomeClock(homeDate(day), hour * 60 + minute)
 }
 
 /** Whole days between two dates, positive when `later` is after `earlier`. */

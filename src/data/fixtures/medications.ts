@@ -23,6 +23,7 @@ import type {
   StockCount,
 } from '../types'
 import { zonedDate, type TimeZone } from '@/lib/format'
+import { homeMinutesOfDay } from './home-zone'
 import { MEDICATION_LOOKAHEAD_HOURS } from '@/lib/shift'
 import {
   NOW,
@@ -998,7 +999,7 @@ const omissionRounds = [
 export const SPECIFIED_OMISSIONS: MarRecord[] = []
 
 for (const omission of omissionRounds) {
-  const roundTime = `${`${omission.dueAt.getHours()}`.padStart(2, '0')}:00`
+  const roundTime = `${`${Math.floor(homeMinutesOfDay(omission.dueAt) / 60)}`.padStart(2, '0')}:00`
   const day = zonedDate(toIsoDateTime(omission.dueAt), zoneFor(OKAFOR))
   const existing = marRecords.findIndex(
     (record) =>

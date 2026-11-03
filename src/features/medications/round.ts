@@ -10,6 +10,7 @@ import type {
 } from '@/data/types'
 import type { MarRecord } from '@/data/fixtures/medications'
 import type { Vocabulary } from '@/lib/vocabulary'
+import { formatTime, type TimeZone } from '@/lib/format'
 
 /**
  * A medication round, worked out before anything renders it.
@@ -81,6 +82,15 @@ export function currentRound(rounds: string[], nowHhMm: string): string {
     if (round <= nowHhMm) current = round
   }
   return current
+}
+
+/**
+ * The round a nurse arriving at `at` is standing in front of, **on the home's
+ * clock**. The screen read the hour with `toTimeString`, the machine's clock,
+ * which on a machine behind UTC opened the 08:00 round at 14:20.
+ */
+export function currentRoundAt(rounds: string[], at: IsoDateTime, timeZone: TimeZone) {
+  return currentRound(rounds, formatTime(at, timeZone))
 }
 
 /** Room numbers sort as numbers where they are numbers. Unrecorded goes last. */

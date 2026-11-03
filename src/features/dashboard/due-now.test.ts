@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { atHomeClock, homeDate } from '@/data/fixtures/home-zone'
 
 /**
  * A round in progress. PRD §6.4, Phase 12.
@@ -17,8 +18,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
  */
 async function freshLoadAt(hour: number, minute: number) {
   vi.resetModules()
-  const when = new Date()
-  when.setHours(hour, minute, 0, 0)
+  // Today at that time on the home's clock. It was `setHours`, the machine's,
+  // which agreed with fixtures built on the machine's clock too: the test could
+  // not have seen the hour drift because it shared it.
+  const when = atHomeClock(homeDate(new Date()), hour * 60 + minute)
   // Timers advance, or the fixture's own promises never settle.
   vi.useFakeTimers({ shouldAdvanceTime: true })
   vi.setSystemTime(when)

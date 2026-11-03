@@ -13,7 +13,7 @@ import { useSession, useSiteFormat } from '@/app/session/use-session'
 import { SiteTimeZone } from '@/app/session/SessionProvider'
 import { useTerms } from '@/app/session/use-term'
 import { assertNever } from '@/lib/assert-never'
-import { formatCount } from '@/lib/format'
+import { formatCount, zonedDate, type TimeZone } from '@/lib/format'
 import { elapsedMinutesBetween } from '@/lib/shift'
 import { coarseWait } from '@/features/notes/note-parts'
 import { CloseOmissionControl } from './CloseOmissionControl'
@@ -339,10 +339,13 @@ function Found({
   )
 }
 
-/** `15/08` — the day at a glance. The full date is on the meta line. */
-const shortDay = (at: IsoDateTime) => {
-  const day = new Date(at)
-  return `${String(day.getDate()).padStart(2, '0')}/${String(day.getMonth() + 1).padStart(2, '0')}`
+/**
+ * `15/08` — the day at a glance, on the home's calendar. The full date is on
+ * the meta line. It read `getDate()`, the machine's day.
+ */
+const shortDay = (at: IsoDateTime, timeZone: TimeZone) => {
+  const [, month, day] = zonedDate(at, timeZone).split('-')
+  return `${day}/${month}`
 }
 
 const rowKey = (entry: Omission) =>
@@ -350,6 +353,7 @@ const rowKey = (entry: Omission) =>
 
 function OmissionRow({ entry, onClosed }: { entry: Omission; onClosed: () => void }) {
   const format = useSiteFormat()
+  const { activeSite } = useSession()
   const { resident, medication, record } = entry
   const escalated = entry.escalatedAt !== 'not_escalated'
 
@@ -394,7 +398,7 @@ function OmissionRow({ entry, onClosed }: { entry: Omission; onClosed: () => voi
           variant="chip"
           label={escalated ? 'No record, escalated' : 'No record, not escalated'}
           {...(escalated ? { icon: 'alert-notification/alert-02' as const } : {})}
-          detail={`${record.roundTime}, ${shortDay(entry.dueAt)} · missed ${ago} ago`}
+          detail={`${record.roundTime}, ${shortDay(entry.dueAt, activeSite.timeZone)} · missed ${ago} ago`}
         />
       </div>
 
