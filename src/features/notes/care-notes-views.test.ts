@@ -133,6 +133,32 @@ describe('residents with no note today', () => {
     expect(items).toHaveLength(0)
   })
 
+  it('does not count a correction written today as writing anybody up today', () => {
+    const residents = [resident('a', 'Ada Nwachukwu')]
+    const correction = note('c', 'a', at(12, 9), { corrects: 'note-n' as CareNoteId })
+    const items = withoutNoteToday(
+      residents,
+      [correction, note('n', 'a', at(11, 20))],
+      TZ,
+      at(12, 12),
+    )
+    expect(items.map((item) => item.resident.id)).toEqual(['res-a'])
+  })
+
+  it('still counts today’s note once it has been corrected', () => {
+    const residents = [resident('a', 'Ada Nwachukwu')]
+    const items = withoutNoteToday(
+      residents,
+      [
+        note('c', 'a', at(12, 11), { corrects: 'note-n' as CareNoteId }),
+        note('n', 'a', at(12, 9), { supersededBy: 'note-c' as CareNoteId }),
+      ],
+      TZ,
+      at(12, 12),
+    )
+    expect(items).toHaveLength(0)
+  })
+
   it('separates "never written up" from "nothing today", never first', () => {
     // Two different failures. Collapsing them loses the worse inside the
     // milder one.

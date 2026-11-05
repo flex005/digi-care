@@ -126,6 +126,12 @@ export interface QuietResident {
  * nobody has written up since Tuesday and a resident nobody has ever written
  * up are different failures, and collapsing them into one list would lose the
  * worse of the two inside the milder one.
+ *
+ * **A correction does not write anybody up** (decided 05/11/2026, and the Care
+ * Worker build holds the same rule). Its subject is the earlier note's day, not
+ * today's care, so a correction written today of yesterday's note leaves
+ * today's care unrecorded and the gap stands. A note written today and later
+ * corrected still counts: it was today's care, and it stays on the record.
  */
 export function withoutNoteToday(
   residents: Resident[],
@@ -139,7 +145,8 @@ export function withoutNoteToday(
 
   for (const note of notes) {
     if (!latest.has(note.residentId)) latest.set(note.residentId, note)
-    if (zonedDate(note.recordedAt, timeZone) === today) wroteToday.add(note.residentId)
+    if (note.corrects === 'none' && zonedDate(note.recordedAt, timeZone) === today)
+      wroteToday.add(note.residentId)
   }
 
   return residents
