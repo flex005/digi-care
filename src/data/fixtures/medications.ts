@@ -636,6 +636,8 @@ export const MAR_HISTORY_DAYS = 90
  * would drift from the chart the first day an interval changed.
  */
 export function isScheduledDaysAgo(medication: Medication, daysBack: number): boolean {
+  // A PRN is never scheduled, on any day: it has no due time (05/11/2026).
+  if (medication.isPrn) return false
   const started = firstChartedDayAgo(medication)
   if (daysBack > started || daysBack < 0) return false
   return (started - daysBack) % medication.intervalDays === 0
@@ -705,6 +707,28 @@ const CLOSURE_REASONS: readonly [string, string, string] = [
   'Checked with the family and the pharmacy. Discussed with the member of staff.',
 ]
 
+/**
+ * What an as-required drug's chart can say at a round: that a dose was given,
+ * or that nothing was due. **Corrected 05/11/2026: a PRN is by definition not
+ * scheduled**, and every PRN template carries round times only because
+ * `Medication.roundTimes` is non-empty by type. The generator walked them as a
+ * schedule, so 23 as-required drugs fell "due" at each of their rounds and 347
+ * of their cells were omissions — doses that cannot be missed, because nobody
+ * owed them. A dose given stays exactly as drawn; anything else the draw would
+ * have made (an omission, a not-given, a window open or coming up) is not due.
+ *
+ * **Not a trim to improve a figure** (CLAUDE.md): no record somebody made is
+ * removed. What goes is a set of obligations the model invented. The same
+ * correction is in the Care Worker build, which shares this file.
+ *
+ * Applied after every draw has been made, so each drug's RNG stream is
+ * bit-for-bit what it was and no scheduled drug's cell moves.
+ */
+function asRequired(medication: Medication, state: MarCellState): MarCellState {
+  if (!medication.isPrn || state.kind === 'given') return state
+  return { kind: 'not_due' }
+}
+
 const marRecords: MarRecord[] = []
 
 for (const [index, medication] of medications.entries()) {
@@ -747,7 +771,8 @@ for (const [index, medication] of medications.entries()) {
           residentId: medication.residentId,
           roundTime,
           date: zonedDate(toIsoDateTime(dueAt), zoneFor(medication.residentId)),
-          state:
+          state: asRequired(
+            medication,
             dueAt.getTime() - NOW.getTime() < MEDICATION_LOOKAHEAD_HOURS * 3_600_000
               ? {
                   kind: 'due',
@@ -755,6 +780,7 @@ for (const [index, medication] of medications.entries()) {
                   windowClosesAt: toIsoDateTime(new Date(dueAt.getTime() + 3_600_000)),
                 }
               : { kind: 'not_due' },
+          ),
         })
         continue
       }
@@ -815,23 +841,26 @@ for (const [index, medication] of medications.entries()) {
           residentId: medication.residentId,
           roundTime,
           date: zonedDate(toIsoDateTime(dueAt), zoneFor(medication.residentId)),
-          state: stillToGive
-            ? {
-                kind: 'due',
-                windowOpensAt: toIsoDateTime(dueAt),
-                windowClosesAt: toIsoDateTime(new Date(dueAt.getTime() + 3_600_000)),
-              }
-            : {
-                kind: 'given',
-                givenAt: toIsoDateTime(recordedAfter(dueAt, 4 + (index % 12))),
-                givenBy: carersAndSeniors[index % carersAndSeniors.length]!,
-                witness: medication.isControlledDrug
-                  ? {
-                      kind: 'witnessed',
-                      by: carersAndSeniors[(index + 1) % carersAndSeniors.length]!,
-                    }
-                  : { kind: 'not_required' },
-              },
+          state: asRequired(
+            medication,
+            stillToGive
+              ? {
+                  kind: 'due',
+                  windowOpensAt: toIsoDateTime(dueAt),
+                  windowClosesAt: toIsoDateTime(new Date(dueAt.getTime() + 3_600_000)),
+                }
+              : {
+                  kind: 'given',
+                  givenAt: toIsoDateTime(recordedAfter(dueAt, 4 + (index % 12))),
+                  givenBy: carersAndSeniors[index % carersAndSeniors.length]!,
+                  witness: medication.isControlledDrug
+                    ? {
+                        kind: 'witnessed',
+                        by: carersAndSeniors[(index + 1) % carersAndSeniors.length]!,
+                      }
+                    : { kind: 'not_required' },
+                },
+          ),
         })
         continue
       }
@@ -947,7 +976,7 @@ for (const [index, medication] of medications.entries()) {
         residentId: medication.residentId,
         roundTime,
         date: zonedDate(toIsoDateTime(dueAt), zoneFor(medication.residentId)),
-        state,
+        state: asRequired(medication, state),
       })
     }
   }
@@ -1027,6 +1056,13 @@ for (const omission of omissionRounds) {
 
 export const marRecordsAll: MarRecord[] = marRecords
 
+/** The as-required drugs, by id, for the one question `fellDueAt` asks of a record. */
+const AS_REQUIRED = new Set(
+  medications
+    .filter((medication) => medication.isPrn)
+    .map((medication) => medication.id),
+)
+
 /**
  * When a dose fell due, whatever became of it — or that it never did.
  *
@@ -1041,8 +1077,14 @@ export const marRecordsAll: MarRecord[] = marRecords
  * written, and a dose still inside its window the moment that window opened.
  * `not_due` is the one member with no instant, and it is not a zero — the
  * round has not happened.
+ *
+ * **An as-required drug never falls due**, given or not (05/11/2026). Its chart
+ * holds the doses somebody chose to give, and counting those among the doses
+ * owed would put a PRN in the denominator of a medication error rate — a
+ * fraction of obligations that included things nobody was obliged to do.
  */
 export function fellDueAt(record: MarRecord): IsoDateTime | 'not_due' {
+  if (AS_REQUIRED.has(record.medicationId)) return 'not_due'
   switch (record.state.kind) {
     case 'omitted':
       return record.state.dueAt
