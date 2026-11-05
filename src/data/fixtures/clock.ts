@@ -24,6 +24,7 @@
  * import cycle here would be a blank record rather than an error.
  */
 
+import { atHomeClock, homeDate, homeMinutesOfDay, shiftHomeDate } from './home-zone'
 import { ROUND_TIMES, minutesOfDay, roundInProgressAt } from './rounds'
 
 /** `?at=HH:MM` on today's date, or `?at=<ISO instant>` for another day. */
@@ -35,9 +36,9 @@ function parse(raw: string): Date | undefined {
     const hours = Number(clock[1])
     const minutes = Number(clock[2])
     if (hours > 23 || minutes > 59) return undefined
-    const at = new Date()
-    at.setHours(hours, minutes, 0, 0)
-    return at
+    // Today on the home's clock, at that time on the home's clock: `?at=20:20`
+    // is the home's 20:20, whatever zone the machine reading it is in.
+    return atHomeClock(homeDate(new Date()), hours * 60 + minutes)
   }
   const instant = new Date(raw)
   return Number.isNaN(instant.getTime()) ? undefined : instant
@@ -69,15 +70,14 @@ function requested(): Date | undefined {
  * the real time beside it.
  */
 function nearestLiveRound(from: Date): Date {
-  const minutes = from.getHours() * 60 + from.getMinutes()
+  const minutes = homeMinutesOfDay(from)
   const past = ROUND_TIMES.filter((round) => minutesOfDay(round) <= minutes)
   // Before the first round of the day, the last one of yesterday is the most
   // recent: a night shift is a shift.
   const round = past[past.length - 1] ?? ROUND_TIMES[ROUND_TIMES.length - 1]
-  const at = new Date(from)
-  at.setHours(0, minutesOfDay(round) + 20, 0, 0)
-  if (past.length === 0) at.setDate(at.getDate() - 1)
-  return at
+  const today = homeDate(from)
+  const day = past.length === 0 ? shiftHomeDate(today, { days: -1 }) : today
+  return atHomeClock(day, minutesOfDay(round) + 20)
 }
 
 const asked =
@@ -86,8 +86,7 @@ const asked =
     : new URLSearchParams(window.location.search).get(CLOCK_PARAM)
 const override = requested()
 const real = new Date()
-const realIsLive =
-  roundInProgressAt(real.getHours() * 60 + real.getMinutes()) !== undefined
+const realIsLive = roundInProgressAt(homeMinutesOfDay(real)) !== undefined
 
 /**
  * What the record was generated against.

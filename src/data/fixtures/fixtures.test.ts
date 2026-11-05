@@ -24,7 +24,8 @@ import { ROUND_TIMES } from './rounds'
 import { sites, staff } from './organisation'
 import { GAP_INCIDENT_IDS, flagIsOverdue, incidentById, incidents } from './incidents'
 import { NOW, toIsoDateTime } from './generate'
-import { zonedDate } from '@/lib/format'
+import { formatTime, zonedDate } from '@/lib/format'
+import { HOME_ZONE } from './home-zone'
 import { handovers } from './handover'
 import type { Incident, RecordedList, Resident } from '../types'
 
@@ -1315,6 +1316,43 @@ describe("a MAR round belongs to the site's day, not the runner's", () => {
     expect(
       wrong.slice(0, 3).map((r) => `${r.medicationId} ${r.date} ${r.roundTime}`),
     ).toEqual([])
+  })
+
+  /**
+   * **A 20:00 dose is due at 20:00 on its home's clock.** On 25/10/2026 every
+   * window moved an hour against Rosewood ("20:00 round, from 19:00 GMT"),
+   * because the instants were built on the machine's clock; nothing failed,
+   * because nothing compared a record's round with its own instant.
+   */
+  it('puts every due time at its round, on its own site’s clock', () => {
+    const zoneOf = (residentId: string) => {
+      const resident = residents.find((entry) => entry.id === residentId)!
+      return sites.find((entry) => entry.id === resident.siteId)!.timeZone
+    }
+    const due = marRecordsAll.flatMap((record) => {
+      const state = record.state
+      const at =
+        state.kind === 'due'
+          ? state.windowOpensAt
+          : state.kind === 'omitted'
+            ? state.dueAt
+            : undefined
+      return at === undefined ? [] : [{ record, at }]
+    })
+    expect(due.length).toBeGreaterThan(0)
+    const wrong = due.filter(
+      ({ record, at }) =>
+        formatTime(at, zoneOf(record.residentId)) !== record.roundTime,
+    )
+    expect(
+      wrong
+        .slice(0, 3)
+        .map(({ record, at }) => `${record.medicationId} ${record.roundTime} at ${at}`),
+    ).toEqual([])
+  })
+
+  it('builds every wall-clock time in the one zone every site is in', () => {
+    for (const site of sites) expect(site.timeZone, site.name).toBe(HOME_ZONE)
   })
 
   it('uses a date-only key, never a locale string', () => {

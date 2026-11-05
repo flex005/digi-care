@@ -6,6 +6,7 @@ import {
   clockHref,
   now,
 } from './clock'
+import { homeMinutesOfDay } from './home-zone'
 import { roundInProgressAt } from './rounds'
 import { NOW } from './generate'
 
@@ -42,8 +43,9 @@ describe('the record and the screens read one clock', () => {
      * against an instant that does not announce itself is the reassurance
      * failure with the reader's own change as the cause.
      */
-    const minutes = GENERATED_AT.getHours() * 60 + GENERATED_AT.getMinutes()
-    expect(roundInProgressAt(minutes)).toBeDefined()
+    // On the home's clock. This read `getHours()`, the machine's, and agreed
+    // with a clock built on the machine's too.
+    expect(roundInProgressAt(homeMinutesOfDay(GENERATED_AT))).toBeDefined()
 
     expect(CLOCK_REASON).toBe(CLOCK_IS_OVERRIDDEN ? 'nearest_round' : 'real')
   })

@@ -1,7 +1,7 @@
 import type { IsoDateTime, Resident, StaffId } from '@/data/types'
 import { RISK_ASSESSMENT_TEMPLATES } from '@/data/types'
 import { careNotes } from '@/data/fixtures/care-notes'
-import { fellDueAt, marRecordsAll } from '@/data/fixtures/medications'
+import { marRecordsAll } from '@/data/fixtures/medications'
 import { residents } from '@/data/fixtures/residents'
 import { documents } from '@/data/fixtures/documents'
 import type { Term, Vocabulary } from '@/lib/vocabulary'
@@ -59,11 +59,15 @@ export function staffActivity(staffId: StaffId, terms: Vocabulary): StaffAct[] {
     })
   }
 
+  /*
+   * Every dose this person gave, an as-required one included: a PRN never falls
+   * due, but giving one is still something they did. This asked `fellDueAt`,
+   * which never said "not due" of a given dose until a PRN stopped falling due
+   * (05/11/2026), and then would have dropped every PRN they gave.
+   */
   for (const record of marRecordsAll) {
     if (record.state.kind !== 'given') continue
     if (record.state.givenBy.id !== staffId) continue
-    const when = fellDueAt(record)
-    if (when === 'not_due') continue
     acts.push({
       id: `dose-${record.medicationId}-${record.date}-${record.roundTime}`,
       at: record.state.givenAt,
