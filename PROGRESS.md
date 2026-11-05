@@ -18000,3 +18000,26 @@ to batch into a cleanup.
 **Raised there, present here, not fixed in this pass, as asked:**
 - **Review due dates on the UTC day:** `nextReviewFrom`, plus the six other UTC-day reads above.
 - **Age off by one within an hour of midnight on a birthday:** `ageFrom` in `format.ts`, identical to the other build's.
+
+## A PRN is not scheduled: the chart corrected, and what moved (05/11/2026)
+
+Found reading medication for the Care Worker build's phone; corrected in both builds, because they share `src/data/fixtures/medications.ts`. **This corrects a modelling error. It is not fixture data trimmed to improve a figure**, and the distinction is the point of this entry. A PRN is by definition not scheduled: it has no due time, so it cannot fall due, be omitted, or be refused at a round nobody offered it at. Every PRN template carries round times only because the type makes them non-empty, and the generator walked them as a schedule: 23 as-required drugs had 347 omissions, 406 refusals and 12 open windows nobody owed.
+
+- **What changed in the fixture.** `asRequired` runs after every draw, so each drug's RNG stream is unchanged: **every PRN dose given stays exactly as drawn** (4,436 cells) and **no scheduled drug's cell moved** (8,471 given, 738 not given, 734 omitted, 18 due, 214 not due, before and after). Everything else on a PRN's chart is now `not_due`. `fellDueAt` says a PRN never falls due, and `isScheduledDaysAgo` says a PRN is scheduled on no day — the second is how the dashboard's rings and bars decide what a dose is, and without it a PRN's empty cells would have landed in "no record".
+- **Two readers asked `fellDueAt` to mean something else, and were moved off it.** Staff activity and the care note coverage report's "recorded N doses" both used it to skip "not due", which never happened to a recorded dose — until a PRN stopped falling due, when both would have silently dropped every PRN a person gave. Giving one is still something they did, so both now count by the act: staff activity drops the check (12,907 dose acts, before and after), and the report takes the instant from the record itself.
+- **Seven tests** in `src/data/fixtures/prn-not-scheduled.test.ts`, pinned to 16/09/2026 20:20 BST. The report case is differential: the same report run with and without PRN records must differ by exactly the PRN doses that person gave. **Five mutations** (the generator's guard, `fellDueAt`'s PRN line, `isScheduledDaysAgo`'s, staff activity dropping a PRN, the report returning to `fellDueAt`), each confirmed landed, each red, each restored. Nothing in the existing 1,796 tests noticed either way — none had ever pinned a PRN's behaviour.
+
+**What moved**, Rosewood Court at 16/09/2026 20:20 BST, before → after:
+
+| Figure | Before | After |
+|---|---|---|
+| Omissions in the last week | 91 of 1,150 due | 55 of 766 due |
+| Dashboard, today's doses (recorded / no record / due now / total) | 125 / 8 / 29 / 162 | 86 / 4 / 18 / 108 |
+| Dashboard, doses by day, last seven days (due) | 160, 165, 162, 162, 163, 162, 133 | 106, 111, 108, 108, 109, 108, 90 |
+| — no record | 7, 14, 19, 15, 15, 13, 8 | 4, 7, 10, 10, 10, 10, 4 |
+| Group overview, doses with no record in 30 days: Rosewood | 375 of 4,990 | 238 of 3,316 |
+| — Ashgrove | 19 of 372 | 10 of 217 |
+| Medication omissions report, 30 days, every cut | 363 of 4,830 | 230 of 3,210 |
+| — by drug, rows | 15 | 13 (Paracetamol 1g and Salbutamol, PRN only, gone) |
+| Care note coverage by staff, "doses recorded" (C. Nwosu, as an example) | 594 | 578 — the PRN refusals the generator had put in their name, which were never real |
+| Staff activity, dose acts across the team | 12,907 | 12,907 |

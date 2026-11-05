@@ -685,9 +685,18 @@ function careNoteCoverage(input: RunInput): ReportResult {
    * that makes it mean something.
    */
   const rounds = new Map<string, number>()
+  /*
+   * **By the act, not by whether the dose was owed.** This counted through
+   * `fellDueAt`, which gives a recorded dose the moment it was recorded — until
+   * a PRN stopped falling due (05/11/2026), when it would have dropped every
+   * PRN a person gave from "recorded N doses". Giving one is still something
+   * they recorded, so the instant here is the act's own.
+   */
   for (const record of data.marRecords) {
-    const when = fellDueAt(record)
-    if (when === 'not_due' || !within(when, period, data.site.timeZone)) continue
+    if (record.state.kind !== 'given' && record.state.kind !== 'not_given') continue
+    const when =
+      record.state.kind === 'given' ? record.state.givenAt : record.state.recordedAt
+    if (!within(when, period, data.site.timeZone)) continue
     if (record.state.kind === 'given') {
       rounds.set(
         record.state.givenBy.id,
