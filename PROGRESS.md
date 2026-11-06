@@ -18030,3 +18030,11 @@ Found reading medication for the Care Worker build's phone; corrected in both bu
 - **Found in the Care Worker build**, where a test comparing `openDosesAt` with the raw records failed on its first run. The filter here was the same two clauses. Ported as one clause (`!== 'not_due'`) with a corrected docblock.
 - **Tests**, neither asking `openDosesAt` for its expectations: `open-doses.test.ts` checks it against the raw records for every resident at every round of the day, with literals for an omitted dose and a patch's day off; `round-patch-day-off.test.ts` records the three 08:00 rounds with their residents and doses as literals. **Mutations**: the clause removed fails all five; `openDosesAt` forgetting omitted doses fails the anchor.
 - **The cause is a hazard tracked in both builds**: `not_due` means both "nothing scheduled today" and "a round that has not opened yet", and the first was read as the second. It wants to be two states, which is a type change across both builds. Recorded in the Care Worker build's DEPARTURES.md.
+
+## 06/11/2026 — coarseWait rounds days from the minutes
+
+**Ported from the Care Worker build**, where pinning a test found it. `coarseWait` rounded a wait to the hour and then rounded those hours to the day, so 83 hours 39 minutes became 84 hours and then 3.5 days, then 4. Live here: at 20:20 BST on 16/09/2026, Emmanuel Okafor's flagged note (flagged 08:41 BST on 13/09, waited 3.49 days) showed **"waiting 4 days"** on its chip, wherever `ReviewState` draws it: the care notes queue row and the note card. The same function draws "waited N" on a reviewed flag, an omission's age and the incident log's "waiting N", all over-reading by a day inside the half hour below each half-day. Days are now rounded once, from the minutes.
+
+`coarse-wait.test.tsx` holds the boundary in literal minutes, and renders the real fixture note's chip at a pinned instant ("waiting 3 days"). Restoring the double rounding fails both.
+
+Siblings checked in both builds: `formatDuration` in `lib/format.ts` (months rounded once, then split into years) and in `lib/shift.ts` (minutes rounded once, then split into hours) are exact decompositions, not double rounding. Nothing else rounds a rounded value.
