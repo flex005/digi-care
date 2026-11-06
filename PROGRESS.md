@@ -18023,3 +18023,10 @@ Found reading medication for the Care Worker build's phone; corrected in both bu
 | — by drug, rows | 15 | 13 (Paracetamol 1g and Salbutamol, PRN only, gone) |
 | Care note coverage by staff, "doses recorded" (C. Nwosu, as an example) | 594 | 578 — the PRN refusals the generator had put in their name, which were never real |
 | Staff activity, dose acts across the team | 12,907 | 12,907 |
+
+## A round that could never be signed on a patch's day off (06/11/2026)
+
+- **`openDosesAt` counted a `not_due` cell as an open dose.** Kavanagh's fentanyl and Salami's and Amadi's buprenorphine are changed every third day, so on their days off the MAR cell is `not_due`. `buildRound` leaves the patch off the round, as it should; `recordRound` asks `openDosesAt` what the round must answer, and that list included the patch. So answering every dose the round shows was refused as "This round is short 1 of N doses", and the round could never be signed. Confirmed at 08:20 BST on 16/09/2026, on `main`, for all three residents before the fix; all three record after it.
+- **Found in the Care Worker build**, where a test comparing `openDosesAt` with the raw records failed on its first run. The filter here was the same two clauses. Ported as one clause (`!== 'not_due'`) with a corrected docblock.
+- **Tests**, neither asking `openDosesAt` for its expectations: `open-doses.test.ts` checks it against the raw records for every resident at every round of the day, with literals for an omitted dose and a patch's day off; `round-patch-day-off.test.ts` records the three 08:00 rounds with their residents and doses as literals. **Mutations**: the clause removed fails all five; `openDosesAt` forgetting omitted doses fails the anchor.
+- **The cause is a hazard tracked in both builds**: `not_due` means both "nothing scheduled today" and "a round that has not opened yet", and the first was read as the second. It wants to be two states, which is a type change across both builds. Recorded in the Care Worker build's DEPARTURES.md.

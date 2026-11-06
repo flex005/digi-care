@@ -1604,7 +1604,14 @@ export function recordOpeningCount(input: {
 }
 
 /**
- * The doses still open at a round: due, omitted, or never reached.
+ * The doses still open at a round: due or omitted.
+ *
+ * **Never a `not_due` cell** (fixed 06/11/2026, ported from the Care Worker
+ * build). A patch changed every third day has a `not_due` record on its days
+ * off, and `buildRound` leaves it off the round, as it should; this list used to
+ * count it, so on those days the whole round was refused as short a dose nobody
+ * could see or answer. Found there by checking this list against the raw
+ * records; `open-doses.test.ts` does the same here.
  *
  * **Exported because the guard for the round has to ask the round.** A test
  * that decided for itself which doses were outstanding would be a second copy
@@ -1625,7 +1632,8 @@ export function openDosesAt(
           record.date === date &&
           record.roundTime === roundTime &&
           record.state.kind !== 'given' &&
-          record.state.kind !== 'not_given',
+          record.state.kind !== 'not_given' &&
+          record.state.kind !== 'not_due',
       )
       .map((record) => record.medicationId),
   )
