@@ -37,7 +37,9 @@ export function coarseWait(minutes: number): string {
   // be ranked at a glance. Below 48 hours the hour is the useful unit — the
   // difference between 6 and 18 matters and "0 days" does not.
   if (hours >= 48) {
-    const days = Math.round(hours / 24)
+    // From the minutes, never from the rounded hours: rounding twice drew 83
+    // hours 39 minutes as 84 hours and then as four days.
+    const days = Math.round(whole / (24 * 60))
     return `${days} ${days === 1 ? 'day' : 'days'}`
   }
   return `${hours} ${hours === 1 ? 'hour' : 'hours'}`
