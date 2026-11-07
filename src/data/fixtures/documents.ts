@@ -9,7 +9,7 @@ import type {
   SiteId,
   StaffRef,
 } from '../types'
-import { medicationsFor } from './medications'
+import { EVENING_ORDINARY_IDS, medicationsFor } from './medications'
 import { carersAndSeniors, managers, sites, staffNwosu } from './organisation'
 import { residents } from './residents'
 import { daysAgo, daysAhead, makeRandom, toIsoDate } from './generate'
@@ -224,6 +224,13 @@ export function referencedIds(resident: Resident): ReferencedId[] {
 
 const residentDocuments: DocumentRecord[] = []
 
+/**
+ * The scanned prescriptions of the four evening medicines added on 07/11/2026,
+ * which are drawn after every other document (below, before the exports).
+ */
+const isDrawnLater = (reference: ReferencedId): boolean =>
+  [...EVENING_ORDINARY_IDS].some((id) => reference.id === `doc-${id}`)
+
 for (const resident of residents) {
   /*
    * Referenced ids first, so the ordinary documents are drawn from what is
@@ -231,6 +238,7 @@ for (const resident of residents) {
    * section — it is the section that carries the finding.
    */
   for (const reference of referencedIds(resident)) {
+    if (isDrawnLater(reference)) continue
     if (!rng.chance(REFERENCE_RESOLVES)) continue
     residentDocuments.push(
       documentFor(resident, reference.category, reference.title, reference.id),
@@ -336,6 +344,25 @@ if (onFileAlready) {
     filedBy: staffNwosu,
     filedOn: okafor.futurePlans.resuscitation.signedOn,
   })
+}
+
+/**
+ * **The four evening prescriptions' scans, drawn last** (07/11/2026). Drawn in
+ * the residents' loop, each would have taken a turn in the one stream every
+ * document comes from, and every document after Emmanuel Okafor's would have
+ * moved. Drawn here, after the last existing draw, every existing document is
+ * exactly what it was, and the same rule decides whether each scan resolves.
+ * The library's totals rise by the scans that do; `docs/DEPARTURES.md` names
+ * the figure.
+ */
+for (const resident of residents) {
+  for (const reference of referencedIds(resident)) {
+    if (!isDrawnLater(reference)) continue
+    if (!rng.chance(REFERENCE_RESOLVES)) continue
+    residentDocuments.push(
+      documentFor(resident, reference.category, reference.title, reference.id),
+    )
+  }
 }
 
 export const documents: DocumentRecord[] = [...residentDocuments, ...siteDocuments]

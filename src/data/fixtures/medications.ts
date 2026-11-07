@@ -447,6 +447,44 @@ for (const pinned of pinnedControlledDrugs) {
   if (!medicationList.some((med) => med.id === pinned.id)) medicationList.push(pinned)
 }
 
+/**
+ * An ordinary evening medicine for each of four residents whose 20:00 round
+ * held only controlled drugs: Emmanuel Okafor, Grace Adeyemi, Beryl Hutchinson
+ * and Arthur Pemberton, the list N. Eze is given in the Care Worker build.
+ *
+ * **A correction to unrepresentative data, not a trim to improve a figure**
+ * (CLAUDE.md). Their ordinary medicines all fell at 08:00 and 18:00, so every
+ * dose on their evening round was a controlled drug, which is not a shift a
+ * care worker works. Nothing is removed and no existing record changes: the
+ * drugs are taken from the pool, chosen by each resident's recorded diagnoses,
+ * and appended after every other prescription, so the index each existing
+ * drug seeds its records from is unchanged and no other fixture moves.
+ */
+const EVENING_ORDINARY: [ResidentId, string][] = [
+  ['res-okafor' as ResidentId, 'Atorvastatin'], // hypertension, atrial fibrillation
+  ['res-adeyemi' as ResidentId, 'Donepezil'], // vascular dementia
+  ['res-hutchinson' as ResidentId, 'Atorvastatin'], // hypertension
+  ['res-pemberton' as ResidentId, 'Atorvastatin'], // atrial fibrillation
+]
+
+/**
+ * Their ids, so `documents.ts` can draw their scanned prescriptions after every
+ * other document rather than among them, where each would shift the draw for
+ * every resident after it.
+ */
+export const EVENING_ORDINARY_IDS: ReadonlySet<MedicationId> = new Set(
+  EVENING_ORDINARY.map(([residentId, name]) => {
+    const drug = DRUGS.find((entry) => entry.name === name)
+    if (drug === undefined) throw new Error(`${name} is not in the drug pool`)
+    const id =
+      `med-${residentId}-${drug.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` as MedicationId
+    if (medicationList.some((med) => med.id === id))
+      throw new Error(`${residentId} is already prescribed ${name}`)
+    medicationList.push({ id, residentId, intervalDays: 1, ...drug })
+    return id
+  }),
+)
+
 // ---------------------------------------------------------------------------
 // The prescription. PRD §5.3, §6.4.
 //
