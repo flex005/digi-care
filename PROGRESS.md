@@ -18038,3 +18038,11 @@ Found reading medication for the Care Worker build's phone; corrected in both bu
 `coarse-wait.test.tsx` holds the boundary in literal minutes, and renders the real fixture note's chip at a pinned instant ("waiting 3 days"). Restoring the double rounding fails both.
 
 Siblings checked in both builds: `formatDuration` in `lib/format.ts` (months rounded once, then split into years) and in `lib/shift.ts` (minutes rounded once, then split into hours) are exact decompositions, not double rounding. Nothing else rounds a rounded value.
+
+## 07/11/2026 — Evening medicines for four residents; their documents drawn last
+
+Ported from the Care Worker build, which shares `src/data`: atorvastatin at 20:00 for Okafor, Hutchinson and Pemberton and donepezil for Adeyemi, appended after every other prescription, and their scanned prescriptions drawn after every other document (option C; marking the scans as kept on paper to hold DOC-01's figures was rejected). Fingerprinted with and without the change: every existing prescription, dose record, stock count and document identical; four prescriptions and three documents added.
+
+**The whole suite passed with the new fixtures, and that is the finding.** Every figure here that moved is computed by its test from the same fixtures the screen reads, so nothing could disagree. `src/features/documents/library-figures.test.ts` now writes Rosewood's library out by hand at a pinned instant (239 of 309, 77%; Health and clinical 112/10/5/22; the other two DOC-01 categories as quoted), counted a second way from the document fixtures. Broken two ways: the new scans drawn among the others (Health and clinical 122, nine expired), and never drawn (109).
+
+Figures that move here, measured at 20:20 BST on 16/09/2026 from the raw records, before → after: Rosewood's 20:00 round open 18 across 15 residents → 20 across 16; doses due today 108 → 112; the week's omissions 55 of 766 → 56 of 794; N. Eze's four residents' doses due today 22 → 26, open at 20:00 3 → 5. This build's 20:00 figures sit one below the Care Worker build's because Adeyemi's never-counted oxycodone is kept open there and signed here, a divergence recorded in the Care Worker build's DEPARTURES.md.
